@@ -1,0 +1,10 @@
+{
+    "Form": {
+        "title": "Book a Consultation",
+        "header": "If you have any remaining questions or need to discuss your mental health concerns, please don’t hesitate to contact me.",
+        "mandatatory": "This field is required"
+    },
+  "Common": {
+    "ok": "OK"
+  }
+}
