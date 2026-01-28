@@ -9,7 +9,7 @@ import { NextResponse } from 'next/server';
 export async function POST(request: Request) {
   const body = await request.json();
 
-  const thirdPartyResponse = await fetch(`${APP_URL}/auth/register`, {
+  const thirdPartyResponse = await fetch(`${APP_URL}/auth/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -19,41 +19,15 @@ export async function POST(request: Request) {
     console.log('thirdPartyResponse SERVER', thirdPartyResponse)
   const response = await thirdPartyResponse.json();
   console.log('response SERVER', response)
-  return NextResponse.json({
-    success: true,
-    body
+
+  const res = NextResponse.json({ response });
+
+  res.cookies.set('sessionToken', response?.token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    maxAge: 60 * 60 * 24 * 7, // 1 week
+    path: '/',
   });
+
+  return res;
 }
-
-// export default async function TelegramHandler(req: NextApiRequest, res: NextApiResponse) {
-//   try {
-//   const body = req.body;
-//   console.log('body', body)
-//   // // const thirdPartyResponse = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-//   // //     method: 'POST',
-//   // //     headers: {
-//   // //       'Content-Type': 'application/json',
-//   // //     },
-//   // //     body: JSON.stringify({
-//   // //       chat_id: CHAT_ID,
-//   // //       text: `💬 Website:\n
-//   // //         Ім'я: ${body.firstName}\r\n
-//   // //         Пошта: ${body.email}\r\n
-//   // //         Телефон: ${body.phone}\r\n
-//   // //          ${body.text ? `Повідомлення: ${body.text}` : '' }
-//   // //         `
-//   // //     }),
-//   // //   });
-//   // const response = await thirdPartyResponse.json();
-
-//   // if (thirdPartyResponse.status === 200) {
-//   //     res.send({ ok: true });
-//   // } else {
-//   //   res.status(400).json({ status: 'BAD REQUEST', error: response });
-//   // }
-    
-//   } catch(error) {
-//     res.status(500).json({ status: 'BAD REQUEST' });
-//   }
-  
-// };

@@ -1,6 +1,6 @@
 import Image from "next/image";
 import styles from "./page.module.css";
-import Form from "../../../components/Form";
+import Form from "../../../components/Form/Form";
 import LocaleSwitcher from "../../../components/LocaleSwitcher/LocaleSwitcher";
 
 export default function Home() {

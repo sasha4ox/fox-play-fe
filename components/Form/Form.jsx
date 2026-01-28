@@ -10,7 +10,8 @@ import FacebookIcon from '@mui/icons-material/Facebook';
 import InstagramIcon from '@mui/icons-material/Instagram';
 import { useTranslations } from 'next-intl';
 import { useLocale } from 'next-intl';
-import { APP_URL } from './../src/lib/env';
+import { APP_URL } from '../../src/lib/env';
+import { redirect } from 'next/navigation';
 
 const conriesToShow = [
                     // EU
@@ -40,27 +41,55 @@ const conriesToShow = [
                     ]
 
 export default function Form() {
+  const [isLoginForm, setIsloginForm] = useState(true);
   const { control, handleSubmit, setError, formState: { isSubmitting } } = useForm({
     defaultValues: {
       password: "",
       email: ""
     },
   });
- const locale = useLocale();
+  const locale = useLocale();
   const t = useTranslations('Form');
 
+  const handleChangeForm = () => {
+    setIsloginForm(!isLoginForm)
+  }
   
+
+  const handleLogin = async (data) => {
+    const response = await fetch('/api/login', {
+      method: 'post',
+      headers: {
+      'Content-Type': 'application/json',
+        },
+      body: JSON.stringify(data),
+    });
+    const parsedResponse = await response.json();
+
+    if (parsedResponse.response.token) {
+      redirect(`${locale}/dashboard`);
+    }
+  }
+
+  const handleRegister = async (data) => {
+    const response = await fetch('/api/register', {
+      method: 'post',
+      headers: {
+      'Content-Type': 'application/json',
+        },
+      body: JSON.stringify(data),
+    });
+  }
+
   const [isEmailSent, setIsEmailSent] = useState(false);
   const onSubmit = async (data) => {
     console.log('APP_URL', APP_URL)
     try {
-      const response = await fetch('/api/login', {
-        method: 'post',
-        headers: {
-        'Content-Type': 'application/json',
-          },
-        body: JSON.stringify(data),
-      });
+      if (isLoginForm) {
+        handleLogin(data)
+      } else {
+        handleRegister(data)
+      }
       if (response.ok) {
         setIsEmailSent(true)
       }
@@ -74,9 +103,9 @@ export default function Form() {
   return (
     <section className={styles.formWrapper}>
       <h1>{locale}</h1>
-      <h2>{t('title')}</h2>
+      <h2>{isLoginForm ? "Логін" : "Реєстрація"}</h2>
       <span className={styles.formHeader}>{t('header')}</span>
-      <div className={styles.links}>
+      {/* <div className={styles.links}>
         <a href="https://t.me/KonungFox" target="_blank"  className={styles.link} aria-label="Приєднуйтесь до Telegram">
           <TelegramIcon fontSize='large'/>
         </a>
@@ -86,7 +115,7 @@ export default function Form() {
         <a className={styles.link} href="https://www.instagram.com/" target="_blank" aria-label="Приєднуйтесь до Instagram">
           <InstagramIcon fontSize='large'/>
         </a>
-      </div>
+      </div> */}
       <form onSubmit={handleSubmit(onSubmit)} className={styles.form}>
         <Controller
           name="email"
@@ -127,6 +156,8 @@ export default function Form() {
     ✅    Запит успішно надіслано! Ми звʼяжемося з вами найближчим часом.
         </Alert>}
         <button type="submit" className={styles.send}>{isSubmitting ? "Надсилаю запит" : "Надіслати запит"}</button>
+        <div onClick={handleChangeForm}>{isLoginForm ? "Не має акаунту" : "В мене є акаунт"}</div>
+        
       </form>
     </section>
   );
