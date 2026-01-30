@@ -2,7 +2,7 @@
 
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
-import { useLocale } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import Container from '@mui/material/Container';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
@@ -41,9 +41,9 @@ export default function GameServersPage() {
     return (
       <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', py: 4, px: 2 }}>
         <Container maxWidth="sm">
-          <Alert severity="error">{error || 'Not found.'}</Alert>
+          <Alert severity="error">{error || t('notFound')}</Alert>
           <MuiLink component={Link} href={`/${locale}/dashboard`} sx={{ display: 'inline-block', mt: 2 }}>
-            ← Back to games
+            {tCommon('backToGames')}
           </MuiLink>
         </Container>
       </Box>
@@ -59,10 +59,10 @@ export default function GameServersPage() {
           ← {game.name} → {variant.name}
         </MuiLink>
         <Typography variant="h4" fontWeight={600} color="text.primary" gutterBottom>
-          Choose server
+          {t('chooseServer')}
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          {game.name} → {variant.name} ({servers.length} server{servers.length !== 1 ? 's' : ''})
+          {servers.length !== 1 ? t('serversHintPlural', { game: game.name, variant: variant.name, count: servers.length }) : t('serversHint', { game: game.name, variant: variant.name, count: servers.length })}
         </Typography>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           {servers.map((server) => (

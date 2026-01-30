@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useLocale } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import Link from 'next/link';
 import Box from '@mui/material/Box';
 import Container from '@mui/material/Container';
@@ -39,7 +39,7 @@ export default function MyOffersPage() {
     return (
       <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', py: 4, px: 2 }}>
         <Container maxWidth="sm">
-          <Alert severity="info">Log in to see your offers.</Alert>
+          <Alert severity="info">{t('loginToSeeOffers')}</Alert>
         </Container>
       </Box>
     );
@@ -50,14 +50,14 @@ export default function MyOffersPage() {
       <Container maxWidth="sm">
         <Link href={`/${locale}/dashboard`} style={{ textDecoration: 'none' }}>
           <MuiLink component="span" color="secondary" sx={{ display: 'inline-block', mb: 2 }}>
-            ← Dashboard
+            {t('dashboard')}
           </MuiLink>
         </Link>
         <Typography variant="h4" fontWeight={600} gutterBottom>
-          My offers
+          {t('myOffers')}
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          Offers you created. Click to view or edit.
+          {t('offersHint')}
         </Typography>
 
         {loading && (
@@ -67,7 +67,7 @@ export default function MyOffersPage() {
         )}
         {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
         {!loading && !error && offers.length === 0 && (
-          <Typography color="text.secondary">No offers yet. Create one from a game server.</Typography>
+          <Typography color="text.secondary">{t('noOffers')}</Typography>
         )}
         {!loading && offers.length > 0 && (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mt: 2 }}>
@@ -90,15 +90,15 @@ export default function MyOffersPage() {
                       {offer.title}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
-                      {OFFER_TYPE_LABELS[offer.offerType] ?? offer.offerType} · {offer.price} {offer.currency} · Qty: {offer.quantity}
+                      {OFFER_TYPE_LABELS[offer.offerType] ?? offer.offerType} · {offer.price} {offer.currency} · {t('qty')}: {offer.quantity}
                     </Typography>
                     <Box sx={{ mt: 1 }}>
                       <MuiLink component={Link} href={href} color="secondary" sx={{ mr: 1 }}>
-                        View
+                        {tCommon('view')}
                       </MuiLink>
                       {editHref && (
                         <MuiLink component={Link} href={editHref} color="secondary">
-                          Edit
+                          {tCommon('edit')}
                         </MuiLink>
                       )}
                     </Box>

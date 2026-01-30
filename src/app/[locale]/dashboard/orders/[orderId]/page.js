@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { useLocale } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import Link from 'next/link';
 import Box from '@mui/material/Box';
 import Container from '@mui/material/Container';
@@ -120,7 +120,7 @@ export default function OrderChatPage() {
 
   const handleMarkDelivered = async () => {
     if (!orderId || !token || deliverProofFiles.length === 0) {
-      setActionError('Please attach at least one image as proof of transfer.');
+      setActionError(t('attachProofError'));
       return;
     }
     setDeliverSubmitting(true);
@@ -157,7 +157,7 @@ export default function OrderChatPage() {
     if (!orderId || !token) return;
     const reason = (disputeReason || '').trim();
     if (!reason) {
-      setActionError('Please enter a reason for the dispute.');
+      setActionError(t('enterDisputeReason'));
       return;
     }
     if (!disputeFiles.length) {
@@ -177,7 +177,7 @@ export default function OrderChatPage() {
       if (disputeFileInputRef.current) disputeFileInputRef.current.value = '';
       refetchOrder();
     } catch (err) {
-      setActionError(err.message || 'Failed to open dispute');
+      setActionError(err.message || t('failedOpenDispute'));
     } finally {
       setDisputeSubmitting(false);
     }
@@ -205,9 +205,9 @@ export default function OrderChatPage() {
     return (
       <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', py: 4, px: 2 }}>
         <Container maxWidth="sm">
-          <Alert severity="error">{error || 'Order not found.'}</Alert>
+          <Alert severity="error">{error || t('orderNotFound')}</Alert>
           <Button component={Link} href={`/${locale}/dashboard/orders`} sx={{ mt: 2 }}>
-            ← My orders
+            {tOrders('myOrders')}
           </Button>
         </Container>
       </Box>
@@ -221,24 +221,24 @@ export default function OrderChatPage() {
       <Container maxWidth="sm" sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
         <Link href={`/${locale}/dashboard/orders`} style={{ textDecoration: 'none' }}>
           <MuiLink component="span" color="secondary" sx={{ display: 'inline-block', mb: 1 }}>
-            ← Chats
+            {tOrders('chats')}
           </MuiLink>
         </Link>
         <Typography variant="h6" fontWeight={600} sx={{ mb: 1 }}>
-          Order chat
+          {t('orderChat')}
         </Typography>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1, flexWrap: 'wrap' }}>
           <Typography variant="body2" color="text.secondary">
-            Status: <strong>{order.status}</strong>
+            {tOrders('status')}: <strong>{order.status}</strong>
           </Typography>
           {connected && (
-            <Typography variant="caption" color="success.main">● Live</Typography>
+            <Typography variant="caption" color="success.main">{t('live')}</Typography>
           )}
           {Array.isArray(onlineUserIds) && onlineUserIds.length > 0 && (
             <Typography variant="caption" color="text.secondary">
-              · Online: {[order.buyerId, order.sellerId]
+              {t('online')}: {[order.buyerId, order.sellerId]
                 .filter((id) => onlineUserIds.includes(id))
-                .map((id) => (id === order.buyerId ? 'Buyer' : 'Seller'))
+                .map((id) => (id === order.buyerId ? t('buyer') : t('seller')))
                 .join(', ')}
             </Typography>
           )}
@@ -247,22 +247,22 @@ export default function OrderChatPage() {
         {order.offer && (
           <Box sx={{ mb: 2, p: 2, border: '1px solid', borderColor: 'divider', borderRadius: 1, bgcolor: 'action.hover' }}>
             <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-              {isBuyer ? 'You are buying' : 'You are selling'}
+              {isBuyer ? t('youAreBuying') : t('youAreSelling')}
             </Typography>
             <Typography variant="body1" fontWeight={600}>{order.offer.title}</Typography>
             <Typography variant="body2" color="text.secondary">
               Qty: {order.quantity}
-              {order.offer.offerType === 'ADENA' ? ` · ${Number(order.offer?.price ?? 0)} ${order.sellerCurrency} per unit` : ` · ${Number(order.sellerAmount ?? 0).toFixed(2)} ${order.sellerCurrency} total`}
-              {' '}(amounts fixed at purchase)
+              {order.offer.offerType === 'ADENA' ? ` · ${Number(order.offer?.price ?? 0)} ${order.sellerCurrency} ${t('perUnit')}` : ` · ${Number(order.sellerAmount ?? 0).toFixed(2)} ${order.sellerCurrency} ${t('total')}`}
+              {' '}({t('amountsFixedAtPurchase')})
             </Typography>
             {isBuyer && order.buyerAmount != null && (
               <Typography variant="caption" color="text.secondary" display="block">
-                Your total: {Number(order.buyerAmount).toFixed(2)} {order.buyerCurrency} (fixed at purchase)
+                {t('yourTotal')}: {Number(order.buyerAmount).toFixed(2)} {order.buyerCurrency} ({t('amountsFixedAtPurchase')})
               </Typography>
             )}
             {order.buyerCharacterNick && (
               <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5 }}>
-                Buyer in-game nick: {order.buyerCharacterNick}
+                {t('buyerInGameNick')}: {order.buyerCharacterNick}
               </Typography>
             )}
           </Box>
@@ -272,9 +272,9 @@ export default function OrderChatPage() {
 
         {canSellerDeliver && (
           <Box sx={{ mb: 2, p: 2, border: '1px solid', borderColor: 'divider', borderRadius: 1, bgcolor: 'background.paper' }}>
-            <Typography variant="subtitle2" gutterBottom>I transferred items / adena</Typography>
+            <Typography variant="subtitle2" gutterBottom>{t('iTransferred')}</Typography>
             <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 1 }}>
-              Upload proof (screenshot of transaction). At least one image is required.
+              {t('uploadProofHint')}
             </Typography>
             <input
               type="file"
@@ -299,7 +299,7 @@ export default function OrderChatPage() {
                 onClick={handleMarkDelivered}
                 disabled={deliverSubmitting || deliverProofFiles.length === 0}
               >
-                {deliverSubmitting ? 'Sending…' : 'Confirm delivered'}
+                {deliverSubmitting ? t('submitting') : t('confirmDelivered')}
               </Button>
             </Box>
           </Box>
@@ -307,7 +307,7 @@ export default function OrderChatPage() {
 
         {canBuyerCompleteOrDispute && (
           <Box sx={{ mb: 2, p: 2, border: '1px solid', borderColor: 'divider', borderRadius: 1, bgcolor: 'background.paper' }}>
-            <Typography variant="subtitle2" gutterBottom>Confirm receipt or open dispute</Typography>
+            <Typography variant="subtitle2" gutterBottom>{t('confirmReceiptOrDispute')}</Typography>
             <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
               <Button
                 size="small"
@@ -316,7 +316,7 @@ export default function OrderChatPage() {
                 onClick={handleComplete}
                 disabled={completeSubmitting}
               >
-                {completeSubmitting ? 'Completing…' : 'I received it — Complete'}
+                {completeSubmitting ? t('completing') : t('iReceivedComplete')}
               </Button>
               <Button
                 size="small"
@@ -324,7 +324,7 @@ export default function OrderChatPage() {
                 color="error"
                 onClick={() => setDisputeDialogOpen(true)}
               >
-                I didn&apos;t receive it — Open dispute
+                {t('notReceivedDispute')}
               </Button>
             </Box>
           </Box>
@@ -353,7 +353,7 @@ export default function OrderChatPage() {
         >
           {messages.length === 0 && (
             <Typography color="text.secondary" variant="body2">
-              No messages yet. Say hello!
+              {t('noMessages')}
             </Typography>
           )}
           {messages.map((msg) => (
@@ -365,7 +365,7 @@ export default function OrderChatPage() {
               }}
             >
               <Typography variant="caption" color="text.secondary" display="block">
-                {msg.sender?.nickname ?? msg.sender?.email ?? 'User'}
+                {msg.sender?.nickname ?? msg.sender?.email ?? tCommon('user')}
                 {msg.createdAt && (
                   <Typography component="span" variant="caption" color="text.secondary" sx={{ ml: 0.5, opacity: 0.9 }}>
                     · {new Date(msg.createdAt).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' })}
@@ -408,11 +408,11 @@ export default function OrderChatPage() {
             style={{ display: 'none' }}
             onChange={(e) => setFiles(Array.from(e.target.files || []))}
           />
-          <IconButton color="secondary" onClick={() => fileInputRef.current?.click()} title="Attach image">
+          <IconButton color="secondary" onClick={() => fileInputRef.current?.click()} title={t('attachImage')}>
             <AttachFileIcon />
           </IconButton>
           <TextField
-            placeholder="Message..."
+            placeholder={t('messagePlaceholder')}
             value={text}
             onChange={(e) => setText(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), handleSend())}
@@ -423,26 +423,26 @@ export default function OrderChatPage() {
             variant="outlined"
           />
           <Button variant="contained" color="secondary" onClick={handleSend} disabled={sending}>
-            Send
+            {tCommon('send')}
           </Button>
         </Box>
         {files.length > 0 && (
           <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5 }}>
-            {files.length} image(s) attached
+            {t('imagesAttached', { count: files.length })}
           </Typography>
         )}
 
         <Dialog open={disputeDialogOpen} onClose={() => setDisputeDialogOpen(false)} maxWidth="sm" fullWidth>
-          <DialogTitle>Open dispute</DialogTitle>
+          <DialogTitle>{t('openDispute')}</DialogTitle>
           <DialogContent>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-              If you did not receive the items/adena, describe the issue and attach evidence (screenshots). At least one image is required.
+              {t('disputeDialogHint')}
             </Typography>
             <TextField
-              label="Reason"
+              label={t('reason')}
               value={disputeReason}
               onChange={(e) => setDisputeReason(e.target.value)}
-              placeholder="Describe what went wrong"
+              placeholder={t('reasonPlaceholder')}
               fullWidth
               multiline
               rows={3}
@@ -461,13 +461,13 @@ export default function OrderChatPage() {
               onClick={() => disputeFileInputRef.current?.click()}
               sx={{ mb: 1 }}
             >
-              {disputeFiles.length ? `${disputeFiles.length} image(s)` : 'Attach evidence image(s)'}
+              {disputeFiles.length ? t('imagesCount', { count: disputeFiles.length }) : t('attachEvidence')}
             </Button>
           </DialogContent>
           <DialogActions>
-            <Button onClick={() => setDisputeDialogOpen(false)}>Cancel</Button>
+            <Button onClick={() => setDisputeDialogOpen(false)}>{tCommon('cancel')}</Button>
             <Button variant="contained" color="error" onClick={handleOpenDispute} disabled={disputeSubmitting || !disputeReason.trim() || disputeFiles.length === 0}>
-              {disputeSubmitting ? 'Submitting…' : 'Open dispute'}
+              {disputeSubmitting ? t('submitting') : t('openDispute')}
             </Button>
           </DialogActions>
         </Dialog>

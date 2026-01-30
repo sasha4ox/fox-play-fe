@@ -2,7 +2,7 @@
 
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useLocale } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { useState, useEffect } from 'react';
 import Container from '@mui/material/Container';
 import Box from '@mui/material/Box';
@@ -69,7 +69,7 @@ export default function GameOffersPage() {
         <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', py: 4, px: 2 }}>
           <Container maxWidth="sm">
             <Alert severity="error">{gamesError}</Alert>
-            <MuiLink component={Link} href={`/${locale}/dashboard`} sx={{ display: 'inline-block', mt: 2 }}>← Back to games</MuiLink>
+            <MuiLink component={Link} href={`/${locale}/dashboard`} sx={{ display: 'inline-block', mt: 2 }}>{t('backToGames')}</MuiLink>
           </Container>
         </Box>
       );
@@ -108,7 +108,7 @@ export default function GameOffersPage() {
         )}
         {offersError && <Alert severity="error" sx={{ mb: 2 }}>{offersError}</Alert>}
         {!offersLoading && !offersError && offers.length === 0 && (
-          <Typography color="text.secondary">No offers yet. Be the first to sell.</Typography>
+          <Typography color="text.secondary">{t('noOffers')}</Typography>
         )}
         {!offersLoading && offers.length > 0 && (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>

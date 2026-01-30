@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useLocale } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
 import Box from '@mui/material/Box';
@@ -23,13 +23,15 @@ export default function Header() {
   const pathname = usePathname();
   const locale = useLocale();
   const router = useRouter();
+  const t = useTranslations('Header');
   const base = `/${locale}`;
   const isAuth = useIsAuthenticated();
   const token = useAuthStore((s) => s.token);
   const { user, logout } = useAuthStore();
   const openLoginModal = useLoginModalStore((s) => s.openModal);
   const { profile, primaryBalance, preferredCurrency, loading: profileLoading, refetch } = useProfile();
-  const displayName = profile?.nickname ?? user?.nickname ?? user?.email ?? 'User';
+  const tCommon = useTranslations('Common');
+  const displayName = profile?.nickname ?? user?.nickname ?? user?.email ?? tCommon('user');
   const [currencyChanging, setCurrencyChanging] = useState(false);
 
   const handleLogout = () => {
@@ -85,7 +87,7 @@ export default function Header() {
               F
             </Box>
             <Typography variant="h6" component="span" fontWeight={700} sx={{ letterSpacing: '-0.02em' }}>
-              Fox Play
+              {t('foxPlay')}
             </Typography>
           </Box>
         </Link>
@@ -99,7 +101,7 @@ export default function Header() {
                 '&:hover': { bgcolor: 'rgba(77, 61, 66, 0.08)' },
               }}
             >
-              Home
+              {t('home')}
             </Button>
           </Link>
           <Link href={`${base}/dashboard`} style={{ textDecoration: 'none' }}>
@@ -110,7 +112,7 @@ export default function Header() {
                 '&:hover': { bgcolor: 'rgba(77, 61, 66, 0.08)' },
               }}
             >
-              Dashboard
+              {t('dashboard')}
             </Button>
           </Link>
           {isAuth && (
@@ -123,7 +125,7 @@ export default function Header() {
                     '&:hover': { bgcolor: 'rgba(77, 61, 66, 0.08)' },
                   }}
                 >
-                  Chats
+                  {t('chats')}
                 </Button>
               </Link>
               <Link href={`${base}/dashboard/offers`} style={{ textDecoration: 'none' }}>
@@ -134,7 +136,7 @@ export default function Header() {
                     '&:hover': { bgcolor: 'rgba(77, 61, 66, 0.08)' },
                   }}
                 >
-                  My offers
+                  {t('myOffers')}
                 </Button>
               </Link>
             </Box>
@@ -191,7 +193,7 @@ export default function Header() {
               </Typography>
               <Link href={`${base}/dashboard/balance`} style={{ textDecoration: 'none' }}>
                 <Button size="small" variant="outlined" color="secondary" sx={{ textTransform: 'none' }}>
-                  Balance
+                  {t('balance')}
                 </Button>
               </Link>
               <Button
@@ -201,13 +203,13 @@ export default function Header() {
                 onClick={handleLogout}
                 sx={{ textTransform: 'none' }}
               >
-                Logout
+                {t('logout')}
               </Button>
             </Box>
           ) : (
             <Box sx={{ display: 'flex', gap: 0.5 }}>
               <Button size="small" variant="outlined" color="secondary" sx={{ textTransform: 'none' }} onClick={() => openLoginModal()}>
-                Login
+                {t('login')}
               </Button>
             </Box>
           )}

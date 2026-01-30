@@ -2,7 +2,7 @@
 
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useLocale } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { useState, useEffect } from 'react';
 import Container from '@mui/material/Container';
 import Box from '@mui/material/Box';
@@ -74,7 +74,7 @@ export default function EditOfferPage() {
       );
       router.push(`/${locale}/game/${gameId}/${variantId}/${serverId}/offers/${offerId}`);
     } catch (err) {
-      setSubmitError(err.message || 'Failed to update offer');
+      setSubmitError(err.message || t('failedUpdate'));
     } finally {
       setSubmitting(false);
     }
@@ -92,8 +92,8 @@ export default function EditOfferPage() {
     return (
       <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', py: 4, px: 2 }}>
         <Container maxWidth="sm">
-          <Alert severity="error">{error || 'Offer not found.'}</Alert>
-          <MuiLink component={Link} href={`/${locale}/game/${gameId}/${variantId}/${serverId}/offers`} sx={{ display: 'inline-block', mt: 2 }}>← Back</MuiLink>
+          <Alert severity="error">{error || t('offerNotFound')}</Alert>
+          <MuiLink component={Link} href={`/${locale}/game/${gameId}/${variantId}/${serverId}/offers`} sx={{ display: 'inline-block', mt: 2 }}>{tCommon('back')}</MuiLink>
         </Container>
       </Box>
     );
@@ -103,8 +103,8 @@ export default function EditOfferPage() {
     return (
       <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', py: 4, px: 2 }}>
         <Container maxWidth="sm">
-          <Alert severity="error">You can only edit your own offers.</Alert>
-          <MuiLink component={Link} href={`/${locale}/game/${gameId}/${variantId}/${serverId}/offers/${offerId}`} sx={{ display: 'inline-block', mt: 2 }}>← Back to offer</MuiLink>
+          <Alert severity="error">{t('onlyEditOwn')}</Alert>
+          <MuiLink component={Link} href={`/${locale}/game/${gameId}/${variantId}/${serverId}/offers/${offerId}`} sx={{ display: 'inline-block', mt: 2 }}>{t('backToOffer')}</MuiLink>
         </Container>
       </Box>
     );
@@ -114,20 +114,20 @@ export default function EditOfferPage() {
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', py: 4, px: 2 }}>
       <Container maxWidth="sm">
         <MuiLink component={Link} href={`/${locale}/game/${gameId}/${variantId}/${serverId}/offers/${offerId}`} color="secondary" sx={{ display: 'inline-block', mb: 2 }}>
-          ← Back to offer
+          {t('backToOffer')}
         </MuiLink>
         <Typography variant="h4" fontWeight={600} gutterBottom>
-          Edit offer
+          {t('editOffer')}
         </Typography>
 
         <form onSubmit={handleSubmit}>
-          <TextField label="Title" value={title} onChange={(e) => setTitle(e.target.value)} fullWidth sx={{ mb: 2 }} required />
-          <TextField label="Description" value={description} onChange={(e) => setDescription(e.target.value)} multiline rows={4} fullWidth sx={{ mb: 2 }} required />
-          <TextField type="number" label="Quantity" value={quantity} onChange={(e) => setQuantity(e.target.value)} inputProps={{ min: 1 }} fullWidth sx={{ mb: 2 }} required />
-          <TextField type="number" label="Price" value={price} onChange={(e) => setPrice(e.target.value)} inputProps={{ min: 0, step: 0.01 }} fullWidth sx={{ mb: 2 }} required />
+          <TextField label={t('title')} value={title} onChange={(e) => setTitle(e.target.value)} fullWidth sx={{ mb: 2 }} required />
+          <TextField label={t('description')} value={description} onChange={(e) => setDescription(e.target.value)} multiline rows={4} fullWidth sx={{ mb: 2 }} required />
+          <TextField type="number" label={t('quantity')} value={quantity} onChange={(e) => setQuantity(e.target.value)} inputProps={{ min: 1 }} fullWidth sx={{ mb: 2 }} required />
+          <TextField type="number" label={t('price')} value={price} onChange={(e) => setPrice(e.target.value)} inputProps={{ min: 0, step: 0.01 }} fullWidth sx={{ mb: 2 }} required />
           {submitError && <Alert severity="error" sx={{ mb: 2 }}>{submitError}</Alert>}
           <Button type="submit" variant="contained" color="secondary" disabled={submitting}>
-            {submitting ? 'Saving…' : 'Save'}
+            {submitting ? t('saving') : tCommon('save')}
           </Button>
         </form>
       </Container>

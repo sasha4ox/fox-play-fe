@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useLocale } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import Link from 'next/link';
 import Box from '@mui/material/Box';
 import Container from '@mui/material/Container';
@@ -47,7 +47,7 @@ export default function MyOrdersPage() {
     return (
       <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', py: 4, px: 2 }}>
         <Container maxWidth="sm">
-          <Alert severity="info">Log in to see your orders.</Alert>
+          <Alert severity="info">{t('loginToSeeOrders')}</Alert>
         </Container>
       </Box>
     );
@@ -63,23 +63,23 @@ export default function MyOrdersPage() {
       <Container maxWidth="sm">
         <Link href={`/${locale}/dashboard`} style={{ textDecoration: 'none' }}>
           <MuiLink component="span" color="secondary" sx={{ display: 'inline-block', mb: 2 }}>
-            ← Dashboard
+            {t('dashboard')}
           </MuiLink>
         </Link>
         <Typography variant="h4" fontWeight={600} gutterBottom>
-          Chats
+          {t('chats')}
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          Order chats and pre-order conversations. Open one to message.
+          {t('orderChatsHint')}
         </Typography>
 
         {!loading && (offerThreads.asBuyer?.length > 0 || offerThreads.asSeller?.length > 0) && (
           <Box sx={{ mb: 3 }}>
             <Typography variant="subtitle1" fontWeight={600} gutterBottom>
-              Pre-order conversations
+              {t('preOrderConversations')}
             </Typography>
             <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 1 }}>
-              Discussions about offers (before buying). Open to continue or buy.
+              {t('preOrderHint')}
             </Typography>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
               {offerThreads.asBuyer?.map((t) => {
@@ -92,10 +92,10 @@ export default function MyOrdersPage() {
                     <CardActionArea component={Link} href={href}>
                       <CardContent sx={{ py: 1.5, px: 2 }}>
                         <Typography variant="subtitle2" fontWeight={600}>
-                          {t.offer?.title ?? 'Offer'}
+                          {t.offer?.title ?? t('offer')}
                         </Typography>
                         <Typography variant="caption" color="text.secondary" display="block">
-                          With seller: {t.otherParty?.nickname ?? t.otherParty?.email ?? '—'}
+                          {t('withSeller')}: {t.otherParty?.nickname ?? t.otherParty?.email ?? '—'}
                         </Typography>
                         {t.lastMessage?.text && (
                           <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5, fontStyle: 'italic' }} noWrap>
@@ -122,10 +122,10 @@ export default function MyOrdersPage() {
                     <CardActionArea component={Link} href={href}>
                       <CardContent sx={{ py: 1.5, px: 2 }}>
                         <Typography variant="subtitle2" fontWeight={600}>
-                          {t.offer?.title ?? 'Offer'}
+                          {t.offer?.title ?? t('offer')}
                         </Typography>
                         <Typography variant="caption" color="text.secondary" display="block">
-                          With buyer: {t.otherParty?.nickname ?? t.otherParty?.email ?? '—'}
+                          {t('withBuyer')}: {t.otherParty?.nickname ?? t.otherParty?.email ?? '—'}
                         </Typography>
                         {t.lastMessage?.text && (
                           <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5, fontStyle: 'italic' }} noWrap>
@@ -147,7 +147,7 @@ export default function MyOrdersPage() {
         )}
 
         <Typography variant="subtitle1" fontWeight={600} gutterBottom>
-          Order chats
+          {t('orderChats')}
         </Typography>
 
         {loading && (
@@ -157,7 +157,7 @@ export default function MyOrdersPage() {
         )}
         {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
         {!loading && !error && allOrders.length === 0 && (
-          <Typography color="text.secondary">No order chats yet.</Typography>
+          <Typography color="text.secondary">{t('noOrderChats')}</Typography>
         )}
         {!loading && allOrders.length > 0 && (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mt: 2 }}>
@@ -166,10 +166,10 @@ export default function MyOrdersPage() {
                 <CardActionArea component={Link} href={`/${locale}/dashboard/orders/${order.id}`}>
                   <CardContent sx={{ py: 2, px: 2 }}>
                     <Typography variant="subtitle1" fontWeight={600}>
-                      Order {order.id?.slice(0, 8)}…
+                      {t('orderIdShort', { id: order.id?.slice(0, 8) ?? '' })}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
-                      Status: {order.status ?? '—'} · Chat
+                      {t('status')}: {order.status ?? '—'} · {t('chat')}
                     </Typography>
                   </CardContent>
                 </CardActionArea>

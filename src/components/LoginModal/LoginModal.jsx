@@ -6,10 +6,12 @@ import DialogContent from '@mui/material/DialogContent';
 import IconButton from '@mui/material/IconButton';
 import CloseIcon from '@mui/icons-material/Close';
 import Typography from '@mui/material/Typography';
+import { useTranslations } from 'next-intl';
 import Form from '@/components/Form/Form';
 import { useLoginModalStore } from '@/store/loginModalStore';
 
 export default function LoginModal() {
+  const t = useTranslations('LoginModal');
   const open = useLoginModalStore((s) => s.open);
   const closeModal = useLoginModalStore((s) => s.closeModal);
   const triggerLoginSuccess = useLoginModalStore((s) => s.triggerLoginSuccess);
@@ -42,7 +44,7 @@ export default function LoginModal() {
         }}
       >
         <Typography variant="h6" component="span" fontWeight={600} color="text.primary">
-          Log in or sign up
+          {t('title')}
         </Typography>
         <IconButton aria-label="close" onClick={closeModal} size="small" sx={{ color: 'text.secondary' }}>
           <CloseIcon />

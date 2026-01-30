@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useLocale } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import Link from 'next/link';
 import Container from '@mui/material/Container';
 import Box from '@mui/material/Box';
@@ -16,6 +16,7 @@ import { useGames } from '@/hooks/useGames';
 export default function DashboardPage() {
   const router = useRouter();
   const locale = useLocale();
+  const t = useTranslations('Dashboard');
   const { games, loading, error } = useGames();
 
   const handleGameClick = (gameId) => {
@@ -34,15 +35,15 @@ export default function DashboardPage() {
       <Container maxWidth="sm">
         <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
           <Link href={`/${locale}/dashboard/balance`} style={{ textDecoration: 'none' }}>
-            <Typography component="span" color="secondary" fontWeight={500}>Balance</Typography>
+            <Typography component="span" color="secondary" fontWeight={500}>{t('balance')}</Typography>
           </Link>
           <Typography component="span" color="text.secondary">·</Typography>
           <Link href={`/${locale}/dashboard/orders`} style={{ textDecoration: 'none' }}>
-            <Typography component="span" color="secondary" fontWeight={500}>My orders & chat</Typography>
+            <Typography component="span" color="secondary" fontWeight={500}>{t('myOrdersChat')}</Typography>
           </Link>
         </Box>
         <Typography variant="h4" fontWeight={600} color="text.primary" gutterBottom>
-          Choose a game
+          {t('chooseGame')}
         </Typography>
 
         {loading && (
@@ -75,7 +76,7 @@ export default function DashboardPage() {
 
         {!loading && !error && games.length === 0 && (
           <Typography color="text.secondary" sx={{ mt: 2 }}>
-            No games available.
+            {t('noGames')}
           </Typography>
         )}
       </Container>

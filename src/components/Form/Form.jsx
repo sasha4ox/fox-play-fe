@@ -116,7 +116,7 @@ export default function Form({ popupMode = false, onLoginSuccess }) {
   return (
     <section className={styles.formWrapper}>
       <h1>{locale}</h1>
-      <h2>{isLoginForm ? "Логін" : "Реєстрація"}</h2>
+      <h2>{isLoginForm ? t('login') : t('register')}</h2>
       <span className={styles.formHeader}>{t('header')}</span>
       {/* <div className={styles.links}>
         <a href="https://t.me/KonungFox" target="_blank"  className={styles.link} aria-label="Приєднуйтесь до Telegram">
@@ -137,7 +137,7 @@ export default function Form({ popupMode = false, onLoginSuccess }) {
           required: t('mandatatory'),
           pattern: {
             value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-            message: "Введіть коректну email адресу",
+            message: t('emailInvalid'),
           },
         }}
           render={({ field, fieldState: { error } }) => (
@@ -157,7 +157,7 @@ export default function Form({ popupMode = false, onLoginSuccess }) {
           render={({ field, fieldState: { error } }) => (
               <TextField
                   {...field}
-                  label="Пароль"
+                  label={t('password')}
                   type={"password"}
                   variant="outlined"
                   error={!!error}
@@ -173,11 +173,11 @@ export default function Form({ popupMode = false, onLoginSuccess }) {
             render={({ field, fieldState: { error } }) => (
               <TextField
                 {...field}
-                label="Nickname (visible to everyone)"
+                label={t('nickname')}
                 variant="outlined"
                 fullWidth
                 sx={{ mt: 2 }}
-                placeholder="e.g. FoxPlayer"
+                placeholder={t('nicknamePlaceholder')}
                 error={!!error}
                 helperText={error ? error.message : null}
                 required
@@ -186,13 +186,13 @@ export default function Form({ popupMode = false, onLoginSuccess }) {
           />
         )}
         {isEmailSent && <Alert severity="success" sx={{ mb: 2 }}>
-    ✅    Запит успішно надіслано! Ми звʼяжемося з вами найближчим часом.
+    ✅ {t('emailSentSuccess')}
         </Alert>}
         <Button type="submit" variant="contained" color="secondary" fullWidth className={styles.send} disabled={isSubmitting}>
-          {isSubmitting ? t('sending') ?? 'Надсилаю запит' : t('submit') ?? 'Надіслати запит'}
+          {isSubmitting ? t('sending') : t('submit')}
         </Button>
         <Button type="button" variant="text" color="secondary" fullWidth onClick={handleChangeForm} sx={{ mt: 1 }}>
-          {isLoginForm ? "Не має акаунту" : "В мене є акаунт"}
+          {isLoginForm ? t('noAccount') : t('haveAccount')}
         </Button>
         
       </form>

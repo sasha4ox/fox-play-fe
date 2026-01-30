@@ -2,7 +2,7 @@
 
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useLocale } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { useState } from 'react';
 import Container from '@mui/material/Container';
 import Box from '@mui/material/Box';
@@ -20,19 +20,20 @@ import { useAuthStore } from '@/store/authStore';
 import { useProfile } from '@/hooks/useProfile';
 import { createOffer } from '@/lib/api';
 
-const OFFER_TYPES = [
-  { value: 'ADENA', label: 'Adena' },
-  { value: 'ITEMS', label: 'Items' },
-  { value: 'ACCOUNTS', label: 'Accounts' },
-  { value: 'BOOSTING', label: 'Boosting' },
-  { value: 'OTHER', label: 'Other' },
-];
-
 export default function NewOfferPage() {
   const params = useParams();
   const router = useRouter();
   const locale = useLocale();
+  const t = useTranslations('NewOffer');
+  const tOffers = useTranslations('Offers');
   const gameId = params?.gameId;
+  const OFFER_TYPES = [
+    { value: 'ADENA', label: tOffers('adena') },
+    { value: 'ITEMS', label: tOffers('items') },
+    { value: 'ACCOUNTS', label: tOffers('accounts') },
+    { value: 'BOOSTING', label: tOffers('boosting') },
+    { value: 'OTHER', label: tOffers('other') },
+  ];
   const variantId = params?.variantId;
   const serverId = params?.serverId;
   const { tree, loading: gamesLoading, error: gamesError } = useGames();
@@ -101,8 +102,8 @@ export default function NewOfferPage() {
     return (
       <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', py: 4, px: 2 }}>
         <Container maxWidth="sm">
-          <Alert severity="info">Please log in to create an offer.</Alert>
-          <MuiLink component={Link} href={`/${locale}`} sx={{ display: 'inline-block', mt: 2 }}>Go to login</MuiLink>
+          <Alert severity="info">{t('loginToCreate')}</Alert>
+          <MuiLink component={Link} href={`/${locale}`} sx={{ display: 'inline-block', mt: 2 }}>{t('goToLogin')}</MuiLink>
         </Container>
       </Box>
     );
@@ -123,7 +124,7 @@ export default function NewOfferPage() {
           {breadcrumb}
         </Typography>
         <Alert severity="info" sx={{ mb: 2 }}>
-          Listing in: <strong>{currency}</strong>. Change currency on the Balance page.
+          {t('listingIn', { currency })}
         </Alert>
 
         <Tabs value={tab} onChange={(_, v) => setTab(v)} sx={{ mb: 2 }}>
@@ -137,7 +138,7 @@ export default function NewOfferPage() {
             <>
               <TextField
                 type="number"
-                label="Amount of adena"
+                label={t('amountOfAdena')}
                 value={quantity}
                 onChange={(e) => setQuantity(e.target.value)}
                 inputProps={{ min: 1 }}
@@ -147,7 +148,7 @@ export default function NewOfferPage() {
               />
               <TextField
                 type="number"
-                label={`Price per unit (${currency})`}
+                label={t('pricePerUnit', { currency })}
                 value={price}
                 onChange={(e) => setPrice(e.target.value)}
                 inputProps={{ min: 0, step: 0.01 }}
@@ -160,7 +161,7 @@ export default function NewOfferPage() {
           {!isAdena && (
             <>
               <TextField
-                label="Title"
+                label={t('title')}
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 fullWidth
@@ -168,7 +169,7 @@ export default function NewOfferPage() {
                 required
               />
               <TextField
-                label="Description"
+                label={t('description')}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 multiline
@@ -179,7 +180,7 @@ export default function NewOfferPage() {
               />
               <TextField
                 type="number"
-                label={`Price (${currency})`}
+                label={`${t('price')} (${currency})`}
                 value={price}
                 onChange={(e) => setPrice(e.target.value)}
                 inputProps={{ min: 0, step: 0.01 }}
@@ -191,7 +192,7 @@ export default function NewOfferPage() {
           )}
           {submitError && <Alert severity="error" sx={{ mb: 2 }}>{submitError}</Alert>}
           <Button type="submit" variant="contained" color="secondary" disabled={submitting}>
-            {submitting ? 'Creating…' : 'Create offer'}
+            {submitting ? t('creating') : t('createOfferButton')}
           </Button>
         </form>
       </Container>

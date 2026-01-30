@@ -18,10 +18,12 @@ import { useProfile } from '@/hooks/useProfile';
 import TextField from '@mui/material/TextField';
 import { getDepositInfo, simulateDeposit, createDepositOrder } from '@/lib/api';
 import { useLoginModalStore } from '@/store/loginModalStore';
+import { useTranslations } from 'next-intl';
 
 export default function BalancePage() {
   const router = useRouter();
   const locale = useLocale();
+  const t = useTranslations('Balance');
   const base = `/${locale}`;
   const isAuth = useIsAuthenticated();
   const token = useAuthStore((s) => s.token);
@@ -67,7 +69,7 @@ export default function BalancePage() {
     if (!token || !allowed) return;
     const amount = parseFloat(depositAmount);
     if (!Number.isFinite(amount) || amount < 1) {
-      setCreateDepositError(useWhiteBit ? 'Enter a valid amount (min 1)' : 'Enter a valid amount (min 1 USDT)');
+      setCreateDepositError(useWhiteBit ? t('enterAmountMin') : t('enterAmountUsdt'));
       return;
     }
     const origin = typeof window !== 'undefined' ? window.location.origin : '';
@@ -84,9 +86,9 @@ export default function BalancePage() {
       .then((data) => {
         const url = data?.depositUrl || data?.checkoutUrl;
         if (url) window.location.href = url;
-        else setCreateDepositError('No payment URL returned');
+        else setCreateDepositError(t('noPaymentUrl'));
       })
-      .catch((e) => setCreateDepositError(e.message || 'Failed to create deposit'))
+      .catch((e) => setCreateDepositError(e.message || t('failedDeposit')))
       .finally(() => setCreateDepositLoading(false));
   };
 
@@ -95,10 +97,10 @@ export default function BalancePage() {
       <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', py: 4, px: 2 }}>
         <Container maxWidth="sm">
           <Typography variant="h5" fontWeight={600} gutterBottom>
-            Balance
+            {t('title')}
           </Typography>
           <Alert severity="info" sx={{ mt: 2 }}>
-            Please log in to view and manage your balance.
+            {t('loginToView')}
           </Alert>
           <Button
             variant="contained"
@@ -106,7 +108,7 @@ export default function BalancePage() {
             sx={{ mt: 2, textTransform: 'none' }}
             onClick={() => openLoginModal(() => router.push(`${base}/dashboard/balance`))}
           >
-            Log in
+            {t('login')}
           </Button>
         </Container>
       </Box>
@@ -118,12 +120,12 @@ export default function BalancePage() {
       <Container maxWidth="sm">
         <Link href={`${base}/dashboard`} style={{ textDecoration: 'none' }}>
           <MuiLink component="span" color="secondary" sx={{ display: 'inline-block', mb: 2 }}>
-            ← Dashboard
+            {t('dashboard')}
           </MuiLink>
         </Link>
 
         <Typography variant="h4" fontWeight={600} color="text.primary" gutterBottom>
-          Your balance
+          {t('yourBalance')}
         </Typography>
 
         {loading && (
@@ -141,20 +143,20 @@ export default function BalancePage() {
         {!loading && profile && (
           <>
             <Typography variant="body2" color="text.secondary" sx={{ mt: 2, mb: 1 }}>
-              Change display currency in the header dropdown.
+              {t('changeCurrencyHint')}
             </Typography>
 
             <Card variant="outlined" sx={{ mb: 3 }}>
               <CardContent>
                 <Typography color="text.secondary" variant="body2" gutterBottom>
-                  Total in {preferredCurrency ?? '—'} (all wallets converted)
+                  {t('totalIn', { currency: preferredCurrency ?? '—' })}
                 </Typography>
                 <Typography variant="h4" fontWeight={600} color="text.primary">
                   {primaryBalance ? primaryBalance.available.toFixed(2) : '0.00'} {preferredCurrency ?? ''}
                 </Typography>
                 {primaryBalance && primaryBalance.frozen > 0 && (
                   <Typography color="text.secondary" variant="body2" sx={{ mt: 1 }}>
-                    Frozen: {primaryBalance.frozen.toFixed(2)} {preferredCurrency}
+                    {t('frozen')}: {primaryBalance.frozen.toFixed(2)} {preferredCurrency}
                   </Typography>
                 )}
               </CardContent>
@@ -162,7 +164,7 @@ export default function BalancePage() {
 
             {balances.length > 1 && (
               <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
-                Other currencies
+                {t('otherCurrencies')}
               </Typography>
             )}
             {balances
@@ -179,10 +181,10 @@ export default function BalancePage() {
               ))}
 
             <Typography variant="h6" fontWeight={600} sx={{ mt: 4, mb: 2 }}>
-              Upload balance
+              {t('uploadBalance')}
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-              Add funds via Binance Pay (USDT) or WhiteBIT (UAH/card). After payment, your balance is credited automatically.
+              {t('depositHint')}
             </Typography>
             {!depositInfo ? (
               <Button
@@ -192,7 +194,7 @@ export default function BalancePage() {
                 disabled={depositLoading}
                 sx={{ textTransform: 'none' }}
               >
-                {depositLoading ? 'Loading…' : 'Deposit options'}
+                {depositLoading ? t('loading') : t('depositOptions')}
               </Button>
             ) : (
               <Card variant="outlined" sx={{ mt: 1 }}>
@@ -208,7 +210,7 @@ export default function BalancePage() {
                       disabled={simulateLoading}
                       sx={{ textTransform: 'none', mt: 1 }}
                     >
-                      {simulateLoading ? 'Adding…' : `Simulate deposit (+${depositInfo.mockAmount ?? 100} to your balance)`}
+                      {simulateLoading ? t('adding') : t('simulateDeposit', { amount: depositInfo.mockAmount ?? 100 })}
                     </Button>
                   ) : (
                     <>

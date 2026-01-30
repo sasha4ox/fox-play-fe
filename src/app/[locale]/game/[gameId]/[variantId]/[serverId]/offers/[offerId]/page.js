@@ -2,7 +2,7 @@
 
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useLocale } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { useState, useEffect } from 'react';
 import Container from '@mui/material/Container';
 import Box from '@mui/material/Box';
@@ -24,16 +24,19 @@ import { useAuthStore } from '@/store/authStore';
 import { useLoginModalStore } from '@/store/loginModalStore';
 import { fetchOfferById, createOrder, getOfferMessages, sendOfferMessage } from '@/lib/api';
 
-const OFFER_TYPE_LABELS = { ADENA: 'Adena', ITEMS: 'Items', ACCOUNTS: 'Accounts', BOOSTING: 'Boosting', OTHER: 'Other' };
-
 export default function OfferPDPPage() {
   const params = useParams();
   const router = useRouter();
   const locale = useLocale();
+  const t = useTranslations('OfferDetail');
+  const tOffers = useTranslations('Offers');
+  const tCommon = useTranslations('Common');
+  const tEdit = useTranslations('EditOffer');
   const offerId = params?.offerId;
   const gameId = params?.gameId;
   const variantId = params?.variantId;
   const serverId = params?.serverId;
+  const OFFER_TYPE_LABELS = { ADENA: tOffers('adena'), ITEMS: tOffers('items'), ACCOUNTS: tOffers('accounts'), BOOSTING: tOffers('boosting'), OTHER: tOffers('other') };
   const [offer, setOffer] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -90,7 +93,7 @@ export default function OfferPDPPage() {
     if (!offer || !token) return;
     const nick = (buyCharacterNick || '').trim();
     if (!nick) {
-      setBuyError('In-game character nickname is required');
+      setBuyError(t('inGameNickRequired'));
       return;
     }
     const qty = Math.min(Math.max(1, Math.floor(buyQuantity)), offer.quantity);
@@ -177,7 +180,7 @@ export default function OfferPDPPage() {
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', py: 4, px: 2 }}>
       <Container maxWidth="sm">
         <MuiLink component={Link} href={`/${locale}/game/${gameId}/${variantId}/${serverId}/offers`} color="secondary" sx={{ display: 'inline-block', mb: 2 }}>
-          ← Back to offers
+          {t('backToOffers')}
         </MuiLink>
 
         <Typography variant="h4" fontWeight={600} gutterBottom>
@@ -201,12 +204,12 @@ export default function OfferPDPPage() {
         <Box sx={{ display: 'flex', gap: 1, mt: 3 }}>
           {!isCreator && (
             <Button variant="contained" color="secondary" onClick={handleBuyClick} disabled={offer.quantity <= 0}>
-              Buy
+              {t('buy')}
             </Button>
           )}
           {isCreator && (
             <Button component={Link} href={`/${locale}/game/${gameId}/${variantId}/${serverId}/offers/${offerId}/edit`} variant="outlined" color="secondary">
-              Edit offer
+              {tEdit('editOffer')}
             </Button>
           )}
         </Box>

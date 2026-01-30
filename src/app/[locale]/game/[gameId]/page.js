@@ -22,7 +22,8 @@ export default function GameVariantsPage() {
   const gameId = params?.gameId;
   const { tree, loading, error } = useGames();
   const game = tree ? getGameFromTree(tree, gameId) : null;
-
+  const t = useTranslations('Game');
+  const tCommon = useTranslations('Common');
   const handleVariantClick = (variantId) => {
     router.push(`/${locale}/game/${gameId}/${variantId}`);
   };
@@ -39,9 +40,9 @@ export default function GameVariantsPage() {
     return (
       <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', py: 4, px: 2 }}>
         <Container maxWidth="sm">
-          <Alert severity="error">{error || 'Game not found.'}</Alert>
+          <Alert severity="error">{error || t('gameNotFound')}</Alert>
           <MuiLink component={Link} href={`/${locale}/dashboard`} sx={{ display: 'inline-block', mt: 2 }}>
-            ← Back to games
+            {tCommon('backToGames')}
           </MuiLink>
         </Container>
       </Box>
@@ -57,10 +58,10 @@ export default function GameVariantsPage() {
           ← {game.name}
         </MuiLink>
         <Typography variant="h4" fontWeight={600} color="text.primary" gutterBottom>
-          Choose variant
+          {t('chooseVariant')}
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          {game.name} → variants
+          {t('variantsHint', { game: game.name })}
         </Typography>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           {variants.map((variant) => (
