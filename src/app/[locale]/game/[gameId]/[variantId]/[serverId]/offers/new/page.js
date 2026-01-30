@@ -17,6 +17,7 @@ import Alert from '@mui/material/Alert';
 import { useGames } from '@/hooks/useGames';
 import { getGameFromTree, getVariantFromTree, getServerFromTree } from '@/lib/games';
 import { useAuthStore } from '@/store/authStore';
+import { useProfile } from '@/hooks/useProfile';
 import { createOffer } from '@/lib/api';
 
 const OFFER_TYPES = [
@@ -39,13 +40,14 @@ export default function NewOfferPage() {
   const variant = tree ? getVariantFromTree(tree, gameId, variantId) : null;
   const server = tree ? getServerFromTree(tree, gameId, variantId, serverId) : null;
   const token = useAuthStore((s) => s.token);
+  const { preferredCurrency } = useProfile();
+  const currency = preferredCurrency ?? 'EUR';
 
   const [tab, setTab] = useState(0);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [quantity, setQuantity] = useState(1);
   const [price, setPrice] = useState('');
-  const [currency] = useState('EUR');
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
 
@@ -120,6 +122,9 @@ export default function NewOfferPage() {
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
           {breadcrumb}
         </Typography>
+        <Alert severity="info" sx={{ mb: 2 }}>
+          Listing in: <strong>{currency}</strong>. Change currency on the Balance page.
+        </Alert>
 
         <Tabs value={tab} onChange={(_, v) => setTab(v)} sx={{ mb: 2 }}>
           {OFFER_TYPES.map((t, i) => (
@@ -142,7 +147,7 @@ export default function NewOfferPage() {
               />
               <TextField
                 type="number"
-                label="Price per unit"
+                label={`Price per unit (${currency})`}
                 value={price}
                 onChange={(e) => setPrice(e.target.value)}
                 inputProps={{ min: 0, step: 0.01 }}
@@ -174,7 +179,7 @@ export default function NewOfferPage() {
               />
               <TextField
                 type="number"
-                label="Price"
+                label={`Price (${currency})`}
                 value={price}
                 onChange={(e) => setPrice(e.target.value)}
                 inputProps={{ min: 0, step: 0.01 }}

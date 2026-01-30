@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useLocale } from 'next-intl';
@@ -8,10 +9,15 @@ import Toolbar from '@mui/material/Toolbar';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
+import Select from '@mui/material/Select';
+import MenuItem from '@mui/material/MenuItem';
 import LocaleSwitcher from '@/components/LocaleSwitcher/LocaleSwitcher';
 import { useAuthStore, useIsAuthenticated } from '@/store/authStore';
 import { useLoginModalStore } from '@/store/loginModalStore';
 import { useProfile } from '@/hooks/useProfile';
+import { updatePreferredCurrency } from '@/lib/api';
+
+const CURRENCIES = ['USD', 'EUR', 'UAH', 'RUB'];
 
 export default function Header() {
   const pathname = usePathname();
@@ -19,13 +25,30 @@ export default function Header() {
   const router = useRouter();
   const base = `/${locale}`;
   const isAuth = useIsAuthenticated();
+  const token = useAuthStore((s) => s.token);
   const { user, logout } = useAuthStore();
   const openLoginModal = useLoginModalStore((s) => s.openModal);
-  const { primaryBalance, preferredCurrency, loading: profileLoading } = useProfile();
+  const { profile, primaryBalance, preferredCurrency, loading: profileLoading, refetch } = useProfile();
+  const displayName = profile?.nickname ?? user?.nickname ?? user?.email ?? 'User';
+  const [currencyChanging, setCurrencyChanging] = useState(false);
 
   const handleLogout = () => {
     logout();
     router.push(base);
+  };
+
+  const handleCurrencyChange = async (e) => {
+    const newCurrency = e.target.value;
+    if (!token || newCurrency === preferredCurrency) return;
+    setCurrencyChanging(true);
+    try {
+      await updatePreferredCurrency(newCurrency, token);
+      await refetch();
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setCurrencyChanging(false);
+    }
   };
 
   const isHome = !pathname || pathname === '/' || pathname === `/${locale}`;
@@ -90,6 +113,32 @@ export default function Header() {
               Dashboard
             </Button>
           </Link>
+          {isAuth && (
+            <Box component="span" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+              <Link href={`${base}/dashboard/orders`} style={{ textDecoration: 'none' }}>
+                <Button
+                  sx={{
+                    color: 'text.primary',
+                    fontWeight: pathname?.includes('/dashboard/orders') ? 600 : 500,
+                    '&:hover': { bgcolor: 'rgba(77, 61, 66, 0.08)' },
+                  }}
+                >
+                  Chats
+                </Button>
+              </Link>
+              <Link href={`${base}/dashboard/offers`} style={{ textDecoration: 'none' }}>
+                <Button
+                  sx={{
+                    color: 'text.primary',
+                    fontWeight: pathname?.includes('/dashboard/offers') ? 600 : 500,
+                    '&:hover': { bgcolor: 'rgba(77, 61, 66, 0.08)' },
+                  }}
+                >
+                  My offers
+                </Button>
+              </Link>
+            </Box>
+          )}
         </Box>
 
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -109,15 +158,36 @@ export default function Header() {
 
           {isAuth ? (
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              {!profileLoading && primaryBalance != null && (
-                <Link href={`${base}/dashboard/balance`} style={{ textDecoration: 'none' }}>
-                  <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500 }}>
-                    {primaryBalance.available.toFixed(2)} {preferredCurrency}
-                  </Typography>
-                </Link>
+              {!profileLoading && preferredCurrency && (
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                  <Select
+                    size="small"
+                    value={preferredCurrency}
+                    onChange={handleCurrencyChange}
+                    disabled={currencyChanging}
+                    variant="standard"
+                    disableUnderline
+                    sx={{
+                      color: 'text.secondary',
+                      fontWeight: 500,
+                      fontSize: '0.875rem',
+                      minWidth: 52,
+                      '& .MuiSelect-select': { py: 0.25 },
+                    }}
+                  >
+                    {CURRENCIES.map((c) => (
+                      <MenuItem key={c} value={c}>{c}</MenuItem>
+                    ))}
+                  </Select>
+                  <Link href={`${base}/dashboard/balance`} style={{ textDecoration: 'none' }}>
+                    <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500 }}>
+                      {(primaryBalance?.available ?? 0).toFixed(2)}
+                    </Typography>
+                  </Link>
+                </Box>
               )}
               <Typography variant="body2" color="text.secondary" noWrap sx={{ maxWidth: 140 }}>
-                {user?.email ?? 'User'}
+                {displayName}
               </Typography>
               <Link href={`${base}/dashboard/balance`} style={{ textDecoration: 'none' }}>
                 <Button size="small" variant="outlined" color="secondary" sx={{ textTransform: 'none' }}>

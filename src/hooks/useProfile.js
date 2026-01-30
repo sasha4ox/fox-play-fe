@@ -53,15 +53,16 @@ export function useProfile() {
   }, [token]);
 
   const preferredCurrency = profile?.preferredCurrency ?? null;
-  const primaryBalance = profile?.balances?.find((b) => b.currency === preferredCurrency) ?? null;
-  const available = primaryBalance ? Number(primaryBalance.available) : 0;
-  const frozen = primaryBalance ? Number(primaryBalance.frozen) : 0;
+  // Total in preferred currency (all wallets converted) so switching to RUB shows e.g. 90000 RUB
+  const total = profile?.totalInPreferredCurrency;
+  const available = total ? Number(total.available) : 0;
+  const frozen = total ? Number(total.frozen) : 0;
 
   return {
     profile,
     preferredCurrency,
     balances: profile?.balances ?? [],
-    primaryBalance: primaryBalance ? { available, frozen, currency: preferredCurrency } : null,
+    primaryBalance: preferredCurrency ? { available, frozen, currency: preferredCurrency } : null,
     loading,
     error,
     refetch,

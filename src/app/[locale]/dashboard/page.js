@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useLocale } from 'next-intl';
+import Link from 'next/link';
 import Container from '@mui/material/Container';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
@@ -31,6 +32,15 @@ export default function DashboardPage() {
       }}
     >
       <Container maxWidth="sm">
+        <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
+          <Link href={`/${locale}/dashboard/balance`} style={{ textDecoration: 'none' }}>
+            <Typography component="span" color="secondary" fontWeight={500}>Balance</Typography>
+          </Link>
+          <Typography component="span" color="text.secondary">·</Typography>
+          <Link href={`/${locale}/dashboard/orders`} style={{ textDecoration: 'none' }}>
+            <Typography component="span" color="secondary" fontWeight={500}>My orders & chat</Typography>
+          </Link>
+        </Box>
         <Typography variant="h4" fontWeight={600} color="text.primary" gutterBottom>
           Choose a game
         </Typography>

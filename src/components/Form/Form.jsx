@@ -43,7 +43,8 @@ export default function Form({ popupMode = false, onLoginSuccess }) {
   const { control, handleSubmit, setError, formState: { isSubmitting } } = useForm({
     defaultValues: {
       password: "",
-      email: ""
+      email: "",
+      nickname: "",
     },
   });
   const locale = useLocale();
@@ -82,6 +83,17 @@ export default function Form({ popupMode = false, onLoginSuccess }) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     });
+    const parsed = await response.json();
+    const res = parsed.response;
+    if (response?.ok && res?.token) {
+      const user = res.user ?? { id: res.userId, email: data.email, nickname: data.nickname };
+      setAuth(user, res.token);
+      if (popupMode && onLoginSuccess) {
+        onLoginSuccess();
+        return;
+      }
+      redirect(`/${locale}/dashboard`);
+    }
     return response;
   }
 
@@ -153,6 +165,26 @@ export default function Form({ popupMode = false, onLoginSuccess }) {
               />
           )}
         />
+        {!isLoginForm && (
+          <Controller
+            name="nickname"
+            control={control}
+            rules={{ required: t('mandatatory') }}
+            render={({ field, fieldState: { error } }) => (
+              <TextField
+                {...field}
+                label="Nickname (visible to everyone)"
+                variant="outlined"
+                fullWidth
+                sx={{ mt: 2 }}
+                placeholder="e.g. FoxPlayer"
+                error={!!error}
+                helperText={error ? error.message : null}
+                required
+              />
+            )}
+          />
+        )}
         {isEmailSent && <Alert severity="success" sx={{ mb: 2 }}>
     ✅    Запит успішно надіслано! Ми звʼяжемося з вами найближчим часом.
         </Alert>}

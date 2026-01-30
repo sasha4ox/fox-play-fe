@@ -121,6 +121,7 @@ export default function GameOffersPage() {
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
                       {OFFER_TYPE_LABELS[offer.offerType] ?? offer.offerType} · {offer.quantity} · {offer.price} {offer.currency}
+                      {offer.seller && ` · by ${offer.seller.nickname ?? offer.seller.email ?? '—'}`}
                     </Typography>
                   </CardContent>
                 </CardActionArea>

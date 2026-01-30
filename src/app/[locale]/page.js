@@ -1,11 +1,19 @@
 'use client';
 
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useLocale } from 'next-intl';
 import Box from '@mui/material/Box';
-import Container from '@mui/material/Container';
-import Typography from '@mui/material/Typography';
-import Form from '@/components/Form/Form';
+import CircularProgress from '@mui/material/CircularProgress';
 
 export default function Home() {
+  const router = useRouter();
+  const locale = useLocale();
+
+  useEffect(() => {
+    router.replace(`/${locale}/dashboard`);
+  }, [router, locale]);
+
   return (
     <Box
       sx={{
@@ -14,16 +22,9 @@ export default function Home() {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        py: 4,
-        px: 2,
       }}
     >
-      <Container maxWidth="sm">
-        <Typography variant="h5" fontWeight={600} color="text.primary" align="center" gutterBottom>
-          Fox Play
-        </Typography>
-        <Form />
-      </Container>
+      <CircularProgress color="secondary" />
     </Box>
   );
 }

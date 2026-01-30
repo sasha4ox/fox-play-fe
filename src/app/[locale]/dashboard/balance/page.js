@@ -9,20 +9,15 @@ import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
-import FormControl from '@mui/material/FormControl';
-import InputLabel from '@mui/material/InputLabel';
-import Select from '@mui/material/Select';
-import MenuItem from '@mui/material/MenuItem';
 import CircularProgress from '@mui/material/CircularProgress';
 import Alert from '@mui/material/Alert';
 import MuiLink from '@mui/material/Link';
 import Link from 'next/link';
 import { useAuthStore, useIsAuthenticated } from '@/store/authStore';
 import { useProfile } from '@/hooks/useProfile';
-import { updatePreferredCurrency, getDepositInfo } from '@/lib/api';
+import TextField from '@mui/material/TextField';
+import { getDepositInfo, simulateDeposit, createDepositOrder } from '@/lib/api';
 import { useLoginModalStore } from '@/store/loginModalStore';
-
-const CURRENCIES = ['UAH', 'RUB', 'USD', 'EUR'];
 
 export default function BalancePage() {
   const router = useRouter();
@@ -41,23 +36,13 @@ export default function BalancePage() {
     refetch,
   } = useProfile();
 
-  const [currencyChanging, setCurrencyChanging] = useState(false);
   const [depositInfo, setDepositInfo] = useState(null);
   const [depositLoading, setDepositLoading] = useState(false);
-
-  const handleCurrencyChange = async (event) => {
-    const newCurrency = event.target.value;
-    if (!token || newCurrency === preferredCurrency) return;
-    setCurrencyChanging(true);
-    try {
-      await updatePreferredCurrency(newCurrency, token);
-      await refetch();
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setCurrencyChanging(false);
-    }
-  };
+  const [simulateLoading, setSimulateLoading] = useState(false);
+  const [depositAmount, setDepositAmount] = useState('');
+  const [depositCurrency, setDepositCurrency] = useState('UAH');
+  const [createDepositLoading, setCreateDepositLoading] = useState(false);
+  const [createDepositError, setCreateDepositError] = useState(null);
 
   const handleLoadDepositInfo = () => {
     if (!token) return;
@@ -66,6 +51,43 @@ export default function BalancePage() {
       .then((info) => setDepositInfo(info))
       .catch(() => setDepositInfo(null))
       .finally(() => setDepositLoading(false));
+  };
+
+  const handleSimulateDeposit = () => {
+    if (!token) return;
+    setSimulateLoading(true);
+    simulateDeposit(token)
+      .then(() => refetch())
+      .catch((e) => console.error(e))
+      .finally(() => setSimulateLoading(false));
+  };
+
+  const handleCreateDeposit = (useWhiteBit = false) => {
+    const allowed = useWhiteBit ? depositInfo?.whitebitEnabled : depositInfo?.binanceEnabled;
+    if (!token || !allowed) return;
+    const amount = parseFloat(depositAmount);
+    if (!Number.isFinite(amount) || amount < 1) {
+      setCreateDepositError(useWhiteBit ? 'Enter a valid amount (min 1)' : 'Enter a valid amount (min 1 USDT)');
+      return;
+    }
+    const origin = typeof window !== 'undefined' ? window.location.origin : '';
+    const returnUrl = `${origin}${base}/dashboard/balance?deposit=success`;
+    const cancelUrl = `${origin}${base}/dashboard/balance?deposit=cancel`;
+    setCreateDepositError(null);
+    setCreateDepositLoading(true);
+    const params = { amount, returnUrl, cancelUrl };
+    if (useWhiteBit) {
+      params.provider = 'whitebit';
+      params.currency = depositCurrency;
+    }
+    createDepositOrder(params, token)
+      .then((data) => {
+        const url = data?.depositUrl || data?.checkoutUrl;
+        if (url) window.location.href = url;
+        else setCreateDepositError('No payment URL returned');
+      })
+      .catch((e) => setCreateDepositError(e.message || 'Failed to create deposit'))
+      .finally(() => setCreateDepositLoading(false));
   };
 
   if (!isAuth) {
@@ -118,26 +140,14 @@ export default function BalancePage() {
 
         {!loading && profile && (
           <>
-            <FormControl fullWidth sx={{ mt: 2, mb: 2 }} size="small">
-              <InputLabel>Display currency</InputLabel>
-              <Select
-                value={preferredCurrency ?? ''}
-                label="Display currency"
-                onChange={handleCurrencyChange}
-                disabled={currencyChanging}
-              >
-                {CURRENCIES.map((c) => (
-                  <MenuItem key={c} value={c}>
-                    {c}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 2, mb: 1 }}>
+              Change display currency in the header dropdown.
+            </Typography>
 
             <Card variant="outlined" sx={{ mb: 3 }}>
               <CardContent>
                 <Typography color="text.secondary" variant="body2" gutterBottom>
-                  Available
+                  Total in {preferredCurrency ?? '—'} (all wallets converted)
                 </Typography>
                 <Typography variant="h4" fontWeight={600} color="text.primary">
                   {primaryBalance ? primaryBalance.available.toFixed(2) : '0.00'} {preferredCurrency ?? ''}
@@ -172,7 +182,7 @@ export default function BalancePage() {
               Upload balance
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-              For MVP we use Binance to add funds. After payment, your balance will be updated manually.
+              Add funds via Binance Pay (USDT) or WhiteBIT (UAH/card). After payment, your balance is credited automatically.
             </Typography>
             {!depositInfo ? (
               <Button
@@ -182,7 +192,7 @@ export default function BalancePage() {
                 disabled={depositLoading}
                 sx={{ textTransform: 'none' }}
               >
-                {depositLoading ? 'Loading…' : 'Deposit via Binance'}
+                {depositLoading ? 'Loading…' : 'Deposit options'}
               </Button>
             ) : (
               <Card variant="outlined" sx={{ mt: 1 }}>
@@ -190,17 +200,97 @@ export default function BalancePage() {
                   <Typography variant="body2" color="text.secondary" gutterBottom>
                     {depositInfo.instructions}
                   </Typography>
-                  <Button
-                    component="a"
-                    href={depositInfo.payUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    variant="contained"
-                    color="secondary"
-                    sx={{ textTransform: 'none', mt: 1 }}
-                  >
-                    Open Binance Pay
-                  </Button>
+                  {depositInfo.mock ? (
+                    <Button
+                      variant="contained"
+                      color="secondary"
+                      onClick={handleSimulateDeposit}
+                      disabled={simulateLoading}
+                      sx={{ textTransform: 'none', mt: 1 }}
+                    >
+                      {simulateLoading ? 'Adding…' : `Simulate deposit (+${depositInfo.mockAmount ?? 100} to your balance)`}
+                    </Button>
+                  ) : (
+                    <>
+                      {depositInfo.binanceEnabled && (
+                        <Box sx={{ mt: 1, mb: depositInfo.whitebitEnabled ? 2 : 0 }}>
+                          <Typography variant="subtitle2" color="text.secondary" gutterBottom>Binance Pay (USDT)</Typography>
+                          <TextField
+                            type="number"
+                            label="Amount (USDT)"
+                            value={depositAmount}
+                            onChange={(e) => setDepositAmount(e.target.value)}
+                            inputProps={{ min: 1, step: 1 }}
+                            size="small"
+                            sx={{ mr: 1, width: 140 }}
+                          />
+                          <Button
+                            variant="contained"
+                            color="secondary"
+                            onClick={() => handleCreateDeposit(false)}
+                            disabled={createDepositLoading}
+                            sx={{ textTransform: 'none' }}
+                          >
+                            {createDepositLoading ? 'Creating…' : 'Deposit via Binance'}
+                          </Button>
+                        </Box>
+                      )}
+                      {depositInfo.whitebitEnabled && (
+                        <Box sx={{ mt: 1 }}>
+                          <Typography variant="subtitle2" color="text.secondary" gutterBottom>WhiteBIT (UAH / card)</Typography>
+                          <TextField
+                            type="number"
+                            label="Amount"
+                            value={depositAmount}
+                            onChange={(e) => setDepositAmount(e.target.value)}
+                            inputProps={{ min: 1, step: 1 }}
+                            size="small"
+                            sx={{ mr: 1, width: 100 }}
+                          />
+                          <TextField
+                            select
+                            label="Currency"
+                            value={depositCurrency}
+                            onChange={(e) => setDepositCurrency(e.target.value)}
+                            size="small"
+                            sx={{ mr: 1, minWidth: 90 }}
+                            SelectProps={{ native: true }}
+                          >
+                            <option value="UAH">UAH</option>
+                            <option value="USD">USD</option>
+                            <option value="EUR">EUR</option>
+                          </TextField>
+                          <Button
+                            variant="contained"
+                            color="secondary"
+                            onClick={() => handleCreateDeposit(true)}
+                            disabled={createDepositLoading}
+                            sx={{ textTransform: 'none' }}
+                          >
+                            {createDepositLoading ? 'Creating…' : 'Deposit via WhiteBIT'}
+                          </Button>
+                        </Box>
+                      )}
+                      {!depositInfo.binanceEnabled && !depositInfo.whitebitEnabled && (
+                        <Button
+                          component="a"
+                          href={depositInfo.payUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          variant="contained"
+                          color="secondary"
+                          sx={{ textTransform: 'none', mt: 1 }}
+                        >
+                          Open payment
+                        </Button>
+                      )}
+                      {createDepositError && (
+                        <Typography variant="caption" color="error" display="block" sx={{ mt: 1 }}>
+                          {createDepositError}
+                        </Typography>
+                      )}
+                    </>
+                  )}
                 </CardContent>
               </Card>
             )}
