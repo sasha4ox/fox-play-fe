@@ -115,9 +115,7 @@ export default function Form({ popupMode = false, onLoginSuccess }) {
 
   return (
     <section className={styles.formWrapper}>
-      <h1>{locale}</h1>
       <h2>{isLoginForm ? t('login') : t('register')}</h2>
-      <span className={styles.formHeader}>{t('header')}</span>
       {/* <div className={styles.links}>
         <a href="https://t.me/KonungFox" target="_blank"  className={styles.link} aria-label="Приєднуйтесь до Telegram">
           <TelegramIcon fontSize='large'/>
