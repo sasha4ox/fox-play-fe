@@ -1,17 +1,15 @@
-'use client'
+'use client';
+
 import { useState } from 'react';
 import TextField from '@mui/material/TextField';
 import Alert from '@mui/material/Alert';
+import Button from '@mui/material/Button';
 import { useForm, Controller } from 'react-hook-form';
-// import { MuiTelInput } from 'mui-tel-input'
-import styles from "./form.module.css";
-import TelegramIcon from '@mui/icons-material/Telegram';
-import FacebookIcon from '@mui/icons-material/Facebook';
-import InstagramIcon from '@mui/icons-material/Instagram';
 import { useTranslations } from 'next-intl';
 import { useLocale } from 'next-intl';
-import { APP_URL } from '../../src/lib/env';
 import { redirect } from 'next/navigation';
+import { useAuthStore } from '@/store/authStore';
+import styles from './form.module.css';
 
 const conriesToShow = [
                     // EU
@@ -40,7 +38,7 @@ const conriesToShow = [
                     'ZA'  // South Africa
                     ]
 
-export default function Form() {
+export default function Form({ popupMode = false, onLoginSuccess }) {
   const [isLoginForm, setIsloginForm] = useState(true);
   const { control, handleSubmit, setError, formState: { isSubmitting } } = useForm({
     defaultValues: {
@@ -56,17 +54,24 @@ export default function Form() {
   }
   
 
+  const setAuth = useAuthStore((s) => s.setAuth);
+
   const handleLogin = async (data) => {
     const response = await fetch('/api/login', {
       method: 'post',
-      headers: {
-      'Content-Type': 'application/json',
-        },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     });
     const parsedResponse = await response.json();
+    const res = parsedResponse.response;
 
-    if (parsedResponse.response.token) {
+    if (res?.token) {
+      const user = res.user ?? { id: res.userId, email: data.email };
+      setAuth(user, res.token);
+      if (popupMode && onLoginSuccess) {
+        onLoginSuccess();
+        return;
+      }
       redirect(`${locale}/dashboard`);
     }
   }
@@ -74,31 +79,27 @@ export default function Form() {
   const handleRegister = async (data) => {
     const response = await fetch('/api/register', {
       method: 'post',
-      headers: {
-      'Content-Type': 'application/json',
-        },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     });
+    return response;
   }
 
   const [isEmailSent, setIsEmailSent] = useState(false);
+
   const onSubmit = async (data) => {
-    console.log('APP_URL', APP_URL)
     try {
       if (isLoginForm) {
-        handleLogin(data)
+        await handleLogin(data);
       } else {
-        handleRegister(data)
+        const response = await handleRegister(data);
+        if (response?.ok) setIsEmailSent(true);
       }
-      if (response.ok) {
-        setIsEmailSent(true)
-      }
-    } catch (error) {
-        setIsEmailSent(false)
-        setError("email", { type: "custom", message: "Нажаль, ми не змогли відправити запит!" })
+    } catch (err) {
+      setIsEmailSent(false);
+      setError('email', { type: 'custom', message: t('errorSubmit') ?? 'Нажаль, ми не змогли відправити запит!' });
     }
-
-  } 
+  }; 
 
   return (
     <section className={styles.formWrapper}>
@@ -155,8 +156,12 @@ export default function Form() {
         {isEmailSent && <Alert severity="success" sx={{ mb: 2 }}>
     ✅    Запит успішно надіслано! Ми звʼяжемося з вами найближчим часом.
         </Alert>}
-        <button type="submit" className={styles.send}>{isSubmitting ? "Надсилаю запит" : "Надіслати запит"}</button>
-        <div onClick={handleChangeForm}>{isLoginForm ? "Не має акаунту" : "В мене є акаунт"}</div>
+        <Button type="submit" variant="contained" color="secondary" fullWidth className={styles.send} disabled={isSubmitting}>
+          {isSubmitting ? t('sending') ?? 'Надсилаю запит' : t('submit') ?? 'Надіслати запит'}
+        </Button>
+        <Button type="button" variant="text" color="secondary" fullWidth onClick={handleChangeForm} sx={{ mt: 1 }}>
+          {isLoginForm ? "Не має акаунту" : "В мене є акаунт"}
+        </Button>
         
       </form>
     </section>

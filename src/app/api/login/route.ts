@@ -16,9 +16,7 @@ export async function POST(request: Request) {
       },
       body: JSON.stringify(body),
     });
-    console.log('thirdPartyResponse SERVER', thirdPartyResponse)
   const response = await thirdPartyResponse.json();
-  console.log('response SERVER', response)
 
   const res = NextResponse.json({ response });
 

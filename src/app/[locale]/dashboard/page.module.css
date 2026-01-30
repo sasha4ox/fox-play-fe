@@ -1,0 +1,84 @@
+.page {
+  --background: #fafafa;
+  --foreground: #fff;
+  --text-primary: #000;
+  --text-secondary: #666;
+  --card-border: #ebebeb;
+  --card-hover: #f2f2f2;
+
+  display: flex;
+  min-height: 100vh;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-geist-sans);
+  background-color: var(--background);
+}
+
+.main {
+  width: 100%;
+  max-width: 800px;
+  padding: 48px 24px;
+}
+
+.title {
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 32px;
+}
+
+.subtitle {
+  font-size: 16px;
+  color: var(--text-secondary);
+}
+
+.error {
+  font-size: 16px;
+  color: #c00;
+}
+
+.gamesList {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.gameCard {
+  display: block;
+  width: 100%;
+  padding: 24px;
+  background: var(--foreground);
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+  text-align: left;
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.gameCard:hover {
+  background: var(--card-hover);
+  border-color: #ccc;
+}
+
+.gameCard.selected {
+  border-color: var(--text-primary);
+  background: var(--card-hover);
+}
+
+@media (prefers-color-scheme: dark) {
+  .page {
+    --background: #000;
+    --foreground: #1a1a1a;
+    --text-primary: #ededed;
+    --text-secondary: #999;
+    --card-border: #333;
+    --card-hover: #262626;
+  }
+
+  .gameCard:hover {
+    border-color: #555;
+  }
+}

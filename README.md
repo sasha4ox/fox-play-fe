@@ -1,36 +1,94 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Fox Play – Frontend
 
-## Getting Started
+Next.js frontend for Fox Play: login/register, game picker (Game → Variant → Server), and offers. Uses **next-intl** for i18n (en/ua) and talks to the Fox Play backend API for games and auth.
 
-First, run the development server:
+## Prerequisites
+
+- **Node.js** 18+
+- **pnpm** (or npm/yarn)
+
+## How to start locally
+
+### 1. Clone and install
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone <repo-url>
+cd fox-play-fe
+pnpm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2. Environment
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+Create `.env.local` in the project root:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```env
+# Backend API – local dev
+NEXT_PUBLIC_API_URL=http://localhost:8080
 
-## Learn More
+# Optional
+NEXT_PUBLIC_APP_URL=https://your-app.vercel.app
+NEXT_PUBLIC_LOCAL_APP_URL=http://localhost:3000
+```
 
-To learn more about Next.js, take a look at the following resources:
+For **local development**, `NEXT_PUBLIC_API_URL` must point to your backend (e.g. `http://localhost:8080`). The backend must allow this frontend’s origin in CORS (e.g. `CORS_ORIGIN=http://localhost:3000`).
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### 3. Run
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+pnpm dev
+```
 
-## Deploy on Vercel
+Open **http://localhost:3000**. You’ll be redirected to a locale (e.g. `/en`). Use **Dashboard** to pick a game → variant → server → offers. Games are loaded from `GET /games` on the backend.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+---
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Deploy frontend (Vercel)
+
+1. **Import the project** in [Vercel](https://vercel.com) (e.g. connect the GitHub repo).
+
+2. **Environment variables** (Project → Settings → Environment Variables):
+
+   | Variable                    | Value                                 | Notes                                                                                               |
+   | --------------------------- | ------------------------------------- | --------------------------------------------------------------------------------------------------- |
+   | `NEXT_PUBLIC_API_URL`       | `https://your-backend.up.railway.app` | Your **Railway backend** URL (no trailing slash). Required so the app can call `/games`, auth, etc. |
+   | `NEXT_PUBLIC_APP_URL`       | `https://your-app.vercel.app`         | Optional; your Vercel app URL.                                                                      |
+   | `NEXT_PUBLIC_LOCAL_APP_URL` | `http://localhost:3000`               | Optional; for local.                                                                                |
+
+   For production, set **NEXT_PUBLIC_API_URL** to the **Railway backend** URL.
+
+3. **Build**: Vercel uses `pnpm build` (Next.js). No extra build step needed if the repo has a standard Next.js setup.
+
+4. **Backend CORS**: On **Railway** (backend), set **CORS_ORIGIN** to your Vercel URL, e.g. `https://fox-play-fe.vercel.app`, so the browser can call the API from the deployed frontend.
+
+5. **Redeploy** after changing env vars so the new `NEXT_PUBLIC_*` values are baked in.
+
+---
+
+## BE (Railway) + FE (Vercel) together
+
+- **Backend (Railway)**
+  - Set `CORS_ORIGIN` to your **Vercel** frontend URL (e.g. `https://fox-play-fe.vercel.app`).
+  - Use the public Railway URL as the API base (e.g. `https://foxplay-production.up.railway.app`).
+
+- **Frontend (Vercel)**
+  - Set `NEXT_PUBLIC_API_URL` to that **same** Railway URL (e.g. `https://foxplay-production.up.railway.app`).
+
+Then the deployed app will load games and auth from the deployed backend.
+
+---
+
+## Main scripts
+
+| Command      | Description           |
+| ------------ | --------------------- |
+| `pnpm dev`   | Run dev server (3000) |
+| `pnpm build` | Production build      |
+| `pnpm start` | Run production build  |
+| `pnpm lint`  | Run ESLint            |
+
+## Tech
+
+- **Next.js** (App Router), **next-intl** (en/ua)
+- **React**, **MUI** (Form, etc.)
+- **react-hook-form**
+- Games/variants/servers and auth from the Fox Play backend API
