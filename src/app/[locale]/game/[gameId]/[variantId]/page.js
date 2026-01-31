@@ -19,6 +19,8 @@ export default function GameServersPage() {
   const router = useRouter();
   const params = useParams();
   const locale = useLocale();
+  const t = useTranslations('Game');
+  const tCommon = useTranslations('Common');
   const gameId = params?.gameId;
   const variantId = params?.variantId;
   const { tree, loading, error } = useGames();

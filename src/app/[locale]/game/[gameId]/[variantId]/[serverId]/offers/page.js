@@ -26,6 +26,7 @@ export default function GameOffersPage() {
   const params = useParams();
   const router = useRouter();
   const locale = useLocale();
+  const t = useTranslations('OffersList');
   const gameId = params?.gameId;
   const variantId = params?.variantId;
   const serverId = params?.serverId;
@@ -86,10 +87,10 @@ export default function GameOffersPage() {
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', py: 4, px: 2 }}>
       <Container maxWidth="sm">
         <MuiLink component={Link} href={`/${locale}/game/${gameId}/${variantId}`} color="secondary" sx={{ display: 'inline-block', mb: 2 }}>
-          ← Back to servers
+          {t('backToServers')}
         </MuiLink>
         <Typography variant="h4" fontWeight={600} color="text.primary" gutterBottom>
-          Offers
+          {t('offersFor', { server: server?.name ?? '' })}
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
           {breadcrumb}
@@ -97,7 +98,7 @@ export default function GameOffersPage() {
 
         <Box sx={{ display: 'flex', gap: 1, mb: 3 }}>
           <Button variant="contained" color="secondary" onClick={handleSellItems}>
-            {isAuthenticated ? 'Sell items' : 'Log in to sell items'}
+            {isAuthenticated ? t('sellItems') : t('loginToSell')}
           </Button>
         </Box>
 

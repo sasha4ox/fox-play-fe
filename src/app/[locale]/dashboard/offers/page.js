@@ -19,6 +19,8 @@ const OFFER_TYPE_LABELS = { ADENA: 'Adena', ITEMS: 'Items', ACCOUNTS: 'Accounts'
 
 export default function MyOffersPage() {
   const locale = useLocale();
+  const t = useTranslations('Offers');
+  const tCommon = useTranslations('Common');
   const token = useAuthStore((s) => s.token);
   const [offers, setOffers] = useState([]);
   const [loading, setLoading] = useState(true);

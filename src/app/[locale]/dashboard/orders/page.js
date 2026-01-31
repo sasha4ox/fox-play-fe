@@ -17,6 +17,7 @@ import { getMyOrdersAsBuyer, getMyOrdersAsSeller, getMyOfferThreads } from '@/li
 
 export default function MyOrdersPage() {
   const locale = useLocale();
+  const t = useTranslations('Orders');
   const token = useAuthStore((s) => s.token);
   const [buyerOrders, setBuyerOrders] = useState([]);
   const [sellerOrders, setSellerOrders] = useState([]);
@@ -82,29 +83,29 @@ export default function MyOrdersPage() {
               {t('preOrderHint')}
             </Typography>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-              {offerThreads.asBuyer?.map((t) => {
-                const g = t.offer?.server?.gameVariant?.game?.id;
-                const v = t.offer?.server?.gameVariant?.id;
-                const s = t.offer?.server?.id;
-                const href = g && v && s ? `/${locale}/game/${g}/${v}/${s}/offers/${t.offerId}` : '#';
+              {offerThreads.asBuyer?.map((thread) => {
+                const g = thread.offer?.server?.gameVariant?.game?.id;
+                const v = thread.offer?.server?.gameVariant?.id;
+                const s = thread.offer?.server?.id;
+                const href = g && v && s ? `/${locale}/game/${g}/${v}/${s}/offers/${thread.offerId}` : '#';
                 return (
-                  <Card key={`b-${t.offerId}`} variant="outlined">
+                  <Card key={`b-${thread.offerId}`} variant="outlined">
                     <CardActionArea component={Link} href={href}>
                       <CardContent sx={{ py: 1.5, px: 2 }}>
                         <Typography variant="subtitle2" fontWeight={600}>
-                          {t.offer?.title ?? t('offer')}
+                          {thread.offer?.title ?? t('offer')}
                         </Typography>
                         <Typography variant="caption" color="text.secondary" display="block">
-                          {t('withSeller')}: {t.otherParty?.nickname ?? t.otherParty?.email ?? '—'}
+                          {t('withSeller')}: {thread.otherParty?.nickname ?? thread.otherParty?.email ?? '—'}
                         </Typography>
-                        {t.lastMessage?.text && (
+                        {thread.lastMessage?.text && (
                           <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5, fontStyle: 'italic' }} noWrap>
-                            {t.lastMessage.text}
+                            {thread.lastMessage.text}
                           </Typography>
                         )}
-                        {t.lastMessage?.createdAt && (
+                        {thread.lastMessage?.createdAt && (
                           <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.25 }}>
-                            {new Date(t.lastMessage.createdAt).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' })}
+                            {new Date(thread.lastMessage.createdAt).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' })}
                           </Typography>
                         )}
                       </CardContent>
@@ -112,29 +113,29 @@ export default function MyOrdersPage() {
                   </Card>
                 );
               })}
-              {offerThreads.asSeller?.map((t) => {
-                const g = t.offer?.server?.gameVariant?.game?.id;
-                const v = t.offer?.server?.gameVariant?.id;
-                const s = t.offer?.server?.id;
-                const href = g && v && s ? `/${locale}/game/${g}/${v}/${s}/offers/${t.offerId}` : '#';
+              {offerThreads.asSeller?.map((thread) => {
+                const g = thread.offer?.server?.gameVariant?.game?.id;
+                const v = thread.offer?.server?.gameVariant?.id;
+                const s = thread.offer?.server?.id;
+                const href = g && v && s ? `/${locale}/game/${g}/${v}/${s}/offers/${thread.offerId}` : '#';
                 return (
-                  <Card key={`s-${t.offerId}-${t.buyerId}`} variant="outlined">
+                  <Card key={`s-${thread.offerId}-${thread.buyerId}`} variant="outlined">
                     <CardActionArea component={Link} href={href}>
                       <CardContent sx={{ py: 1.5, px: 2 }}>
                         <Typography variant="subtitle2" fontWeight={600}>
-                          {t.offer?.title ?? t('offer')}
+                          {thread.offer?.title ?? t('offer')}
                         </Typography>
                         <Typography variant="caption" color="text.secondary" display="block">
-                          {t('withBuyer')}: {t.otherParty?.nickname ?? t.otherParty?.email ?? '—'}
+                          {t('withBuyer')}: {thread.otherParty?.nickname ?? thread.otherParty?.email ?? '—'}
                         </Typography>
-                        {t.lastMessage?.text && (
+                        {thread.lastMessage?.text && (
                           <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5, fontStyle: 'italic' }} noWrap>
-                            {t.lastMessage.text}
+                            {thread.lastMessage.text}
                           </Typography>
                         )}
-                        {t.lastMessage?.createdAt && (
+                        {thread.lastMessage?.createdAt && (
                           <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.25 }}>
-                            {new Date(t.lastMessage.createdAt).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' })}
+                            {new Date(thread.lastMessage.createdAt).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' })}
                           </Typography>
                         )}
                       </CardContent>

@@ -33,6 +33,7 @@ export default function OrderChatPage() {
   const params = useParams();
   const router = useRouter();
   const locale = useLocale();
+  const t = useTranslations('OrderDetail');
   const orderId = params?.orderId;
   const token = useAuthStore((s) => s.token);
   const user = useAuthStore((s) => s.user);

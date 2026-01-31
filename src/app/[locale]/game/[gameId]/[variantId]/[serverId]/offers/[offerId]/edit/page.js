@@ -19,6 +19,8 @@ export default function EditOfferPage() {
   const params = useParams();
   const router = useRouter();
   const locale = useLocale();
+  const t = useTranslations('EditOffer');
+  const tCommon = useTranslations('Common');
   const offerId = params?.offerId;
   const gameId = params?.gameId;
   const variantId = params?.variantId;
