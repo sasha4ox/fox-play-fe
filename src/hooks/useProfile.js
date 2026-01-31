@@ -1,18 +1,18 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useEffect, useCallback } from 'react';
 import { getProfile } from '@/lib/api';
 import { useAuthStore } from '@/store/authStore';
+import { useProfileStore } from '@/store/profileStore';
 
 /**
  * Fetches profile (user + balances) when authenticated.
- * Returns primary balance in user's preferred currency.
+ * Profile is stored globally so when currency is changed in the Header,
+ * balance page and new-offer page (and any other consumer) update immediately.
  */
 export function useProfile() {
   const token = useAuthStore((s) => s.token);
-  const [profile, setProfile] = useState(null);
-  const [loading, setLoading] = useState(!!token);
-  const [error, setError] = useState(null);
+  const { profile, loading, error, setProfile, setLoading, setError, clearProfile } = useProfileStore();
 
   const refetch = useCallback(() => {
     if (!token) return Promise.resolve(null);
@@ -30,15 +30,16 @@ export function useProfile() {
         setProfile(null);
         return null;
       });
-  }, [token]);
+  }, [token, setProfile, setLoading, setError]);
 
   useEffect(() => {
     if (!token) {
-      setProfile(null);
-      setLoading(false);
+      clearProfile();
       return;
     }
     let cancelled = false;
+    setLoading(true);
+    setError(null);
     getProfile(token)
       .then((data) => {
         if (!cancelled) setProfile(data);
@@ -50,10 +51,9 @@ export function useProfile() {
         if (!cancelled) setLoading(false);
       });
     return () => { cancelled = true; };
-  }, [token]);
+  }, [token, clearProfile, setProfile, setLoading, setError]);
 
   const preferredCurrency = profile?.preferredCurrency ?? null;
-  // Total in preferred currency (all wallets converted) so switching to RUB shows e.g. 90000 RUB
   const total = profile?.totalInPreferredCurrency;
   const available = total ? Number(total.available) : 0;
   const frozen = total ? Number(total.frozen) : 0;
