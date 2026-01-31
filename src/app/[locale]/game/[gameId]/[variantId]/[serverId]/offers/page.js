@@ -89,12 +89,16 @@ export default function GameOffersPage() {
   }
 
   const breadcrumb = `${game.name} → ${variant.name} → ${server.name}`;
+  const servers = variant?.servers ?? [];
+  const singleServer = servers.length === 1;
+  const backHref = singleServer ? `/${locale}/game/${gameId}` : `/${locale}/game/${gameId}/${variantId}`;
+  const backLabel = singleServer ? t('backToVariants') : t('backToServers');
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', py: 4, px: 2 }}>
       <Container>
-        <MuiLink component={Link} href={`/${locale}/game/${gameId}/${variantId}`} color="secondary" sx={{ display: 'inline-block', mb: 2 }}>
-          {t('backToServers')}
+        <MuiLink component={Link} href={backHref} color="secondary" sx={{ display: 'inline-block', mb: 2 }}>
+          {backLabel}
         </MuiLink>
         <Typography variant="h4" fontWeight={600} color="text.primary" gutterBottom>
           {t('offersFor', { server: server?.name ?? '' })}

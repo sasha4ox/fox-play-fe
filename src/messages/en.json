@@ -175,7 +175,8 @@
     "sellItems": "Sell items",
     "loginToSell": "Log in to sell items",
     "backToGames": "← Back to games",
-    "backToServers": "← Back to servers"
+    "backToServers": "← Back to servers",
+    "backToVariants": "← Back to variants"
   },
   "OfferDetail": {
     "offerNotFound": "Offer not found.",

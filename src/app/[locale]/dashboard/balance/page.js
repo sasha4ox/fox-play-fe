@@ -211,17 +211,18 @@ export default function BalancePage() {
                   <Typography variant="body2" color="text.secondary" gutterBottom>
                     {depositInfo.instructions}
                   </Typography>
-                  {depositInfo.mock ? (
+                  {depositInfo.mock && (
                     <Button
                       variant="contained"
                       color="secondary"
                       onClick={handleSimulateDeposit}
                       disabled={simulateLoading}
-                      sx={{ textTransform: 'none', mt: 1 }}
+                      sx={{ textTransform: 'none', mt: 1, mb: depositInfo.binanceEnabled || depositInfo.whitebitEnabled ? 2 : 0 }}
                     >
                       {simulateLoading ? t('adding') : t('simulateDeposit', { amount: depositInfo.mockAmount ?? 100 })}
                     </Button>
-                  ) : (
+                  )}
+                  {(depositInfo.binanceEnabled || depositInfo.whitebitEnabled) && (
                     <>
                       {depositInfo.binanceEnabled && (
                         <Box sx={{ mt: 1, mb: depositInfo.whitebitEnabled ? 2 : 0 }}>
@@ -282,25 +283,25 @@ export default function BalancePage() {
                           </Button>
                         </Box>
                       )}
-                      {!depositInfo.binanceEnabled && !depositInfo.whitebitEnabled && (
-                        <Button
-                          component="a"
-                          href={depositInfo.payUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          variant="contained"
-                          color="secondary"
-                          sx={{ textTransform: 'none', mt: 1 }}
-                        >
-                          Open payment
-                        </Button>
-                      )}
                       {createDepositError && (
                         <Typography variant="caption" color="error" display="block" sx={{ mt: 1 }}>
                           {createDepositError}
                         </Typography>
                       )}
                     </>
+                  )}
+                  {!depositInfo.binanceEnabled && !depositInfo.whitebitEnabled && !depositInfo.mock && (
+                    <Button
+                      component="a"
+                      href={depositInfo.payUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      variant="contained"
+                      color="secondary"
+                      sx={{ textTransform: 'none', mt: 1 }}
+                    >
+                      Open payment
+                    </Button>
                   )}
                 </CardContent>
               </Card>

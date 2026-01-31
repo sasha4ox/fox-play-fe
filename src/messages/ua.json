@@ -175,7 +175,8 @@
     "sellItems": "Продати",
     "loginToSell": "Увійдіть, щоб продати",
     "backToGames": "← До ігор",
-    "backToServers": "← До серверів"
+    "backToServers": "← До серверів",
+    "backToVariants": "← До варіантів"
   },
   "OfferDetail": {
     "offerNotFound": "Оголошення не знайдено.",
