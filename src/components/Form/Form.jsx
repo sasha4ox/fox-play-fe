@@ -94,24 +94,28 @@ export default function Form({ popupMode = false, onLoginSuccess }) {
   };
 
   const handleRegister = async (data) => {
+    setAuthError(null);
     const response = await fetch('/api/register', {
-      method: 'post',
+      method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     });
     const parsed = await response.json();
-    const res = parsed.response;
-    if (response?.ok && res?.token) {
+    const res = parsed.response ?? parsed;
+    if (response.ok && res?.token) {
       const user = res.user ?? { id: res.userId, email: data.email, nickname: data.nickname };
       setAuth(user, res.token);
+      setAuthSuccess(t('registerSuccess'));
       if (popupMode && onLoginSuccess) {
         onLoginSuccess();
         return;
       }
       redirect(`/${locale}/dashboard`);
+    } else {
+      setAuthError(getAuthErrorMessage(res));
     }
     return response;
-  }
+  };
 
   const [isEmailSent, setIsEmailSent] = useState(false);
 
