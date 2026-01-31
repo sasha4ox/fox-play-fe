@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
 import Link from 'next/link';
+import { useState, useEffect } from 'react';
 import Container from '@mui/material/Container';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
@@ -12,12 +13,29 @@ import CardContent from '@mui/material/CardContent';
 import Skeleton from '@mui/material/Skeleton';
 import Alert from '@mui/material/Alert';
 import { useGames } from '@/hooks/useGames';
+import { useAuthStore } from '@/store/authStore';
+import { getRecentServers } from '@/lib/api';
 
 export default function DashboardPage() {
   const router = useRouter();
   const locale = useLocale();
   const t = useTranslations('Dashboard');
   const { games, loading, error } = useGames();
+  const token = useAuthStore((s) => s.token);
+  const [recentServers, setRecentServers] = useState([]);
+  const [recentLoading, setRecentLoading] = useState(false);
+
+  useEffect(() => {
+    if (!token) {
+      setRecentServers([]);
+      return;
+    }
+    setRecentLoading(true);
+    getRecentServers(token)
+      .then((list) => setRecentServers(Array.isArray(list) ? list : []))
+      .catch(() => setRecentServers([]))
+      .finally(() => setRecentLoading(false));
+  }, [token]);
 
   const handleGameClick = (gameId) => {
     router.push(`/${locale}/game/${gameId}`);
