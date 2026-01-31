@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
@@ -11,8 +11,10 @@ import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
 import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
+import Skeleton from '@mui/material/Skeleton';
 import LocaleSwitcher from '@/components/LocaleSwitcher/LocaleSwitcher';
 import { useAuthStore, useIsAuthenticated } from '@/store/authStore';
+import { useThemeStore } from '@/store/themeStore';
 import { useLoginModalStore } from '@/store/loginModalStore';
 import { useProfile } from '@/hooks/useProfile';
 import { updatePreferredCurrency } from '@/lib/api';
@@ -33,6 +35,19 @@ export default function Header() {
   const tCommon = useTranslations('Common');
   const displayName = profile?.nickname ?? user?.nickname ?? user?.email ?? tCommon('user');
   const [currencyChanging, setCurrencyChanging] = useState(false);
+  const themeMode = useThemeStore((s) => s.mode);
+  const setThemeMode = useThemeStore((s) => s.setMode);
+  const [systemDark, setSystemDark] = useState(false);
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const mq = window.matchMedia('(prefers-color-scheme: dark)');
+    setSystemDark(mq.matches);
+    const listener = () => setSystemDark(mq.matches);
+    mq.addEventListener('change', listener);
+    return () => mq.removeEventListener('change', listener);
+  }, []);
+  // Effective theme: if user never chose, use system; otherwise use stored choice.
+  const effectiveMode = themeMode === 'system' ? (systemDark ? 'dark' : 'light') : themeMode;
 
   const handleLogout = () => {
     logout();
@@ -60,9 +75,10 @@ export default function Header() {
       position="static"
       elevation={0}
       sx={{
-        backgroundColor: '#EAe5de',
-        color: '#352228',
-        borderBottom: '1px solid rgba(114, 94, 101, 0.15)',
+        bgcolor: 'background.paper',
+        color: 'text.primary',
+        borderBottom: 1,
+        borderColor: 'divider',
         boxShadow: '0 1px 3px rgba(0, 0, 0, 0.06)',
       }}
     >
@@ -132,6 +148,29 @@ export default function Header() {
         </Box>
 
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Select
+            size="small"
+            value={effectiveMode}
+            onChange={(e) => setThemeMode(e.target.value)}
+            variant="standard"
+            disableUnderline
+            MenuProps={{
+              disableScrollLock: true,
+              anchorOrigin: { vertical: 'bottom', horizontal: 'right' },
+              transformOrigin: { vertical: 'top', horizontal: 'right' },
+            }}
+            sx={{
+              color: 'text.secondary',
+              fontWeight: 500,
+              fontSize: '0.875rem',
+              minWidth: 80,
+              width: 80,
+              '& .MuiSelect-select': { py: 0.25 },
+            }}
+          >
+            <MenuItem value="light">{t('themeLight')}</MenuItem>
+            <MenuItem value="dark">{t('themeDark')}</MenuItem>
+          </Select>
           <Box
             sx={{
               display: 'flex',
@@ -139,7 +178,7 @@ export default function Header() {
               gap: 0.5,
               px: 0.5,
               py: 0.5,
-              bgcolor: 'rgba(255,255,255,0.5)',
+              bgcolor: 'action.hover',
               borderRadius: 1.25,
             }}
           >
@@ -148,13 +187,17 @@ export default function Header() {
 
           {isAuth ? (
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              {!profileLoading && preferredCurrency && (
+              {(profileLoading || currencyChanging) ? (
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 120 }}>
+                  <Skeleton variant="rounded" width={52} height={28} sx={{ flexShrink: 0 }} />
+                  <Skeleton variant="text" width={48} height={24} />
+                </Box>
+              ) : preferredCurrency ? (
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                   <Select
                     size="small"
                     value={preferredCurrency}
                     onChange={handleCurrencyChange}
-                    disabled={currencyChanging}
                     variant="standard"
                     disableUnderline
                     sx={{
@@ -175,7 +218,7 @@ export default function Header() {
                     </Typography>
                   </Link>
                 </Box>
-              )}
+              ) : null}
               <Typography variant="body2" color="text.secondary" noWrap sx={{ maxWidth: 140 }}>
                 {displayName}
               </Typography>

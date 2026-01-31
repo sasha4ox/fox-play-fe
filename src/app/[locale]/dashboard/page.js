@@ -9,7 +9,7 @@ import Typography from '@mui/material/Typography';
 import Card from '@mui/material/Card';
 import CardActionArea from '@mui/material/CardActionArea';
 import CardContent from '@mui/material/CardContent';
-import CircularProgress from '@mui/material/CircularProgress';
+import Skeleton from '@mui/material/Skeleton';
 import Alert from '@mui/material/Alert';
 import { useGames } from '@/hooks/useGames';
 
@@ -47,8 +47,14 @@ export default function DashboardPage() {
         </Typography>
 
         {loading && (
-          <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-            <CircularProgress color="secondary" />
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}>
+            {[1, 2, 3, 4].map((i) => (
+              <Card key={i} variant="outlined">
+                <CardContent sx={{ py: 3, px: 3 }}>
+                  <Skeleton variant="text" width="40%" height={32} />
+                </CardContent>
+              </Card>
+            ))}
           </Box>
         )}
 

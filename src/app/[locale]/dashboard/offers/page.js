@@ -9,7 +9,7 @@ import Typography from '@mui/material/Typography';
 import Card from '@mui/material/Card';
 import CardActionArea from '@mui/material/CardActionArea';
 import CardContent from '@mui/material/CardContent';
-import CircularProgress from '@mui/material/CircularProgress';
+import Skeleton from '@mui/material/Skeleton';
 import Alert from '@mui/material/Alert';
 import MuiLink from '@mui/material/Link';
 import { useAuthStore } from '@/store/authStore';
@@ -63,8 +63,15 @@ export default function MyOffersPage() {
         </Typography>
 
         {loading && (
-          <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-            <CircularProgress color="secondary" />
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mt: 2 }}>
+            {[1, 2, 3].map((i) => (
+              <Card key={i} variant="outlined">
+                <CardContent sx={{ py: 2, px: 2 }}>
+                  <Skeleton variant="text" width="70%" height={28} />
+                  <Skeleton variant="text" width="50%" height={20} sx={{ mt: 0.5 }} />
+                </CardContent>
+              </Card>
+            ))}
           </Box>
         )}
         {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}

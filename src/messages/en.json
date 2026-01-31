@@ -40,7 +40,10 @@
     "balance": "Balance",
     "logout": "Logout",
     "login": "Login",
-    "foxPlay": "Fox Play"
+    "foxPlay": "Fox Play",
+    "themeLight": "Light",
+    "themeDark": "Dark",
+    "themeSystem": "System"
   },
   "LoginModal": {
     "title": "Log in or sign up"

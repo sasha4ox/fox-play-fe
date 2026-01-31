@@ -40,7 +40,10 @@
     "balance": "Баланс",
     "logout": "Вийти",
     "login": "Увійти",
-    "foxPlay": "Fox Play"
+    "foxPlay": "Fox Play",
+    "themeLight": "Світла",
+    "themeDark": "Темна",
+    "themeSystem": "Як у системи"
   },
   "LoginModal": {
     "title": "Увійти або зареєструватися"

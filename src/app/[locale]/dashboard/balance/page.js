@@ -9,7 +9,7 @@ import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
-import CircularProgress from '@mui/material/CircularProgress';
+import Skeleton from '@mui/material/Skeleton';
 import Alert from '@mui/material/Alert';
 import MuiLink from '@mui/material/Link';
 import Link from 'next/link';
@@ -129,8 +129,17 @@ export default function BalancePage() {
         </Typography>
 
         {loading && (
-          <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-            <CircularProgress color="secondary" />
+          <Box sx={{ mt: 2 }}>
+            <Skeleton variant="text" width="60%" height={28} sx={{ mb: 1 }} />
+            <Card variant="outlined" sx={{ mb: 3 }}>
+              <CardContent>
+                <Skeleton variant="text" width={120} height={20} sx={{ mb: 1 }} />
+                <Skeleton variant="text" width={140} height={36} />
+              </CardContent>
+            </Card>
+            <Skeleton variant="text" width="40%" height={28} sx={{ mt: 3, mb: 1 }} />
+            <Skeleton variant="text" width="90%" height={20} sx={{ mb: 2 }} />
+            <Skeleton variant="rounded" width={180} height={40} />
           </Box>
         )}
 

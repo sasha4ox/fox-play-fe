@@ -25,12 +25,14 @@ export default function LoginModal() {
       PaperProps={{
         sx: {
           borderRadius: 3,
-          boxShadow: '0 8px 32px rgba(53, 34, 40, 0.12)',
-          border: '1px solid rgba(114, 94, 101, 0.2)',
-          overflow: 'hidden'
+          boxShadow: 2,
+          border: 1,
+          borderColor: 'divider',
+          overflow: 'hidden',
+          bgcolor: 'background.paper',
         },
       }}
-      slotProps={{ backdrop: { sx: { backgroundColor: 'rgba(53, 34, 40, 0.2)' } } }}
+      slotProps={{ backdrop: { sx: { backgroundColor: 'rgba(0,0,0,0.4)' } } }}
     >
       <DialogTitle
         sx={{
@@ -39,8 +41,9 @@ export default function LoginModal() {
           justifyContent: 'space-between',
           py: 2,
           px: 3,
-          borderBottom: '1px solid rgba(114, 94, 101, 0.15)',
-          bgcolor: '#f9f6f1',
+          borderBottom: 1,
+          borderColor: 'divider',
+          bgcolor: 'background.paper',
         }}
       >
         <Typography variant="h6" component="span" fontWeight={600} color="text.primary">
@@ -50,10 +53,7 @@ export default function LoginModal() {
           <CloseIcon />
         </IconButton>
       </DialogTitle>
-      <DialogContent sx={{  px: 3, py: 3, display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          background: '#fff' }}>
+      <DialogContent sx={{ px: 3, py: 3, display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: 'background.paper' }}>
         <Form popupMode onLoginSuccess={triggerLoginSuccess} />
       </DialogContent>
     </Dialog>

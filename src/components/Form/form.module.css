@@ -6,7 +6,8 @@
 }
 
 .formWrapper {
-    background-color: #fff;
+    background-color: transparent;
+    color: var(--foreground);
     display: flex;
     flex-direction: column;
     align-items: center;
