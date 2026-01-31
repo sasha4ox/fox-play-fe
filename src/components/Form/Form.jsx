@@ -40,6 +40,8 @@ const conriesToShow = [
 
 export default function Form({ popupMode = false, onLoginSuccess }) {
   const [isLoginForm, setIsloginForm] = useState(true);
+  const [authError, setAuthError] = useState(null);
+  const [authSuccess, setAuthSuccess] = useState(null);
   const { control, handleSubmit, setError, formState: { isSubmitting } } = useForm({
     defaultValues: {
       password: "",
@@ -51,31 +53,45 @@ export default function Form({ popupMode = false, onLoginSuccess }) {
   const t = useTranslations('Form');
 
   const handleChangeForm = () => {
-    setIsloginForm(!isLoginForm)
-  }
+    setAuthError(null);
+    setAuthSuccess(null);
+    setIsloginForm(!isLoginForm);
+  };
   
 
   const setAuth = useAuthStore((s) => s.setAuth);
 
+  const getAuthErrorMessage = (responseBody) => {
+    const msg = responseBody?.error?.message ?? responseBody?.message ?? '';
+    if (/invalid credentials/i.test(msg)) return t('invalidCredentials');
+    if (/user already exists/i.test(msg)) return t('emailAlreadyRegistered');
+    if (/nickname is required/i.test(msg)) return t('nicknameRequired');
+    return msg || t('errorSubmit');
+  };
+
   const handleLogin = async (data) => {
+    setAuthError(null);
     const response = await fetch('/api/login', {
-      method: 'post',
+      method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     });
     const parsedResponse = await response.json();
     const res = parsedResponse.response;
 
-    if (res?.token) {
+    if (response.ok && res?.token) {
       const user = res.user ?? { id: res.userId, email: data.email };
       setAuth(user, res.token);
+      setAuthSuccess(t('loginSuccess'));
       if (popupMode && onLoginSuccess) {
         onLoginSuccess();
         return;
       }
-      redirect(`${locale}/dashboard`);
+      redirect(`/${locale}/dashboard`);
+    } else {
+      setAuthError(getAuthErrorMessage(parsedResponse?.response ?? parsedResponse));
     }
-  }
+  };
 
   const handleRegister = async (data) => {
     const response = await fetch('/api/register', {
@@ -100,6 +116,8 @@ export default function Form({ popupMode = false, onLoginSuccess }) {
   const [isEmailSent, setIsEmailSent] = useState(false);
 
   const onSubmit = async (data) => {
+    setAuthError(null);
+    setAuthSuccess(null);
     try {
       if (isLoginForm) {
         await handleLogin(data);
@@ -108,8 +126,8 @@ export default function Form({ popupMode = false, onLoginSuccess }) {
         if (response?.ok) setIsEmailSent(true);
       }
     } catch (err) {
-      setIsEmailSent(false);
-      setError('email', { type: 'custom', message: t('errorSubmit') ?? 'Нажаль, ми не змогли відправити запит!' });
+      setAuthError(t('errorSubmit'));
+      setError('email', { type: 'custom', message: t('errorSubmit') });
     }
   }; 
 
@@ -128,24 +146,35 @@ export default function Form({ popupMode = false, onLoginSuccess }) {
         </a>
       </div> */}
       <form onSubmit={handleSubmit(onSubmit)} className={styles.form}>
+        {authError && (
+          <Alert severity="error" sx={{ mb: 2 }} onClose={() => setAuthError(null)}>
+            {authError}
+          </Alert>
+        )}
+        {authSuccess && (
+          <Alert severity="success" sx={{ mb: 2 }}>
+            {authSuccess}
+          </Alert>
+        )}
         <Controller
           name="email"
           control={control}
           rules={{
-          required: t('mandatatory'),
-          pattern: {
-            value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-            message: t('emailInvalid'),
-          },
-        }}
+            required: t('mandatatory'),
+            pattern: {
+              value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+              message: t('emailInvalid'),
+            },
+          }}
           render={({ field, fieldState: { error } }) => (
-              <TextField
-                  {...field}
-                  label="Ваш e-mail"
-                  variant="outlined"
-                  error={!!error}
-                  helperText={error ? error.message : null}
-              />
+            <TextField
+              {...field}
+              label={t('email')}
+              variant="outlined"
+              fullWidth
+              error={!!error}
+              helperText={error ? error.message : null}
+            />
           )}
         />
         <Controller
@@ -183,9 +212,11 @@ export default function Form({ popupMode = false, onLoginSuccess }) {
             )}
           />
         )}
-        {isEmailSent && <Alert severity="success" sx={{ mb: 2 }}>
-    ✅ {t('emailSentSuccess')}
-        </Alert>}
+        {isEmailSent && (
+          <Alert severity="success" sx={{ mb: 2 }}>
+            {t('emailSentSuccess')}
+          </Alert>
+        )}
         <Button type="submit" variant="contained" color="secondary" fullWidth className={styles.send} disabled={isSubmitting}>
           {isSubmitting ? t('sending') : t('submit')}
         </Button>

@@ -10,22 +10,22 @@ export async function POST(request: Request) {
   const body = await request.json();
 
   const thirdPartyResponse = await fetch(`${APP_URL}/auth/login`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(body),
-    });
-  const response = await thirdPartyResponse.json();
-
-  const res = NextResponse.json({ response });
-
-  res.cookies.set('sessionToken', response?.token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    maxAge: 60 * 60 * 24 * 7, // 1 week
-    path: '/',
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
   });
+  const response = await thirdPartyResponse.json();
+  const status = thirdPartyResponse.ok ? 200 : thirdPartyResponse.status;
+  const res = NextResponse.json({ response }, { status });
+
+  if (thirdPartyResponse.ok && response?.token) {
+    res.cookies.set('sessionToken', response.token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: 60 * 60 * 24 * 7,
+      path: '/',
+    });
+  }
 
   return res;
 }

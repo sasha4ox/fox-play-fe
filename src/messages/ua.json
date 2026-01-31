@@ -25,7 +25,12 @@
     "nickname": "Нікнейм (видно всім)",
     "nicknamePlaceholder": "напр. FoxPlayer",
     "errorSubmit": "Нажаль, ми не змогли обробити запит.",
-    "emailSentSuccess": "Запит успішно надіслано! Ми зв'яжемося з вами найближчим часом."
+    "emailSentSuccess": "Запит успішно надіслано! Ми зв'яжемося з вами найближчим часом.",
+    "invalidCredentials": "Невірний email або пароль.",
+    "emailAlreadyRegistered": "Цей email вже зареєстровано.",
+    "nicknameRequired": "Нікнейм обов'язковий.",
+    "loginSuccess": "Ви увійшли в акаунт.",
+    "registerSuccess": "Акаунт створено. Ви увійшли."
   },
   "Header": {
     "home": "Головна",

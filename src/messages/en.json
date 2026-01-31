@@ -25,7 +25,12 @@
     "nickname": "Nickname (visible to everyone)",
     "nicknamePlaceholder": "e.g. FoxPlayer",
     "errorSubmit": "Sorry, we couldn't process your request.",
-    "emailSentSuccess": "Request sent successfully! We'll get back to you soon."
+    "emailSentSuccess": "Request sent successfully! We'll get back to you soon.",
+    "invalidCredentials": "Invalid email or password.",
+    "emailAlreadyRegistered": "This email is already registered.",
+    "nicknameRequired": "Nickname is required.",
+    "loginSuccess": "You are logged in.",
+    "registerSuccess": "Account created. You are logged in."
   },
   "Header": {
     "home": "Home",
