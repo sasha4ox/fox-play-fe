@@ -128,6 +128,18 @@ export async function getProfile(token) {
   return apiGet('/me', token)
 }
 
+/** Last 5 servers user viewed offers on (auth required). Returns [{ serverId, gameId, variantId, gameName, variantName, serverName, lastVisited }] */
+export async function getRecentServers(token) {
+  return apiGet('/me/recent-servers', token)
+}
+
+/** Record that user viewed this server's offers (auth required). Keeps last 5. */
+export async function addRecentServer(serverId, token) {
+  const res = await apiFetch('/me/recent-servers', { method: 'POST', body: JSON.stringify({ serverId }) }, token)
+  if (res.status === 204) return
+  return res.json()
+}
+
 /** Update preferred currency (auth required) */
 export async function updatePreferredCurrency(currency, token) {
   return apiPatch('/me', { preferredCurrency: currency }, token)

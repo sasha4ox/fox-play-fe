@@ -42,7 +42,45 @@ export default function DashboardPage() {
             <Typography component="span" color="secondary" fontWeight={500}>{t('myOrdersChat')}</Typography>
           </Link>
         </Box>
-        <Typography variant="h4" fontWeight={600} color="text.primary" gutterBottom>
+        {token && (
+          <>
+            <Typography variant="h6" fontWeight={600} color="text.primary" gutterBottom>
+              {t('recentServers')}
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+              {t('recentServersHint')}
+            </Typography>
+            {recentLoading && (
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mb: 3 }}>
+                {[1, 2].map((i) => (
+                  <Skeleton key={i} variant="rounded" height={56} />
+                ))}
+              </Box>
+            )}
+            {!recentLoading && recentServers.length > 0 && (
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mb: 3 }}>
+                {recentServers.map((s) => (
+                  <Card key={s.serverId} variant="outlined">
+                    <CardActionArea component={Link} href={`/${locale}/game/${s.gameId}/${s.variantId}/${s.serverId}/offers`}>
+                      <CardContent sx={{ py: 1.5, px: 2 }}>
+                        <Typography variant="subtitle2" fontWeight={600}>
+                          {s.gameName} → {s.variantName} → {s.serverName}
+                        </Typography>
+                      </CardContent>
+                    </CardActionArea>
+                  </Card>
+                ))}
+              </Box>
+            )}
+            {!recentLoading && recentServers.length === 0 && (
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                {t('recentServersEmpty')}
+              </Typography>
+            )}
+          </>
+        )}
+
+        <Typography variant="h4" fontWeight={600} color="text.primary" gutterBottom sx={{ mt: token ? 2 : 0 }}>
           {t('chooseGame')}
         </Typography>
 

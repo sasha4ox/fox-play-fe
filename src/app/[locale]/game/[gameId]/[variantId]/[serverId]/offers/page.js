@@ -16,9 +16,9 @@ import CircularProgress from '@mui/material/CircularProgress';
 import Alert from '@mui/material/Alert';
 import { useGames } from '@/hooks/useGames';
 import { getGameFromTree, getVariantFromTree, getServerFromTree } from '@/lib/games';
-import { useIsAuthenticated } from '@/store/authStore';
+import { useAuthStore, useIsAuthenticated } from '@/store/authStore';
 import { useLoginModalStore } from '@/store/loginModalStore';
-import { fetchOffersByServer } from '@/lib/api';
+import { fetchOffersByServer, addRecentServer } from '@/lib/api';
 
 const OFFER_TYPE_LABELS = { ADENA: 'Adena', ITEMS: 'Items', ACCOUNTS: 'Accounts', BOOSTING: 'Boosting', OTHER: 'Other' };
 
@@ -35,11 +35,18 @@ export default function GameOffersPage() {
   const variant = tree ? getVariantFromTree(tree, gameId, variantId) : null;
   const server = tree ? getServerFromTree(tree, gameId, variantId, serverId) : null;
   const isAuthenticated = useIsAuthenticated();
+  const token = useAuthStore((s) => s.token);
   const openLoginModal = useLoginModalStore((s) => s.openModal);
 
   const [offers, setOffers] = useState([]);
   const [offersLoading, setOffersLoading] = useState(true);
   const [offersError, setOffersError] = useState(null);
+
+  useEffect(() => {
+    if (serverId && token) {
+      addRecentServer(serverId, token).catch(() => {});
+    }
+  }, [serverId, token]);
 
   useEffect(() => {
     if (!serverId) return;

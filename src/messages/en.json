@@ -52,7 +52,10 @@
     "balance": "Balance",
     "myOrdersChat": "My orders & chat",
     "chooseGame": "Choose a game",
-    "noGames": "No games available."
+    "noGames": "No games available.",
+    "recentServers": "Your recent servers",
+    "recentServersHint": "Quick access to servers where you viewed offers",
+    "recentServersEmpty": "Visit a server's offers page to see it here."
   },
   "Balance": {
     "loading": "Loading…",
