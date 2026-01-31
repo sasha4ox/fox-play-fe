@@ -61,7 +61,7 @@ export default function MyOrdersPage() {
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', py: 4, px: 2 }}>
-      <Container maxWidth="sm">
+      <Container>
         <Link href={`/${locale}/dashboard`} style={{ textDecoration: 'none' }}>
           <MuiLink component="span" color="secondary" sx={{ display: 'inline-block', mb: 2 }}>
             {t('dashboard')}

@@ -93,7 +93,7 @@ export default function EditOfferPage() {
   if (error || !offer) {
     return (
       <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', py: 4, px: 2 }}>
-        <Container maxWidth="sm">
+        <Container>
           <Alert severity="error">{error || t('offerNotFound')}</Alert>
           <MuiLink component={Link} href={`/${locale}/game/${gameId}/${variantId}/${serverId}/offers`} sx={{ display: 'inline-block', mt: 2 }}>{tCommon('back')}</MuiLink>
         </Container>
@@ -104,7 +104,7 @@ export default function EditOfferPage() {
   if (!isCreator) {
     return (
       <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', py: 4, px: 2 }}>
-        <Container maxWidth="sm">
+        <Container>
           <Alert severity="error">{t('onlyEditOwn')}</Alert>
           <MuiLink component={Link} href={`/${locale}/game/${gameId}/${variantId}/${serverId}/offers/${offerId}`} sx={{ display: 'inline-block', mt: 2 }}>{t('backToOffer')}</MuiLink>
         </Container>
@@ -114,7 +114,7 @@ export default function EditOfferPage() {
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', py: 4, px: 2 }}>
-      <Container maxWidth="sm">
+      <Container>
         <MuiLink component={Link} href={`/${locale}/game/${gameId}/${variantId}/${serverId}/offers/${offerId}`} color="secondary" sx={{ display: 'inline-block', mb: 2 }}>
           {t('backToOffer')}
         </MuiLink>

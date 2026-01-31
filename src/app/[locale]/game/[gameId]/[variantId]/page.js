@@ -52,7 +52,7 @@ export default function GameServersPage() {
   if (error || !game || !variant) {
     return (
       <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', py: 4, px: 2 }}>
-        <Container maxWidth="sm">
+        <Container>
           <Alert severity="error">{error || t('notFound')}</Alert>
           <MuiLink component={Link} href={`/${locale}/dashboard`} sx={{ display: 'inline-block', mt: 2 }}>
             {tCommon('backToGames')}
@@ -64,7 +64,7 @@ export default function GameServersPage() {
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', py: 4, px: 2 }}>
-      <Container maxWidth="sm">
+      <Container>
         <MuiLink component={Link} href={`/${locale}/game/${gameId}`} color="secondary" sx={{ display: 'inline-block', mb: 2 }}>
           ← {game.name} → {variant.name}
         </MuiLink>

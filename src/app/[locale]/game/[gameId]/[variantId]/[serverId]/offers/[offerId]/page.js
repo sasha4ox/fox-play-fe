@@ -164,7 +164,7 @@ export default function OfferPDPPage() {
   if (error || !offer) {
     return (
       <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', py: 4, px: 2 }}>
-        <Container maxWidth="sm">
+        <Container >
           <Alert severity="error">{error || 'Offer not found.'}</Alert>
           <MuiLink component={Link} href={`/${locale}/game/${gameId}/${variantId}/${serverId}/offers`} sx={{ display: 'inline-block', mt: 2 }}>
             ← Back to offers
@@ -178,7 +178,7 @@ export default function OfferPDPPage() {
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', py: 4, px: 2 }}>
-      <Container maxWidth="sm">
+      <Container>
         <MuiLink component={Link} href={`/${locale}/game/${gameId}/${variantId}/${serverId}/offers`} color="secondary" sx={{ display: 'inline-block', mb: 2 }}>
           {t('backToOffers')}
         </MuiLink>

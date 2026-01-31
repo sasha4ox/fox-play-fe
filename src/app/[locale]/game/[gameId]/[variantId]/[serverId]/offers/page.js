@@ -75,7 +75,7 @@ export default function GameOffersPage() {
     if (gamesError)
       return (
         <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', py: 4, px: 2 }}>
-          <Container maxWidth="sm">
+          <Container>
             <Alert severity="error">{gamesError}</Alert>
             <MuiLink component={Link} href={`/${locale}/dashboard`} sx={{ display: 'inline-block', mt: 2 }}>{t('backToGames')}</MuiLink>
           </Container>
@@ -92,7 +92,7 @@ export default function GameOffersPage() {
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', py: 4, px: 2 }}>
-      <Container maxWidth="sm">
+      <Container>
         <MuiLink component={Link} href={`/${locale}/game/${gameId}/${variantId}`} color="secondary" sx={{ display: 'inline-block', mb: 2 }}>
           {t('backToServers')}
         </MuiLink>

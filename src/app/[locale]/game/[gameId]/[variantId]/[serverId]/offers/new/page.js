@@ -90,7 +90,7 @@ export default function NewOfferPage() {
   if (gamesError) {
     return (
       <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', py: 4, px: 2 }}>
-        <Container maxWidth="sm">
+        <Container>
           <Alert severity="error">{gamesError}</Alert>
           <MuiLink component={Link} href={`/${locale}/dashboard`} sx={{ display: 'inline-block', mt: 2 }}>← Back</MuiLink>
         </Container>
@@ -101,7 +101,7 @@ export default function NewOfferPage() {
   if (!token) {
     return (
       <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', py: 4, px: 2 }}>
-        <Container maxWidth="sm">
+        <Container>
           <Alert severity="info">{t('loginToCreate')}</Alert>
           <MuiLink component={Link} href={`/${locale}`} sx={{ display: 'inline-block', mt: 2 }}>{t('goToLogin')}</MuiLink>
         </Container>
@@ -113,7 +113,7 @@ export default function NewOfferPage() {
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', py: 4, px: 2 }}>
-      <Container maxWidth="sm">
+      <Container>
         <MuiLink component={Link} href={`/${locale}/game/${gameId}/${variantId}/${serverId}/offers`} color="secondary" sx={{ display: 'inline-block', mb: 2 }}>
           ← Back to offers
         </MuiLink>

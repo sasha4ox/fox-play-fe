@@ -40,7 +40,7 @@ export default function MyOffersPage() {
   if (!token) {
     return (
       <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', py: 4, px: 2 }}>
-        <Container maxWidth="sm">
+        <Container>
           <Alert severity="info">{t('loginToSeeOffers')}</Alert>
         </Container>
       </Box>

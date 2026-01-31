@@ -187,7 +187,7 @@ export default function OrderChatPage() {
   if (!token) {
     return (
       <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', py: 4, px: 2 }}>
-        <Container maxWidth="sm">
+        <Container>
           <Alert severity="info">Log in to open chat.</Alert>
         </Container>
       </Box>
@@ -205,7 +205,7 @@ export default function OrderChatPage() {
   if (error || !order) {
     return (
       <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', py: 4, px: 2 }}>
-        <Container maxWidth="sm">
+        <Container>
           <Alert severity="error">{error || t('orderNotFound')}</Alert>
           <Button component={Link} href={`/${locale}/dashboard/orders`} sx={{ mt: 2 }}>
             {tOrders('myOrders')}
