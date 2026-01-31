@@ -95,7 +95,7 @@ export default function BalancePage() {
   if (!isAuth) {
     return (
       <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', py: 4, px: 2 }}>
-        <Container maxWidth="sm">
+        <Container>
           <Typography variant="h5" fontWeight={600} gutterBottom>
             {t('title')}
           </Typography>

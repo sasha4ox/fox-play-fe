@@ -138,28 +138,7 @@ export default function Form({ popupMode = false, onLoginSuccess }) {
   return (
     <section className={styles.formWrapper}>
       <h2>{isLoginForm ? t('login') : t('register')}</h2>
-      {/* <div className={styles.links}>
-        <a href="https://t.me/KonungFox" target="_blank"  className={styles.link} aria-label="Приєднуйтесь до Telegram">
-          <TelegramIcon fontSize='large'/>
-        </a>
-        <a className={styles.link} href="https://www.facebook.com/" target="_blank" aria-label="Приєднуйтесь до Facebook">
-          <FacebookIcon fontSize='large'/>
-        </a>
-        <a className={styles.link} href="https://www.instagram.com/" target="_blank" aria-label="Приєднуйтесь до Instagram">
-          <InstagramIcon fontSize='large'/>
-        </a>
-      </div> */}
       <form onSubmit={handleSubmit(onSubmit)} className={styles.form}>
-        {authError && (
-          <Alert severity="error" sx={{ mb: 2 }} onClose={() => setAuthError(null)}>
-            {authError}
-          </Alert>
-        )}
-        {authSuccess && (
-          <Alert severity="success" sx={{ mb: 2 }}>
-            {authSuccess}
-          </Alert>
-        )}
         <Controller
           name="email"
           control={control}
@@ -211,7 +190,6 @@ export default function Form({ popupMode = false, onLoginSuccess }) {
                 placeholder={t('nicknamePlaceholder')}
                 error={!!error}
                 helperText={error ? error.message : null}
-                required
               />
             )}
           />
@@ -219,6 +197,16 @@ export default function Form({ popupMode = false, onLoginSuccess }) {
         {isEmailSent && (
           <Alert severity="success" sx={{ mb: 2 }}>
             {t('emailSentSuccess')}
+          </Alert>
+        )}
+        {authError && (
+          <Alert severity="error" sx={{ mb: 2 }} onClose={() => setAuthError(null)}>
+            {authError}
+          </Alert>
+        )}
+        {authSuccess && (
+          <Alert severity="success" sx={{ mb: 2 }}>
+            {authSuccess}
           </Alert>
         )}
         <Button type="submit" variant="contained" color="secondary" fullWidth className={styles.send} disabled={isSubmitting}>

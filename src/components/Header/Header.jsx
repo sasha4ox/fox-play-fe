@@ -53,8 +53,7 @@ export default function Header() {
     }
   };
 
-  const isHome = !pathname || pathname === '/' || pathname === `/${locale}`;
-  const isDashboard = pathname?.includes('/dashboard');
+  const isHome = !pathname || pathname === '/' || pathname === `/${locale}` || pathname?.includes('/dashboard');
 
   return (
     <AppBar
@@ -102,17 +101,6 @@ export default function Header() {
               }}
             >
               {t('home')}
-            </Button>
-          </Link>
-          <Link href={`${base}/dashboard`} style={{ textDecoration: 'none' }}>
-            <Button
-              sx={{
-                color: 'text.primary',
-                fontWeight: isDashboard ? 600 : 500,
-                '&:hover': { bgcolor: 'rgba(77, 61, 66, 0.08)' },
-              }}
-            >
-              {t('dashboard')}
             </Button>
           </Link>
           {isAuth && (

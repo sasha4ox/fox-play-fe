@@ -32,7 +32,7 @@ export default function DashboardPage() {
         px: 2,
       }}
     >
-      <Container maxWidth="sm">
+      <Container>
         <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
           <Link href={`/${locale}/dashboard/balance`} style={{ textDecoration: 'none' }}>
             <Typography component="span" color="secondary" fontWeight={500}>{t('balance')}</Typography>

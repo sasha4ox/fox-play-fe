@@ -3,6 +3,7 @@
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { useLocale, useTranslations } from 'next-intl';
+import { useEffect } from 'react';
 import Container from '@mui/material/Container';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
@@ -26,6 +27,15 @@ export default function GameServersPage() {
   const { tree, loading, error } = useGames();
   const game = tree ? getGameFromTree(tree, gameId) : null;
   const variant = tree ? getVariantFromTree(tree, gameId, variantId) : null;
+  const servers = variant?.servers ?? [];
+
+  // When there's only one server, go straight to its offers (no point showing "Choose server").
+  useEffect(() => {
+    if (loading || error || !game || !variant) return;
+    if (servers.length === 1) {
+      router.replace(`/${locale}/game/${gameId}/${variantId}/${servers[0].id}/offers`);
+    }
+  }, [loading, error, game, variant, servers, locale, gameId, variantId, router]);
 
   const handleServerClick = (serverId) => {
     router.push(`/${locale}/game/${gameId}/${variantId}/${serverId}/offers`);
@@ -51,8 +61,6 @@ export default function GameServersPage() {
       </Box>
     );
   }
-
-  const servers = variant.servers || [];
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', py: 4, px: 2 }}>

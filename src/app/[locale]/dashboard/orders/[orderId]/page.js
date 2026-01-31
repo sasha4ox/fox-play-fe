@@ -219,7 +219,7 @@ export default function OrderChatPage() {
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', py: 2, px: 2, display: 'flex', flexDirection: 'column' }}>
-      <Container maxWidth="sm" sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+      <Container sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
         <Link href={`/${locale}/dashboard/orders`} style={{ textDecoration: 'none' }}>
           <MuiLink component="span" color="secondary" sx={{ display: 'inline-block', mb: 1 }}>
             {tOrders('chats')}

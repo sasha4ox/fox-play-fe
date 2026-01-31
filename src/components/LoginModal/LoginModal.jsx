@@ -27,7 +27,7 @@ export default function LoginModal() {
           borderRadius: 3,
           boxShadow: '0 8px 32px rgba(53, 34, 40, 0.12)',
           border: '1px solid rgba(114, 94, 101, 0.2)',
-          overflow: 'hidden',
+          overflow: 'hidden'
         },
       }}
       slotProps={{ backdrop: { sx: { backgroundColor: 'rgba(53, 34, 40, 0.2)' } } }}
@@ -50,7 +50,10 @@ export default function LoginModal() {
           <CloseIcon />
         </IconButton>
       </DialogTitle>
-      <DialogContent sx={{ bgcolor: '#f9f6f1', px: 3, py: 3 }}>
+      <DialogContent sx={{  px: 3, py: 3, display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          background: '#fff' }}>
         <Form popupMode onLoginSuccess={triggerLoginSuccess} />
       </DialogContent>
     </Dialog>
