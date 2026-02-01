@@ -53,6 +53,7 @@
     "title": "Профіль",
     "dashboard": "Дашборд",
     "nickname": "Нікнейм",
+    "nicknameTaken": "Цей нікнейм вже зайнятий. Оберіть інший.",
     "loginToView": "Увійдіть, щоб редагувати профіль.",
     "login": "Увійти",
     "avatarImageOnly": "Оберіть файл зображення.",
@@ -144,6 +145,9 @@
     "notReceivedDispute": "Не отримав — Відкрити спір",
     "orderCompleted": "Замовлення завершено. Продавцю виплачено.",
     "orderDisputed": "По цьому замовленню відкрито спір.",
+    "disputeReasonLabel": "Причина спору",
+    "disputeOpenedByBuyer": "Відкрито покупцем",
+    "disputeEvidence": "Докази (скріншоти)",
     "noMessages": "Повідомлень ще немає. Напишіть привіт!",
     "messagePlaceholder": "Повідомлення...",
     "attachImage": "Прикріпити зображення",
@@ -161,7 +165,14 @@
     "failedOpenDispute": "Не вдалося відкрити спір",
     "moderatorBadge": "Модератор",
     "adminBadge": "Адмін",
-    "viewingAsModerator": "Ви переглядаєте це замовлення як модератор. Ви можете листуватися з покупцем і продавцем у цьому чаті."
+    "viewingAsModerator": "Ви переглядаєте це замовлення як модератор. Ви можете листуватися з покупцем і продавцем у цьому чаті.",
+    "resolveDisputeTitle": "Вирішити спір",
+    "resolveDisputeHint": "Продавець виконав умови — передати гроші продавцю. Або повернути покупцю, якщо правий покупець.",
+    "releaseToSeller": "Продавець виконав — передати продавцю",
+    "refundBuyer": "Повернути покупцю",
+    "resolving": "Вирішення…",
+    "disputeClosedNoFundsMoved": "Спір закрито. Кошти не переміщувалися (оплата вже була проведена).",
+    "disputeAlreadyResolvedHint": "Якщо спір уже було вирішено, статус оновиться."
   },
   "Offers": {
     "myOffers": "Мої оголошення",
@@ -192,11 +203,15 @@
     "loginToSell": "Увійдіть, щоб продати",
     "backToGames": "← До ігор",
     "backToServers": "← До серверів",
-    "backToVariants": "← До варіантів"
+    "backToVariants": "← До варіантів",
+    "sellerOnline": "Онлайн",
+    "sellerOffline": "Офлайн"
   },
   "OfferDetail": {
     "offerNotFound": "Оголошення не знайдено.",
     "backToOffers": "← Оголошення",
+    "sellerOnline": "Онлайн",
+    "sellerOffline": "Офлайн",
     "buy": "Купити",
     "messageSeller": "Написати продавцю",
     "chatWithBuyer": "Чат з покупцем",

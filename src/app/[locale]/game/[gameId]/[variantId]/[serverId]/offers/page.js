@@ -52,7 +52,7 @@ export default function GameOffersPage() {
     if (!serverId) return;
     setOffersLoading(true);
     setOffersError(null);
-    fetchOffersByServer(serverId)
+    fetchOffersByServer(serverId, token)
       .then((data) => {
         setOffers(Array.isArray(data) ? data : []);
         setOffersLoading(false);
@@ -61,7 +61,7 @@ export default function GameOffersPage() {
         setOffersError(err.message);
         setOffersLoading(false);
       });
-  }, [serverId]);
+  }, [serverId, token]);
 
   const handleSellItems = () => {
     if (!isAuthenticated) {
@@ -131,9 +131,40 @@ export default function GameOffersPage() {
                     <Typography variant="subtitle1" fontWeight={600}>
                       {offer.title}
                     </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      {OFFER_TYPE_LABELS[offer.offerType] ?? offer.offerType} · {offer.quantity} · {offer.price} {offer.currency}
-                      {offer.seller && ` · by ${offer.seller.nickname ?? offer.seller.email ?? '—'}`}
+                    <Typography variant="body2" color="text.secondary" component="span" sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 0.5 }}>
+                      {OFFER_TYPE_LABELS[offer.offerType] ?? offer.offerType} · {offer.quantity}
+                      {' · '}
+                      {offer.displayPrice != null && offer.displayCurrency
+                        ? `${offer.displayPrice} ${offer.displayCurrency} (${offer.price} ${offer.currency})`
+                        : `${offer.price} ${offer.currency}`}
+                      {offer.seller && (
+                        <>
+                          {' · by '}
+                          {offer.seller.nickname ?? offer.seller.email ?? '—'}
+                          <Box
+                            component="span"
+                            sx={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: 0.25,
+                              ml: 0.5,
+                            }}
+                          >
+                            <Box
+                              component="span"
+                              sx={{
+                                width: 6,
+                                height: 6,
+                                borderRadius: '50%',
+                                bgcolor: offer.seller.isOnline ? 'success.main' : 'text.disabled',
+                              }}
+                            />
+                            <Typography component="span" variant="caption" color="text.secondary">
+                              {offer.seller.isOnline ? t('sellerOnline') : t('sellerOffline')}
+                            </Typography>
+                          </Box>
+                        </>
+                      )}
                     </Typography>
                   </CardContent>
                 </CardActionArea>

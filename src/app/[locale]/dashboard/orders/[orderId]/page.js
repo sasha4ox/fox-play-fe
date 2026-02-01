@@ -27,6 +27,7 @@ import {
   markOrderDelivered,
   completeOrder as apiCompleteOrder,
   openDispute,
+  resolveDispute,
 } from '@/lib/api';
 import { useOrderSocket } from '@/hooks/useOrderSocket';
 
@@ -52,6 +53,7 @@ export default function OrderChatPage() {
   const [files, setFiles] = useState([]);
   const messagesEndRef = useRef(null);
   const [actionError, setActionError] = useState(null);
+  const [actionInfo, setActionInfo] = useState(null);
   const [deliverSubmitting, setDeliverSubmitting] = useState(false);
   const [deliverProofFiles, setDeliverProofFiles] = useState([]);
   const deliverProofInputRef = useRef(null);
@@ -61,6 +63,7 @@ export default function OrderChatPage() {
   const [disputeFiles, setDisputeFiles] = useState([]);
   const [disputeSubmitting, setDisputeSubmitting] = useState(false);
   const disputeFileInputRef = useRef(null);
+  const [resolveSubmitting, setResolveSubmitting] = useState(false);
 
   const { connected, lastMessage, onlineUserIds } = useOrderSocket(orderId, token);
 
@@ -105,7 +108,8 @@ export default function OrderChatPage() {
       setText('');
       setFiles([]);
       if (fileInputRef.current) fileInputRef.current.value = '';
-      // Message is added via socket (single source of truth) to avoid duplicate display
+      // Refetch messages so the new one appears (socket may not echo to sender)
+      getOrderMessages(orderId, token).then((msgs) => setMessages(Array.isArray(msgs) ? msgs : [])).catch(() => {});
     } catch (err) {
       setSendError(err.message);
     } finally {
@@ -157,6 +161,33 @@ export default function OrderChatPage() {
       setActionError(err.message || 'Failed to complete order');
     } finally {
       setCompleteSubmitting(false);
+    }
+  };
+
+  const handleResolveDispute = async (action) => {
+    if (!order?.dispute?.id || !token) return;
+    setResolveSubmitting(true);
+    setActionError(null);
+    setActionInfo(null);
+    try {
+      const result = await resolveDispute(order.dispute.id, { action }, token);
+      refetchOrder();
+      if (result?.noFundsMoved) {
+        setActionInfo(t('disputeClosedNoFundsMoved'));
+        setTimeout(() => setActionInfo(null), 8000);
+      }
+    } catch (err) {
+      refetchOrder();
+      const msg = err.message || '';
+      const isSoft = /already resolved|hold|settled|Refresh|not found/i.test(msg);
+      if (isSoft) {
+        setActionInfo(t('disputeAlreadyResolvedHint'));
+        setTimeout(() => setActionInfo(null), 8000);
+      } else {
+        setActionError(msg || 'Failed to resolve dispute');
+      }
+    } finally {
+      setResolveSubmitting(false);
     }
   };
 
@@ -275,6 +306,7 @@ export default function OrderChatPage() {
           </Box>
         )}
 
+        {actionInfo && <Alert severity="info" sx={{ mb: 1 }} onClose={() => setActionInfo(null)}>{actionInfo}</Alert>}
         {actionError && <Alert severity="error" sx={{ mb: 1 }}>{actionError}</Alert>}
 
         {canSellerDeliver && (
@@ -344,8 +376,62 @@ export default function OrderChatPage() {
           <Alert severity="warning" sx={{ mb: 1 }}>{t('orderDisputed')}</Alert>
         )}
 
+        {order.status === 'DISPUTED' && order?.dispute && (
+          <Box sx={{ mb: 2, p: 2, border: '1px solid', borderColor: 'warning.main', borderRadius: 1, bgcolor: 'action.hover' }}>
+            <Typography variant="subtitle2" color="text.primary" gutterBottom>{t('disputeReasonLabel')}</Typography>
+            <Typography variant="body2" color="text.primary" sx={{ whiteSpace: 'pre-wrap' }}>{order.dispute.reason || '—'}</Typography>
+            {order.dispute.openedBy && (order.buyer?.id === order.dispute.openedBy || order.buyerId === order.dispute.openedBy) && (
+              <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 1 }}>{t('disputeOpenedByBuyer')}</Typography>
+            )}
+            {order.dispute.attachments?.length > 0 && (
+              <Box sx={{ mt: 1.5 }}>
+                <Typography variant="caption" color="text.secondary" display="block" gutterBottom>{t('disputeEvidence')}</Typography>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                  {order.dispute.attachments.map((att) => (
+                    <a key={att.id} href={att.url} target="_blank" rel="noopener noreferrer" style={{ display: 'block' }}>
+                      <Box
+                        component="img"
+                        src={att.url}
+                        alt=""
+                        sx={{ maxWidth: 200, maxHeight: 150, borderRadius: 1, border: '1px solid', borderColor: 'divider', objectFit: 'cover' }}
+                      />
+                    </a>
+                  ))}
+                </Box>
+              </Box>
+            )}
+          </Box>
+        )}
+
         {isModerator && (
           <Alert severity="info" sx={{ mb: 1 }}>{t('viewingAsModerator')}</Alert>
+        )}
+
+        {isModerator && order?.status === 'DISPUTED' && order?.dispute?.id && (
+          <Box sx={{ mb: 2, p: 2, border: '1px solid', borderColor: 'divider', borderRadius: 1, bgcolor: 'background.paper' }}>
+            <Typography variant="subtitle2" gutterBottom>{t('resolveDisputeTitle')}</Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>{t('resolveDisputeHint')}</Typography>
+            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+              <Button
+                size="small"
+                variant="contained"
+                color="success"
+                onClick={() => handleResolveDispute('RELEASE')}
+                disabled={resolveSubmitting}
+              >
+                {resolveSubmitting ? t('resolving') : t('releaseToSeller')}
+              </Button>
+              <Button
+                size="small"
+                variant="contained"
+                color="error"
+                onClick={() => handleResolveDispute('REFUND')}
+                disabled={resolveSubmitting}
+              >
+                {resolveSubmitting ? t('resolving') : t('refundBuyer')}
+              </Button>
+            </Box>
+          </Box>
         )}
 
         <Box

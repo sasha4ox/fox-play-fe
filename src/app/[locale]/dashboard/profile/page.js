@@ -7,14 +7,13 @@ import Box from '@mui/material/Box';
 import Container from '@mui/material/Container';
 import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
-import TextField from '@mui/material/TextField';
 import Avatar from '@mui/material/Avatar';
 import Skeleton from '@mui/material/Skeleton';
 import Alert from '@mui/material/Alert';
 import MuiLink from '@mui/material/Link';
 import { useAuthStore, useIsAuthenticated } from '@/store/authStore';
 import { useProfile } from '@/hooks/useProfile';
-import { updateProfile, uploadAvatar } from '@/lib/api';
+import { uploadAvatar } from '@/lib/api';
 import { useLoginModalStore } from '@/store/loginModalStore';
 
 export default function ProfilePage() {
@@ -26,30 +25,13 @@ export default function ProfilePage() {
   const token = useAuthStore((s) => s.token);
   const openLoginModal = useLoginModalStore((s) => s.openModal);
   const { profile, loading, error, refetch } = useProfile();
-  const [nickname, setNickname] = useState('');
-  const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState(null);
   const [avatarUploading, setAvatarUploading] = useState(false);
   const avatarInputRef = useRef(null);
 
   const displayNickname = profile?.nickname ?? '';
-  const effectiveNickname = nickname !== '' ? nickname : displayNickname;
   const avatarUrl = profile?.avatarUrl;
   const initial = (profile?.nickname || profile?.email || '?').charAt(0).toUpperCase();
-
-  const handleSaveNickname = async () => {
-    if (!token || effectiveNickname === displayNickname) return;
-    setSaving(true);
-    setSaveError(null);
-    try {
-      await updateProfile({ nickname: effectiveNickname.trim() || null }, token);
-      await refetch();
-    } catch (e) {
-      setSaveError(e.message || 'Failed to save');
-    } finally {
-      setSaving(false);
-    }
-  };
 
   const handleAvatarChange = (e) => {
     const file = e.target.files?.[0];
@@ -148,24 +130,17 @@ export default function ProfilePage() {
             </Button>
           </Box>
 
-          <TextField
-            label={t('nickname')}
-            value={effectiveNickname}
-            onChange={(e) => setNickname(e.target.value)}
-            fullWidth
-            sx={{ maxWidth: 360 }}
-          />
+          <Box sx={{ width: '100%', maxWidth: 360 }}>
+            <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 0.5 }}>
+              {t('nickname')}
+            </Typography>
+            <Typography variant="body1" fontWeight={500}>
+              {displayNickname || '—'}
+            </Typography>
+          </Box>
           <Typography variant="body2" color="text.secondary">
             {profile?.email}
           </Typography>
-          <Button
-            variant="contained"
-            color="secondary"
-            onClick={handleSaveNickname}
-            disabled={saving || effectiveNickname === displayNickname}
-          >
-            {saving ? tCommon('loading') : tCommon('save')}
-          </Button>
         </Box>
 
         <Typography variant="body2" color="text.secondary" sx={{ mt: 3 }}>

@@ -60,7 +60,7 @@ export default function OfferPDPPage() {
     if (!offerId) return;
     setLoading(true);
     setError(null);
-    fetchOfferById(offerId)
+    fetchOfferById(offerId, token)
       .then((data) => {
         setOffer(data);
         setBuyQuantity(1);
@@ -70,7 +70,7 @@ export default function OfferPDPPage() {
         setError(err.message);
         setLoading(false);
       });
-  }, [offerId]);
+  }, [offerId, token]);
 
   const [selectedThreadBuyerId, setSelectedThreadBuyerId] = useState(null);
 
@@ -193,11 +193,28 @@ export default function OfferPDPPage() {
           {offer.description}
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          Price: {offer.price} {offer.currency} {offer.offerType === 'ADENA' ? 'per unit' : ''} · Quantity: {offer.quantity}
+          Price: {offer.displayPrice != null && offer.displayCurrency
+            ? `${offer.displayPrice} ${offer.displayCurrency} (${offer.price} ${offer.currency})`
+            : `${offer.price} ${offer.currency}`}
+          {offer.offerType === 'ADENA' ? ' per unit' : ''} · Quantity: {offer.quantity}
         </Typography>
         {offer.seller && (
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 1, display: 'flex', alignItems: 'center', gap: 0.5, flexWrap: 'wrap' }}>
             Seller: {offer.seller.nickname ?? offer.seller.email}
+            <Box component="span" sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.25 }}>
+              <Box
+                component="span"
+                sx={{
+                  width: 6,
+                  height: 6,
+                  borderRadius: '50%',
+                  bgcolor: offer.seller.isOnline ? 'success.main' : 'text.disabled',
+                }}
+              />
+              <Typography component="span" variant="caption" color="text.secondary">
+                {offer.seller.isOnline ? t('sellerOnline') : t('sellerOffline')}
+              </Typography>
+            </Box>
           </Typography>
         )}
 

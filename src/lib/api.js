@@ -77,14 +77,14 @@ export async function fetchGamesTree() {
   return res.json()
 }
 
-/** Offers by server (public) */
-export async function fetchOffersByServer(serverId) {
-  return apiGet(`/offers?serverId=${serverId}`)
+/** Offers by server. Pass token when logged in to get displayPrice in your currency. */
+export async function fetchOffersByServer(serverId, token = null) {
+  return apiGet(`/offers?serverId=${serverId}`, token)
 }
 
-/** Single offer (public) */
-export async function fetchOfferById(offerId) {
-  return apiGet(`/offers/${offerId}`)
+/** Single offer. Pass token when logged in to get displayPrice in your currency. */
+export async function fetchOfferById(offerId, token = null) {
+  return apiGet(`/offers/${offerId}`, token)
 }
 
 /** My offers as seller (auth required) */

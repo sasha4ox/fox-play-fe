@@ -53,6 +53,7 @@
     "title": "Profile",
     "dashboard": "Dashboard",
     "nickname": "Nickname",
+    "nicknameTaken": "This nickname is already taken. Please choose another.",
     "loginToView": "Log in to edit your profile.",
     "login": "Log in",
     "avatarImageOnly": "Please choose an image file.",
@@ -144,6 +145,9 @@
     "notReceivedDispute": "I didn't receive it — Open dispute",
     "orderCompleted": "Order completed. Seller has been paid.",
     "orderDisputed": "This order is in dispute.",
+    "disputeReasonLabel": "Reason for dispute",
+    "disputeOpenedByBuyer": "Opened by buyer",
+    "disputeEvidence": "Evidence (screenshots)",
     "noMessages": "No messages yet. Say hello!",
     "messagePlaceholder": "Message...",
     "attachImage": "Attach image",
@@ -161,7 +165,14 @@
     "failedOpenDispute": "Failed to open dispute",
     "moderatorBadge": "Moderator",
     "adminBadge": "Admin",
-    "viewingAsModerator": "You're viewing this order as a moderator. You can chat with the buyer and seller in this thread."
+    "viewingAsModerator": "You're viewing this order as a moderator. You can chat with the buyer and seller in this thread.",
+    "resolveDisputeTitle": "Resolve dispute",
+    "resolveDisputeHint": "Seller did right — release payment to seller. Or refund buyer if buyer is right.",
+    "releaseToSeller": "Seller did right — release to seller",
+    "refundBuyer": "Refund buyer",
+    "resolving": "Resolving…",
+    "disputeClosedNoFundsMoved": "Dispute closed. No funds were moved (payment was already settled).",
+    "disputeAlreadyResolvedHint": "If the dispute was already resolved, the status will update."
   },
   "Offers": {
     "myOffers": "My offers",
@@ -192,11 +203,15 @@
     "loginToSell": "Log in to sell items",
     "backToGames": "← Back to games",
     "backToServers": "← Back to servers",
-    "backToVariants": "← Back to variants"
+    "backToVariants": "← Back to variants",
+    "sellerOnline": "Online",
+    "sellerOffline": "Offline"
   },
   "OfferDetail": {
     "offerNotFound": "Offer not found.",
     "backToOffers": "← Offers",
+    "sellerOnline": "Online",
+    "sellerOffline": "Offline",
     "buy": "Buy",
     "messageSeller": "Message seller",
     "chatWithBuyer": "Chat with buyer",
