@@ -35,15 +35,28 @@
   "Header": {
     "home": "Home",
     "dashboard": "Dashboard",
+    "admin": "Admin",
     "chats": "Chats",
     "myOffers": "My offers",
     "balance": "Balance",
+    "profile": "Profile",
     "logout": "Logout",
     "login": "Login",
     "foxPlay": "Fox Play",
     "themeLight": "Light",
     "themeDark": "Dark",
-    "themeSystem": "System"
+    "theme": "Theme",
+    "language": "Language",
+    "menu": "Menu"
+  },
+  "Profile": {
+    "title": "Profile",
+    "dashboard": "Dashboard",
+    "nickname": "Nickname",
+    "loginToView": "Log in to edit your profile.",
+    "login": "Log in",
+    "avatarImageOnly": "Please choose an image file.",
+    "moreLater": "More profile options will be added here later."
   },
   "LoginModal": {
     "title": "Log in or sign up"
@@ -145,7 +158,10 @@
     "failedMarkDelivered": "Failed to mark as delivered",
     "enterDisputeReason": "Please enter a reason for the dispute.",
     "attachEvidenceError": "Please attach at least one image as evidence.",
-    "failedOpenDispute": "Failed to open dispute"
+    "failedOpenDispute": "Failed to open dispute",
+    "moderatorBadge": "Moderator",
+    "adminBadge": "Admin",
+    "viewingAsModerator": "You're viewing this order as a moderator. You can chat with the buyer and seller in this thread."
   },
   "Offers": {
     "myOffers": "My offers",
@@ -224,5 +240,40 @@
     "description": "Description",
     "quantity": "Quantity",
     "price": "Price"
+  },
+  "Admin": {
+    "overview": "Overview",
+    "disputes": "Disputes",
+    "games": "Games & servers",
+    "statsUsers": "Users",
+    "statsOrders": "Orders",
+    "statsDisputesOpen": "Disputes (open)",
+    "statsDisputesResolved": "Disputes (resolved)",
+    "statsOffers": "Offers",
+    "statsDepositsPending": "Deposits (pending)",
+    "statsDepositsCompleted": "Deposits (completed)",
+    "ordersByStatus": "Orders by status",
+    "status": "Status",
+    "all": "All",
+    "disputeOrder": "Order",
+    "disputeReason": "Reason",
+    "disputeOpenedBy": "Opened by",
+    "disputeBuyer": "Buyer",
+    "disputeSeller": "Seller",
+    "actions": "Actions",
+    "noDisputes": "No disputes.",
+    "total": "Total",
+    "release": "Release to seller",
+    "refund": "Refund buyer",
+    "addGame": "Add game",
+    "addVariant": "Add variant",
+    "addServer": "Add server",
+    "enabled": "Enabled",
+    "noGames": "No games.",
+    "gameName": "Game name",
+    "variantName": "Variant name",
+    "serverName": "Server name",
+    "add": "Add",
+    "cancel": "Cancel"
   }
 }

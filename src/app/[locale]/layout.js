@@ -39,9 +39,11 @@ export default async function RootLayout({ children, params }) {
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
         <Providers>
           <NextIntlClientProvider>
-            <Header />
-            {children}
-            <LoginModal />
+            <div style={{ maxWidth: '100vw', overflowX: 'hidden' }}>
+              <Header />
+              {children}
+              <LoginModal />
+            </div>
           </NextIntlClientProvider>
         </Providers>
       </body>

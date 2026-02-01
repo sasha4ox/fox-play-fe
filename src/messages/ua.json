@@ -35,15 +35,28 @@
   "Header": {
     "home": "Головна",
     "dashboard": "Дашборд",
+    "admin": "Адмін",
     "chats": "Чати",
     "myOffers": "Мої оголошення",
     "balance": "Баланс",
+    "profile": "Профіль",
     "logout": "Вийти",
     "login": "Увійти",
     "foxPlay": "Fox Play",
     "themeLight": "Світла",
     "themeDark": "Темна",
-    "themeSystem": "Як у системи"
+    "theme": "Тема",
+    "language": "Мова",
+    "menu": "Меню"
+  },
+  "Profile": {
+    "title": "Профіль",
+    "dashboard": "Дашборд",
+    "nickname": "Нікнейм",
+    "loginToView": "Увійдіть, щоб редагувати профіль.",
+    "login": "Увійти",
+    "avatarImageOnly": "Оберіть файл зображення.",
+    "moreLater": "Додаткові налаштування профілю з'являться тут пізніше."
   },
   "LoginModal": {
     "title": "Увійти або зареєструватися"
@@ -145,7 +158,10 @@
     "failedMarkDelivered": "Не вдалося позначити як доставлено",
     "enterDisputeReason": "Введіть причину спору.",
     "attachEvidenceError": "Додайте щонайменше одне зображення як доказ.",
-    "failedOpenDispute": "Не вдалося відкрити спір"
+    "failedOpenDispute": "Не вдалося відкрити спір",
+    "moderatorBadge": "Модератор",
+    "adminBadge": "Адмін",
+    "viewingAsModerator": "Ви переглядаєте це замовлення як модератор. Ви можете листуватися з покупцем і продавцем у цьому чаті."
   },
   "Offers": {
     "myOffers": "Мої оголошення",
@@ -224,5 +240,40 @@
     "description": "Опис",
     "quantity": "Кількість",
     "price": "Ціна"
+  },
+  "Admin": {
+    "overview": "Огляд",
+    "disputes": "Справи",
+    "games": "Ігри та сервери",
+    "statsUsers": "Користувачі",
+    "statsOrders": "Замовлення",
+    "statsDisputesOpen": "Справи (відкриті)",
+    "statsDisputesResolved": "Справи (вирішені)",
+    "statsOffers": "Оголошення",
+    "statsDepositsPending": "Поповнення (очікують)",
+    "statsDepositsCompleted": "Поповнення (виконані)",
+    "ordersByStatus": "Замовлення за статусом",
+    "status": "Статус",
+    "all": "Усі",
+    "disputeOrder": "Замовлення",
+    "disputeReason": "Причина",
+    "disputeOpenedBy": "Відкрито",
+    "disputeBuyer": "Покупець",
+    "disputeSeller": "Продавець",
+    "actions": "Дії",
+    "noDisputes": "Немає справ.",
+    "total": "Всього",
+    "release": "Передати продавцю",
+    "refund": "Повернути покупцю",
+    "addGame": "Додати гру",
+    "addVariant": "Додати варіант",
+    "addServer": "Додати сервер",
+    "enabled": "Увімкнено",
+    "noGames": "Немає ігор.",
+    "gameName": "Назва гри",
+    "variantName": "Назва варіанту",
+    "serverName": "Назва сервера",
+    "add": "Додати",
+    "cancel": "Скасувати"
   }
 }

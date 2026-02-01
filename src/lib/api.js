@@ -145,6 +145,27 @@ export async function updatePreferredCurrency(currency, token) {
   return apiPatch('/me', { preferredCurrency: currency }, token)
 }
 
+/** Update profile (nickname, avatarUrl). body: { nickname?, avatarUrl? } */
+export async function updateProfile(body, token) {
+  return apiPatch('/me', body, token)
+}
+
+/** Upload avatar image. FormData with 'avatar' file. Returns { avatarUrl } */
+export async function uploadAvatar(formData, token) {
+  const base = getApiBase()
+  const res = await fetch(`${base}/me/avatar`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+    body: formData,
+  })
+  if (res.status === 401 && typeof window !== 'undefined') useAuthStore.getState().logout()
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    throw new Error(data?.message || `Upload failed: ${res.status}`)
+  }
+  return res.json()
+}
+
 /** Deposit info for MVP – Binance (auth required). When mock: true, use simulateDeposit for dev. */
 export async function getDepositInfo(token) {
   return apiGet('/me/deposit', token)
@@ -244,4 +265,61 @@ export async function sendOrderMessage(orderId, formData, token) {
     throw err
   }
   return res.json()
+}
+
+// ——— Admin (ADMIN / MODERATOR only) ———
+
+/** Platform stats (users, orders, disputes, offers, deposits). */
+export async function getAdminStats(token) {
+  return apiGet('/admin/stats', token)
+}
+
+/** List disputes with optional status filter (OPEN, RESOLVED, REJECTED). */
+export async function getAdminDisputes(token, { status, skip, take } = {}) {
+  const params = new URLSearchParams()
+  if (status) params.set('status', status)
+  if (skip != null) params.set('skip', String(skip))
+  if (take != null) params.set('take', String(take))
+  const q = params.toString()
+  return apiGet(`/admin/disputes${q ? `?${q}` : ''}`, token)
+}
+
+/** Full games tree with enabled flags (for admin management). */
+export async function getAdminGames(token) {
+  return apiGet('/admin/games', token)
+}
+
+/** Update game (name, enabled). */
+export async function adminUpdateGame(gameId, body, token) {
+  return apiPatch(`/admin/games/${gameId}`, body, token)
+}
+
+/** Update variant (name, enabled). */
+export async function adminUpdateVariant(variantId, body, token) {
+  return apiPatch(`/admin/variants/${variantId}`, body, token)
+}
+
+/** Update server (name, enabled). */
+export async function adminUpdateServer(serverId, body, token) {
+  return apiPatch(`/admin/servers/${serverId}`, body, token)
+}
+
+/** Create game. body: { name } */
+export async function adminCreateGame(body, token) {
+  return apiPost('/admin/games', body, token)
+}
+
+/** Create variant. body: { name } */
+export async function adminCreateVariant(gameId, body, token) {
+  return apiPost(`/admin/games/${gameId}/variants`, body, token)
+}
+
+/** Create server. body: { name } */
+export async function adminCreateServer(gameId, variantId, body, token) {
+  return apiPost(`/admin/games/${gameId}/variants/${variantId}/servers`, body, token)
+}
+
+/** Resolve dispute. body: { action: 'RELEASE' | 'REFUND' } */
+export async function resolveDispute(disputeId, body, token) {
+  return apiPost(`/disputes/${disputeId}/resolve`, body, token)
 }

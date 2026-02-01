@@ -22,6 +22,7 @@ export default function LoginModal() {
       onClose={closeModal}
       maxWidth="sm"
       fullWidth
+      disableScrollLock
       PaperProps={{
         sx: {
           borderRadius: 3,

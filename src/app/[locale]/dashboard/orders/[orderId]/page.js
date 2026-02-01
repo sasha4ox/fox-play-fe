@@ -19,6 +19,7 @@ import MuiLink from '@mui/material/Link';
 import CircularProgress from '@mui/material/CircularProgress';
 import AttachFileIcon from '@mui/icons-material/AttachFile';
 import { useAuthStore } from '@/store/authStore';
+import { useProfile } from '@/hooks/useProfile';
 import {
   getOrderById,
   getOrderMessages,
@@ -34,9 +35,12 @@ export default function OrderChatPage() {
   const router = useRouter();
   const locale = useLocale();
   const t = useTranslations('OrderDetail');
+  const tCommon = useTranslations('Common');
+  const tOrders = useTranslations('Orders');
   const orderId = params?.orderId;
   const token = useAuthStore((s) => s.token);
   const user = useAuthStore((s) => s.user);
+  const { profile } = useProfile();
   const [order, setOrder] = useState(null);
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -110,6 +114,8 @@ export default function OrderChatPage() {
   };
 
   const currentUserId = user?.id ?? user?.userId;
+  const role = profile?.role ?? user?.role;
+  const isModerator = role === 'ADMIN' || role === 'MODERATOR';
   const isSeller = order && currentUserId && (order.sellerId === currentUserId || order.seller?.id === currentUserId);
   const isBuyer = order && currentUserId && (order.buyerId === currentUserId || order.buyer?.id === currentUserId);
   const canSellerDeliver =
@@ -335,7 +341,11 @@ export default function OrderChatPage() {
           <Alert severity="success" sx={{ mb: 1 }}>Order completed. Seller has been paid.</Alert>
         )}
         {order.status === 'DISPUTED' && (
-          <Alert severity="warning" sx={{ mb: 1 }}>This order is in dispute.</Alert>
+          <Alert severity="warning" sx={{ mb: 1 }}>{t('orderDisputed')}</Alert>
+        )}
+
+        {isModerator && (
+          <Alert severity="info" sx={{ mb: 1 }}>{t('viewingAsModerator')}</Alert>
         )}
 
         <Box
@@ -367,6 +377,11 @@ export default function OrderChatPage() {
             >
               <Typography variant="caption" color="text.secondary" display="block">
                 {msg.sender?.nickname ?? msg.sender?.email ?? tCommon('user')}
+                {(msg.sender?.role === 'ADMIN' || msg.sender?.role === 'MODERATOR') && (
+                  <Typography component="span" variant="caption" sx={{ ml: 0.5, fontWeight: 600 }}>
+                    ({msg.sender?.role === 'ADMIN' ? t('adminBadge') : t('moderatorBadge')})
+                  </Typography>
+                )}
                 {msg.createdAt && (
                   <Typography component="span" variant="caption" color="text.secondary" sx={{ ml: 0.5, opacity: 0.9 }}>
                     · {new Date(msg.createdAt).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' })}
