@@ -51,13 +51,17 @@ export default function DashboardPage() {
       }}
     >
       <Container>
-        <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
+        <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap' }}>
           <Link href={`/${locale}/dashboard/balance`} style={{ textDecoration: 'none' }}>
             <Typography component="span" color="secondary" fontWeight={500}>{t('balance')}</Typography>
           </Link>
           <Typography component="span" color="text.secondary">·</Typography>
           <Link href={`/${locale}/dashboard/orders`} style={{ textDecoration: 'none' }}>
             <Typography component="span" color="secondary" fontWeight={500}>{t('myOrdersChat')}</Typography>
+          </Link>
+          <Typography component="span" color="text.secondary">·</Typography>
+          <Link href={`/${locale}/dashboard/sales`} style={{ textDecoration: 'none' }}>
+            <Typography component="span" color="secondary" fontWeight={500}>{t('mySales')}</Typography>
           </Link>
         </Box>
         {token && (

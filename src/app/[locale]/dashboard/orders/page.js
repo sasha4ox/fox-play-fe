@@ -12,15 +12,16 @@ import CardContent from '@mui/material/CardContent';
 import Skeleton from '@mui/material/Skeleton';
 import Alert from '@mui/material/Alert';
 import MuiLink from '@mui/material/Link';
+import Avatar from '@mui/material/Avatar';
+import Badge from '@mui/material/Badge';
 import { useAuthStore } from '@/store/authStore';
-import { getMyOrdersAsBuyer, getMyOrdersAsSeller, getMyOfferThreads } from '@/lib/api';
+import { getMyOrderChats, getMyOfferThreads } from '@/lib/api';
 
 export default function MyOrdersPage() {
   const locale = useLocale();
   const t = useTranslations('Orders');
   const token = useAuthStore((s) => s.token);
-  const [buyerOrders, setBuyerOrders] = useState([]);
-  const [sellerOrders, setSellerOrders] = useState([]);
+  const [chatSummary, setChatSummary] = useState({ orders: [], unreadTotal: 0 });
   const [offerThreads, setOfferThreads] = useState({ asBuyer: [], asSeller: [] });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -31,13 +32,11 @@ export default function MyOrdersPage() {
       return;
     }
     Promise.all([
-      getMyOrdersAsBuyer(token),
-      getMyOrdersAsSeller(token),
+      getMyOrderChats(token),
       getMyOfferThreads(token).catch(() => ({ asBuyer: [], asSeller: [] })),
     ])
-      .then(([buyer, seller, threads]) => {
-        setBuyerOrders(Array.isArray(buyer) ? buyer : []);
-        setSellerOrders(Array.isArray(seller) ? seller : []);
+      .then(([chats, threads]) => {
+        setChatSummary(chats && typeof chats === 'object' ? { orders: chats.orders ?? [], unreadTotal: chats.unreadTotal ?? 0 } : { orders: [], unreadTotal: 0 });
         setOfferThreads(threads && typeof threads === 'object' && !Array.isArray(threads) ? threads : { asBuyer: [], asSeller: [] });
       })
       .catch((err) => setError(err.message))
@@ -54,10 +53,10 @@ export default function MyOrdersPage() {
     );
   }
 
-  const allOrders = [...buyerOrders, ...sellerOrders].filter(
-    (o, i, arr) => arr.findIndex((x) => x.id === o.id) === i
-  );
-  allOrders.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+  const allOrders = chatSummary.orders ?? [];
+  const sellerChats = allOrders.filter((o) => o.isSeller);
+  const buyerChats = allOrders.filter((o) => !o.isSeller);
+  const orderChatsList = [...sellerChats, ...buyerChats];
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', py: 4, px: 2 }}>
@@ -167,22 +166,73 @@ export default function MyOrdersPage() {
         {!loading && !error && allOrders.length === 0 && (
           <Typography color="text.secondary">{t('noOrderChats')}</Typography>
         )}
-        {!loading && allOrders.length > 0 && (
+        {!loading && orderChatsList.length > 0 && (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mt: 2 }}>
-            {allOrders.map((order) => (
-              <Card key={order.id} variant="outlined">
-                <CardActionArea component={Link} href={`/${locale}/dashboard/orders/${order.id}`}>
-                  <CardContent sx={{ py: 2, px: 2 }}>
-                    <Typography variant="subtitle1" fontWeight={600}>
-                      {t('orderIdShort', { id: order.id?.slice(0, 8) ?? '' })}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      {t('status')}: {order.status ?? '—'} · {t('chat')}
-                    </Typography>
-                  </CardContent>
-                </CardActionArea>
-              </Card>
-            ))}
+            {sellerChats.length > 0 && (
+              <Typography variant="caption" color="primary.main" fontWeight={600} sx={{ mb: -0.5 }}>
+                {t('someoneBoughtYourItem')}
+              </Typography>
+            )}
+            {orderChatsList.map((order) => {
+              const other = order.otherParty;
+              const lastDate = order.lastMessage?.createdAt ?? order.createdAt;
+              const displayName = other?.nickname ?? other?.email ?? t('chat');
+              const isSellerChat = order.isSeller;
+              return (
+                <Card
+                  key={order.id}
+                  variant="outlined"
+                  sx={
+                    isSellerChat
+                      ? {
+                          borderLeft: '4px solid',
+                          borderColor: 'primary.main',
+                          bgcolor: (theme) => `${theme.palette.primary.main}08`,
+                        }
+                      : {}
+                  }
+                >
+                  <CardActionArea component={Link} href={`/${locale}/dashboard/orders/${order.id}`}>
+                    <CardContent sx={{ py: 2, px: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
+                      <Badge badgeContent={order.unreadCount > 0 ? order.unreadCount : 0} color="error" invisible={order.unreadCount === 0}>
+                        <Avatar
+                          src={other?.avatarUrl}
+                          sx={{ width: 48, height: 48, bgcolor: isSellerChat ? 'primary.main' : 'grey.600' }}
+                        >
+                          {(displayName || '?').charAt(0).toUpperCase()}
+                        </Avatar>
+                      </Badge>
+                      <Box sx={{ flex: 1, minWidth: 0 }}>
+                        {isSellerChat && (
+                          <Typography variant="caption" color="primary.main" fontWeight={600} display="block" sx={{ mb: 0.25 }}>
+                            {t('sale')}
+                          </Typography>
+                        )}
+                        <Typography variant="subtitle1" fontWeight={600} noWrap>
+                          {order.offer?.title ?? t('orderIdShort', { id: order.id?.slice(0, 8) ?? '' })}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          {displayName} · {t('status')}: {order.status ?? '—'}
+                          {order.isSeller && order.sellerAmount != null && (
+                            <> · {Number(order.sellerAmount).toFixed(2)} {order.sellerCurrency} → {order.payoutMethod === 'card' ? t('toCardShort') : t('toBalanceShort')}</>
+                          )}
+                        </Typography>
+                        {order.lastMessage?.text && (
+                          <Typography variant="caption" color="text.secondary" noWrap display="block" sx={{ mt: 0.25 }}>
+                            {order.lastMessage.text}
+                          </Typography>
+                        )}
+                        {lastDate && (
+                          <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.25 }}>
+                            {new Date(lastDate).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' })}
+                          </Typography>
+                        )}
+                      </Box>
+                    </CardContent>
+                  </CardActionArea>
+                </Card>
+              );
+            })}
           </Box>
         )}
       </Container>

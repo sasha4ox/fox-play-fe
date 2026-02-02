@@ -26,12 +26,32 @@ import { useAuthStore, useIsAuthenticated } from '@/store/authStore';
 import { useThemeStore } from '@/store/themeStore';
 import { useLoginModalStore } from '@/store/loginModalStore';
 import { useProfile } from '@/hooks/useProfile';
-import { updatePreferredCurrency } from '@/lib/api';
+import { useSellerNewOrder } from '@/hooks/useSellerNewOrder';
+import { updatePreferredCurrency, getUnreadCount } from '@/lib/api';
+import {
+  playNewOrderSound,
+  playNewMessageSound,
+  getNotificationSoundEnabled,
+  getMessageSoundEnabled,
+  setMessageSoundEnabled,
+  getMessageSoundPreset,
+  setMessageSoundPreset,
+  getSoldSoundEnabled,
+  setSoldSoundEnabled,
+  getSoldSoundPreset,
+  setSoldSoundPreset,
+  getPresetIds,
+} from '@/lib/notificationSound';
+import Badge from '@mui/material/Badge';
+import Alert from '@mui/material/Alert';
+import Switch from '@mui/material/Switch';
+import FormControl from '@mui/material/FormControl';
 import MenuIcon from '@mui/icons-material/Menu';
 import PersonIcon from '@mui/icons-material/Person';
 import LogoutIcon from '@mui/icons-material/Logout';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 import LightModeIcon from '@mui/icons-material/LightMode';
+import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
 
 const CURRENCIES = ['USD', 'EUR', 'UAH', 'RUB'];
 
@@ -57,9 +77,64 @@ export default function Header() {
   const [anchorEl, setAnchorEl] = useState(null);
   const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [sellerOrderCount, setSellerOrderCount] = useState(0);
+  const [messageSoundOn, setMessageSoundOn] = useState(true);
+  const [messageSoundPreset, setMessageSoundPresetState] = useState('chime');
+  const [soldSoundOn, setSoldSoundOn] = useState(true);
+  const [soldSoundPreset, setSoldSoundPresetState] = useState('chime');
+  useEffect(() => {
+    setMessageSoundOn(getMessageSoundEnabled());
+    setMessageSoundPresetState(getMessageSoundPreset());
+    setSoldSoundOn(getSoldSoundEnabled());
+    setSoldSoundPresetState(getSoldSoundPreset());
+  }, []);
+  const refetchUnread = () => {
+    if (!token) return;
+    getUnreadCount(token)
+      .then((data) => {
+        setUnreadCount(data?.count ?? 0);
+        setSellerOrderCount(data?.sellerOrderCount ?? 0);
+      })
+      .catch(() => {});
+  };
+  const handleOrderActivity = () => {
+    refetchUnread();
+    playNewMessageSound();
+  };
+  const { lastNewOrder, clearNewOrder } = useSellerNewOrder(isAuth ? token : null, {
+    onOrderActivity: handleOrderActivity,
+  });
+  useEffect(() => {
+    if (lastNewOrder) {
+      playNewOrderSound();
+      refetchUnread();
+    }
+  }, [lastNewOrder]);
   const themeMode = useThemeStore((s) => s.mode);
   const setThemeMode = useThemeStore((s) => s.setMode);
   const [systemDark, setSystemDark] = useState(false);
+  const handleMessageSoundToggle = (e) => {
+    const checked = e.target.checked;
+    setMessageSoundOn(checked);
+    setMessageSoundEnabled(checked);
+  };
+  const handleMessagePresetChange = (e) => {
+    const v = e.target.value;
+    setMessageSoundPresetState(v);
+    setMessageSoundPreset(v);
+  };
+  const handleSoldSoundToggle = (e) => {
+    const checked = e.target.checked;
+    setSoldSoundOn(checked);
+    setSoldSoundEnabled(checked);
+  };
+  const handleSoldPresetChange = (e) => {
+    const v = e.target.value;
+    setSoldSoundPresetState(v);
+    setSoldSoundPreset(v);
+  };
+  const presetIds = getPresetIds();
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -70,6 +145,32 @@ export default function Header() {
     return () => mq.removeEventListener('change', listener);
   }, []);
   const effectiveMode = themeMode === 'system' ? (systemDark ? 'dark' : 'light') : themeMode;
+
+  useEffect(() => {
+    if (!isAuth || !token) {
+      setUnreadCount(0);
+      setSellerOrderCount(0);
+      return;
+    }
+    getUnreadCount(token)
+      .then((data) => {
+        setUnreadCount(data?.count ?? 0);
+        setSellerOrderCount(data?.sellerOrderCount ?? 0);
+      })
+      .catch(() => {
+        setUnreadCount(0);
+        setSellerOrderCount(0);
+      });
+    const interval = setInterval(() => {
+      getUnreadCount(token)
+        .then((data) => {
+          setUnreadCount(data?.count ?? 0);
+          setSellerOrderCount(data?.sellerOrderCount ?? 0);
+        })
+        .catch(() => {});
+    }, 30000);
+    return () => clearInterval(interval);
+  }, [isAuth, token, pathname]);
 
   const handleLogout = () => {
     setAnchorEl(null);
@@ -98,8 +199,10 @@ export default function Header() {
     { href: base, label: t('home'), active: isHome },
     ...(isAuth
       ? [
-          { href: `${base}/dashboard/orders`, label: t('chats'), active: pathname?.includes('/dashboard/orders') },
+          { href: `${base}/dashboard/orders`, label: t('chats'), active: pathname?.includes('/dashboard/orders'), badge: unreadCount },
           { href: `${base}/dashboard/offers`, label: t('myOffers'), active: pathname?.includes('/dashboard/offers') },
+          { href: `${base}/dashboard/balance`, label: t('balance'), active: pathname?.includes('/dashboard/balance') },
+          { href: `${base}/dashboard/sales`, label: t('mySales'), active: pathname?.includes('/dashboard/sales'), badge: sellerOrderCount },
           ...(profile?.role === 'ADMIN' || profile?.role === 'MODERATOR' || user?.role === 'ADMIN' || user?.role === 'MODERATOR'
             ? [{ href: `${base}/dashboard/admin/overview`, label: t('admin'), active: pathname?.includes('/dashboard/admin') }]
             : []),
@@ -109,17 +212,31 @@ export default function Header() {
 
   const NavBlock = () => (
     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-      {navLinks.map(({ href, label, active }) => (
+      {navLinks.map(({ href, label, active, badge }) => (
         <Link key={href + label} href={href} style={{ textDecoration: 'none' }}>
-          <Button
+          <Badge
+            badgeContent={badge ?? 0}
+            color="error"
+            invisible={!(badge > 0)}
             sx={{
-              color: 'text.primary',
-              fontWeight: active ? 600 : 500,
-              '&:hover': { bgcolor: 'action.hover' },
+              '& .MuiBadge-badge': {
+                right: 2,
+                top: 4,
+              },
             }}
           >
-            {label}
-          </Button>
+            <Button
+              sx={{
+                color: 'text.primary',
+                fontWeight: active ? 600 : 500,
+                '&:hover': { bgcolor: 'action.hover' },
+                px: 1.5,
+                minWidth: 0,
+              }}
+            >
+              {label}
+            </Button>
+          </Badge>
         </Link>
       ))}
     </Box>
@@ -250,6 +367,36 @@ export default function Header() {
           </MenuItem>
           <Divider />
           <Box sx={{ px: 2, py: 0.5 }}>
+            <Typography variant="caption" color="text.secondary">{t('sounds')}</Typography>
+          </Box>
+          <MenuItem component="div" sx={{ cursor: 'default', flexDirection: 'column', alignItems: 'stretch' }} onClick={(e) => e.stopPropagation()}>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+              <ListItemText primary={t('soundMessageReceived')} primaryTypographyProps={{ variant: 'body2' }} />
+              <Switch size="small" checked={messageSoundOn} onChange={handleMessageSoundToggle} onClick={(e) => e.stopPropagation()} />
+            </Box>
+            <FormControl size="small" sx={{ minWidth: 100, mt: 0.5 }} onClick={(e) => e.stopPropagation()}>
+              <Select value={messageSoundPreset} onChange={handleMessagePresetChange} displayEmpty size="small" sx={{ height: 28, fontSize: '0.8rem' }}>
+                {presetIds.map((id) => (
+                  <MenuItem key={id} value={id}>{t(`soundPreset_${id}`)}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </MenuItem>
+          <MenuItem component="div" sx={{ cursor: 'default', flexDirection: 'column', alignItems: 'stretch' }} onClick={(e) => e.stopPropagation()}>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+              <ListItemText primary={t('soundSoldItem')} primaryTypographyProps={{ variant: 'body2' }} />
+              <Switch size="small" checked={soldSoundOn} onChange={handleSoldSoundToggle} onClick={(e) => e.stopPropagation()} />
+            </Box>
+            <FormControl size="small" sx={{ minWidth: 100, mt: 0.5 }} onClick={(e) => e.stopPropagation()}>
+              <Select value={soldSoundPreset} onChange={handleSoldPresetChange} displayEmpty size="small" sx={{ height: 28, fontSize: '0.8rem' }}>
+                {presetIds.map((id) => (
+                  <MenuItem key={id} value={id}>{t(`soundPreset_${id}`)}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </MenuItem>
+          <Divider />
+          <Box sx={{ px: 2, py: 0.5 }}>
             <Typography variant="caption" color="text.secondary">{t('theme')}</Typography>
           </Box>
           <MenuItem onClick={() => { setThemeMode('light'); setAnchorEl(null); }}>
@@ -278,22 +425,46 @@ export default function Header() {
   };
 
   const drawer = (
-    <Box sx={{ width: 280, pt: 2, pb: 2 }} role="presentation">
+    <Box sx={{ width: 280, pt: 2, pb: 3, px: 0, pr: 2, maxHeight: '100vh', overflowY: 'auto', overflowX: 'hidden' }} role="presentation">
       <Box sx={{ px: 2, pb: 1 }}>
         <Typography variant="subtitle2" color="text.secondary">{t('menu')}</Typography>
       </Box>
-      {navLinks.map(({ href, label }) => (
-        <Button
-          key={href + label}
-          component={Link}
-          href={href}
-          fullWidth
-          sx={{ justifyContent: 'flex-start', px: 2, py: 1.5 }}
-          onClick={() => setMobileOpen(false)}
-        >
-          {label}
-        </Button>
-      ))}
+      {navLinks.map(({ href, label, badge }) => {
+        const count = badge ?? 0
+        return (
+          <Button
+            key={href + label}
+            component={Link}
+            href={href}
+            fullWidth
+            sx={{ justifyContent: 'flex-start', px: 2, py: 1.5 }}
+            onClick={() => setMobileOpen(false)}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <span>{label}</span>
+              {count > 0 && (
+                <Box
+                  component="span"
+                  sx={{
+                    minWidth: 20,
+                    height: 20,
+                    borderRadius: '50%',
+                    bgcolor: 'error.main',
+                    color: 'error.contrastText',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '0.75rem',
+                    fontWeight: 600,
+                  }}
+                >
+                  {count > 99 ? '99+' : count}
+                </Box>
+              )}
+            </Box>
+          </Button>
+        )
+      })}
       {isAuth && (
         <>
           <Divider sx={{ my: 1 }} />
@@ -315,6 +486,29 @@ export default function Header() {
           >
             {t('profile')}
           </Button>
+          <Box sx={{ px: 2, py: 1 }}>
+            <Typography variant="caption" color="text.secondary">{t('sounds')}</Typography>
+            <Box sx={{ mt: 0.5 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', py: 0.5 }}>
+                <Typography variant="body2">{t('soundMessageReceived')}</Typography>
+                <Switch size="small" checked={messageSoundOn} onChange={handleMessageSoundToggle} />
+              </Box>
+              <Select value={messageSoundPreset} onChange={handleMessagePresetChange} size="small" sx={{ mt: 0.5, width: '100%' }}>
+                {presetIds.map((id) => (
+                  <MenuItem key={id} value={id}>{t(`soundPreset_${id}`)}</MenuItem>
+                ))}
+              </Select>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', py: 0.5, mt: 0.5 }}>
+                <Typography variant="body2">{t('soundSoldItem')}</Typography>
+                <Switch size="small" checked={soldSoundOn} onChange={handleSoldSoundToggle} />
+              </Box>
+              <Select value={soldSoundPreset} onChange={handleSoldPresetChange} size="small" sx={{ mt: 0.5, width: '100%' }}>
+                {presetIds.map((id) => (
+                  <MenuItem key={id} value={id}>{t(`soundPreset_${id}`)}</MenuItem>
+                ))}
+              </Select>
+            </Box>
+          </Box>
           <Box sx={{ px: 2, py: 1 }}>
             <Typography variant="caption" color="text.secondary">{t('theme')}</Typography>
             <Box sx={{ display: 'flex', gap: 0.5, mt: 0.5 }}>
@@ -414,12 +608,44 @@ export default function Header() {
         </Box>
       </Toolbar>
 
+      {/* New order notification bar – visible in header */}
+      {lastNewOrder && (
+        <Alert
+          severity="success"
+          variant="filled"
+          onClose={clearNewOrder}
+          sx={{
+            mx: 1,
+            mb: 1,
+            alignItems: 'center',
+            '& .MuiAlert-message': { flex: 1 },
+          }}
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 1 }}>
+            <Typography variant="body2" component="span" sx={{ color: 'inherit' }}>
+              {t('newOrderNotification', { title: lastNewOrder.offerTitle, qty: lastNewOrder.quantity })}
+            </Typography>
+            <Button
+              component={Link}
+              href={lastNewOrder?.orderId ? `${base}/dashboard/orders/${lastNewOrder.orderId}` : base}
+              size="small"
+              variant="outlined"
+              color="inherit"
+              onClick={clearNewOrder}
+              sx={{ textTransform: 'none', borderColor: 'rgba(255,255,255,0.7)', color: 'inherit' }}
+            >
+              {t('openChat')}
+            </Button>
+          </Box>
+        </Alert>
+      )}
+
       <Drawer
         anchor="left"
         open={mobileOpen}
         onClose={() => setMobileOpen(false)}
         ModalProps={{ keepMounted: true }}
-        sx={{ '& .MuiDrawer-paper': { boxSizing: 'border-box', width: 280 } }}
+        sx={{ '& .MuiDrawer-paper': { boxSizing: 'border-box', width: 280, maxHeight: '100vh' } }}
       >
         {drawer}
       </Drawer>

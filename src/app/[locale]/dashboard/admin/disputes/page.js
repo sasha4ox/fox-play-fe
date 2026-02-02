@@ -7,6 +7,11 @@ import Container from '@mui/material/Container';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
+import TextField from '@mui/material/TextField';
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import DialogActions from '@mui/material/DialogActions';
 import FormControl from '@mui/material/FormControl';
 import InputLabel from '@mui/material/InputLabel';
 import Select from '@mui/material/Select';
@@ -32,6 +37,9 @@ export default function AdminDisputesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [resolvingId, setResolvingId] = useState(null);
+  const [verdictDialog, setVerdictDialog] = useState({ open: false, disputeId: null, action: null });
+  const [verdict, setVerdict] = useState('');
+  const [verdictError, setVerdictError] = useState(null);
 
   const load = () => {
     if (!token) return;
@@ -47,13 +55,34 @@ export default function AdminDisputesPage() {
     load();
   }, [token, statusFilter]);
 
-  const handleResolve = (disputeId, action) => {
-    if (!token) return;
-    setResolvingId(disputeId);
-    resolveDispute(disputeId, { action }, token)
-      .then(() => load())
+  const openVerdictDialog = (disputeId, action) => {
+    setVerdictDialog({ open: true, disputeId, action });
+    setVerdict('');
+    setVerdictError(null);
+  };
+
+  const closeVerdictDialog = () => {
+    setVerdictDialog({ open: false, disputeId: null, action: null });
+    setVerdict('');
+    setVerdictError(null);
+  };
+
+  const handleResolveSubmit = () => {
+    const trimmed = (verdict || '').trim();
+    if (!trimmed) {
+      setVerdictError(t('verdictRequired'));
+      return;
+    }
+    if (!token || !verdictDialog.disputeId || !verdictDialog.action) return;
+    setResolvingId(verdictDialog.disputeId);
+    setVerdictError(null);
+    resolveDispute(verdictDialog.disputeId, { action: verdictDialog.action, verdict: trimmed }, token)
+      .then(() => {
+        closeVerdictDialog();
+        load();
+      })
       .catch((e) => {
-        setError(e.message || 'Failed to resolve');
+        setVerdictError(e.message || 'Failed to resolve');
       })
       .finally(() => setResolvingId(null));
   };
@@ -123,7 +152,7 @@ export default function AdminDisputesPage() {
                           size="small"
                           color="primary"
                           disabled={resolvingId === d.id}
-                          onClick={() => handleResolve(d.id, 'RELEASE')}
+                          onClick={() => openVerdictDialog(d.id, 'RELEASE')}
                         >
                           {t('release')}
                         </Button>
@@ -131,7 +160,7 @@ export default function AdminDisputesPage() {
                           size="small"
                           color="secondary"
                           disabled={resolvingId === d.id}
-                          onClick={() => handleResolve(d.id, 'REFUND')}
+                          onClick={() => openVerdictDialog(d.id, 'REFUND')}
                         >
                           {t('refund')}
                         </Button>
@@ -149,6 +178,35 @@ export default function AdminDisputesPage() {
           {t('total')}: {data.total}
         </Typography>
       )}
+
+      <Dialog open={verdictDialog.open} onClose={closeVerdictDialog} maxWidth="sm" fullWidth>
+        <DialogTitle>
+          {verdictDialog.action === 'RELEASE' ? t('release') : t('refund')} — {t('verdictRequired')}
+        </DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            {t('verdictHint')}
+          </Typography>
+          <TextField
+            label={t('verdict')}
+            value={verdict}
+            onChange={(e) => setVerdict(e.target.value)}
+            fullWidth
+            multiline
+            rows={3}
+            required
+            error={!!verdictError}
+            helperText={verdictError}
+            placeholder={t('verdictPlaceholder')}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={closeVerdictDialog}>{t('cancel')}</Button>
+          <Button variant="contained" onClick={handleResolveSubmit} disabled={resolvingId || !verdict.trim()}>
+            {resolvingId ? t('submitting') : (verdictDialog.action === 'RELEASE' ? t('release') : t('refund'))}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Container>
   );
 }

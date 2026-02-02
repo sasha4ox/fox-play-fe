@@ -64,6 +64,9 @@ export default function OrderChatPage() {
   const [disputeSubmitting, setDisputeSubmitting] = useState(false);
   const disputeFileInputRef = useRef(null);
   const [resolveSubmitting, setResolveSubmitting] = useState(false);
+  const [resolveVerdictDialog, setResolveVerdictDialog] = useState({ open: false, action: null });
+  const [resolveVerdictText, setResolveVerdictText] = useState('');
+  const tAdmin = useTranslations('Admin');
 
   const { connected, lastMessage, onlineUserIds } = useOrderSocket(orderId, token);
 
@@ -95,6 +98,13 @@ export default function OrderChatPage() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  // Refetch order periodically so read receipts (Seen) update when the other user reads
+  useEffect(() => {
+    if (!orderId || !token) return;
+    const interval = setInterval(refetchOrder, 15000);
+    return () => clearInterval(interval);
+  }, [orderId, token]);
 
   const handleSend = async () => {
     if (!orderId || !token || (!text.trim() && files.length === 0)) return;
@@ -164,13 +174,29 @@ export default function OrderChatPage() {
     }
   };
 
-  const handleResolveDispute = async (action) => {
-    if (!order?.dispute?.id || !token) return;
+  const openResolveVerdictDialog = (action) => {
+    setResolveVerdictDialog({ open: true, action });
+    setResolveVerdictText('');
+    setActionError(null);
+  };
+
+  const closeResolveVerdictDialog = () => {
+    setResolveVerdictDialog({ open: false, action: null });
+    setResolveVerdictText('');
+  };
+
+  const handleResolveDisputeSubmit = async () => {
+    const verdict = (resolveVerdictText || '').trim();
+    if (!verdict || !resolveVerdictDialog.action || !order?.dispute?.id || !token) {
+      if (!verdict) setActionError(tAdmin('verdictRequired'));
+      return;
+    }
     setResolveSubmitting(true);
     setActionError(null);
     setActionInfo(null);
     try {
-      const result = await resolveDispute(order.dispute.id, { action }, token);
+      const result = await resolveDispute(order.dispute.id, { action: resolveVerdictDialog.action, verdict }, token);
+      closeResolveVerdictDialog();
       refetchOrder();
       if (result?.noFundsMoved) {
         setActionInfo(t('disputeClosedNoFundsMoved'));
@@ -262,9 +288,31 @@ export default function OrderChatPage() {
             {tOrders('chats')}
           </MuiLink>
         </Link>
-        <Typography variant="h6" fontWeight={600} sx={{ mb: 1 }}>
-          {t('orderChat')}
-        </Typography>
+        {/* Unique UI: order / sold-item chat banner */}
+        <Box
+          sx={{
+            mb: 2,
+            py: 1.5,
+            px: 2,
+            borderRadius: 1,
+            background: (theme) => `linear-gradient(135deg, ${theme.palette.primary.main}14 0%, ${theme.palette.secondary.main}12 100%)`,
+            border: '1px solid',
+            borderColor: 'primary.main',
+            borderLeftWidth: 4,
+          }}
+        >
+          <Typography variant="overline" color="primary.main" fontWeight={700} sx={{ letterSpacing: 1 }}>
+            {t('orderChatBadge')}
+          </Typography>
+          <Typography variant="h6" fontWeight={600} sx={{ mt: 0.25 }}>
+            {t('orderChat')}
+            {order.offer?.title && (
+              <Typography component="span" variant="body2" color="text.secondary" fontWeight={400} sx={{ ml: 1 }}>
+                · {order.offer.title}
+              </Typography>
+            )}
+          </Typography>
+        </Box>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1, flexWrap: 'wrap' }}>
           <Typography variant="body2" color="text.secondary">
             {tOrders('status')}: <strong>{order.status}</strong>
@@ -296,6 +344,13 @@ export default function OrderChatPage() {
             {isBuyer && order.buyerAmount != null && (
               <Typography variant="caption" color="text.secondary" display="block">
                 {t('yourTotal')}: {Number(order.buyerAmount).toFixed(2)} {order.buyerCurrency} ({t('amountsFixedAtPurchase')})
+              </Typography>
+            )}
+            {isSeller && order.sellerAmount != null && (
+              <Typography variant="body2" color="primary.main" fontWeight={600} sx={{ mt: 1 }}>
+                {t('youReceive')}: {Number(order.sellerAmount).toFixed(2)} {order.sellerCurrency}
+                {' — '}
+                {order.transaction?.externalId ? t('toCard') : t('toBalance')}
               </Typography>
             )}
             {order.buyerCharacterNick && (
@@ -376,8 +431,12 @@ export default function OrderChatPage() {
           <Alert severity="warning" sx={{ mb: 1 }}>{t('orderDisputed')}</Alert>
         )}
 
-        {order.status === 'DISPUTED' && order?.dispute && (
-          <Box sx={{ mb: 2, p: 2, border: '1px solid', borderColor: 'warning.main', borderRadius: 1, bgcolor: 'action.hover' }}>
+        {/* Dispute: reason, evidence (visible to seller), and verdict when resolved */}
+        {order?.dispute && (
+          <Box sx={{ mb: 2, p: 2, border: '1px solid', borderColor: order.dispute.status === 'RESOLVED' ? 'success.main' : 'warning.main', borderRadius: 1, bgcolor: 'action.hover' }}>
+            {order.dispute.status === 'RESOLVED' && (
+              <Typography variant="overline" color="success.main" fontWeight={600} display="block" gutterBottom>{t('disputeResolved')}</Typography>
+            )}
             <Typography variant="subtitle2" color="text.primary" gutterBottom>{t('disputeReasonLabel')}</Typography>
             <Typography variant="body2" color="text.primary" sx={{ whiteSpace: 'pre-wrap' }}>{order.dispute.reason || '—'}</Typography>
             {order.dispute.openedBy && (order.buyer?.id === order.dispute.openedBy || order.buyerId === order.dispute.openedBy) && (
@@ -385,7 +444,7 @@ export default function OrderChatPage() {
             )}
             {order.dispute.attachments?.length > 0 && (
               <Box sx={{ mt: 1.5 }}>
-                <Typography variant="caption" color="text.secondary" display="block" gutterBottom>{t('disputeEvidence')}</Typography>
+                <Typography variant="caption" color="text.secondary" display="block" gutterBottom>{t('disputeEvidenceVisibleToSeller')}</Typography>
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
                   {order.dispute.attachments.map((att) => (
                     <a key={att.id} href={att.url} target="_blank" rel="noopener noreferrer" style={{ display: 'block' }}>
@@ -398,6 +457,12 @@ export default function OrderChatPage() {
                     </a>
                   ))}
                 </Box>
+              </Box>
+            )}
+            {order.dispute.status === 'RESOLVED' && order.dispute.verdict && (
+              <Box sx={{ mt: 2, pt: 1.5, borderTop: 1, borderColor: 'divider' }}>
+                <Typography variant="subtitle2" color="text.primary" gutterBottom>{t('disputeVerdictLabel')}</Typography>
+                <Typography variant="body2" color="text.primary" sx={{ whiteSpace: 'pre-wrap' }}>{order.dispute.verdict}</Typography>
               </Box>
             )}
           </Box>
@@ -416,23 +481,48 @@ export default function OrderChatPage() {
                 size="small"
                 variant="contained"
                 color="success"
-                onClick={() => handleResolveDispute('RELEASE')}
+                onClick={() => openResolveVerdictDialog('RELEASE')}
                 disabled={resolveSubmitting}
               >
-                {resolveSubmitting ? t('resolving') : t('releaseToSeller')}
+                {t('releaseToSeller')}
               </Button>
               <Button
                 size="small"
                 variant="contained"
                 color="error"
-                onClick={() => handleResolveDispute('REFUND')}
+                onClick={() => openResolveVerdictDialog('REFUND')}
                 disabled={resolveSubmitting}
               >
-                {resolveSubmitting ? t('resolving') : t('refundBuyer')}
+                {t('refundBuyer')}
               </Button>
             </Box>
           </Box>
         )}
+
+        <Dialog open={resolveVerdictDialog.open} onClose={closeResolveVerdictDialog} maxWidth="sm" fullWidth>
+          <DialogTitle>
+            {resolveVerdictDialog.action === 'RELEASE' ? t('releaseToSeller') : t('refundBuyer')} — {tAdmin('verdictRequired')}
+          </DialogTitle>
+          <DialogContent>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>{tAdmin('verdictHint')}</Typography>
+            <TextField
+              label={tAdmin('verdict')}
+              value={resolveVerdictText}
+              onChange={(e) => setResolveVerdictText(e.target.value)}
+              fullWidth
+              multiline
+              rows={3}
+              required
+              placeholder={tAdmin('verdictPlaceholder')}
+            />
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={closeResolveVerdictDialog}>{tAdmin('cancel')}</Button>
+            <Button variant="contained" onClick={handleResolveDisputeSubmit} disabled={resolveSubmitting || !resolveVerdictText.trim()}>
+              {resolveSubmitting ? tAdmin('submitting') : (resolveVerdictDialog.action === 'RELEASE' ? t('releaseToSeller') : t('refundBuyer'))}
+            </Button>
+          </DialogActions>
+        </Dialog>
 
         <Box
           sx={{
@@ -440,12 +530,13 @@ export default function OrderChatPage() {
             minHeight: 300,
             maxHeight: '50vh',
             overflow: 'auto',
-            border: '1px solid',
-            borderColor: 'divider',
-            borderRadius: 1,
+            border: '2px solid',
+            borderColor: 'primary.light',
+            borderRadius: 1.5,
             p: 2,
             mb: 2,
             bgcolor: 'background.paper',
+            boxShadow: (theme) => `inset 0 0 0 1px ${theme.palette.primary.main}08`,
           }}
         >
           {messages.length === 0 && (
@@ -453,50 +544,61 @@ export default function OrderChatPage() {
               {t('noMessages')}
             </Typography>
           )}
-          {messages.map((msg) => (
-            <Box
-              key={msg.id}
-              sx={{
-                textAlign: isMe(msg.senderId ?? msg.sender?.id) ? 'right' : 'left',
-                mb: 1.5,
-              }}
-            >
-              <Typography variant="caption" color="text.secondary" display="block">
-                {msg.sender?.nickname ?? msg.sender?.email ?? tCommon('user')}
-                {(msg.sender?.role === 'ADMIN' || msg.sender?.role === 'MODERATOR') && (
-                  <Typography component="span" variant="caption" sx={{ ml: 0.5, fontWeight: 600 }}>
-                    ({msg.sender?.role === 'ADMIN' ? t('adminBadge') : t('moderatorBadge')})
-                  </Typography>
-                )}
-                {msg.createdAt && (
-                  <Typography component="span" variant="caption" color="text.secondary" sx={{ ml: 0.5, opacity: 0.9 }}>
-                    · {new Date(msg.createdAt).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' })}
-                  </Typography>
-                )}
-              </Typography>
+          {messages.map((msg) => {
+            const myMessage = isMe(msg.senderId ?? msg.sender?.id);
+            const otherUserId = order?.buyerId === currentUserId ? order?.sellerId : order?.buyerId;
+            const otherRead = order?.orderReads?.find((r) => r.userId === otherUserId);
+            const seen = myMessage && otherRead && msg.createdAt && new Date(otherRead.lastReadAt) >= new Date(msg.createdAt);
+            return (
               <Box
+                key={msg.id}
                 sx={{
-                  display: 'inline-block',
-                  px: 1.5,
-                  py: 1,
-                  borderRadius: 1,
-                  bgcolor: isMe(msg.senderId ?? msg.sender?.id) ? 'primary.main' : 'action.hover',
-                  color: isMe(msg.senderId ?? msg.sender?.id) ? 'primary.contrastText' : 'text.primary',
+                  textAlign: myMessage ? 'right' : 'left',
+                  mb: 1.5,
                 }}
               >
-                <Typography variant="body2">{msg.text}</Typography>
-                {msg.attachments?.length > 0 && (
-                  <Box sx={{ mt: 1 }}>
-                    {msg.attachments.map((att) => (
-                      <a key={att.id} href={att.url} target="_blank" rel="noopener noreferrer" style={{ display: 'block' }}>
-                        <img src={att.url} alt="" style={{ maxWidth: 200, maxHeight: 150, borderRadius: 4 }} />
-                      </a>
-                    ))}
-                  </Box>
-                )}
+                <Typography variant="caption" color="text.secondary" display="block">
+                  {msg.sender?.nickname ?? msg.sender?.email ?? tCommon('user')}
+                  {(msg.sender?.role === 'ADMIN' || msg.sender?.role === 'MODERATOR') && (
+                    <Typography component="span" variant="caption" sx={{ ml: 0.5, fontWeight: 600 }}>
+                      ({msg.sender?.role === 'ADMIN' ? t('adminBadge') : t('moderatorBadge')})
+                    </Typography>
+                  )}
+                  {msg.createdAt && (
+                    <Typography component="span" variant="caption" color="text.secondary" sx={{ ml: 0.5, opacity: 0.9 }}>
+                      · {new Date(msg.createdAt).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' })}
+                    </Typography>
+                  )}
+                </Typography>
+                <Box
+                  sx={{
+                    display: 'inline-block',
+                    px: 1.5,
+                    py: 1,
+                    borderRadius: 1,
+                    bgcolor: myMessage ? 'primary.main' : 'action.hover',
+                    color: myMessage ? 'primary.contrastText' : 'text.primary',
+                  }}
+                >
+                  <Typography variant="body2">{msg.text}</Typography>
+                  {msg.attachments?.length > 0 && (
+                    <Box sx={{ mt: 1 }}>
+                      {msg.attachments.map((att) => (
+                        <a key={att.id} href={att.url} target="_blank" rel="noopener noreferrer" style={{ display: 'block' }}>
+                          <img src={att.url} alt="" style={{ maxWidth: 200, maxHeight: 150, borderRadius: 4 }} />
+                        </a>
+                      ))}
+                    </Box>
+                  )}
+                  {seen && (
+                    <Typography variant="caption" sx={{ display: 'block', mt: 0.5, opacity: 0.9 }}>
+                      {t('seen')}
+                    </Typography>
+                  )}
+                </Box>
               </Box>
-            </Box>
-          ))}
+            );
+          })}
           <div ref={messagesEndRef} />
         </Box>
 

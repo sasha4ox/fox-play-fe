@@ -123,6 +123,11 @@ export async function createOrder(body, token) {
   return apiPost('/orders', body, token)
 }
 
+/** Fondy checkout: hold on card (no platform balance). Returns { checkoutUrl, pendingId }; redirect user to checkoutUrl. */
+export async function createFondyCheckout(body, token) {
+  return apiPost('/fondy/checkout', body, token)
+}
+
 /** Profile: user + balances in preferred currency (auth required) */
 export async function getProfile(token) {
   return apiGet('/me', token)
@@ -189,9 +194,22 @@ export async function getMyOrdersAsBuyer(token) {
   return apiGet('/orders/me/buyer', token)
 }
 
-/** My orders as seller (auth required) */
-export async function getMyOrdersAsSeller(token) {
-  return apiGet('/orders/me/seller', token)
+/** My orders as seller (auth required). options.status: filter by status (e.g. 'CREATED' or 'CREATED,PAID') */
+export async function getMyOrdersAsSeller(token, options = {}) {
+  const params = new URLSearchParams()
+  if (options.status) params.set('status', options.status)
+  const q = params.toString()
+  return apiGet(`/orders/me/seller${q ? `?${q}` : ''}`, token)
+}
+
+/** Chats summary: orders with lastMessage, otherParty (avatar), unreadCount, unreadTotal (auth required) */
+export async function getMyOrderChats(token) {
+  return apiGet('/orders/me/chats', token)
+}
+
+/** Unread messages count across all order chats (auth required) */
+export async function getUnreadCount(token) {
+  return apiGet('/messages/unread-count', token)
 }
 
 /** Single order (auth required) */

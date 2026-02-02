@@ -22,7 +22,8 @@ import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
 import { useAuthStore } from '@/store/authStore';
 import { useLoginModalStore } from '@/store/loginModalStore';
-import { fetchOfferById, createOrder, getOfferMessages, sendOfferMessage } from '@/lib/api';
+import { useProfile } from '@/hooks/useProfile';
+import { fetchOfferById, createOrder, createFondyCheckout, getOfferMessages, sendOfferMessage } from '@/lib/api';
 
 export default function OfferPDPPage() {
   const params = useParams();
@@ -51,10 +52,12 @@ export default function OfferPDPPage() {
   const [messageError, setMessageError] = useState(null);
   const user = useAuthStore((s) => s.user);
   const token = useAuthStore((s) => s.token);
+  const { profile } = useProfile();
   const isAuthenticated = !!token;
   const openLoginModal = useLoginModalStore((s) => s.openModal);
   const currentUserId = user?.id ?? user?.userId;
   const isCreator = currentUserId && offer?.seller?.id && currentUserId === offer.seller.id;
+  const fondyEnabled = !!profile?.fondyEnabled;
 
   useEffect(() => {
     if (!offerId) return;
@@ -106,10 +109,36 @@ export default function OfferPDPPage() {
       );
       setBuyDialogOpen(false);
       setBuyCharacterNick('');
-      // Redirect to the new order so the user sees it and can chat
       router.push(`/${locale}/dashboard/orders/${order.id}`);
     } catch (err) {
       setBuyError(err.message || 'Failed to create order');
+    } finally {
+      setBuySubmitting(false);
+    }
+  };
+
+  const handlePayByCard = async () => {
+    if (!offer || !token) return;
+    const nick = (buyCharacterNick || '').trim();
+    if (!nick) {
+      setBuyError(t('inGameNickRequired'));
+      return;
+    }
+    const qty = Math.min(Math.max(1, Math.floor(buyQuantity)), offer.quantity);
+    setBuySubmitting(true);
+    setBuyError(null);
+    try {
+      const result = await createFondyCheckout(
+        { offerId: offer.id, quantity: qty, characterNick: nick },
+        token
+      );
+      if (result?.checkoutUrl) {
+        window.location.href = result.checkoutUrl;
+        return;
+      }
+      setBuyError('No checkout URL received');
+    } catch (err) {
+      setBuyError(err.message || 'Failed to start card payment');
     } finally {
       setBuySubmitting(false);
     }
@@ -346,11 +375,16 @@ export default function OfferPDPPage() {
             </Alert>
           )}
         </DialogContent>
-        <DialogActions>
+        <DialogActions sx={{ flexWrap: 'wrap', gap: 1 }}>
           <Button onClick={() => setBuyDialogOpen(false)}>Cancel</Button>
           <Button variant="contained" onClick={handleBuySubmit} disabled={buySubmitting}>
-            {buySubmitting ? 'Creating…' : 'Confirm'}
+            {buySubmitting ? 'Creating…' : t('payWithBalance')}
           </Button>
+          {fondyEnabled && (
+            <Button variant="outlined" color="secondary" onClick={handlePayByCard} disabled={buySubmitting}>
+              {buySubmitting ? '…' : t('payByCard')}
+            </Button>
+          )}
         </DialogActions>
       </Dialog>
     </Box>
