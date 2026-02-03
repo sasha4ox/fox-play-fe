@@ -48,7 +48,10 @@ export default function NewOfferPage() {
   const [tab, setTab] = useState(0);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [quantity, setQuantity] = useState(1);
+  const [quantityAdena, setQuantityAdena] = useState('1kk');
+  const [priceAdena, setPriceAdena] = useState('1kk');
+  const [quantityError, setQuantityError] = useState(null);
+  const [priceError, setPriceError] = useState(null);
   const [price, setPrice] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
@@ -56,19 +59,47 @@ export default function NewOfferPage() {
   const offerType = OFFER_TYPES[tab]?.value ?? 'OTHER';
   const isAdena = offerType === 'ADENA';
 
+  const validateAdenaInputs = () => {
+    let valid = true;
+    if (isAdena) {
+      const q = parseAdenaInput(quantityAdena);
+      const p = parseAdenaInput(priceAdena);
+      if (q == null || q < MIN_ADENA) {
+        setQuantityError(t('min1kk'));
+        valid = false;
+      } else setQuantityError(null);
+      if (p == null || p < MIN_ADENA) {
+        setPriceError(t('min1kk'));
+        valid = false;
+      } else setPriceError(null);
+      if (quantityAdena.trim() !== '' && q == null) {
+        setQuantityError(t('invalidAdenaFormat'));
+        valid = false;
+      }
+      if (priceAdena.trim() !== '' && p == null) {
+        setPriceError(t('invalidAdenaFormat'));
+        valid = false;
+      }
+    }
+    return valid;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!token || !serverId) return;
-    setSubmitting(true);
     setSubmitError(null);
+    if (isAdena && !validateAdenaInputs()) return;
+    setSubmitting(true);
+    const quantityNum = isAdena ? (parseAdenaInput(quantityAdena) ?? 0) : 1;
+    const priceNum = isAdena ? (parseAdenaInput(priceAdena) ?? 0) : Number(price) || 0;
     const payload = {
       offerType,
       serverId,
       currency,
       title: isAdena ? 'Adena' : title,
-      description: isAdena ? `Selling ${quantity} adena` : description,
-      quantity: isAdena ? Number(quantity) : 1,
-      price: Number(price) || 0,
+      description: isAdena ? `Selling ${formatAdena(quantityNum)} adena` : description,
+      quantity: quantityNum,
+      price: priceNum,
     };
     try {
       await createOffer(payload, token);
