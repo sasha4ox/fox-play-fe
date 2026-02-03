@@ -9,6 +9,7 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
+import InputAdornment from '@mui/material/InputAdornment';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import MuiLink from '@mui/material/Link';
@@ -19,7 +20,7 @@ import { getGameFromTree, getVariantFromTree, getServerFromTree } from '@/lib/ga
 import { useAuthStore } from '@/store/authStore';
 import { useProfile } from '@/hooks/useProfile';
 import { createOffer } from '@/lib/api';
-import { parseAdenaInput, formatAdena, MIN_ADENA } from '@/lib/adenaFormat';
+import { formatAdena } from '@/lib/adenaFormat';
 
 export default function NewOfferPage() {
   const params = useParams();
@@ -48,8 +49,8 @@ export default function NewOfferPage() {
   const [tab, setTab] = useState(0);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [quantityAdena, setQuantityAdena] = useState('1kk');
-  const [priceAdena, setPriceAdena] = useState('1kk');
+  const [quantityAdena, setQuantityAdena] = useState(1);
+  const [priceAdena, setPriceAdena] = useState(1);
   const [quantityError, setQuantityError] = useState(null);
   const [priceError, setPriceError] = useState(null);
   const [price, setPrice] = useState('');
@@ -59,27 +60,16 @@ export default function NewOfferPage() {
   const offerType = OFFER_TYPES[tab]?.value ?? 'OTHER';
   const isAdena = offerType === 'ADENA';
 
+  const MIN_KK = 1;
+  const MIN_PRICE_PER_100KK = 0.01;
   const validateAdenaInputs = () => {
     let valid = true;
     if (isAdena) {
-      const q = parseAdenaInput(quantityAdena);
-      const p = parseAdenaInput(priceAdena);
-      if (q == null || q < MIN_ADENA) {
-        setQuantityError(t('min1kk'));
-        valid = false;
-      } else setQuantityError(null);
-      if (p == null || p < MIN_ADENA) {
-        setPriceError(t('min1kk'));
-        valid = false;
-      } else setPriceError(null);
-      if (quantityAdena.trim() !== '' && q == null) {
-        setQuantityError(t('invalidAdenaFormat'));
-        valid = false;
-      }
-      if (priceAdena.trim() !== '' && p == null) {
-        setPriceError(t('invalidAdenaFormat'));
-        valid = false;
-      }
+      const qOk = Number.isFinite(quantityAdena) && quantityAdena >= MIN_KK;
+      const pOk = Number.isFinite(priceAdena) && priceAdena >= MIN_PRICE_PER_100KK;
+      setQuantityError(qOk ? null : t('min1kk'));
+      setPriceError(pOk ? null : t('minPriceFor100kk'));
+      if (!qOk || !pOk) valid = false;
     }
     return valid;
   };
@@ -90,8 +80,9 @@ export default function NewOfferPage() {
     setSubmitError(null);
     if (isAdena && !validateAdenaInputs()) return;
     setSubmitting(true);
-    const quantityNum = isAdena ? (parseAdenaInput(quantityAdena) ?? 0) : 1;
-    const priceNum = isAdena ? (parseAdenaInput(priceAdena) ?? 0) : Number(price) || 0;
+    const quantityNum = isAdena ? Math.floor(Number(quantityAdena) * 1_000_000) : 1;
+    const priceFor100kk = Number(priceAdena) || 0;
+    const priceNum = isAdena ? priceFor100kk / 100 : Number(price) || 0;
     const payload = {
       offerType,
       serverId,
@@ -167,32 +158,67 @@ export default function NewOfferPage() {
 
         <form onSubmit={handleSubmit}>
           {isAdena && (
-            <>
+            <Box sx={{ maxWidth: 260 }}>
               <TextField
                 label={t('amountOfAdena')}
+                type="text"
+                inputMode="decimal"
                 value={quantityAdena}
-                onChange={(e) => { setQuantityAdena(e.target.value); setQuantityError(null); }}
-                placeholder={t('amountPlaceholder')}
+                onChange={(e) => {
+                  const raw = e.target.value.replace(',', '.');
+                  const v = raw === '' ? '' : Number(raw);
+                  setQuantityAdena(v);
+                  setQuantityError(null);
+                }}
                 helperText={quantityError}
                 error={!!quantityError}
-                fullWidth
-                sx={{ mb: 2 }}
                 required
-                inputProps={{ inputMode: 'text' }}
+                sx={{
+                  mb: 2,
+                  width: '100%',
+                  '& input': { MozAppearance: 'textfield' },
+                  '& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button': { WebkitAppearance: 'none', margin: 0 },
+                }}
+                InputProps={{
+                  endAdornment: <InputAdornment position="end">kk</InputAdornment>,
+                }}
               />
               <TextField
-                label={t('pricePerUnit', { currency })}
+                label={t('priceFor100kk', { currency })}
+                type="text"
+                inputMode="decimal"
                 value={priceAdena}
-                onChange={(e) => { setPriceAdena(e.target.value); setPriceError(null); }}
-                placeholder={t('pricePlaceholder')}
+                onChange={(e) => {
+                  const raw = e.target.value.replace(',', '.');
+                  const v = raw === '' ? '' : Number(raw);
+                  setPriceAdena(v);
+                  setPriceError(null);
+                }}
                 helperText={priceError}
                 error={!!priceError}
-                fullWidth
-                sx={{ mb: 2 }}
                 required
-                inputProps={{ inputMode: 'text' }}
+                sx={{
+                  mb: 2,
+                  width: '100%',
+                  '& input': { MozAppearance: 'textfield' },
+                  '& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button': { WebkitAppearance: 'none', margin: 0 },
+                }}
+                InputProps={{
+                  endAdornment: <InputAdornment position="end">{currency}</InputAdornment>,
+                }}
               />
-            </>
+              <Box sx={{ mt: 2, p: 1.5, bgcolor: 'action.hover', borderRadius: 1 }}>
+                <Typography variant="body2" color="text.primary" sx={{ mb: 0.5 }}>
+                  <strong>1)</strong> {t('youWillReceive')}: <strong>{((Number(quantityAdena) || 0) / 100 * (Number(priceAdena) || 0)).toFixed(2)} {currency}</strong>
+                </Typography>
+                <Typography variant="body2" color="text.primary" sx={{ mb: 0.5 }}>
+                  <strong>2)</strong> {t('cost1kkk')}: <strong>{(10 * (Number(priceAdena) || 0)).toFixed(2)} {currency}</strong>
+                </Typography>
+                <Typography variant="body2" color="text.primary">
+                  <strong>3)</strong> {t('pricePer1kk')}: <strong>{((Number(priceAdena) || 0) / 100).toFixed(4)} {currency}</strong>
+                </Typography>
+              </Box>
+            </Box>
           )}
           {!isAdena && (
             <>

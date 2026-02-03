@@ -28,10 +28,17 @@ export async function apiFetch(path, options = {}, token = null) {
   }
   if (!res.ok) {
     let message = res.status === 401 ? 'Session expired. Please log in again.' : `API error: ${res.status}`
+    let body = {}
     try {
-      const body = await res.json()
+      body = await res.json()
       message = body?.message ?? body?.error?.message ?? message
     } catch (_) {}
+    if (res.status === 403 && body?.code === 'ACCOUNT_RESTRICTED' && typeof window !== 'undefined') {
+      useAuthStore.getState().logout()
+      try {
+        sessionStorage.setItem('accountRestrictedMessage', message)
+      } catch (_) {}
+    }
     const err = new Error(message)
     err.status = res.status
     err.response = res
@@ -242,6 +249,11 @@ export async function completeOrder(orderId, token) {
   return apiPost(`/orders/${orderId}/complete`, {}, token)
 }
 
+/** Leave mandatory feedback for the other party (buyer or seller). Auth required. Body: { rating: 1–5, comment?: string } */
+export async function leaveOrderFeedback(orderId, body, token) {
+  return apiPost(`/orders/${orderId}/feedback`, body, token)
+}
+
 /** Buyer: open dispute with reason + evidence image(s) (auth required). body: FormData with 'reason' and 'files' */
 export async function openDispute(orderId, formData, token) {
   const base = getApiBase()
@@ -339,6 +351,27 @@ export async function adminCreateVariant(gameId, body, token) {
 /** Create server. body: { name } */
 export async function adminCreateServer(gameId, variantId, body, token) {
   return apiPost(`/admin/games/${gameId}/variants/${variantId}/servers`, body, token)
+}
+
+/** List users (admin). query: { skip?, take?, banned?: 'true'|'false' } */
+export async function getAdminUsers(token, query = {}) {
+  const q = new URLSearchParams()
+  if (query.skip != null) q.set('skip', query.skip)
+  if (query.take != null) q.set('take', query.take)
+  if (query.banned === true || query.banned === 'true') q.set('banned', 'true')
+  if (query.banned === false || query.banned === 'false') q.set('banned', 'false')
+  const s = q.toString()
+  return apiGet(`/admin/users${s ? `?${s}` : ''}`, token)
+}
+
+/** Ban user. body: { reason?: string } */
+export async function adminBanUser(userId, body, token) {
+  return apiPost(`/admin/users/${userId}/ban`, body || {}, token)
+}
+
+/** Unban user. */
+export async function adminUnbanUser(userId, token) {
+  return apiPost(`/admin/users/${userId}/unban`, {}, token)
 }
 
 /** Resolve dispute. body: { action: 'RELEASE' | 'REFUND' } */

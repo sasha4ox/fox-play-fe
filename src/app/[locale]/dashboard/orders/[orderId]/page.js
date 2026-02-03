@@ -9,6 +9,10 @@ import Container from '@mui/material/Container';
 import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
+import FormControl from '@mui/material/FormControl';
+import InputLabel from '@mui/material/InputLabel';
+import Select from '@mui/material/Select';
+import MenuItem from '@mui/material/MenuItem';
 import IconButton from '@mui/material/IconButton';
 import Alert from '@mui/material/Alert';
 import Dialog from '@mui/material/Dialog';
@@ -26,10 +30,12 @@ import {
   sendOrderMessage,
   markOrderDelivered,
   completeOrder as apiCompleteOrder,
+  leaveOrderFeedback,
   openDispute,
   resolveDispute,
 } from '@/lib/api';
 import { useOrderSocket } from '@/hooks/useOrderSocket';
+import { formatAdena } from '@/lib/adenaFormat';
 
 export default function OrderChatPage() {
   const params = useParams();
@@ -66,6 +72,9 @@ export default function OrderChatPage() {
   const [resolveSubmitting, setResolveSubmitting] = useState(false);
   const [resolveVerdictDialog, setResolveVerdictDialog] = useState({ open: false, action: null });
   const [resolveVerdictText, setResolveVerdictText] = useState('');
+  const [feedbackRating, setFeedbackRating] = useState(5);
+  const [feedbackComment, setFeedbackComment] = useState('');
+  const [feedbackSubmitting, setFeedbackSubmitting] = useState(false);
   const tAdmin = useTranslations('Admin');
 
   const { connected, lastMessage, onlineUserIds } = useOrderSocket(orderId, token);
@@ -217,6 +226,23 @@ export default function OrderChatPage() {
     }
   };
 
+  const currentUserLeftFeedback = order?.feedbacks?.some((f) => f.fromUserId === currentUserId) ?? false;
+  const handleLeaveFeedback = async () => {
+    if (!orderId || !token) return;
+    const rating = Math.min(5, Math.max(1, Math.round(Number(feedbackRating))));
+    setFeedbackSubmitting(true);
+    setActionError(null);
+    try {
+      await leaveOrderFeedback(orderId, { rating, comment: feedbackComment.trim() || undefined }, token);
+      setFeedbackComment('');
+      refetchOrder();
+    } catch (err) {
+      setActionError(err.message || 'Failed to submit feedback');
+    } finally {
+      setFeedbackSubmitting(false);
+    }
+  };
+
   const handleOpenDispute = async () => {
     if (!orderId || !token) return;
     const reason = (disputeReason || '').trim();
@@ -336,16 +362,25 @@ export default function OrderChatPage() {
               {isBuyer ? t('youAreBuying') : t('youAreSelling')}
             </Typography>
             <Typography variant="body1" fontWeight={600}>{order.offer.title}</Typography>
-            <Typography variant="body2" color="text.secondary">
-              Qty: {order.quantity}
-              {order.offer.offerType === 'ADENA' ? ` · ${Number(order.offer?.price ?? 0)} ${order.sellerCurrency} ${t('perUnit')}` : ` · ${Number(order.sellerAmount ?? 0).toFixed(2)} ${order.sellerCurrency} ${t('total')}`}
-              {' '}({t('amountsFixedAtPurchase')})
-            </Typography>
-            {isBuyer && order.buyerAmount != null && (
-              <Typography variant="caption" color="text.secondary" display="block">
-                {t('yourTotal')}: {Number(order.buyerAmount).toFixed(2)} {order.buyerCurrency} ({t('amountsFixedAtPurchase')})
+            {order.offer.offerType === 'ADENA' ? (
+              <>
+                <Typography variant="body2" color="text.secondary">
+                  {t('qty')}: {formatAdena(Number(order.quantity ?? 0))} · {t('priceFor100kk')}: {Number(order.offer?.price ?? 0) * 100} {order.sellerCurrency}
+                </Typography>
+                {isBuyer && order.buyerAmount != null && (
+                  <Typography variant="body2" color="text.primary" fontWeight={600} sx={{ mt: 0.5 }}>
+                    {t('yourTotal')}: {Number(order.buyerAmount).toFixed(2)} {order.buyerCurrency}
+                  </Typography>
+                )}
+              </>
+            ) : (
+              <Typography variant="body2" color="text.secondary">
+                {t('qty')}: {order.quantity} · {Number(order.sellerAmount ?? 0).toFixed(2)} {order.sellerCurrency} {t('total')}
               </Typography>
             )}
+            <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5 }}>
+              {t('amountsFixedAtPurchase')}
+            </Typography>
             {isSeller && order.sellerAmount != null && (
               <Typography variant="body2" color="primary.main" fontWeight={600} sx={{ mt: 1 }}>
                 {t('youReceive')}: {Number(order.sellerAmount).toFixed(2)} {order.sellerCurrency}
@@ -427,6 +462,44 @@ export default function OrderChatPage() {
         {order.status === 'COMPLETED' && (
           <Alert severity="success" sx={{ mb: 1 }}>Order completed. Seller has been paid.</Alert>
         )}
+
+        {order.status === 'COMPLETED' && !currentUserLeftFeedback && (
+          <Box sx={{ mb: 2, p: 2, border: '1px solid', borderColor: 'warning.main', borderRadius: 1, bgcolor: 'background.paper' }}>
+            <Typography variant="subtitle2" gutterBottom>{t('feedbackMandatory')}</Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>{t('feedbackMandatoryHint')}</Typography>
+            <FormControl size="small" fullWidth sx={{ mb: 1.5, minWidth: 120 }}>
+              <InputLabel>{t('feedbackRating')}</InputLabel>
+              <Select
+                value={feedbackRating}
+                label={t('feedbackRating')}
+                onChange={(e) => setFeedbackRating(Number(e.target.value))}
+              >
+                {[1, 2, 3, 4, 5].map((n) => (
+                  <MenuItem key={n} value={n}>{n}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <TextField
+              label={t('feedbackComment')}
+              value={feedbackComment}
+              onChange={(e) => setFeedbackComment(e.target.value)}
+              fullWidth
+              multiline
+              rows={2}
+              size="small"
+              sx={{ mb: 1.5 }}
+            />
+            <Button
+              variant="contained"
+              color="secondary"
+              onClick={handleLeaveFeedback}
+              disabled={feedbackSubmitting}
+            >
+              {feedbackSubmitting ? t('submitting') : t('feedbackSubmit')}
+            </Button>
+          </Box>
+        )}
+
         {order.status === 'DISPUTED' && (
           <Alert severity="warning" sx={{ mb: 1 }}>{t('orderDisputed')}</Alert>
         )}

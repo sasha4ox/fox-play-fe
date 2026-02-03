@@ -128,6 +128,7 @@ export default function MyOrdersPage() {
                 {bought.map((order) => {
                   const paidWithCard = order.transaction?.externalId != null;
                   const sellerName = order.seller?.nickname ?? order.seller?.email ?? '—';
+                  const statusLabel = order.status ? t(`status_${order.status}`) : '—';
                   return (
                     <Card key={order.id} variant="outlined">
                       <CardActionArea component={Link} href={`/${locale}/dashboard/orders/${order.id}`}>
@@ -135,8 +136,15 @@ export default function MyOrdersPage() {
                           <Typography variant="subtitle1" fontWeight={600}>
                             {order.offer?.title ?? order.id?.slice(0, 8)}
                           </Typography>
-                          <Typography variant="body2" color="text.secondary">
-                            {t('boughtFrom')}: {sellerName} · Qty: {order.quantity ?? 1} · {t('status')}: {order.status ?? '—'}
+                          <Typography variant="body2" color="text.secondary" component="span" sx={{ display: 'block' }}>
+                            {t('boughtFrom')}: {sellerName} · Qty: {order.quantity ?? 1} · {t('status')}:{' '}
+                            {order.status ? (
+                              <Tooltip title={t(`statusMeaning_${order.status}`)} placement="top" enterTouchDelay={0} leaveTouchDelay={5000}>
+                                <Box component="span" sx={{ borderBottom: '1px dotted currentColor', cursor: 'help' }}>{statusLabel}</Box>
+                              </Tooltip>
+                            ) : (
+                              statusLabel
+                            )}
                           </Typography>
                           <Typography variant="body2" color="primary.main" fontWeight={600} sx={{ mt: 1 }}>
                             {t('youPaid')}: {Number(order.buyerAmount ?? 0).toFixed(2)} {order.buyerCurrency ?? ''}

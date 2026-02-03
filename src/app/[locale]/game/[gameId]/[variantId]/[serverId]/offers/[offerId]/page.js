@@ -16,14 +16,21 @@ import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
 import TextField from '@mui/material/TextField';
+import InputAdornment from '@mui/material/InputAdornment';
 import FormControl from '@mui/material/FormControl';
 import InputLabel from '@mui/material/InputLabel';
 import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
+import Avatar from '@mui/material/Avatar';
+import Badge from '@mui/material/Badge';
+import Rating from '@mui/material/Rating';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
 import { useAuthStore } from '@/store/authStore';
 import { useLoginModalStore } from '@/store/loginModalStore';
 import { useProfile } from '@/hooks/useProfile';
 import { fetchOfferById, createOrder, createFondyCheckout, getOfferMessages, sendOfferMessage } from '@/lib/api';
+import { formatAdena } from '@/lib/adenaFormat';
 
 export default function OfferPDPPage() {
   const params = useParams();
@@ -43,6 +50,7 @@ export default function OfferPDPPage() {
   const [error, setError] = useState(null);
   const [buyDialogOpen, setBuyDialogOpen] = useState(false);
   const [buyQuantity, setBuyQuantity] = useState(1);
+  const [buyQuantityKk, setBuyQuantityKk] = useState(1);
   const [buyCharacterNick, setBuyCharacterNick] = useState('');
   const [buySubmitting, setBuySubmitting] = useState(false);
   const [buyError, setBuyError] = useState(null);
@@ -59,6 +67,8 @@ export default function OfferPDPPage() {
   const isCreator = currentUserId && offer?.seller?.id && currentUserId === offer.seller.id;
   const fondyEnabled = !!profile?.fondyEnabled;
 
+  const preferredCurrency = profile?.preferredCurrency;
+
   useEffect(() => {
     if (!offerId) return;
     setLoading(true);
@@ -67,13 +77,14 @@ export default function OfferPDPPage() {
       .then((data) => {
         setOffer(data);
         setBuyQuantity(1);
+        setBuyQuantityKk(1);
         setLoading(false);
       })
       .catch((err) => {
         setError(err.message);
         setLoading(false);
       });
-  }, [offerId, token]);
+  }, [offerId, token, preferredCurrency]);
 
   const [selectedThreadBuyerId, setSelectedThreadBuyerId] = useState(null);
 
@@ -89,6 +100,8 @@ export default function OfferPDPPage() {
       openLoginModal(() => setBuyDialogOpen(true));
       return;
     }
+    setBuyQuantity(1);
+    setBuyQuantityKk(1);
     setBuyDialogOpen(true);
   };
 
@@ -99,7 +112,10 @@ export default function OfferPDPPage() {
       setBuyError(t('inGameNickRequired'));
       return;
     }
-    const qty = Math.min(Math.max(1, Math.floor(buyQuantity)), offer.quantity);
+    const isAdena = offer.offerType === 'ADENA';
+    const qty = isAdena
+      ? Math.min(offer.quantity, Math.max(1, Math.floor(buyQuantityKk * 1_000_000)))
+      : Math.min(Math.max(1, Math.floor(buyQuantity)), offer.quantity);
     setBuySubmitting(true);
     setBuyError(null);
     try {
@@ -124,12 +140,15 @@ export default function OfferPDPPage() {
       setBuyError(t('inGameNickRequired'));
       return;
     }
-    const qty = Math.min(Math.max(1, Math.floor(buyQuantity)), offer.quantity);
+    const isAdenaPay = offer.offerType === 'ADENA';
+    const qtyPay = isAdenaPay
+      ? Math.min(offer.quantity, Math.max(1, Math.floor(buyQuantityKk * 1_000_000)))
+      : Math.min(Math.max(1, Math.floor(buyQuantity)), offer.quantity);
     setBuySubmitting(true);
     setBuyError(null);
     try {
       const result = await createFondyCheckout(
-        { offerId: offer.id, quantity: qty, characterNick: nick },
+        { offerId: offer.id, quantity: qtyPay, characterNick: nick },
         token
       );
       if (result?.checkoutUrl) {
@@ -204,6 +223,8 @@ export default function OfferPDPPage() {
   }
 
   const maxQty = Math.max(1, offer.quantity);
+  const isAdenaOffer = offer.offerType === 'ADENA';
+  const maxKk = isAdenaOffer ? offer.quantity : null;
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', py: 4, px: 2 }}>
@@ -218,36 +239,108 @@ export default function OfferPDPPage() {
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
           {OFFER_TYPE_LABELS[offer.offerType] ?? offer.offerType}
         </Typography>
-        <Typography variant="body1" sx={{ mb: 2 }}>
-          {offer.description}
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
-          Price: {offer.displayPrice != null && offer.displayCurrency
-            ? `${offer.displayPrice} ${offer.displayCurrency} (${offer.price} ${offer.currency})`
-            : `${offer.price} ${offer.currency}`}
-          {offer.offerType === 'ADENA' ? ' per unit' : ''} · Quantity: {offer.quantity}
-        </Typography>
+
         {offer.seller && (
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 1, display: 'flex', alignItems: 'center', gap: 0.5, flexWrap: 'wrap' }}>
-            Seller: {offer.seller.nickname ?? offer.seller.email}
-            <Box component="span" sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.25 }}>
-              <Box
-                component="span"
-                sx={{
-                  width: 6,
-                  height: 6,
-                  borderRadius: '50%',
-                  bgcolor: offer.seller.isOnline ? 'success.main' : 'text.disabled',
-                }}
-              />
-              <Typography component="span" variant="caption" color="text.secondary">
-                {offer.seller.isOnline ? t('sellerOnline') : t('sellerOffline')}
+          <Card variant="outlined" sx={{ mb: 2 }}>
+            <CardContent sx={{ py: 2, px: 2, '&:last-child': { pb: 2 } }}>
+              <Typography variant="overline" color="text.secondary" display="block" sx={{ mb: 1 }}>
+                {t('seller')}
               </Typography>
-            </Box>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
+                <Badge
+                  overlap="circular"
+                  anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+                  variant="dot"
+                  sx={{
+                    '& .MuiBadge-badge': {
+                      bgcolor: offer.seller.isOnline ? 'success.main' : 'grey.400',
+                      border: '2px solid',
+                      borderColor: 'background.paper',
+                    },
+                  }}
+                >
+                  <Avatar
+                    src={offer.seller.avatarUrl || undefined}
+                    alt={offer.seller.nickname ?? offer.seller.email}
+                    sx={{ width: 48, height: 48 }}
+                  >
+                    {(offer.seller.nickname || offer.seller.email || '?').charAt(0).toUpperCase()}
+                  </Avatar>
+                </Badge>
+                <Box>
+                  <Typography variant="subtitle1" fontWeight={600}>
+                    {offer.seller.nickname ?? offer.seller.email}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary" display="block">
+                    {offer.seller.isOnline ? t('sellerOnline') : t('sellerOffline')}
+                  </Typography>
+                  {offer.seller.rating != null && Number(offer.seller.rating) > 0 && (
+                    <Rating value={Number(offer.seller.rating)} precision={0.5} readOnly size="small" sx={{ mt: 0.5 }} />
+                  )}
+                </Box>
+              </Box>
+            </CardContent>
+          </Card>
+        )}
+
+        {isAdenaOffer && (() => {
+          const q = Number(offer.quantity) || 0;
+          const priceRaw = offer.displayPrice ?? offer.price;
+          const p = typeof priceRaw === 'object' && priceRaw != null && typeof priceRaw.toString === 'function'
+            ? Number(priceRaw.toString())
+            : Number(priceRaw) || 0;
+          const quantityKk = q / 1_000_000;
+          const currency = offer.displayCurrency ?? offer.currency ?? '';
+          const pricePer1kk = p < 0.001 && p > 0 ? p * 1_000_000 : p;
+          const priceFor100kkDisplay = pricePer1kk * 100;
+          const totalIfBuyFull = quantityKk * (priceFor100kkDisplay / 100);
+          return (
+            <Card variant="outlined" sx={{ mb: 2 }}>
+              <CardContent sx={{ py: 2, px: 2, '&:last-child': { pb: 2 } }}>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                  <Box>
+                    <Typography variant="overline" color="text.secondary">{t('availabilityKk')}</Typography>
+                    <Typography variant="h6" fontWeight={600}>{formatAdena(q)}</Typography>
+                    <Typography variant="caption" color="text.secondary">{t('availabilityKkHint')}</Typography>
+                  </Box>
+                  <Box>
+                    <Typography variant="overline" color="text.secondary">{t('priceFor100kk')}</Typography>
+                    <Typography variant="h6" fontWeight={600} color="primary.main">
+                      {priceFor100kkDisplay.toFixed(2)} {currency}
+                    </Typography>
+                  </Box>
+                  <Box>
+                    <Typography variant="overline" color="text.secondary">{t('priceIfBuyFull')}</Typography>
+                    <Typography variant="h6" fontWeight={600}>
+                      {totalIfBuyFull.toFixed(2)} {currency}
+                    </Typography>
+                  </Box>
+                </Box>
+              </CardContent>
+            </Card>
+          );
+        })()}
+
+        {!isAdenaOffer && (
+          <Card variant="outlined" sx={{ mb: 2 }}>
+            <CardContent sx={{ py: 2, px: 2, '&:last-child': { pb: 2 } }}>
+              <Typography variant="body2" color="text.secondary">
+                Price: {offer.displayPrice != null && offer.displayCurrency
+                  ? `${offer.displayPrice} ${offer.displayCurrency}`
+                  : `${offer.price} ${offer.currency}`}
+                {' · '}Quantity: {offer.quantity}
+              </Typography>
+            </CardContent>
+          </Card>
+        )}
+
+        {!isAdenaOffer && (
+          <Typography variant="body1" sx={{ mb: 2 }}>
+            {offer.description}
           </Typography>
         )}
 
-        <Box sx={{ display: 'flex', gap: 1, mt: 3 }}>
+        <Box sx={{ display: 'flex', gap: 1, mt: 3, flexWrap: 'wrap' }}>
           {!isCreator && (
             <Button variant="contained" color="secondary" onClick={handleBuyClick} disabled={offer.quantity <= 0}>
               {t('buy')}
@@ -343,25 +436,62 @@ export default function OfferPDPPage() {
         <DialogTitle>Buy</DialogTitle>
         <DialogContent>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            {offer.title} · Max: {maxQty}
+            {offer.title}
+            {isAdenaOffer ? ` · Max: ${maxKk} kk` : ` · Max: ${maxQty}`}
           </Typography>
           <TextField
-            label="In-game character nickname"
+            label={t('yourInGameNick')}
             value={buyCharacterNick}
             onChange={(e) => setBuyCharacterNick(e.target.value)}
-            placeholder="Your character name in game"
+            placeholder={t('yourInGameNick')}
             fullWidth
             required
             sx={{ mb: 2 }}
           />
-          <TextField
-            type="number"
-            label="Quantity"
-            value={buyQuantity}
-            onChange={(e) => setBuyQuantity(Math.min(maxQty, Math.max(1, Number(e.target.value) || 1)))}
-            inputProps={{ min: 1, max: maxQty }}
-            fullWidth
-          />
+          {isAdenaOffer ? (
+            <TextField
+             type="text"
+              inputMode="decimal"
+              label={t('toBeReceived')}
+              value={buyQuantityKk}
+              onChange={(e) => {
+                const v = Number(e.target.value);
+                if (!Number.isFinite(v)) return;
+                setBuyQuantityKk(Math.min(maxKk, Math.max(0.001, v)));
+              }}
+              // inputProps={{ min: 0.001, max: maxKk, step: 0.001 }}
+              InputProps={{
+                endAdornment: <InputAdornment position="end">kk</InputAdornment>,
+              }}
+              fullWidth
+              sx={{ mb: 2 }}
+            />
+          ) : (
+            <TextField
+              type="number"
+              label={t('quantity')}
+              value={buyQuantity}
+              onChange={(e) => setBuyQuantity(Math.min(maxQty, Math.max(1, Number(e.target.value) || 1)))}
+              inputProps={{ min: 1, max: maxQty }}
+              fullWidth
+              sx={{ mb: 2 }}
+            />
+          )}
+          {isAdenaOffer && (() => {
+            const pricePer1kk = Number(offer.displayPrice ?? offer.price) || 0;
+            const totalToPay = buyQuantityKk * pricePer1kk;
+            const currency = offer.displayCurrency ?? offer.currency ?? '';
+            return (
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                {t('youWillPay')}: <strong>{totalToPay.toFixed(2)} {currency}</strong>
+              </Typography>
+            );
+          })()}
+          {!isAdenaOffer && offer && (
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+              {t('youWillPay')}: <strong>{(buyQuantity * (Number(offer.displayPrice ?? offer.price) || 0)).toFixed(2)} {offer.displayCurrency ?? offer.currency ?? ''}</strong>
+            </Typography>
+          )}
           {buyError && (
             <Alert severity="error" sx={{ mt: 2 }}>
               {buyError}
