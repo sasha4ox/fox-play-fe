@@ -264,7 +264,13 @@
     "backToServers": "← До серверів",
     "backToVariants": "← До варіантів",
     "sellerOnline": "Онлайн",
-    "sellerOffline": "Офлайн"
+    "sellerOffline": "Офлайн",
+    "categoryFilter": "Категорія",
+    "priceMinPer1kk": "Мін. ціна за 1kk",
+    "priceMaxPer1kk": "Макс. ціна за 1kk",
+    "totalAdena": "Всього адени",
+    "pricePer1kk": "Ціна за 1kk",
+    "byCreator": "від"
   },
   "OfferDetail": {
     "offerNotFound": "Оголошення не знайдено.",
@@ -300,6 +306,10 @@
     "price": "Ціна",
     "amountOfAdena": "Кількість адени",
     "pricePerUnit": "Ціна за од. ({currency})",
+    "amountPlaceholder": "напр. 1kk або 1kkk",
+    "pricePlaceholder": "напр. 1kk (мін. 1kk)",
+    "min1kk": "Мінімум 1kk (1 000 000 адени)",
+    "invalidAdenaFormat": "Введіть kk (мільйон) або kkk (мільярд), напр. 1kk, 2.5kk, 1kkk",
     "creating": "Створення…",
     "createOfferButton": "Створити оголошення",
     "failedCreate": "Не вдалося створити оголошення"

@@ -19,6 +19,7 @@ import { getGameFromTree, getVariantFromTree, getServerFromTree } from '@/lib/ga
 import { useAuthStore } from '@/store/authStore';
 import { useProfile } from '@/hooks/useProfile';
 import { createOffer } from '@/lib/api';
+import { parseAdenaInput, formatAdena, MIN_ADENA } from '@/lib/adenaFormat';
 
 export default function NewOfferPage() {
   const params = useParams();
@@ -137,24 +138,28 @@ export default function NewOfferPage() {
           {isAdena && (
             <>
               <TextField
-                type="number"
                 label={t('amountOfAdena')}
-                value={quantity}
-                onChange={(e) => setQuantity(e.target.value)}
-                inputProps={{ min: 1 }}
+                value={quantityAdena}
+                onChange={(e) => { setQuantityAdena(e.target.value); setQuantityError(null); }}
+                placeholder={t('amountPlaceholder')}
+                helperText={quantityError}
+                error={!!quantityError}
                 fullWidth
                 sx={{ mb: 2 }}
                 required
+                inputProps={{ inputMode: 'text' }}
               />
               <TextField
-                type="number"
                 label={t('pricePerUnit', { currency })}
-                value={price}
-                onChange={(e) => setPrice(e.target.value)}
-                inputProps={{ min: 0, step: 0.01 }}
+                value={priceAdena}
+                onChange={(e) => { setPriceAdena(e.target.value); setPriceError(null); }}
+                placeholder={t('pricePlaceholder')}
+                helperText={priceError}
+                error={!!priceError}
                 fullWidth
                 sx={{ mb: 2 }}
                 required
+                inputProps={{ inputMode: 'text' }}
               />
             </>
           )}

@@ -264,7 +264,13 @@
     "backToServers": "← Back to servers",
     "backToVariants": "← Back to variants",
     "sellerOnline": "Online",
-    "sellerOffline": "Offline"
+    "sellerOffline": "Offline",
+    "categoryFilter": "Category",
+    "priceMinPer1kk": "Min price per 1kk",
+    "priceMaxPer1kk": "Max price per 1kk",
+    "totalAdena": "Total Adena",
+    "pricePer1kk": "Price per 1kk",
+    "byCreator": "by"
   },
   "OfferDetail": {
     "offerNotFound": "Offer not found.",
@@ -300,6 +306,10 @@
     "price": "Price",
     "amountOfAdena": "Amount of adena",
     "pricePerUnit": "Price per unit ({currency})",
+    "amountPlaceholder": "e.g. 1kk or 1kkk",
+    "pricePlaceholder": "e.g. 1kk (min 1kk)",
+    "min1kk": "Minimum is 1kk (1,000,000 adena)",
+    "invalidAdenaFormat": "Use kk (million) or kkk (billion), e.g. 1kk, 2.5kk, 1kkk",
     "creating": "Creating…",
     "createOfferButton": "Create offer",
     "failedCreate": "Failed to create offer"

@@ -14,19 +14,29 @@ import CardContent from '@mui/material/CardContent';
 import MuiLink from '@mui/material/Link';
 import CircularProgress from '@mui/material/CircularProgress';
 import Alert from '@mui/material/Alert';
+import FormControl from '@mui/material/FormControl';
+import InputLabel from '@mui/material/InputLabel';
+import Select from '@mui/material/Select';
+import MenuItem from '@mui/material/MenuItem';
+import TextField from '@mui/material/TextField';
+import Avatar from '@mui/material/Avatar';
+import Badge from '@mui/material/Badge';
 import { useGames } from '@/hooks/useGames';
 import { getGameFromTree, getVariantFromTree, getServerFromTree } from '@/lib/games';
 import { useAuthStore, useIsAuthenticated } from '@/store/authStore';
 import { useLoginModalStore } from '@/store/loginModalStore';
+import { useProfile } from '@/hooks/useProfile';
 import { fetchOffersByServer, addRecentServer } from '@/lib/api';
+import { formatAdena } from '@/lib/adenaFormat';
 
-const OFFER_TYPE_LABELS = { ADENA: 'Adena', ITEMS: 'Items', ACCOUNTS: 'Accounts', BOOSTING: 'Boosting', OTHER: 'Other' };
+const OFFER_TYPES = ['ADENA', 'ITEMS', 'ACCOUNTS', 'BOOSTING', 'OTHER'];
 
 export default function GameOffersPage() {
   const params = useParams();
   const router = useRouter();
   const locale = useLocale();
   const t = useTranslations('OffersList');
+  const tOffers = useTranslations('Offers');
   const gameId = params?.gameId;
   const variantId = params?.variantId;
   const serverId = params?.serverId;
@@ -37,10 +47,14 @@ export default function GameOffersPage() {
   const isAuthenticated = useIsAuthenticated();
   const token = useAuthStore((s) => s.token);
   const openLoginModal = useLoginModalStore((s) => s.openModal);
+  const { preferredCurrency } = useProfile();
 
   const [offers, setOffers] = useState([]);
   const [offersLoading, setOffersLoading] = useState(true);
   const [offersError, setOffersError] = useState(null);
+  const [categoryFilter, setCategoryFilter] = useState('ADENA');
+  const [priceMin, setPriceMin] = useState('');
+  const [priceMax, setPriceMax] = useState('');
 
   useEffect(() => {
     if (serverId && token) {
@@ -52,7 +66,12 @@ export default function GameOffersPage() {
     if (!serverId) return;
     setOffersLoading(true);
     setOffersError(null);
-    fetchOffersByServer(serverId, token)
+    const params = { offerType: categoryFilter || undefined };
+    const pMin = priceMin !== '' && !Number.isNaN(Number(priceMin)) ? Number(priceMin) : undefined;
+    const pMax = priceMax !== '' && !Number.isNaN(Number(priceMax)) ? Number(priceMax) : undefined;
+    if (pMin != null) params.priceMin = pMin;
+    if (pMax != null) params.priceMax = pMax;
+    fetchOffersByServer(serverId, token, params)
       .then((data) => {
         setOffers(Array.isArray(data) ? data : []);
         setOffersLoading(false);
@@ -61,7 +80,7 @@ export default function GameOffersPage() {
         setOffersError(err.message);
         setOffersLoading(false);
       });
-  }, [serverId, token]);
+  }, [serverId, token, preferredCurrency, categoryFilter, priceMin, priceMax]);
 
   const handleSellItems = () => {
     if (!isAuthenticated) {
@@ -94,6 +113,8 @@ export default function GameOffersPage() {
   const backHref = singleServer ? `/${locale}/game/${gameId}` : `/${locale}/game/${gameId}/${variantId}`;
   const backLabel = singleServer ? t('backToVariants') : t('backToServers');
 
+  const categoryLabel = (type) => (type ? tOffers(type.toLowerCase()) : type);
+
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', py: 4, px: 2 }}>
       <Container>
@@ -113,6 +134,41 @@ export default function GameOffersPage() {
           </Button>
         </Box>
 
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 2, mb: 2 }}>
+          <FormControl size="small" sx={{ minWidth: 140 }}>
+            <InputLabel>{t('categoryFilter')}</InputLabel>
+            <Select
+              value={categoryFilter}
+              label={t('categoryFilter')}
+              onChange={(e) => setCategoryFilter(e.target.value)}
+            >
+              {OFFER_TYPES.map((type) => (
+                <MenuItem key={type} value={type}>
+                  {categoryLabel(type)}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <TextField
+            size="small"
+            label={t('priceMinPer1kk')}
+            type="number"
+            value={priceMin}
+            onChange={(e) => setPriceMin(e.target.value)}
+            inputProps={{ min: 0, step: 0.01 }}
+            sx={{ width: 120 }}
+          />
+          <TextField
+            size="small"
+            label={t('priceMaxPer1kk')}
+            type="number"
+            value={priceMax}
+            onChange={(e) => setPriceMax(e.target.value)}
+            inputProps={{ min: 0, step: 0.01 }}
+            sx={{ width: 120 }}
+          />
+        </Box>
+
         {offersLoading && (
           <Box sx={{ display: 'flex', justifyContent: 'center', py: 2 }}>
             <CircularProgress color="secondary" size={24} />
@@ -124,52 +180,71 @@ export default function GameOffersPage() {
         )}
         {!offersLoading && offers.length > 0 && (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-            {offers.map((offer) => (
-              <Card key={offer.id} variant="outlined">
-                <CardActionArea component={Link} href={`/${locale}/game/${gameId}/${variantId}/${serverId}/offers/${offer.id}`}>
-                  <CardContent sx={{ py: 2, px: 2 }}>
-                    <Typography variant="subtitle1" fontWeight={600}>
-                      {offer.title}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary" component="span" sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 0.5 }}>
-                      {OFFER_TYPE_LABELS[offer.offerType] ?? offer.offerType} · {offer.quantity}
-                      {' · '}
-                      {offer.displayPrice != null && offer.displayCurrency
-                        ? `${offer.displayPrice} ${offer.displayCurrency} (${offer.price} ${offer.currency})`
-                        : `${offer.price} ${offer.currency}`}
-                      {offer.seller && (
-                        <>
-                          {' · by '}
-                          {offer.seller.nickname ?? offer.seller.email ?? '—'}
-                          <Box
-                            component="span"
+            {offers.map((offer) => {
+              const isAdena = offer.offerType === 'ADENA';
+              const displayPrice = offer.displayPrice != null && offer.displayCurrency
+                ? `${Number(offer.displayPrice).toFixed(2)} ${offer.displayCurrency}`
+                : `${offer.price} ${offer.currency}`;
+              const pricePer1kk = isAdena ? displayPrice : null;
+              const totalAdena = isAdena ? formatAdena(offer.quantity ?? 0) : null;
+              const seller = offer.seller;
+              const sellerName = seller?.nickname ?? seller?.email ?? '—';
+              return (
+                <Card key={offer.id} variant="outlined">
+                  <CardActionArea component={Link} href={`/${locale}/game/${gameId}/${variantId}/${serverId}/offers/${offer.id}`}>
+                    <CardContent sx={{ py: 2, px: 2 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
+                        {seller && (
+                          <Badge
+                            overlap="circular"
+                            anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+                            variant="dot"
                             sx={{
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: 0.25,
-                              ml: 0.5,
+                              '& .MuiBadge-badge': {
+                                bgcolor: offer.seller.isOnline ? 'success.main' : 'grey.400',
+                                border: '2px solid',
+                                borderColor: 'background.paper',
+                              },
                             }}
                           >
-                            <Box
-                              component="span"
-                              sx={{
-                                width: 6,
-                                height: 6,
-                                borderRadius: '50%',
-                                bgcolor: offer.seller.isOnline ? 'success.main' : 'text.disabled',
-                              }}
-                            />
-                            <Typography component="span" variant="caption" color="text.secondary">
-                              {offer.seller.isOnline ? t('sellerOnline') : t('sellerOffline')}
+                            <Avatar
+                              src={seller.avatarUrl || undefined}
+                              alt={sellerName}
+                              sx={{ width: 40, height: 40 }}
+                            >
+                              {(seller.nickname || seller.email || '?').charAt(0).toUpperCase()}
+                            </Avatar>
+                          </Badge>
+                        )}
+                        <Box sx={{ flex: 1, minWidth: 0 }}>
+                          <Typography variant="subtitle1" fontWeight={600}>
+                            {offer.title}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.25 }}>
+                            {categoryLabel(offer.offerType)}
+                            {seller && ` · ${t('byCreator')} ${sellerName}`}
+                          </Typography>
+                          {isAdena ? (
+                            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5, mt: 1 }}>
+                              <Typography variant="body2" fontWeight={600} color="primary.main">
+                                {t('totalAdena')}: {totalAdena}
+                              </Typography>
+                              <Typography variant="body2" fontWeight={600} color="text.primary">
+                                {t('pricePer1kk')}: {pricePer1kk}
+                              </Typography>
+                            </Box>
+                          ) : (
+                            <Typography variant="body2" color="primary.main" fontWeight={600} sx={{ mt: 1 }}>
+                              {displayPrice}
                             </Typography>
-                          </Box>
-                        </>
-                      )}
-                    </Typography>
-                  </CardContent>
-                </CardActionArea>
-              </Card>
-            ))}
+                          )}
+                        </Box>
+                      </Box>
+                    </CardContent>
+                  </CardActionArea>
+                </Card>
+              );
+            })}
           </Box>
         )}
       </Container>

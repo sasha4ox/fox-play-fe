@@ -77,9 +77,13 @@ export async function fetchGamesTree() {
   return res.json()
 }
 
-/** Offers by server. Pass token when logged in to get displayPrice in your currency. */
-export async function fetchOffersByServer(serverId, token = null) {
-  return apiGet(`/offers?serverId=${serverId}`, token)
+/** Offers by server. Pass token when logged in to get displayPrice in your currency. params: { offerType, priceMin, priceMax } */
+export async function fetchOffersByServer(serverId, token = null, params = {}) {
+  const q = new URLSearchParams({ serverId })
+  if (params.offerType) q.set('offerType', params.offerType)
+  if (params.priceMin != null) q.set('priceMin', String(params.priceMin))
+  if (params.priceMax != null) q.set('priceMax', String(params.priceMax))
+  return apiGet(`/offers?${q.toString()}`, token)
 }
 
 /** Single offer. Pass token when logged in to get displayPrice in your currency. */
