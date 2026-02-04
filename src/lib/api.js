@@ -84,18 +84,20 @@ export async function fetchGamesTree() {
   return res.json()
 }
 
-/** Offers by server. Pass token when logged in to get displayPrice in your currency. params: { offerType, priceMin, priceMax } */
+/** Offers by server. Pass token when logged in to get displayPrice in your currency. For guests, pass displayCurrency (e.g. 'USD'). params: { offerType, priceMin, priceMax, displayCurrency } */
 export async function fetchOffersByServer(serverId, token = null, params = {}) {
   const q = new URLSearchParams({ serverId })
   if (params.offerType) q.set('offerType', params.offerType)
   if (params.priceMin != null) q.set('priceMin', String(params.priceMin))
   if (params.priceMax != null) q.set('priceMax', String(params.priceMax))
+  if (params.displayCurrency) q.set('displayCurrency', params.displayCurrency)
   return apiGet(`/offers?${q.toString()}`, token)
 }
 
-/** Single offer. Pass token when logged in to get displayPrice in your currency. */
-export async function fetchOfferById(offerId, token = null) {
-  return apiGet(`/offers/${offerId}`, token)
+/** Single offer. Pass token when logged in to get displayPrice in your currency. For guests, pass options.displayCurrency (e.g. 'USD'). */
+export async function fetchOfferById(offerId, token = null, options = {}) {
+  const q = options.displayCurrency ? `?displayCurrency=${encodeURIComponent(options.displayCurrency)}` : ''
+  return apiGet(`/offers/${offerId}${q}`, token)
 }
 
 /** My offers as seller (auth required) */
@@ -144,6 +146,11 @@ export async function getProfile(token) {
   return apiGet('/me', token)
 }
 
+/** Feedbacks received by a user (public, for seller reviews). Returns [{ id, rating, comment, createdAt, fromUser: { id, nickname } }] */
+export async function getFeedbacksByUserId(userId) {
+  return apiGet(`/users/${userId}/feedbacks`, null)
+}
+
 /** Last 5 servers user viewed offers on (auth required). Returns [{ serverId, gameId, variantId, gameName, variantName, serverName, lastVisited }] */
 export async function getRecentServers(token) {
   return apiGet('/me/recent-servers', token)
@@ -190,6 +197,11 @@ export async function getDepositInfo(token) {
 /** Mock deposit: credit balance (dev only, when backend returns depositInfo.mock) */
 export async function simulateDeposit(token) {
   return apiPost('/me/deposit/simulate', {}, token)
+}
+
+/** Test credit: add 2000 in user's preferred currency (when ALLOW_TEST_CREDIT=true on backend, for testers). */
+export async function addTestCredit(token) {
+  return apiPost('/me/test-credit', {}, token)
 }
 
 /** Create deposit order. Binance: returns { checkoutUrl }. WhiteBIT: pass provider: 'whitebit', currency: 'UAH' (or USD/EUR), returns { depositUrl }. Redirect user to the URL. */

@@ -1,21 +1,23 @@
+/* Light mode: soft background, high-contrast text (WCAG-friendly) */
 :root {
-  --background: #f9f6f1;
-  --foreground: #352228;
-  --text-primary: #352228;
-  --text-second-color: #725e65;
-  --second-color: #EAe5de;
-  --third-color: #352228;
-  --fourth-color: #4d3d42;
+  --background: #f8fafc;
+  --foreground: #0f172a;
+  --text-primary: #0f172a;
+  --text-second-color: #64748b;
+  --second-color: #e2e8f0;
+  --third-color: #0f172a;
+  --fourth-color: #475569;
 }
 
+/* Dark mode: true dark surfaces, readable text */
 [data-theme="dark"] {
-  --background: #1a1214;
-  --foreground: #f0e6e8;
-  --text-primary: #f0e6e8;
-  --text-second-color: #b8a4a8;
-  --second-color: #252022;
-  --third-color: #b8a4a8;
-  --fourth-color: #c9b9bd;
+  --background: #0f172a;
+  --foreground: #f1f5f9;
+  --text-primary: #f1f5f9;
+  --text-second-color: #94a3b8;
+  --second-color: #1e293b;
+  --third-color: #f1f5f9;
+  --fourth-color: #94a3b8;
 }
 
 html {
@@ -32,8 +34,10 @@ body {
 }
 
 body {
+  position: relative;
+  min-height: 100vh;
   color: var(--foreground);
-  background: var(--background);
+  background-color: var(--background);
   font-family: Arial, Helvetica, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;

@@ -77,7 +77,16 @@ export default function OrderChatPage() {
   const [feedbackSubmitting, setFeedbackSubmitting] = useState(false);
   const tAdmin = useTranslations('Admin');
 
-  const { connected, lastMessage, onlineUserIds } = useOrderSocket(orderId, token);
+  const setMessagesRef = useRef(setMessages);
+  setMessagesRef.current = setMessages;
+  const { connected, onlineUserIds } = useOrderSocket(orderId, token, {
+    onMessage: (msg) => {
+      setMessagesRef.current((prev) => {
+        if (prev.some((m) => m.id === msg.id)) return prev;
+        return [...prev, msg];
+      });
+    },
+  });
 
   const refetchOrder = () => {
     if (!orderId || !token) return;
@@ -95,14 +104,6 @@ export default function OrderChatPage() {
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
   }, [orderId, token]);
-
-  useEffect(() => {
-    if (!lastMessage) return;
-    setMessages((prev) => {
-      if (prev.some((m) => m.id === lastMessage.id)) return prev;
-      return [...prev, lastMessage];
-    });
-  }, [lastMessage]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });

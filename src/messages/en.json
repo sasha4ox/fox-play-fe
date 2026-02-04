@@ -7,6 +7,7 @@
     "view": "View",
     "send": "Send",
     "loading": "Loading…",
+    "close": "Close",
     "back": "← Back",
     "backToGames": "← Back to games",
     "user": "User"
@@ -111,7 +112,11 @@
     "enterAmountMin": "Enter a valid amount (min 1)",
     "enterAmountUsdt": "Enter a valid amount (min 1 USDT)",
     "noPaymentUrl": "No payment URL returned",
-    "failedDeposit": "Failed to create deposit"
+    "failedDeposit": "Failed to create deposit",
+    "testCreditTitle": "Test credit (for testers)",
+    "testCreditHint": "Add {amount} {currency} to your balance for testing. Card payment is not required.",
+    "getTestCredit": "Get {amount} {currency} test credit",
+    "testCreditFailed": "Failed to add test credit"
   },
   "Orders": {
     "chats": "Chats",
@@ -312,7 +317,11 @@
     "messagePlaceholder": "Type a message...",
     "sendMessage": "Send",
     "sending": "Sending…",
-    "noMessages": "No messages yet."
+    "noMessages": "No messages yet.",
+    "seeReviews": "See reviews",
+    "reviewsTitle": "Reviews",
+    "noReviews": "No reviews yet.",
+    "reviewFrom": "From"
   },
   "NewOffer": {
     "createOffer": "Create offer",

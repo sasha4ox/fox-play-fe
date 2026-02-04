@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useLocale } from 'next-intl';
 import Container from '@mui/material/Container';
@@ -16,7 +16,7 @@ import Link from 'next/link';
 import { useAuthStore, useIsAuthenticated } from '@/store/authStore';
 import { useProfile } from '@/hooks/useProfile';
 import TextField from '@mui/material/TextField';
-import { getDepositInfo, simulateDeposit, createDepositOrder } from '@/lib/api';
+import { getDepositInfo, simulateDeposit, addTestCredit, createDepositOrder } from '@/lib/api';
 import { useLoginModalStore } from '@/store/loginModalStore';
 import { useTranslations } from 'next-intl';
 
@@ -45,6 +45,8 @@ export default function BalancePage() {
   const [depositCurrency, setDepositCurrency] = useState('UAH');
   const [createDepositLoading, setCreateDepositLoading] = useState(false);
   const [createDepositError, setCreateDepositError] = useState(null);
+  const [testCreditLoading, setTestCreditLoading] = useState(false);
+  const [testCreditError, setTestCreditError] = useState(null);
 
   const handleLoadDepositInfo = () => {
     if (!token) return;
@@ -55,6 +57,15 @@ export default function BalancePage() {
       .finally(() => setDepositLoading(false));
   };
 
+  useEffect(() => {
+    if (!token) return;
+    let cancelled = false;
+    getDepositInfo(token)
+      .then((info) => { if (!cancelled) setDepositInfo(info); })
+      .catch(() => { if (!cancelled) setDepositInfo(null); });
+    return () => { cancelled = true; };
+  }, [token]);
+
   const handleSimulateDeposit = () => {
     if (!token) return;
     setSimulateLoading(true);
@@ -62,6 +73,16 @@ export default function BalancePage() {
       .then(() => refetch())
       .catch((e) => console.error(e))
       .finally(() => setSimulateLoading(false));
+  };
+
+  const handleTestCredit = () => {
+    if (!token) return;
+    setTestCreditLoading(true);
+    setTestCreditError(null);
+    addTestCredit(token)
+      .then(() => refetch())
+      .catch((e) => setTestCreditError(e.message || t('testCreditFailed')))
+      .finally(() => setTestCreditLoading(false));
   };
 
   const handleCreateDeposit = (useWhiteBit = false) => {
@@ -188,6 +209,33 @@ export default function BalancePage() {
                   </Typography>
                 </Box>
               ))}
+
+            {depositInfo?.testCreditEnabled && (
+              <Card variant="outlined" sx={{ mt: 2, mb: 3, borderColor: 'primary.main', bgcolor: 'action.hover' }}>
+                <CardContent>
+                  <Typography variant="subtitle1" fontWeight={600} color="primary.main" gutterBottom>
+                    {t('testCreditTitle')}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                    {t('testCreditHint', { amount: depositInfo.testCreditAmount ?? 2000, currency: preferredCurrency ?? 'USD' })}
+                  </Typography>
+                  {testCreditError && (
+                    <Alert severity="error" sx={{ mb: 2 }} onClose={() => setTestCreditError(null)}>
+                      {testCreditError}
+                    </Alert>
+                  )}
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={handleTestCredit}
+                    disabled={testCreditLoading}
+                    sx={{ textTransform: 'none' }}
+                  >
+                    {testCreditLoading ? t('adding') : t('getTestCredit', { amount: depositInfo.testCreditAmount ?? 2000, currency: preferredCurrency ?? 'USD' })}
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
 
             <Typography variant="h6" fontWeight={600} sx={{ mt: 4, mb: 2 }}>
               {t('uploadBalance')}

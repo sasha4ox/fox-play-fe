@@ -11,17 +11,21 @@ const getSocketUrl = () => {
 /**
  * Connect to order chat room via Socket.IO. Joins order room when orderId and token are set.
  * Returns { socket, connected, lastMessage, onlineUserIds }.
- * lastMessage is set when server emits 'message'. onlineUserIds = who is currently in this order chat.
+ * Pass onMessage(msg) to get every received message immediately (avoids losing rapid messages).
  */
-export function useOrderSocket(orderId, token) {
+export function useOrderSocket(orderId, token, options = {}) {
+  const { onMessage } = options;
   const [connected, setConnected] = useState(false);
   const [lastMessage, setLastMessage] = useState(null);
   const [onlineUserIds, setOnlineUserIds] = useState([]);
   const socketRef = useRef(null);
+  const onMessageRef = useRef(onMessage);
+  onMessageRef.current = onMessage;
 
   useEffect(() => {
     if (!token || !orderId) return;
     setOnlineUserIds([]);
+    setLastMessage(null);
     const socketUrl = getSocketUrl();
     const socket = io(socketUrl, {
       path: '/socket.io',
@@ -31,7 +35,10 @@ export function useOrderSocket(orderId, token) {
     socketRef.current = socket;
     socket.on('connect', () => setConnected(true));
     socket.on('disconnect', () => setConnected(false));
-    socket.on('message', (msg) => setLastMessage(msg));
+    socket.on('message', (msg) => {
+      setLastMessage(msg);
+      onMessageRef.current?.(msg);
+    });
     socket.on('presence', (data) => setOnlineUserIds(Array.isArray(data?.userIds) ? data.userIds : []));
     socket.emit('join_order', orderId);
     return () => {

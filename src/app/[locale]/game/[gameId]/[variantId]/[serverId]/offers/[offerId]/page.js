@@ -29,7 +29,7 @@ import CardContent from '@mui/material/CardContent';
 import { useAuthStore } from '@/store/authStore';
 import { useLoginModalStore } from '@/store/loginModalStore';
 import { useProfile } from '@/hooks/useProfile';
-import { fetchOfferById, createOrder, createFondyCheckout, getOfferMessages, sendOfferMessage } from '@/lib/api';
+import { fetchOfferById, createOrder, createFondyCheckout, getOfferMessages, sendOfferMessage, getFeedbacksByUserId } from '@/lib/api';
 import { formatAdena } from '@/lib/adenaFormat';
 
 export default function OfferPDPPage() {
@@ -73,7 +73,7 @@ export default function OfferPDPPage() {
     if (!offerId) return;
     setLoading(true);
     setError(null);
-    fetchOfferById(offerId, token)
+    fetchOfferById(offerId, token, { displayCurrency: token ? undefined : 'USD' })
       .then((data) => {
         setOffer(data);
         setBuyQuantity(1);
@@ -87,6 +87,9 @@ export default function OfferPDPPage() {
   }, [offerId, token, preferredCurrency]);
 
   const [selectedThreadBuyerId, setSelectedThreadBuyerId] = useState(null);
+  const [feedbacksDialogOpen, setFeedbacksDialogOpen] = useState(false);
+  const [feedbacks, setFeedbacks] = useState([]);
+  const [feedbacksLoading, setFeedbacksLoading] = useState(false);
 
   useEffect(() => {
     if (!offerId || !token) return;
@@ -94,6 +97,15 @@ export default function OfferPDPPage() {
       .then((data) => setOfferMessages(Array.isArray(data) ? data : []))
       .catch(() => setOfferMessages([]));
   }, [offerId, token, isCreator]);
+
+  useEffect(() => {
+    if (!feedbacksDialogOpen || !offer?.seller?.id) return;
+    setFeedbacksLoading(true);
+    getFeedbacksByUserId(offer.seller.id)
+      .then((data) => setFeedbacks(Array.isArray(data) ? data : []))
+      .catch(() => setFeedbacks([]))
+      .finally(() => setFeedbacksLoading(false));
+  }, [feedbacksDialogOpen, offer?.seller?.id]);
 
   const handleBuyClick = () => {
     if (!isAuthenticated) {
@@ -247,26 +259,31 @@ export default function OfferPDPPage() {
                 {t('seller')}
               </Typography>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
-                <Badge
-                  overlap="circular"
-                  anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
-                  variant="dot"
-                  sx={{
-                    '& .MuiBadge-badge': {
-                      bgcolor: offer.seller.isOnline ? 'success.main' : 'grey.400',
-                      border: '2px solid',
-                      borderColor: 'background.paper',
-                    },
-                  }}
-                >
-                  <Avatar
-                    src={offer.seller.avatarUrl || undefined}
-                    alt={offer.seller.nickname ?? offer.seller.email}
-                    sx={{ width: 48, height: 48 }}
+                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.25 }}>
+                  <Badge
+                    overlap="circular"
+                    anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+                    variant="dot"
+                    sx={{
+                      '& .MuiBadge-badge': {
+                        bgcolor: offer.seller.isOnline ? 'success.main' : 'grey.400',
+                        border: '2px solid',
+                        borderColor: 'background.paper',
+                      },
+                    }}
                   >
-                    {(offer.seller.nickname || offer.seller.email || '?').charAt(0).toUpperCase()}
-                  </Avatar>
-                </Badge>
+                    <Avatar
+                      src={offer.seller.avatarUrl || undefined}
+                      alt={offer.seller.nickname ?? offer.seller.email}
+                      sx={{ width: 48, height: 48 }}
+                    >
+                      {(offer.seller.nickname || offer.seller.email || '?').charAt(0).toUpperCase()}
+                    </Avatar>
+                  </Badge>
+                  {offer.seller.rating != null && Number(offer.seller.rating) > 0 && (
+                    <Rating value={Number(offer.seller.rating)} precision={0.5} readOnly size="small" sx={{ fontSize: '0.8rem' }} />
+                  )}
+                </Box>
                 <Box>
                   <Typography variant="subtitle1" fontWeight={600}>
                     {offer.seller.nickname ?? offer.seller.email}
@@ -274,8 +291,10 @@ export default function OfferPDPPage() {
                   <Typography variant="caption" color="text.secondary" display="block">
                     {offer.seller.isOnline ? t('sellerOnline') : t('sellerOffline')}
                   </Typography>
-                  {offer.seller.rating != null && Number(offer.seller.rating) > 0 && (
-                    <Rating value={Number(offer.seller.rating)} precision={0.5} readOnly size="small" sx={{ mt: 0.5 }} />
+                  {offer.seller.id && (
+                    <Button size="small" variant="text" color="secondary" sx={{ mt: 0.5, p: 0, minWidth: 0, textTransform: 'none' }} onClick={() => setFeedbacksDialogOpen(true)}>
+                      {t('seeReviews')}
+                    </Button>
                   )}
                 </Box>
               </Box>
@@ -352,6 +371,34 @@ export default function OfferPDPPage() {
             </Button>
           )}
         </Box>
+
+        <Dialog open={feedbacksDialogOpen} onClose={() => setFeedbacksDialogOpen(false)} maxWidth="sm" fullWidth>
+          <DialogTitle>{t('reviewsTitle')}</DialogTitle>
+          <DialogContent>
+            {feedbacksLoading ? (
+              <Typography color="text.secondary">{tCommon('loading') || 'Loading…'}</Typography>
+            ) : feedbacks.length === 0 ? (
+              <Typography color="text.secondary">{t('noReviews')}</Typography>
+            ) : (
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, py: 1 }}>
+                {feedbacks.map((fb) => (
+                  <Box key={fb.id} sx={{ p: 1.5, border: '1px solid', borderColor: 'divider', borderRadius: 1 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+                      <Rating value={fb.rating} readOnly size="small" sx={{ fontSize: '0.875rem' }} />
+                      <Typography variant="caption" color="text.secondary">
+                        {t('reviewFrom')}: {fb.fromUser?.nickname ?? '—'} · {fb.createdAt ? new Date(fb.createdAt).toLocaleDateString(undefined, { dateStyle: 'short' }) : ''}
+                      </Typography>
+                    </Box>
+                    {fb.comment && <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>{fb.comment}</Typography>}
+                  </Box>
+                ))}
+              </Box>
+            )}
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setFeedbacksDialogOpen(false)}>{tCommon('close') || 'Close'}</Button>
+          </DialogActions>
+        </Dialog>
 
         {isAuthenticated && (
           <Box sx={{ mt: 4, p: 2, border: '1px solid', borderColor: 'divider', borderRadius: 1, bgcolor: 'background.paper' }}>

@@ -54,9 +54,9 @@ export default function MyOrdersPage() {
   }
 
   const allOrders = chatSummary.orders ?? [];
-  const sellerChats = allOrders.filter((o) => o.isSeller);
-  const buyerChats = allOrders.filter((o) => !o.isSeller);
-  const orderChatsList = [...sellerChats, ...buyerChats];
+  // Use backend order (incomplete first, unread first, newest first); do not re-sort by seller/buyer
+  const orderChatsList = allOrders;
+  const hasAnySellerChats = allOrders.some((o) => o.isSeller);
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', py: 4, px: 2 }}>
@@ -98,12 +98,12 @@ export default function MyOrdersPage() {
                           {t('withSeller')}: {thread.otherParty?.nickname ?? thread.otherParty?.email ?? '—'}
                         </Typography>
                         {thread.lastMessage?.text && (
-                          <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5, fontStyle: 'italic' }} noWrap>
+                          <Typography variant="body2" color="text.primary" display="block" sx={{ mt: 0.5, fontStyle: 'italic', fontWeight: 500 }} noWrap>
                             {thread.lastMessage.text}
                           </Typography>
                         )}
                         {thread.lastMessage?.createdAt && (
-                          <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.25 }}>
+                          <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.25, fontWeight: 500 }}>
                             {new Date(thread.lastMessage.createdAt).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' })}
                           </Typography>
                         )}
@@ -128,12 +128,12 @@ export default function MyOrdersPage() {
                           {t('withBuyer')}: {thread.otherParty?.nickname ?? thread.otherParty?.email ?? '—'}
                         </Typography>
                         {thread.lastMessage?.text && (
-                          <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5, fontStyle: 'italic' }} noWrap>
+                          <Typography variant="body2" color="text.primary" display="block" sx={{ mt: 0.5, fontStyle: 'italic', fontWeight: 500 }} noWrap>
                             {thread.lastMessage.text}
                           </Typography>
                         )}
                         {thread.lastMessage?.createdAt && (
-                          <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.25 }}>
+                          <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.25, fontWeight: 500 }}>
                             {new Date(thread.lastMessage.createdAt).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' })}
                           </Typography>
                         )}
@@ -168,7 +168,7 @@ export default function MyOrdersPage() {
         )}
         {!loading && orderChatsList.length > 0 && (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mt: 2 }}>
-            {sellerChats.length > 0 && (
+            {hasAnySellerChats && (
               <Typography variant="caption" color="primary.main" fontWeight={600} sx={{ mb: -0.5 }}>
                 {t('someoneBoughtYourItem')}
               </Typography>
@@ -218,12 +218,12 @@ export default function MyOrdersPage() {
                           )}
                         </Typography>
                         {order.lastMessage?.text && (
-                          <Typography variant="caption" color="text.secondary" noWrap display="block" sx={{ mt: 0.25 }}>
+                          <Typography variant="body2" color="text.primary" noWrap display="block" sx={{ mt: 0.5, fontWeight: 500 }}>
                             {order.lastMessage.text}
                           </Typography>
                         )}
                         {lastDate && (
-                          <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.25 }}>
+                          <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.25, fontWeight: 500 }}>
                             {new Date(lastDate).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' })}
                           </Typography>
                         )}

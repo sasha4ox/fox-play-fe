@@ -7,6 +7,7 @@
     "view": "Переглянути",
     "send": "Надіслати",
     "loading": "Завантаження…",
+    "close": "Закрити",
     "back": "← Назад",
     "backToGames": "← До ігор",
     "user": "Користувач"
@@ -111,7 +112,11 @@
     "enterAmountMin": "Введіть коректну суму (мін. 1)",
     "enterAmountUsdt": "Введіть коректну суму (мін. 1 USDT)",
     "noPaymentUrl": "Не отримано посилання на оплату",
-    "failedDeposit": "Не вдалося створити поповнення"
+    "failedDeposit": "Не вдалося створити поповнення",
+    "testCreditTitle": "Тестовий кредит (для тестувальників)",
+    "testCreditHint": "Додати {amount} {currency} на баланс для тестування. Оплата карткою не потрібна.",
+    "getTestCredit": "Отримати {amount} {currency} тестового кредиту",
+    "testCreditFailed": "Не вдалося додати тестовий кредит"
   },
   "Orders": {
     "chats": "Чати",
@@ -312,7 +317,11 @@
     "messagePlaceholder": "Напишіть повідомлення...",
     "sendMessage": "Надіслати",
     "sending": "Надсилання…",
-    "noMessages": "Повідомлень ще немає."
+    "noMessages": "Повідомлень ще немає.",
+    "seeReviews": "Відгуки",
+    "reviewsTitle": "Відгуки",
+    "noReviews": "Відгуків ще немає.",
+    "reviewFrom": "Від"
   },
   "NewOffer": {
     "createOffer": "Створити оголошення",

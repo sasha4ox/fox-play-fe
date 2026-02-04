@@ -75,7 +75,10 @@ export default function GameOffersPage() {
     if (!serverId) return;
     setOffersLoading(true);
     setOffersError(null);
-    const params = { offerType: categoryFilter || undefined };
+    const params = {
+      offerType: categoryFilter || undefined,
+      displayCurrency: token ? undefined : 'USD',
+    };
     fetchOffersByServer(serverId, token, params)
       .then((data) => {
         setOffers(Array.isArray(data) ? data : []);
@@ -221,36 +224,36 @@ export default function GameOffersPage() {
                           onClick={() => router.push(`/${locale}/game/${gameId}/${variantId}/${serverId}/offers/${offer.id}`)}
                         >
                           <CardContent sx={{ py: 2, px: 2 }}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1.5 }}>
+                            <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, mb: 1.5 }}>
                               {seller && (
-                                <Badge
-                                  overlap="circular"
-                                  anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
-                                  variant="dot"
-                                  sx={{
-                                    '& .MuiBadge-badge': {
-                                      bgcolor: offer.seller.isOnline ? 'success.main' : 'grey.400',
-                                      border: '2px solid',
-                                      borderColor: 'background.paper',
-                                    },
-                                  }}
-                                >
-                                  <Avatar
-                                    src={seller.avatarUrl || undefined}
-                                    alt={sellerNickname}
-                                    sx={{ width: 40, height: 40 }}
+                                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.25, width: 72, flexShrink: 0 }}>
+                                  <Badge
+                                    overlap="circular"
+                                    anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+                                    variant="dot"
+                                    sx={{
+                                      '& .MuiBadge-badge': {
+                                        bgcolor: offer.seller.isOnline ? 'success.main' : 'grey.400',
+                                        border: '2px solid',
+                                        borderColor: 'background.paper',
+                                      },
+                                    }}
                                   >
-                                    {(seller.nickname || seller.email || '?').charAt(0).toUpperCase()}
-                                  </Avatar>
-                                </Badge>
+                                    <Avatar
+                                      src={seller.avatarUrl || undefined}
+                                      alt={sellerNickname}
+                                      sx={{ width: 40, height: 40 }}
+                                    >
+                                      {(seller.nickname || seller.email || '?').charAt(0).toUpperCase()}
+                                    </Avatar>
+                                  </Badge>
+                                  <Box sx={{ minHeight: 16, width: '100%', display: 'flex', justifyContent: 'center' }}>{seller?.rating != null && Number(seller.rating) > 0 && <Rating value={Number(seller.rating)} precision={0.5} readOnly size="small" sx={{ fontSize: '0.75rem' }} />}</Box>
+                                </Box>
                               )}
-                              <Box sx={{ flex: 1, minWidth: 0 }}>
+                              <Box sx={{ flex: 1, minWidth: 0, pt: 0.25 }}>
                                 <Typography variant="subtitle1" fontWeight={600}>
                                   {sellerNickname}
                                 </Typography>
-                                {seller?.rating != null && Number(seller.rating) > 0 && (
-                                  <Rating value={Number(seller.rating)} precision={0.5} readOnly size="small" sx={{ mt: 0.25 }} />
-                                )}
                               </Box>
                             </Box>
                             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, alignItems: 'baseline' }}>
@@ -314,38 +317,36 @@ export default function GameOffersPage() {
                             '&:hover': { bgcolor: 'action.hover' },
                           }}
                         >
-                          <TableCell>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <TableCell sx={{ verticalAlign: 'top' }}>
+                            <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
                               {seller && (
-                                <Badge
-                                  overlap="circular"
-                                  anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
-                                  variant="dot"
-                                  sx={{
-                                    '& .MuiBadge-badge': {
-                                      bgcolor: offer.seller.isOnline ? 'success.main' : 'grey.400',
-                                      border: '2px solid',
-                                      borderColor: 'background.paper',
-                                    },
-                                  }}
-                                >
-                                  <Avatar
-                                    src={seller.avatarUrl || undefined}
-                                    alt={sellerNickname}
-                                    sx={{ width: 28, height: 28 }}
+                                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0, width: 56, flexShrink: 0 }}>
+                                  <Badge
+                                    overlap="circular"
+                                    anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+                                    variant="dot"
+                                    sx={{
+                                      '& .MuiBadge-badge': {
+                                        bgcolor: offer.seller.isOnline ? 'success.main' : 'grey.400',
+                                        border: '2px solid',
+                                        borderColor: 'background.paper',
+                                      },
+                                    }}
                                   >
-                                    {(seller.nickname || seller.email || '?').charAt(0).toUpperCase()}
-                                  </Avatar>
-                                </Badge>
+                                    <Avatar
+                                      src={seller.avatarUrl || undefined}
+                                      alt={sellerNickname}
+                                      sx={{ width: 28, height: 28 }}
+                                    >
+                                      {(seller.nickname || seller.email || '?').charAt(0).toUpperCase()}
+                                    </Avatar>
+                                  </Badge>
+                                  <Box sx={{ minHeight: 14, width: '100%', display: 'flex', justifyContent: 'center' }}>{seller?.rating != null && Number(seller.rating) > 0 && <Rating value={Number(seller.rating)} precision={0.5} readOnly size="small" sx={{ fontSize: '0.65rem' }} />}</Box>
+                                </Box>
                               )}
-                              <Box>
-                                <Typography variant="body2" fontWeight={500}>
-                                  {sellerNickname}
-                                </Typography>
-                                {seller?.rating != null && Number(seller.rating) > 0 && (
-                                  <Rating value={Number(seller.rating)} precision={0.5} readOnly size="small" sx={{ display: 'flex', mt: 0.25 }} />
-                                )}
-                              </Box>
+                              <Typography variant="body2" fontWeight={500} sx={{ pt: 0.25 }}>
+                                {sellerNickname}
+                              </Typography>
                             </Box>
                           </TableCell>
                           <TableCell sx={{ width: '130px' }} align="center">
@@ -379,28 +380,31 @@ export default function GameOffersPage() {
                         <CardContent sx={{ py: 2, px: 2 }}>
                           <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
                             {seller && (
-                              <Badge
-                                overlap="circular"
-                                anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
-                                variant="dot"
-                                sx={{
-                                  '& .MuiBadge-badge': {
-                                    bgcolor: offer.seller.isOnline ? 'success.main' : 'grey.400',
-                                    border: '2px solid',
-                                    borderColor: 'background.paper',
-                                  },
-                                }}
-                              >
-                                <Avatar
-                                  src={seller.avatarUrl || undefined}
-                                  alt={sellerName}
-                                  sx={{ width: 40, height: 40 }}
+                              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.25, width: 72, flexShrink: 0 }}>
+                                <Badge
+                                  overlap="circular"
+                                  anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+                                  variant="dot"
+                                  sx={{
+                                    '& .MuiBadge-badge': {
+                                      bgcolor: offer.seller.isOnline ? 'success.main' : 'grey.400',
+                                      border: '2px solid',
+                                      borderColor: 'background.paper',
+                                    },
+                                  }}
                                 >
-                                  {(seller.nickname || seller.email || '?').charAt(0).toUpperCase()}
-                                </Avatar>
-                              </Badge>
+                                  <Avatar
+                                    src={seller.avatarUrl || undefined}
+                                    alt={sellerName}
+                                    sx={{ width: 40, height: 40 }}
+                                  >
+                                    {(seller.nickname || seller.email || '?').charAt(0).toUpperCase()}
+                                  </Avatar>
+                                </Badge>
+                                <Box sx={{ minHeight: 16, width: '100%', display: 'flex', justifyContent: 'center' }}>{seller?.rating != null && Number(seller.rating) > 0 && <Rating value={Number(seller.rating)} precision={0.5} readOnly size="small" sx={{ fontSize: '0.75rem' }} />}</Box>
+                              </Box>
                             )}
-                            <Box sx={{ flex: 1, minWidth: 0 }}>
+                            <Box sx={{ flex: 1, minWidth: 0, pt: 0.25 }}>
                               <Typography variant="subtitle1" fontWeight={600}>
                                 {offer.title}
                               </Typography>
@@ -408,9 +412,6 @@ export default function GameOffersPage() {
                                 {categoryLabel(offer.offerType)}
                                 {seller && ` · ${t('byCreator')} ${sellerName}`}
                               </Typography>
-                              {seller?.rating != null && Number(seller.rating) > 0 && (
-                                <Rating value={Number(seller.rating)} precision={0.5} readOnly size="small" sx={{ mt: 0.5 }} />
-                              )}
                               <Typography variant="body2" color="primary.main" fontWeight={600} sx={{ mt: 1 }}>
                                 {displayPrice}
                               </Typography>

@@ -2,6 +2,7 @@
  * Notification sounds: "message received" and "sold item".
  * User (creator) can choose preset: Chime, Bell, Soft, or Custom (files from public/sounds/).
  * All settings stored in localStorage (FE only).
+ * Uses a shared AudioContext so it can play over other audio; call unlockAudio() on first user click so it's not suspended.
  */
 
 const CUSTOM_SOUND_PATHS = {
@@ -9,10 +10,36 @@ const CUSTOM_SOUND_PATHS = {
   sold: '/sounds/sold.mp3',
 }
 
-function playTone(frequency, durationMs, volume = 0.2, type = 'sine') {
+let sharedContext = null
+
+/** Get or create shared AudioContext; resume if suspended. Call this on a user gesture (e.g. opening sound menu) so playback works when music is playing. */
+export function unlockAudio() {
   if (typeof window === 'undefined') return
   try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)()
+    const Ctx = window.AudioContext || window.webkitAudioContext
+    if (!Ctx) return
+    if (!sharedContext) sharedContext = new Ctx()
+    if (sharedContext.state === 'suspended') sharedContext.resume()
+  } catch (_) {}
+}
+
+function getContext() {
+  if (typeof window === 'undefined') return null
+  try {
+    const Ctx = window.AudioContext || window.webkitAudioContext
+    if (!Ctx) return null
+    if (!sharedContext) sharedContext = new Ctx()
+    if (sharedContext.state === 'suspended') sharedContext.resume()
+    return sharedContext
+  } catch (_) {
+    return null
+  }
+}
+
+function playTone(frequency, durationMs, volume = 0.2, type = 'sine') {
+  const ctx = getContext()
+  if (!ctx) return
+  try {
     const osc = ctx.createOscillator()
     const gain = ctx.createGain()
     osc.connect(gain)
@@ -40,28 +67,29 @@ function playOneTone(freq, duration, vol = 0.2) {
 function playCustomSound(path) {
   if (typeof window === 'undefined') return
   try {
+    unlockAudio()
     const audio = new Audio(path)
-    audio.volume = 0.6
+    audio.volume = 0.85
     audio.play().catch(() => {})
   } catch (_) {}
 }
 
 const PRESETS = {
   chime: {
-    sold: () => playTwoTone(523, 120, 659, 180, 0.25),
-    message: () => playOneTone(440, 150, 0.2),
+    sold: () => playTwoTone(523, 120, 659, 180, 0.3),
+    message: () => playOneTone(440, 150, 0.4),
   },
   bell: {
     sold: () => {
-      playTone(784, 100, 0.22)
-      setTimeout(() => playTone(1047, 180, 0.18), 110)
-      setTimeout(() => playTone(659, 120, 0.15), 300)
+      playTone(784, 100, 0.28)
+      setTimeout(() => playTone(1047, 180, 0.22), 110)
+      setTimeout(() => playTone(659, 120, 0.2), 300)
     },
-    message: () => playOneTone(587, 130, 0.2),
+    message: () => playOneTone(587, 130, 0.4),
   },
   soft: {
-    sold: () => playTwoTone(392, 140, 523, 200, 0.15),
-    message: () => playOneTone(349, 180, 0.15),
+    sold: () => playTwoTone(392, 140, 523, 200, 0.22),
+    message: () => playOneTone(349, 180, 0.35),
   },
   custom: {
     sold: () => playCustomSound(CUSTOM_SOUND_PATHS.sold),
@@ -166,7 +194,24 @@ export function playNewOrderSound() {
 /** Play sound for "new message in order" (if enabled). */
 export function playNewMessageSound() {
   if (!getMessageSoundEnabled()) return
+  getContext()
   const preset = getMessageSoundPreset()
   const fn = PRESETS[preset]?.message || PRESETS.chime.message
   fn()
+}
+
+/** Call on app load; returns cleanup. Unlocks audio on first user click/keydown so notifications play over music. */
+export function setupUnlockOnFirstClick() {
+  if (typeof window === 'undefined') return () => {}
+  const once = () => {
+    unlockAudio()
+    document.removeEventListener('click', once)
+    document.removeEventListener('keydown', once)
+  }
+  document.addEventListener('click', once)
+  document.addEventListener('keydown', once)
+  return () => {
+    document.removeEventListener('click', once)
+    document.removeEventListener('keydown', once)
+  }
 }

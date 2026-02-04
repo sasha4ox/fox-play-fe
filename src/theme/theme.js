@@ -2,20 +2,38 @@
 
 import { createTheme } from '@mui/material/styles';
 
+/**
+ * Best-practice light palette: soft background, clear primary, WCAG-friendly contrast.
+ * Background #fafafa reduces glare; primary blue for clarity and trust.
+ */
 const lightPalette = {
   mode: 'light',
-  primary: { main: '#352228', contrastText: '#fff' },
-  secondary: { main: '#4d3d42', contrastText: '#fff' },
-  background: { default: '#f9f6f1', paper: '#EAe5de' },
-  text: { primary: '#352228', secondary: '#725e65' },
+  primary: { main: '#2563eb', contrastText: '#ffffff' },
+  secondary: { main: '#475569', contrastText: '#ffffff' },
+  background: { default: '#f8fafc', paper: '#ffffff' },
+  text: { primary: '#0f172a', secondary: '#64748b' },
+  divider: 'rgba(15, 23, 42, 0.12)',
+  action: {
+    hover: 'rgba(15, 23, 42, 0.04)',
+    selected: 'rgba(37, 99, 235, 0.08)',
+  },
 };
 
+/**
+ * Best-practice dark palette: true dark surfaces, elevated paper, readable text.
+ * Background #0f172a (slate-900); primary #60a5fa for clear accent on dark.
+ */
 const darkPalette = {
   mode: 'dark',
-  primary: { main: '#b8a4a8', contrastText: '#1a1214' },
-  secondary: { main: '#c9b9bd', contrastText: '#1a1214' },
-  background: { default: '#1a1214', paper: '#252022' },
-  text: { primary: '#f0e6e8', secondary: '#b8a4a8' },
+  primary: { main: '#60a5fa', contrastText: '#0f172a' },
+  secondary: { main: '#94a3b8', contrastText: '#0f172a' },
+  background: { default: '#0f172a', paper: '#1e293b' },
+  text: { primary: '#f1f5f9', secondary: '#94a3b8' },
+  divider: 'rgba(241, 245, 249, 0.12)',
+  action: {
+    hover: 'rgba(241, 245, 249, 0.08)',
+    selected: 'rgba(96, 165, 250, 0.16)',
+  },
 };
 
 const shared = {
@@ -34,12 +52,12 @@ const shared = {
     },
     MuiCard: {
       styleOverrides: {
-        root: {
+        root: ({ theme }) => ({
           borderRadius: 12,
-          border: '1px solid rgba(114, 94, 101, 0.2)',
+          border: `1px solid ${theme.palette.divider}`,
           transition: 'background 0.2s, border-color 0.2s',
-          '&:hover': { borderColor: 'rgba(114, 94, 101, 0.4)' },
-        },
+          '&:hover': { borderColor: theme.palette.divider },
+        }),
       },
     },
     MuiLink: {

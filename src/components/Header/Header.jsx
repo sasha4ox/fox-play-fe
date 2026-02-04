@@ -31,6 +31,8 @@ import { updatePreferredCurrency, getUnreadCount } from '@/lib/api';
 import {
   playNewOrderSound,
   playNewMessageSound,
+  unlockAudio,
+  setupUnlockOnFirstClick,
   getNotificationSoundEnabled,
   getMessageSoundEnabled,
   setMessageSoundEnabled,
@@ -143,6 +145,11 @@ export default function Header() {
     const listener = () => setSystemDark(mq.matches);
     mq.addEventListener('change', listener);
     return () => mq.removeEventListener('change', listener);
+  }, []);
+
+  useEffect(() => {
+    const cleanup = setupUnlockOnFirstClick();
+    return () => { if (typeof cleanup === 'function') cleanup(); };
   }, []);
   const effectiveMode = themeMode === 'system' ? (systemDark ? 'dark' : 'light') : themeMode;
 
@@ -310,6 +317,7 @@ export default function Header() {
       <>
         <IconButton
           onClick={(e) => {
+            unlockAudio();
             const el = e.currentTarget;
             setAnchorEl(el);
             const rect = el.getBoundingClientRect();
