@@ -163,7 +163,7 @@ export default function OfferPDPPage() {
     setBuyError(null);
     try {
       const result = await createFondyCheckout(
-        { offerId: offer.id, quantity: qtyPay, characterNick: nick },
+        { offerId: offer.id, quantity: qtyPay, characterNick: nick, locale },
         token
       );
       if (result?.checkoutUrl) {

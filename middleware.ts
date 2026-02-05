@@ -1,11 +1,26 @@
 import createMiddleware from 'next-intl/middleware';
+import { NextResponse } from 'next/server';
 
-export default createMiddleware({
+const intlMiddleware = createMiddleware({
   locales: ['en', 'ua'],
   defaultLocale: 'en'
 });
 
-// 👇 THIS is the important part
+/** Fix bad redirects like /ua/en/dashboard/... -> /ua/dashboard/... (Fondy redirect had double locale). */
+export default function middleware(request) {
+  const pathname = request.nextUrl.pathname;
+  const badMatch = pathname.match(/^\/(en|ua)\/(en|ua)(\/.*|$)/);
+  if (badMatch) {
+    const locale = badMatch[1];
+    const rest = badMatch[3] || '/';
+    const newPath = `/${locale}${rest === '/' ? '' : rest}`;
+    const url = new URL(request.url);
+    url.pathname = newPath;
+    return NextResponse.redirect(url);
+  }
+  return intlMiddleware(request);
+}
+
 export const config = {
   matcher: [
     '/',                // root
