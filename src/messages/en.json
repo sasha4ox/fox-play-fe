@@ -137,7 +137,10 @@
     "toBalanceShort": "to balance",
     "toCardShort": "to card",
     "someoneBoughtYourItem": "Someone bought your item",
-    "sale": "Sale"
+    "sale": "Sale",
+    "paymentSuccessMessage": "Payment successful. Your order is in the list below.",
+    "paymentProcessingMessage": "Payment is being processed. Your order will appear in the list shortly.",
+    "paymentDeclinedMessage": "Payment was declined. You can try again or add funds from Balance."
   },
   "Sales": {
     "title": "My orders",
@@ -205,6 +208,7 @@
     "completing": "Completing…",
     "notReceivedDispute": "I didn't receive it — Open dispute",
     "orderCompleted": "Order completed. Seller has been paid.",
+    "paymentSuccessMessage": "Payment successful. You can continue in this chat.",
     "orderDisputed": "This order is in dispute.",
     "disputeReasonLabel": "Reason for dispute",
     "disputeOpenedByBuyer": "Opened by buyer",
@@ -311,6 +315,7 @@
     "toBeReceived": "To be received",
     "payWithBalance": "Pay with balance",
     "payByCard": "Pay by card (Fondy)",
+    "orPayByCard": "Or use «Pay by card» below to pay with a card.",
     "quantity": "Quantity",
     "buyNow": "Buy now",
     "buying": "Buying…",
@@ -321,7 +326,8 @@
     "seeReviews": "See reviews",
     "reviewsTitle": "Reviews",
     "noReviews": "No reviews yet.",
-    "reviewFrom": "From"
+    "reviewFrom": "From",
+    "paymentDeclinedMessage": "Payment was declined. You can try again or pay with balance."
   },
   "NewOffer": {
     "createOffer": "Create offer",

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
 import Link from 'next/link';
 import Box from '@mui/material/Box';
@@ -40,6 +40,7 @@ import { formatAdena } from '@/lib/adenaFormat';
 export default function OrderChatPage() {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const locale = useLocale();
   const t = useTranslations('OrderDetail');
   const tCommon = useTranslations('Common');
@@ -75,7 +76,11 @@ export default function OrderChatPage() {
   const [feedbackRating, setFeedbackRating] = useState(5);
   const [feedbackComment, setFeedbackComment] = useState('');
   const [feedbackSubmitting, setFeedbackSubmitting] = useState(false);
+  const [paymentSuccessShown, setPaymentSuccessShown] = useState(false);
   const tAdmin = useTranslations('Admin');
+
+  const paymentFromUrl = searchParams.get('payment');
+  const showPaymentSuccess = paymentFromUrl === 'success' && !paymentSuccessShown;
 
   const setMessagesRef = useRef(setMessages);
   setMessagesRef.current = setMessages;
@@ -340,6 +345,11 @@ export default function OrderChatPage() {
             )}
           </Typography>
         </Box>
+        {showPaymentSuccess && (
+          <Alert severity="success" onClose={() => setPaymentSuccessShown(true)} sx={{ mb: 2 }}>
+            {t('paymentSuccessMessage')}
+          </Alert>
+        )}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1, flexWrap: 'wrap' }}>
           <Typography variant="body2" color="text.secondary">
             {tOrders('status')}: <strong>{order.status}</strong>

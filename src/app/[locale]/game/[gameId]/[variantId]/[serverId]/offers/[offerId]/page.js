@@ -1,6 +1,6 @@
 'use client';
 
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useLocale, useTranslations } from 'next-intl';
 import { useState, useEffect } from 'react';
@@ -35,6 +35,7 @@ import { formatAdena } from '@/lib/adenaFormat';
 export default function OfferPDPPage() {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const locale = useLocale();
   const t = useTranslations('OfferDetail');
   const tOffers = useTranslations('Offers');
@@ -90,6 +91,8 @@ export default function OfferPDPPage() {
   const [feedbacksDialogOpen, setFeedbacksDialogOpen] = useState(false);
   const [feedbacks, setFeedbacks] = useState([]);
   const [feedbacksLoading, setFeedbacksLoading] = useState(false);
+  const [paymentDeclinedDismissed, setPaymentDeclinedDismissed] = useState(false);
+  const showPaymentDeclined = searchParams.get('payment') === 'declined' && !paymentDeclinedDismissed;
 
   useEffect(() => {
     if (!offerId || !token) return;
@@ -244,6 +247,12 @@ export default function OfferPDPPage() {
         <MuiLink component={Link} href={`/${locale}/game/${gameId}/${variantId}/${serverId}/offers`} color="secondary" sx={{ display: 'inline-block', mb: 2 }}>
           {t('backToOffers')}
         </MuiLink>
+
+        {showPaymentDeclined && (
+          <Alert severity="warning" onClose={() => setPaymentDeclinedDismissed(true)} sx={{ mb: 2 }}>
+            {t('paymentDeclinedMessage')}
+          </Alert>
+        )}
 
         <Typography variant="h4" fontWeight={600} gutterBottom>
           {offer.title}
@@ -547,6 +556,11 @@ export default function OfferPDPPage() {
                   <MuiLink component={Link} href={`/${locale}/dashboard/balance`}>
                     Add funds to your balance →
                   </MuiLink>
+                  {fondyEnabled && (
+                    <Typography component="span" variant="body2" display="block" sx={{ mt: 1 }}>
+                      {t('orPayByCard')}
+                    </Typography>
+                  )}
                 </Box>
               )}
             </Alert>
@@ -554,14 +568,14 @@ export default function OfferPDPPage() {
         </DialogContent>
         <DialogActions sx={{ flexWrap: 'wrap', gap: 1 }}>
           <Button onClick={() => setBuyDialogOpen(false)}>Cancel</Button>
-          <Button variant="contained" onClick={handleBuySubmit} disabled={buySubmitting}>
-            {buySubmitting ? 'Creating…' : t('payWithBalance')}
-          </Button>
           {fondyEnabled && (
-            <Button variant="outlined" color="secondary" onClick={handlePayByCard} disabled={buySubmitting}>
+            <Button variant="contained" onClick={handlePayByCard} disabled={buySubmitting} color="secondary">
               {buySubmitting ? '…' : t('payByCard')}
             </Button>
           )}
+          <Button variant={fondyEnabled ? 'outlined' : 'contained'} onClick={handleBuySubmit} disabled={buySubmitting}>
+            {buySubmitting ? 'Creating…' : t('payWithBalance')}
+          </Button>
         </DialogActions>
       </Dialog>
     </Box>

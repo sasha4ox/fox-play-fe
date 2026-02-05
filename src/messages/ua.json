@@ -137,7 +137,10 @@
     "toBalanceShort": "на баланс",
     "toCardShort": "на картку",
     "someoneBoughtYourItem": "Хтось купив ваш товар",
-    "sale": "Продаж"
+    "sale": "Продаж",
+    "paymentSuccessMessage": "Оплата пройшла успішно. Ваше замовлення в списку нижче.",
+    "paymentProcessingMessage": "Оплата обробляється. Замовлення незабаром з'явиться в списку.",
+    "paymentDeclinedMessage": "Оплату відхилено. Можете спробувати знову або поповнити баланс."
   },
   "Sales": {
     "title": "Мої замовлення",
@@ -205,6 +208,7 @@
     "completing": "Завершення…",
     "notReceivedDispute": "Не отримав — Відкрити спір",
     "orderCompleted": "Замовлення завершено. Продавцю виплачено.",
+    "paymentSuccessMessage": "Оплата пройшла успішно. Можете продовжити в цьому чаті.",
     "orderDisputed": "По цьому замовленню відкрито спір.",
     "disputeReasonLabel": "Причина спору",
     "disputeOpenedByBuyer": "Відкрито покупцем",
@@ -311,6 +315,7 @@
     "toBeReceived": "Отримаєте",
     "payWithBalance": "Оплатити з балансу",
     "payByCard": "Оплатити карткою (Fondy)",
+    "orPayByCard": "Або натисніть «Оплатити карткою» нижче.",
     "quantity": "Кількість",
     "buyNow": "Купити",
     "buying": "Оформлення…",
@@ -321,7 +326,8 @@
     "seeReviews": "Відгуки",
     "reviewsTitle": "Відгуки",
     "noReviews": "Відгуків ще немає.",
-    "reviewFrom": "Від"
+    "reviewFrom": "Від",
+    "paymentDeclinedMessage": "Оплату відхилено. Можете спробувати знову або оплатити з балансу."
   },
   "NewOffer": {
     "createOffer": "Створити оголошення",

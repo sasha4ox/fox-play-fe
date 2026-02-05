@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Box from '@mui/material/Box';
 import Container from '@mui/material/Container';
@@ -19,12 +20,21 @@ import { getMyOrderChats, getMyOfferThreads } from '@/lib/api';
 
 export default function MyOrdersPage() {
   const locale = useLocale();
+  const searchParams = useSearchParams();
   const t = useTranslations('Orders');
   const token = useAuthStore((s) => s.token);
   const [chatSummary, setChatSummary] = useState({ orders: [], unreadTotal: 0 });
   const [offerThreads, setOfferThreads] = useState({ asBuyer: [], asSeller: [] });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [paymentFeedback, setPaymentFeedback] = useState(null); // 'success' | 'declined' | 'processing'
+
+  useEffect(() => {
+    const payment = searchParams.get('payment');
+    if (payment === 'success' || payment === 'declined' || payment === 'processing') {
+      setPaymentFeedback(payment);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     if (!token) {
@@ -72,6 +82,22 @@ export default function MyOrdersPage() {
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
           {t('orderChatsHint')}
         </Typography>
+
+        {paymentFeedback === 'success' && (
+          <Alert severity="success" onClose={() => setPaymentFeedback(null)} sx={{ mb: 2 }}>
+            {t('paymentSuccessMessage')}
+          </Alert>
+        )}
+        {paymentFeedback === 'processing' && (
+          <Alert severity="info" onClose={() => setPaymentFeedback(null)} sx={{ mb: 2 }}>
+            {t('paymentProcessingMessage')}
+          </Alert>
+        )}
+        {paymentFeedback === 'declined' && (
+          <Alert severity="warning" onClose={() => setPaymentFeedback(null)} sx={{ mb: 2 }}>
+            {t('paymentDeclinedMessage')}
+          </Alert>
+        )}
 
         {!loading && (offerThreads.asBuyer?.length > 0 || offerThreads.asSeller?.length > 0) && (
           <Box sx={{ mb: 3 }}>
