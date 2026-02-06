@@ -1,0 +1,341 @@
+---
+description: Core coding standards and naming conventions for the FoxPlay frontend
+alwaysApply: true
+---
+
+# Core Coding Standards
+
+## Naming Conventions
+
+### Files & Components
+- Use PascalCase for React components: `LoginModal.jsx`, `UserProfile.jsx`
+- Use kebab-case for non-component files: `api.js`, `theme.js`, `auth-store.js`
+- Use camelCase for hooks: `useProfile.js`, `useOrderSocket.js`
+- Component files should match component name: `Header.jsx` exports `Header`
+
+### Folder Structure
+```
+src/
+├── components/          # Reusable UI components
+│   └── ComponentName/   # Each component in its own folder
+│       ├── ComponentName.jsx
+│       └── ComponentName.module.css
+├── hooks/              # Custom React hooks
+├── store/              # Zustand stores
+├── lib/                # Utility functions
+├── app/                # Next.js app directory
+└── messages/           # i18n translations
+```
+
+### Code Naming
+- **Variables & Functions**: camelCase (`userData`, `handleSubmit`)
+- **Components**: PascalCase (`UserCard`, `OfferList`)  
+- **Constants**: SCREAMING_SNAKE_CASE (`API_ENDPOINTS`, `PAYMENT_PROVIDERS`)
+- **CSS Classes**: kebab-case (`user-card`, `offer-list`)
+- **Props**: camelCase (`isLoading`, `onSuccess`)
+
+## Import Organization
+
+### Import Order
+```javascript
+// 1. React and Next.js
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+
+// 2. External libraries
+import { useTranslations } from 'next-intl';
+import clsx from 'clsx';
+
+// 3. Internal components
+import Header from '@/components/Header/Header';
+import LoginModal from '@/components/LoginModal/LoginModal';
+
+// 4. Hooks and stores
+import { useProfile } from '@/hooks/useProfile';
+import { useAuthStore } from '@/store/authStore';
+
+// 5. Utilities
+import { formatPrice } from '@/lib/adenaFormat';
+import { api } from '@/lib/api';
+
+// 6. Relative imports
+import './ComponentName.module.css';
+```
+
+## Component Structure
+
+### Functional Component Pattern
+```javascript
+// ✅ GOOD - Clear, organized component structure
+import React, { useState } from 'react';
+import { useTranslations } from 'next-intl';
+import styles from './OfferCard.module.css';
+
+export default function OfferCard({ 
+  offer, 
+  onPurchase, 
+  isLoading = false,
+  className 
+}) {
+  const t = useTranslations('offers');
+  const [isExpanded, setIsExpanded] = useState(false);
+  
+  // Early returns for loading/error states
+  if (!offer) return null;
+  
+  // Event handlers
+  const handlePurchase = () => {
+    onPurchase?.(offer.id);
+  };
+  
+  const handleToggleExpand = () => {
+    setIsExpanded(prev => !prev);
+  };
+  
+  // Render helpers for complex JSX
+  const renderPrice = () => (
+    <div className={styles.price}>
+      {formatPrice(offer.price, offer.currency)}
+    </div>
+  );
+  
+  return (
+    <div className={clsx(styles.offerCard, className)}>
+      <div className={styles.header}>
+        <h3>{offer.title}</h3>
+        {renderPrice()}
+      </div>
+      
+      {isExpanded && (
+        <div className={styles.details}>
+          <p>{offer.description}</p>
+        </div>
+      )}
+      
+      <div className={styles.actions}>
+        <button 
+          onClick={handleToggleExpand}
+          className={styles.toggleButton}
+        >
+          {isExpanded ? t('showLess') : t('showMore')}
+        </button>
+        
+        <button
+          onClick={handlePurchase}
+          disabled={isLoading}
+          className={styles.purchaseButton}
+        >
+          {isLoading ? t('purchasing') : t('purchase')}
+        </button>
+      </div>
+    </div>
+  );
+}
+```
+
+## Props & Types
+
+### PropTypes or JSDoc
+```javascript
+// For JavaScript projects - use JSDoc
+/**
+ * @typedef {Object} OfferCardProps
+ * @property {Object} offer - The offer data
+ * @property {string} offer.id - Offer ID
+ * @property {string} offer.title - Offer title
+ * @property {number} offer.price - Offer price
+ * @property {string} offer.currency - Currency code
+ * @property {Function} [onPurchase] - Purchase callback
+ * @property {boolean} [isLoading] - Loading state
+ * @property {string} [className] - Additional CSS classes
+ */
+
+/**
+ * Offer card component
+ * @param {OfferCardProps} props
+ */
+export default function OfferCard(props) {
+  // Component implementation
+}
+```
+
+## Styling Patterns
+
+### CSS Modules
+```css
+/* OfferCard.module.css */
+
+/* Use meaningful class names */
+.offerCard {
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  padding: var(--spacing-md);
+  background: var(--bg-surface);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-sm);
+}
+
+.price {
+  font-weight: 600;
+  color: var(--color-success);
+}
+
+/* Use CSS custom properties for theming */
+.purchaseButton {
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  border: none;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.purchaseButton:hover {
+  background: var(--color-primary-dark);
+}
+
+.purchaseButton:disabled {
+  background: var(--color-disabled);
+  cursor: not-allowed;
+}
+```
+
+## Code Quality
+
+### Error Boundaries
+```javascript
+// components/ErrorBoundary/ErrorBoundary.jsx
+import React from 'react';
+
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.error('Error caught by boundary:', error, errorInfo);
+    
+    // Report to error tracking service in production
+    if (process.env.NODE_ENV === 'production') {
+      // reportError(error, errorInfo);
+    }
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ padding: '20px', textAlign: 'center' }}>
+          <h2>Something went wrong</h2>
+          <p>Please refresh the page or try again later.</p>
+          <button onClick={() => this.setState({ hasError: false })}>
+            Try again
+          </button>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
+export default ErrorBoundary;
+```
+
+### Performance Patterns
+```javascript
+import React, { memo, useMemo, useCallback } from 'react';
+
+// ✅ GOOD - Memoized component with proper dependencies
+const OfferList = memo(function OfferList({ 
+  offers, 
+  onPurchase, 
+  filters 
+}) {
+  // Memoize expensive computations
+  const filteredOffers = useMemo(() => {
+    return offers.filter(offer => {
+      if (filters.minPrice && offer.price < filters.minPrice) return false;
+      if (filters.maxPrice && offer.price > filters.maxPrice) return false;
+      if (filters.gameId && offer.gameId !== filters.gameId) return false;
+      return true;
+    });
+  }, [offers, filters]);
+  
+  // Memoize callbacks to prevent unnecessary re-renders
+  const handlePurchase = useCallback((offerId) => {
+    onPurchase?.(offerId);
+  }, [onPurchase]);
+  
+  return (
+    <div>
+      {filteredOffers.map(offer => (
+        <OfferCard
+          key={offer.id}
+          offer={offer}
+          onPurchase={handlePurchase}
+        />
+      ))}
+    </div>
+  );
+});
+
+export default OfferList;
+```
+
+## Internationalization
+
+### Translation Usage
+```javascript
+import { useTranslations } from 'next-intl';
+
+export default function UserProfile() {
+  const t = useTranslations('profile');
+  const commonT = useTranslations('common');
+  
+  return (
+    <div>
+      <h1>{t('title')}</h1>
+      <p>{t('description', { username: 'John' })}</p>
+      
+      <button>
+        {commonT('buttons.save')}
+      </button>
+    </div>
+  );
+}
+```
+
+### Translation Keys Structure
+```json
+// messages/en.json
+{
+  "common": {
+    "buttons": {
+      "save": "Save",
+      "cancel": "Cancel",
+      "submit": "Submit"
+    },
+    "loading": "Loading...",
+    "error": "Something went wrong"
+  },
+  "profile": {
+    "title": "User Profile",
+    "description": "Welcome back, {username}!",
+    "fields": {
+      "nickname": "Nickname",
+      "email": "Email"
+    }
+  }
+}
+```

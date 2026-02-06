@@ -1,0 +1,525 @@
+---
+description: React and Next.js component patterns and best practices for FoxPlay
+alwaysApply: true
+---
+
+# React & Next.js Patterns
+
+## Component Patterns
+
+### Container vs Presentation Components
+```javascript
+// ✅ GOOD - Presentation component (pure, reusable)
+function OfferCard({ offer, onPurchase, isLoading }) {
+  return (
+    <div className={styles.offerCard}>
+      <h3>{offer.title}</h3>
+      <p>{formatPrice(offer.price, offer.currency)}</p>
+      <button 
+        onClick={() => onPurchase(offer.id)}
+        disabled={isLoading}
+      >
+        Purchase
+      </button>
+    </div>
+  );
+}
+
+// ✅ GOOD - Container component (handles state and logic)
+function OfferCardContainer({ offerId }) {
+  const { data: offer, isLoading } = useOffer(offerId);
+  const { mutate: purchaseOffer, isPending } = usePurchaseOffer();
+  
+  const handlePurchase = (id) => {
+    purchaseOffer(id);
+  };
+  
+  return (
+    <OfferCard 
+      offer={offer}
+      onPurchase={handlePurchase}
+      isLoading={isPending}
+    />
+  );
+}
+```
+
+### Compound Components
+```javascript
+// ✅ GOOD - Flexible, composable modal component
+function Modal({ children, isOpen, onClose }) {
+  if (!isOpen) return null;
+  
+  return (
+    <div className={styles.overlay} onClick={onClose}>
+      <div className={styles.modal} onClick={e => e.stopPropagation()}>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+Modal.Header = function ModalHeader({ children, onClose }) {
+  return (
+    <div className={styles.header}>
+      {children}
+      <button onClick={onClose} className={styles.closeButton}>
+        ×
+      </button>
+    </div>
+  );
+};
+
+Modal.Body = function ModalBody({ children }) {
+  return <div className={styles.body}>{children}</div>;
+};
+
+Modal.Footer = function ModalFooter({ children }) {
+  return <div className={styles.footer}>{children}</div>;
+};
+
+// Usage
+<Modal isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)}>
+  <Modal.Header onClose={() => setIsLoginOpen(false)}>
+    Login to FoxPlay
+  </Modal.Header>
+  <Modal.Body>
+    <LoginForm />
+  </Modal.Body>
+  <Modal.Footer>
+    <button onClick={handleLogin}>Sign In</button>
+  </Modal.Footer>
+</Modal>
+```
+
+## Custom Hooks
+
+### Data Fetching Hooks
+```javascript
+// hooks/useProfile.js
+import { useState, useEffect } from 'react';
+import { api } from '@/lib/api';
+
+export function useProfile() {
+  const [profile, setProfile] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  
+  useEffect(() => {
+    async function fetchProfile() {
+      try {
+        setIsLoading(true);
+        const data = await api.get('/me/profile');
+        setProfile(data);
+        setError(null);
+      } catch (err) {
+        setError(err.message);
+        setProfile(null);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    
+    fetchProfile();
+  }, []);
+  
+  const updateProfile = async (updates) => {
+    try {
+      const updatedProfile = await api.patch('/me/profile', updates);
+      setProfile(updatedProfile);
+      return updatedProfile;
+    } catch (err) {
+      setError(err.message);
+      throw err;
+    }
+  };
+  
+  return {
+    profile,
+    isLoading,
+    error,
+    updateProfile,
+    refetch: () => fetchProfile()
+  };
+}
+```
+
+### WebSocket Hook
+```javascript
+// hooks/useOrderSocket.js
+import { useEffect, useRef } from 'react';
+import { useAuthStore } from '@/store/authStore';
+
+export function useOrderSocket(orderId, onMessage) {
+  const wsRef = useRef(null);
+  const token = useAuthStore(state => state.token);
+  
+  useEffect(() => {
+    if (!orderId || !token) return;
+    
+    const ws = new WebSocket(`${process.env.NEXT_PUBLIC_WS_URL}/orders/${orderId}?token=${token}`);
+    wsRef.current = ws;
+    
+    ws.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        onMessage?.(data);
+      } catch (error) {
+        console.error('Failed to parse WebSocket message:', error);
+      }
+    };
+    
+    ws.onclose = () => {
+      console.log('WebSocket connection closed');
+    };
+    
+    ws.onerror = (error) => {
+      console.error('WebSocket error:', error);
+    };
+    
+    return () => {
+      ws.close();
+    };
+  }, [orderId, token, onMessage]);
+  
+  const sendMessage = (message) => {
+    if (wsRef.current?.readyState === WebSocket.OPEN) {
+      wsRef.current.send(JSON.stringify(message));
+    }
+  };
+  
+  return { sendMessage };
+}
+```
+
+## Next.js Patterns
+
+### Page Components
+```javascript
+// app/[locale]/dashboard/orders/page.js
+import { Suspense } from 'react';
+import { getTranslations } from 'next-intl/server';
+import OrdersList from '@/components/OrdersList/OrdersList';
+import LoadingSpinner from '@/components/LoadingSpinner/LoadingSpinner';
+
+export async function generateMetadata({ params: { locale } }) {
+  const t = await getTranslations({ locale, namespace: 'orders' });
+  
+  return {
+    title: t('pageTitle'),
+    description: t('pageDescription')
+  };
+}
+
+export default async function OrdersPage({ params: { locale } }) {
+  const t = await getTranslations({ locale, namespace: 'orders' });
+  
+  return (
+    <div>
+      <h1>{t('title')}</h1>
+      
+      <Suspense fallback={<LoadingSpinner />}>
+        <OrdersList />
+      </Suspense>
+    </div>
+  );
+}
+```
+
+### API Route Patterns
+```javascript
+// app/api/login/route.ts
+import { NextRequest, NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
+
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json();
+    
+    // Validate request
+    if (!body.email || !body.password) {
+      return NextResponse.json(
+        { error: 'Email and password are required' },
+        { status: 400 }
+      );
+    }
+    
+    // Make API call to backend
+    const response = await fetch(`${process.env.API_URL}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      return NextResponse.json(error, { status: response.status });
+    }
+    
+    const data = await response.json();
+    
+    // Set secure HTTP-only cookie
+    const cookieStore = cookies();
+    cookieStore.set('token', data.token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60 // 7 days
+    });
+    
+    return NextResponse.json({ 
+      success: true, 
+      user: data.user 
+    });
+  } catch (error) {
+    console.error('Login API error:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+```
+
+### Middleware
+```javascript
+// middleware.ts
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+
+export function middleware(request: NextRequest) {
+  // Check authentication for dashboard routes
+  if (request.nextUrl.pathname.includes('/dashboard')) {
+    const token = request.cookies.get('token');
+    
+    if (!token) {
+      const loginUrl = new URL('/login', request.url);
+      loginUrl.searchParams.set('redirect', request.nextUrl.pathname);
+      return NextResponse.redirect(loginUrl);
+    }
+  }
+  
+  // Continue with request
+  return NextResponse.next();
+}
+
+export const config = {
+  matcher: ['/dashboard/:path*']
+};
+```
+
+## Form Handling
+
+### Form Component Pattern
+```javascript
+import { useState } from 'react';
+import { useTranslations } from 'next-intl';
+
+export default function CreateOfferForm({ onSuccess }) {
+  const t = useTranslations('offers');
+  const [formData, setFormData] = useState({
+    gameId: '',
+    serverId: '',
+    price: '',
+    quantity: '1',
+    description: ''
+  });
+  const [errors, setErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  const validateForm = () => {
+    const newErrors = {};
+    
+    if (!formData.gameId) newErrors.gameId = t('validation.gameRequired');
+    if (!formData.serverId) newErrors.serverId = t('validation.serverRequired');
+    if (!formData.price || formData.price <= 0) {
+      newErrors.price = t('validation.priceRequired');
+    }
+    if (!formData.quantity || formData.quantity <= 0) {
+      newErrors.quantity = t('validation.quantityRequired');
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+  
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (!validateForm()) return;
+    
+    try {
+      setIsSubmitting(true);
+      const response = await api.post('/offers', formData);
+      onSuccess?.(response);
+      
+      // Reset form
+      setFormData({
+        gameId: '',
+        serverId: '',
+        price: '',
+        quantity: '1',
+        description: ''
+      });
+    } catch (error) {
+      setErrors({ submit: error.message });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+  
+  const handleChange = (field, value) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    
+    // Clear error when user starts typing
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: '' }));
+    }
+  };
+  
+  return (
+    <form onSubmit={handleSubmit} className={styles.form}>
+      <div className={styles.field}>
+        <label htmlFor="gameId">{t('labels.game')} *</label>
+        <select
+          id="gameId"
+          value={formData.gameId}
+          onChange={e => handleChange('gameId', e.target.value)}
+          className={errors.gameId ? styles.error : ''}
+        >
+          <option value="">{t('selectGame')}</option>
+          {/* Game options */}
+        </select>
+        {errors.gameId && <span className={styles.errorText}>{errors.gameId}</span>}
+      </div>
+      
+      <div className={styles.field}>
+        <label htmlFor="price">{t('labels.price')} *</label>
+        <input
+          id="price"
+          type="number"
+          min="0.01"
+          step="0.01"
+          value={formData.price}
+          onChange={e => handleChange('price', parseFloat(e.target.value))}
+          className={errors.price ? styles.error : ''}
+        />
+        {errors.price && <span className={styles.errorText}>{errors.price}</span>}
+      </div>
+      
+      {errors.submit && (
+        <div className={styles.submitError}>
+          {errors.submit}
+        </div>
+      )}
+      
+      <button 
+        type="submit" 
+        disabled={isSubmitting}
+        className={styles.submitButton}
+      >
+        {isSubmitting ? t('creating') : t('createOffer')}
+      </button>
+    </form>
+  );
+}
+```
+
+## Loading States
+
+### Loading Component Patterns
+```javascript
+// Skeleton loading for content
+function OfferCardSkeleton() {
+  return (
+    <div className={styles.offerCard}>
+      <div className={`${styles.skeleton} ${styles.title}`} />
+      <div className={`${styles.skeleton} ${styles.description}`} />
+      <div className={`${styles.skeleton} ${styles.price}`} />
+    </div>
+  );
+}
+
+// Loading states in components
+function OffersList() {
+  const { offers, isLoading, error } = useOffers();
+  
+  if (error) {
+    return (
+      <div className={styles.error}>
+        <p>Failed to load offers</p>
+        <button onClick={refetch}>Try Again</button>
+      </div>
+    );
+  }
+  
+  if (isLoading) {
+    return (
+      <div className={styles.offerGrid}>
+        {Array.from({ length: 6 }).map((_, i) => (
+          <OfferCardSkeleton key={i} />
+        ))}
+      </div>
+    );
+  }
+  
+  return (
+    <div className={styles.offerGrid}>
+      {offers.map(offer => (
+        <OfferCard key={offer.id} offer={offer} />
+      ))}
+    </div>
+  );
+}
+```
+
+## Accessibility
+
+### Accessible Components
+```javascript
+function Modal({ isOpen, onClose, children, title }) {
+  useEffect(() => {
+    if (isOpen) {
+      // Trap focus within modal
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen]);
+  
+  if (!isOpen) return null;
+  
+  return (
+    <div 
+      className={styles.overlay}
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="modal-title"
+    >
+      <div 
+        className={styles.modal}
+        onClick={e => e.stopPropagation()}
+      >
+        <div className={styles.header}>
+          <h2 id="modal-title">{title}</h2>
+          <button
+            onClick={onClose}
+            aria-label="Close modal"
+            className={styles.closeButton}
+          >
+            ×
+          </button>
+        </div>
+        <div className={styles.content}>
+          {children}
+        </div>
+      </div>
+    </div>
+  );
+}
+```

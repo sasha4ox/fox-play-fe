@@ -1,0 +1,640 @@
+---
+description: Error handling patterns and user feedback for FoxPlay frontend
+alwaysApply: true
+---
+
+# Frontend Error Handling
+
+## Error Types & Classes
+
+### API Error Handling
+```javascript
+// lib/api.js
+class ApiError extends Error {
+  constructor(message, status, data) {
+    super(message);
+    this.name = 'ApiError';
+    this.status = status;
+    this.data = data;
+  }
+}
+
+class NetworkError extends Error {
+  constructor(message = 'Network connection failed') {
+    super(message);
+    this.name = 'NetworkError';
+  }
+}
+
+class ValidationError extends Error {
+  constructor(message, fields = {}) {
+    super(message);
+    this.name = 'ValidationError';
+    this.fields = fields;
+  }
+}
+
+// API client with error handling
+export const api = {
+  async request(url, options = {}) {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}${url}`, {
+        headers: {
+          'Content-Type': 'application/json',
+          ...this.getAuthHeaders(),
+          ...options.headers
+        },
+        ...options
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        
+        throw new ApiError(
+          errorData.error || `HTTP ${response.status}`,
+          response.status,
+          errorData
+        );
+      }
+
+      return await response.json();
+    } catch (error) {
+      if (error instanceof ApiError) {
+        throw error;
+      }
+      
+      // Network or other errors
+      throw new NetworkError(error.message);
+    }
+  },
+
+  getAuthHeaders() {
+    const token = useAuthStore.getState().token;
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  },
+
+  get(url, params) {
+    const queryString = params ? `?${new URLSearchParams(params)}` : '';
+    return this.request(`${url}${queryString}`);
+  },
+
+  post(url, data) {
+    return this.request(url, {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  },
+
+  patch(url, data) {
+    return this.request(url, {
+      method: 'PATCH',
+      body: JSON.stringify(data)
+    });
+  },
+
+  delete(url) {
+    return this.request(url, { method: 'DELETE' });
+  }
+};
+```
+
+## Error Boundary Components
+
+### Global Error Boundary
+```javascript
+// components/ErrorBoundary/ErrorBoundary.jsx
+import React from 'react';
+import { useTranslations } from 'next-intl';
+
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { 
+      hasError: false, 
+      error: null,
+      errorInfo: null
+    };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.error('ErrorBoundary caught an error:', error, errorInfo);
+    
+    this.setState({
+      error,
+      errorInfo
+    });
+
+    // Report error to monitoring service
+    if (process.env.NODE_ENV === 'production') {
+      this.reportError(error, errorInfo);
+    }
+  }
+
+  reportError(error, errorInfo) {
+    // Send error to monitoring service (Sentry, LogRocket, etc.)
+    const errorData = {
+      message: error.message,
+      stack: error.stack,
+      componentStack: errorInfo.componentStack,
+      timestamp: new Date().toISOString(),
+      url: window.location.href,
+      userAgent: navigator.userAgent
+    };
+    
+    // Example: Send to monitoring service
+    console.log('Error reported:', errorData);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <ErrorFallback
+          error={this.state.error}
+          onRetry={() => this.setState({ hasError: false, error: null })}
+          showDetails={process.env.NODE_ENV === 'development'}
+        />
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
+function ErrorFallback({ error, onRetry, showDetails }) {
+  const t = useTranslations('errors');
+  
+  return (
+    <div className={styles.errorBoundary}>
+      <div className={styles.content}>
+        <h2>{t('somethingWentWrong')}</h2>
+        <p>{t('errorOccurred')}</p>
+        
+        <div className={styles.actions}>
+          <button onClick={onRetry} className={styles.retryButton}>
+            {t('tryAgain')}
+          </button>
+          
+          <button 
+            onClick={() => window.location.reload()} 
+            className={styles.reloadButton}
+          >
+            {t('reloadPage')}
+          </button>
+        </div>
+        
+        {showDetails && (
+          <details className={styles.errorDetails}>
+            <summary>{t('errorDetails')}</summary>
+            <pre>{error.stack}</pre>
+          </details>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export default ErrorBoundary;
+```
+
+### Async Error Boundary
+```javascript
+// components/AsyncErrorBoundary/AsyncErrorBoundary.jsx
+import { useEffect } from 'react';
+import { useErrorHandler } from 'react-error-boundary';
+
+export function useAsyncError() {
+  const handleError = useErrorHandler();
+  
+  return (error) => {
+    console.error('Async error:', error);
+    handleError(error);
+  };
+}
+
+// Usage in async operations
+function DataComponent() {
+  const handleAsyncError = useAsyncError();
+  
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const data = await api.get('/data');
+        // Handle success
+      } catch (error) {
+        handleAsyncError(error);
+      }
+    }
+    
+    fetchData();
+  }, [handleAsyncError]);
+  
+  return <div>Data Component</div>;
+}
+```
+
+## Component Error Handling
+
+### Form Error Handling
+```javascript
+// components/CreateOfferForm/CreateOfferForm.jsx
+import { useState } from 'react';
+import { useTranslations } from 'next-intl';
+
+export default function CreateOfferForm({ onSuccess }) {
+  const t = useTranslations('forms');
+  const [errors, setErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState(null);
+  
+  const handleSubmit = async (formData) => {
+    try {
+      setIsSubmitting(true);
+      setSubmitError(null);
+      setErrors({});
+      
+      const result = await api.post('/offers', formData);
+      onSuccess?.(result);
+      
+    } catch (error) {
+      if (error instanceof ValidationError) {
+        setErrors(error.fields);
+      } else if (error instanceof ApiError) {
+        if (error.status === 400 && error.data?.details) {
+          // Handle field-specific validation errors
+          const fieldErrors = {};
+          error.data.details.forEach(detail => {
+            fieldErrors[detail.field] = detail.message;
+          });
+          setErrors(fieldErrors);
+        } else {
+          setSubmitError(error.message);
+        }
+      } else if (error instanceof NetworkError) {
+        setSubmitError(t('errors.networkError'));
+      } else {
+        setSubmitError(t('errors.unexpectedError'));
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+  
+  return (
+    <form onSubmit={handleSubmit}>
+      {submitError && (
+        <div className={styles.globalError}>
+          <span className={styles.errorIcon}>⚠️</span>
+          {submitError}
+        </div>
+      )}
+      
+      <FormField 
+        name="price"
+        error={errors.price}
+        onChange={() => clearFieldError('price')}
+      />
+      
+      <button 
+        type="submit" 
+        disabled={isSubmitting}
+      >
+        {isSubmitting ? t('submitting') : t('submit')}
+      </button>
+    </form>
+  );
+}
+```
+
+### Data Fetching Error Handling
+```javascript
+// hooks/useOffers.js
+import { useState, useEffect } from 'react';
+import { api } from '@/lib/api';
+
+export function useOffers(filters = {}) {
+  const [offers, setOffers] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [retryCount, setRetryCount] = useState(0);
+  
+  const fetchOffers = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      const data = await api.get('/offers', filters);
+      setOffers(data);
+      setRetryCount(0); // Reset retry count on success
+      
+    } catch (error) {
+      console.error('Failed to fetch offers:', error);
+      
+      let errorMessage;
+      if (error instanceof NetworkError) {
+        errorMessage = 'Network connection failed. Please check your internet connection.';
+      } else if (error instanceof ApiError) {
+        errorMessage = error.status === 404 
+          ? 'No offers found' 
+          : error.message;
+      } else {
+        errorMessage = 'Failed to load offers. Please try again.';
+      }
+      
+      setError({ message: errorMessage, type: error.name });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  const retry = () => {
+    setRetryCount(prev => prev + 1);
+    fetchOffers();
+  };
+  
+  useEffect(() => {
+    fetchOffers();
+  }, [filters, retryCount]);
+  
+  return {
+    offers,
+    isLoading,
+    error,
+    retry,
+    refetch: fetchOffers
+  };
+}
+
+// Usage in component
+function OffersList() {
+  const { offers, isLoading, error, retry } = useOffers();
+  
+  if (error) {
+    return (
+      <ErrorDisplay 
+        error={error}
+        onRetry={retry}
+        showRetryButton={error.type !== 'ApiError' || error.status !== 404}
+      />
+    );
+  }
+  
+  if (isLoading) {
+    return <LoadingSpinner />;
+  }
+  
+  return (
+    <div>
+      {offers.map(offer => (
+        <OfferCard key={offer.id} offer={offer} />
+      ))}
+    </div>
+  );
+}
+```
+
+## User Feedback Components
+
+### Error Display Component
+```javascript
+// components/ErrorDisplay/ErrorDisplay.jsx
+import { useTranslations } from 'next-intl';
+import styles from './ErrorDisplay.module.css';
+
+export default function ErrorDisplay({ 
+  error, 
+  onRetry, 
+  showRetryButton = true,
+  title,
+  size = 'medium'
+}) {
+  const t = useTranslations('errors');
+  
+  const getErrorIcon = (errorType) => {
+    switch (errorType) {
+      case 'NetworkError': return '📡';
+      case 'ApiError': return '⚠️';
+      case 'ValidationError': return '❌';
+      default: return '❗';
+    }
+  };
+  
+  return (
+    <div className={`${styles.errorDisplay} ${styles[size]}`}>
+      <div className={styles.icon}>
+        {getErrorIcon(error.type)}
+      </div>
+      
+      <div className={styles.content}>
+        {title && <h3 className={styles.title}>{title}</h3>}
+        <p className={styles.message}>{error.message}</p>
+        
+        {showRetryButton && onRetry && (
+          <button onClick={onRetry} className={styles.retryButton}>
+            {t('tryAgain')}
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+```
+
+### Toast Notifications
+```javascript
+// store/notificationStore.js
+import { create } from 'zustand';
+
+export const useNotificationStore = create((set, get) => ({
+  notifications: [],
+  
+  addNotification: (notification) => {
+    const id = Date.now().toString();
+    const newNotification = {
+      id,
+      type: 'info',
+      duration: 5000,
+      ...notification,
+      timestamp: new Date()
+    };
+    
+    set(state => ({
+      notifications: [...state.notifications, newNotification]
+    }));
+    
+    // Auto-remove notification
+    if (newNotification.duration > 0) {
+      setTimeout(() => {
+        get().removeNotification(id);
+      }, newNotification.duration);
+    }
+    
+    return id;
+  },
+  
+  removeNotification: (id) => {
+    set(state => ({
+      notifications: state.notifications.filter(n => n.id !== id)
+    }));
+  },
+  
+  // Convenience methods
+  success: (message, options = {}) => {
+    return get().addNotification({
+      message,
+      type: 'success',
+      ...options
+    });
+  },
+  
+  error: (message, options = {}) => {
+    return get().addNotification({
+      message,
+      type: 'error',
+      duration: 8000, // Longer duration for errors
+      ...options
+    });
+  },
+  
+  warning: (message, options = {}) => {
+    return get().addNotification({
+      message,
+      type: 'warning',
+      ...options
+    });
+  }
+}));
+
+// Toast component
+function ToastContainer() {
+  const notifications = useNotificationStore(state => state.notifications);
+  
+  return (
+    <div className={styles.toastContainer}>
+      {notifications.map(notification => (
+        <Toast key={notification.id} notification={notification} />
+      ))}
+    </div>
+  );
+}
+```
+
+## Error Logging & Monitoring
+
+### Client-Side Error Reporting
+```javascript
+// lib/errorReporting.js
+class ErrorReporter {
+  static instance = null;
+  
+  constructor() {
+    if (ErrorReporter.instance) {
+      return ErrorReporter.instance;
+    }
+    
+    this.isProduction = process.env.NODE_ENV === 'production';
+    this.userId = null;
+    
+    ErrorReporter.instance = this;
+  }
+  
+  setUser(user) {
+    this.userId = user?.id;
+  }
+  
+  reportError(error, context = {}) {
+    const errorData = {
+      message: error.message,
+      stack: error.stack,
+      name: error.name,
+      timestamp: new Date().toISOString(),
+      url: window.location.href,
+      userAgent: navigator.userAgent,
+      userId: this.userId,
+      ...context
+    };
+    
+    // Log to console in development
+    if (!this.isProduction) {
+      console.error('Error reported:', errorData);
+      return;
+    }
+    
+    // Send to monitoring service in production
+    this.sendToMonitoringService(errorData);
+  }
+  
+  async sendToMonitoringService(errorData) {
+    try {
+      await fetch('/api/errors', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(errorData)
+      });
+    } catch (reportingError) {
+      console.error('Failed to report error:', reportingError);
+    }
+  }
+  
+  reportApiError(error, requestContext) {
+    this.reportError(error, {
+      type: 'api_error',
+      requestUrl: requestContext.url,
+      requestMethod: requestContext.method,
+      status: error.status
+    });
+  }
+  
+  reportComponentError(error, componentName) {
+    this.reportError(error, {
+      type: 'component_error',
+      componentName
+    });
+  }
+}
+
+export const errorReporter = new ErrorReporter();
+```
+
+### Global Error Handlers
+```javascript
+// lib/globalErrorHandlers.js
+import { errorReporter } from './errorReporting';
+
+// Catch unhandled promise rejections
+window.addEventListener('unhandledrejection', (event) => {
+  console.error('Unhandled promise rejection:', event.reason);
+  
+  errorReporter.reportError(event.reason, {
+    type: 'unhandled_promise_rejection'
+  });
+});
+
+// Catch uncaught errors
+window.addEventListener('error', (event) => {
+  console.error('Uncaught error:', event.error);
+  
+  errorReporter.reportError(event.error, {
+    type: 'uncaught_error',
+    filename: event.filename,
+    lineno: event.lineno,
+    colno: event.colno
+  });
+});
+
+// Catch resource loading errors
+window.addEventListener('error', (event) => {
+  if (event.target !== window) {
+    console.error('Resource loading error:', event.target);
+    
+    errorReporter.reportError(new Error(`Failed to load resource: ${event.target.src || event.target.href}`), {
+      type: 'resource_error',
+      element: event.target.tagName,
+      src: event.target.src || event.target.href
+    });
+  }
+}, true);
+```
