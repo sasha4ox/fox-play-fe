@@ -19,10 +19,6 @@ import TableRow from '@mui/material/TableRow';
 import MuiLink from '@mui/material/Link';
 import CircularProgress from '@mui/material/CircularProgress';
 import Alert from '@mui/material/Alert';
-import FormControl from '@mui/material/FormControl';
-import InputLabel from '@mui/material/InputLabel';
-import Select from '@mui/material/Select';
-import MenuItem from '@mui/material/MenuItem';
 import Avatar from '@mui/material/Avatar';
 import Badge from '@mui/material/Badge';
 import Rating from '@mui/material/Rating';
@@ -62,8 +58,8 @@ export default function GameOffersPage() {
   const [offersLoading, setOffersLoading] = useState(true);
   const [offersError, setOffersError] = useState(null);
   const [categoryFilter, setCategoryFilter] = useState('ADENA');
-  const [sortBy, setSortBy] = useState('availability');
-  const [sortDir, setSortDir] = useState('desc');
+  const [sortBy, setSortBy] = useState('price');
+  const [sortDir, setSortDir] = useState('asc');
 
   useEffect(() => {
     if (serverId && token) {
@@ -164,21 +160,34 @@ export default function GameOffersPage() {
           </Button>
         </Box>
 
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'stretch', gap: 2, mb: 2 }}>
-          <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 140 } }}>
-            <InputLabel>{t('categoryFilter')}</InputLabel>
-            <Select
-              value={categoryFilter}
-              label={t('categoryFilter')}
-              onChange={(e) => setCategoryFilter(e.target.value)}
-            >
-              {OFFER_TYPES.map((type) => (
-                <MenuItem key={type} value={type}>
-                  {categoryLabel(type)}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 1, mb: 2 }}>
+          <Typography variant="body2" color="text.secondary" sx={{ mr: 1 }}>
+            {t('categoryFilter')}:
+          </Typography>
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+            {OFFER_TYPES.map((type) => (
+              <Button
+                key={type}
+                size="small"
+                variant={categoryFilter === type ? 'contained' : 'outlined'}
+                color={categoryFilter === type ? 'primary' : 'inherit'}
+                onClick={() => setCategoryFilter(type)}
+                sx={{
+                  minWidth: 'auto',
+                  px: 2,
+                  py: 0.5,
+                  borderRadius: 2,
+                  textTransform: 'none',
+                  fontWeight: categoryFilter === type ? 600 : 400,
+                  ...(categoryFilter === type && {
+                    boxShadow: theme => `0 0 0 2px ${theme.palette.primary.main}25`,
+                  }),
+                }}
+              >
+                {categoryLabel(type)}
+              </Button>
+            ))}
+          </Box>
         </Box>
 
         {offersLoading && (
