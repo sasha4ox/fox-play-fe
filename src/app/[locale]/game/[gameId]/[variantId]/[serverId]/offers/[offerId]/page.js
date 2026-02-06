@@ -29,7 +29,7 @@ import CardContent from '@mui/material/CardContent';
 import { useAuthStore } from '@/store/authStore';
 import { useLoginModalStore } from '@/store/loginModalStore';
 import { useProfile } from '@/hooks/useProfile';
-import { fetchOfferById, createOrder, createFondyCheckout, getOfferMessages, sendOfferMessage, getFeedbacksByUserId } from '@/lib/api';
+import { fetchOfferById, createOrder, createFondyCheckout, createWayforpayCheckout, getOfferMessages, sendOfferMessage, getFeedbacksByUserId } from '@/lib/api';
 import { formatAdena } from '@/lib/adenaFormat';
 
 export default function OfferPDPPage() {
@@ -67,6 +67,7 @@ export default function OfferPDPPage() {
   const currentUserId = user?.id ?? user?.userId;
   const isCreator = currentUserId && offer?.seller?.id && currentUserId === offer.seller.id;
   const fondyEnabled = !!profile?.fondyEnabled;
+  const wayforpayEnabled = !!profile?.wayforpayEnabled;
 
   const preferredCurrency = profile?.preferredCurrency;
 
@@ -171,6 +172,48 @@ export default function OfferPDPPage() {
         return;
       }
       setBuyError('No checkout URL received');
+    } catch (err) {
+      setBuyError(err.message || 'Failed to start card payment');
+    } finally {
+      setBuySubmitting(false);
+    }
+  };
+
+  const handlePayByWayforpay = async () => {
+    if (!offer || !token) return;
+    const nick = (buyCharacterNick || '').trim();
+    if (!nick) {
+      setBuyError(t('inGameNickRequired'));
+      return;
+    }
+    const isAdenaPay = offer.offerType === 'ADENA';
+    const qtyPay = isAdenaPay
+      ? Math.min(offer.quantity, Math.max(1, Math.floor(buyQuantityKk * 1_000_000)))
+      : Math.min(Math.max(1, Math.floor(buyQuantity)), offer.quantity);
+    setBuySubmitting(true);
+    setBuyError(null);
+    try {
+      const result = await createWayforpayCheckout(
+        { offerId: offer.id, quantity: qtyPay, characterNick: nick, locale },
+        token
+      );
+      if (result?.postUrl && result?.params) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = result.postUrl;
+        form.style.visibility = 'hidden';
+        Object.entries(result.params).forEach(([key, value]) => {
+          const input = document.createElement('input');
+          input.type = 'hidden';
+          input.name = key;
+          input.value = String(value);
+          form.appendChild(input);
+        });
+        document.body.appendChild(form);
+        form.submit();
+        return;
+      }
+      setBuyError('No payment URL received');
     } catch (err) {
       setBuyError(err.message || 'Failed to start card payment');
     } finally {
@@ -556,7 +599,7 @@ export default function OfferPDPPage() {
                   <MuiLink component={Link} href={`/${locale}/dashboard/balance`}>
                     Add funds to your balance →
                   </MuiLink>
-                  {fondyEnabled && (
+                  {(fondyEnabled || wayforpayEnabled) && (
                     <Typography component="span" variant="body2" display="block" sx={{ mt: 1 }}>
                       {t('orPayByCard')}
                     </Typography>
@@ -573,7 +616,12 @@ export default function OfferPDPPage() {
               {buySubmitting ? '…' : t('payByCard')}
             </Button>
           )}
-          <Button variant={fondyEnabled ? 'outlined' : 'contained'} onClick={handleBuySubmit} disabled={buySubmitting}>
+          {wayforpayEnabled && (
+            <Button variant="contained" onClick={handlePayByWayforpay} disabled={buySubmitting} color="secondary">
+              {buySubmitting ? '…' : t('payByCardWayforpay')}
+            </Button>
+          )}
+          <Button variant={fondyEnabled || wayforpayEnabled ? 'outlined' : 'contained'} onClick={handleBuySubmit} disabled={buySubmitting}>
             {buySubmitting ? 'Creating…' : t('payWithBalance')}
           </Button>
         </DialogActions>

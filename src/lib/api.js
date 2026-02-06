@@ -136,9 +136,14 @@ export async function createOrder(body, token) {
   return apiPost('/orders', body, token)
 }
 
-/** Fondy checkout: hold on card (no platform balance). Returns { checkoutUrl, pendingId }; redirect user to checkoutUrl. */
+/** Fondy checkout: hold on card. Returns { checkoutUrl, pendingId }; redirect user to checkoutUrl. */
 export async function createFondyCheckout(body, token) {
   return apiPost('/fondy/checkout', body, token)
+}
+
+/** WayForPay checkout: hold on card. Returns { postUrl, params, pendingId }; frontend POSTs form to postUrl. */
+export async function createWayforpayCheckout(body, token) {
+  return apiPost('/wayforpay/checkout', body, token)
 }
 
 /** Profile: user + balances in preferred currency (auth required) */

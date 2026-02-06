@@ -315,6 +315,7 @@
     "toBeReceived": "To be received",
     "payWithBalance": "Pay with balance",
     "payByCard": "Pay by card (Fondy)",
+    "payByCardWayforpay": "Pay by card (WayForPay)",
     "orPayByCard": "Or use «Pay by card» below to pay with a card.",
     "quantity": "Quantity",
     "buyNow": "Buy now",

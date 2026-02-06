@@ -315,6 +315,7 @@
     "toBeReceived": "Отримаєте",
     "payWithBalance": "Оплатити з балансу",
     "payByCard": "Оплатити карткою (Fondy)",
+    "payByCardWayforpay": "Оплатити карткою (WayForPay)",
     "orPayByCard": "Або натисніть «Оплатити карткою» нижче.",
     "quantity": "Кількість",
     "buyNow": "Купити",
