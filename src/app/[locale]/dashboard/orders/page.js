@@ -16,7 +16,7 @@ import MuiLink from '@mui/material/Link';
 import Avatar from '@mui/material/Avatar';
 import Badge from '@mui/material/Badge';
 import { useAuthStore } from '@/store/authStore';
-import { getMyOrderChats, getMyOfferThreads } from '@/lib/api';
+import { getMyOrderChats, getMyOfferThreads, getWayforpayOrderStatus } from '@/lib/api';
 
 export default function MyOrdersPage() {
   const locale = useLocale();
@@ -35,6 +35,38 @@ export default function MyOrdersPage() {
       setPaymentFeedback(payment);
     }
   }, [searchParams]);
+
+  // Poll for WayForPay order when we landed with payment=processing&orderReference (webhook may complete after redirect)
+  useEffect(() => {
+    const payment = searchParams.get('payment');
+    const orderReference = searchParams.get('orderReference');
+    if (payment !== 'processing' || !orderReference || !orderReference.startsWith('wfp_')) return;
+    const POLL_INTERVAL_MS = 2000;
+    const POLL_TIMEOUT_MS = 90000;
+    const start = Date.now();
+    const t = setInterval(async () => {
+      if (Date.now() - start > POLL_TIMEOUT_MS) {
+        clearInterval(t);
+        return;
+      }
+      try {
+        const data = await getWayforpayOrderStatus(orderReference);
+        if (data.orderId) {
+          clearInterval(t);
+          window.location.replace(`/${locale}/dashboard/orders/${data.orderId}?payment=success`);
+          return;
+        }
+        if (data.status === 'failed') {
+          clearInterval(t);
+          setPaymentFeedback('declined');
+          return;
+        }
+      } catch (_) {
+        // keep polling
+      }
+    }, POLL_INTERVAL_MS);
+    return () => clearInterval(t);
+  }, [searchParams, locale]);
 
   useEffect(() => {
     if (!token) {

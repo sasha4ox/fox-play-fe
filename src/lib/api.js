@@ -146,6 +146,15 @@ export async function createWayforpayCheckout(body, token) {
   return apiPost('/wayforpay/checkout', body, token)
 }
 
+/** WayForPay order status by reference (public, for polling after redirect). Returns { orderId } or { status: 'processing' | 'failed' }. */
+export async function getWayforpayOrderStatus(orderReference) {
+  const base = getApiBase()
+  const url = `${base}/wayforpay/order-status?orderReference=${encodeURIComponent(orderReference)}`
+  const res = await fetch(url, { method: 'GET', headers: { Accept: 'application/json' } })
+  const data = await res.json().catch(() => ({}))
+  return data
+}
+
 /** Profile: user + balances in preferred currency (auth required) */
 export async function getProfile(token) {
   return apiGet('/me', token)

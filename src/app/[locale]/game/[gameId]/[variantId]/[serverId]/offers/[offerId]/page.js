@@ -201,6 +201,7 @@ export default function OfferPDPPage() {
         const form = document.createElement('form');
         form.method = 'POST';
         form.action = result.postUrl;
+        form.setAttribute('accept-charset', 'utf-8');
         form.style.visibility = 'hidden';
         Object.entries(result.params).forEach(([key, value]) => {
           const input = document.createElement('input');
