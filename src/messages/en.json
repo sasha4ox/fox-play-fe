@@ -140,7 +140,11 @@
     "sale": "Sale",
     "paymentSuccessMessage": "Payment successful. Your order is in the list below.",
     "paymentProcessingMessage": "Payment is being processed. Your order will appear in the list shortly.",
-    "paymentDeclinedMessage": "Payment was declined. You can try again or add funds from Balance."
+    "paymentDeclinedMessage": "Payment was declined. You can try again or add funds from Balance.",
+    "paymentDeclinedCode": "WayForPay code",
+    "paymentDeclinedCode1113": "Invalid signature",
+    "paymentDeclinedCode1109": "Format error (check merchant settings)",
+    "paymentDeclinedCode1115": "Required parameter missing"
   },
   "Sales": {
     "title": "My orders",

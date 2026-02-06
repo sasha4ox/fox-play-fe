@@ -140,7 +140,11 @@
     "sale": "Продаж",
     "paymentSuccessMessage": "Оплата пройшла успішно. Ваше замовлення в списку нижче.",
     "paymentProcessingMessage": "Оплата обробляється. Замовлення незабаром з'явиться в списку.",
-    "paymentDeclinedMessage": "Оплату відхилено. Можете спробувати знову або поповнити баланс."
+    "paymentDeclinedMessage": "Оплату відхилено. Можете спробувати знову або поповнити баланс.",
+    "paymentDeclinedCode": "Код WayForPay",
+    "paymentDeclinedCode1113": "Невірний підпис",
+    "paymentDeclinedCode1109": "Помилка формату (перевірте налаштування мерчанта)",
+    "paymentDeclinedCode1115": "Відсутній обовʼязковий параметр"
   },
   "Sales": {
     "title": "Мої замовлення",

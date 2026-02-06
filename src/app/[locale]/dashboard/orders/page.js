@@ -28,12 +28,15 @@ export default function MyOrdersPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [paymentFeedback, setPaymentFeedback] = useState(null); // 'success' | 'declined' | 'processing'
+  const [paymentDeclinedReasonCode, setPaymentDeclinedReasonCode] = useState(null);
 
   useEffect(() => {
     const payment = searchParams.get('payment');
+    const reasonCode = searchParams.get('reasonCode');
     if (payment === 'success' || payment === 'declined' || payment === 'processing') {
       setPaymentFeedback(payment);
     }
+    if (reasonCode) setPaymentDeclinedReasonCode(reasonCode);
   }, [searchParams]);
 
   // Poll for WayForPay order when we landed with payment=processing&orderReference (webhook may complete after redirect)
@@ -126,8 +129,16 @@ export default function MyOrdersPage() {
           </Alert>
         )}
         {paymentFeedback === 'declined' && (
-          <Alert severity="warning" onClose={() => setPaymentFeedback(null)} sx={{ mb: 2 }}>
+          <Alert severity="warning" onClose={() => { setPaymentFeedback(null); setPaymentDeclinedReasonCode(null); }} sx={{ mb: 2 }}>
             {t('paymentDeclinedMessage')}
+            {paymentDeclinedReasonCode && (
+              <Typography component="span" display="block" variant="body2" sx={{ mt: 1 }}>
+                {t('paymentDeclinedCode')}: {paymentDeclinedReasonCode}
+                {paymentDeclinedReasonCode === '1113' && ` (${t('paymentDeclinedCode1113')})`}
+                {paymentDeclinedReasonCode === '1109' && ` (${t('paymentDeclinedCode1109')})`}
+                {paymentDeclinedReasonCode === '1115' && ` (${t('paymentDeclinedCode1115')})`}
+              </Typography>
+            )}
           </Alert>
         )}
 
