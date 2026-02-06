@@ -1,0 +1,63 @@
+---
+description: Always provide clear summary sections with actions completed and next steps
+alwaysApply: true
+---
+
+# Response Format Requirements
+
+Always include a comprehensive summary section at the end of responses when making changes or completing tasks.
+
+## Summary Section Structure
+
+Use this format for all task completion responses:
+
+```markdown
+## ✅ **Summary**
+
+### **What I Did:**
+- Clear bullet points of all changes made
+- Technical details of implementations
+- Files modified or created
+
+### **What You Should Do Next:**
+- Specific action items for the user
+- Testing recommendations
+- Any follow-up tasks or considerations
+
+### **Key Benefits:**
+- Improvements or fixes delivered
+- User experience enhancements
+- Technical advantages gained
+```
+
+## Guidelines
+
+- **Be Specific**: List exact files changed, functions modified, features added
+- **Be Actionable**: Give clear next steps the user can take
+- **Be Comprehensive**: Don't miss important changes or implications
+- **Use Emojis Sparingly**: Only use checkmarks (✅) and key emojis when they add clarity
+- **Prioritize Clarity**: Structure information for easy scanning and understanding
+
+## Example
+
+```markdown
+## ✅ **Summary**
+
+### **What I Did:**
+- Fixed number formatting in buy modal (`offers/[offerId]/page.js`)
+- Added proper display state management for kk input values
+- Implemented parseAdenaInput for better user input handling
+- Added auto-formatting on blur for clean display
+
+### **What You Should Do Next:**
+- Test the buy modal with different input values (1kk, 2.5kk, etc.)
+- Verify payment calculations work correctly
+- Check mobile responsiveness of the updated input
+
+### **Key Benefits:**
+- No more confusing decimal displays like "0.001"
+- Users can input natural formats like "1kk" or "2.5kk"
+- Better user experience with auto-formatting
+```
+
+This ensures consistent, helpful communication in all interactions.

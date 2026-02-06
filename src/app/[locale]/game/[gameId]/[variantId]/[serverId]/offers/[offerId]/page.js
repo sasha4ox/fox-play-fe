@@ -30,7 +30,7 @@ import { useAuthStore } from '@/store/authStore';
 import { useLoginModalStore } from '@/store/loginModalStore';
 import { useProfile } from '@/hooks/useProfile';
 import { fetchOfferById, createOrder, createFondyCheckout, createWayforpayCheckout, getOfferMessages, sendOfferMessage, getFeedbacksByUserId } from '@/lib/api';
-import { formatAdena } from '@/lib/adenaFormat';
+import { formatAdena, parseAdenaInput, MIN_ADENA } from '@/lib/adenaFormat';
 
 export default function OfferPDPPage() {
   const params = useParams();
@@ -52,6 +52,7 @@ export default function OfferPDPPage() {
   const [buyDialogOpen, setBuyDialogOpen] = useState(false);
   const [buyQuantity, setBuyQuantity] = useState(1);
   const [buyQuantityKk, setBuyQuantityKk] = useState(1);
+  const [buyQuantityKkDisplay, setBuyQuantityKkDisplay] = useState('1');
   const [buyCharacterNick, setBuyCharacterNick] = useState('');
   const [buySubmitting, setBuySubmitting] = useState(false);
   const [buyError, setBuyError] = useState(null);
@@ -80,6 +81,7 @@ export default function OfferPDPPage() {
         setOffer(data);
         setBuyQuantity(1);
         setBuyQuantityKk(1);
+        setBuyQuantityKkDisplay('1');
         setLoading(false);
       })
       .catch((err) => {
@@ -87,6 +89,13 @@ export default function OfferPDPPage() {
         setLoading(false);
       });
   }, [offerId, token, preferredCurrency]);
+
+  // Sync display value when numeric value changes
+  useEffect(() => {
+    // Convert kk value to adena amount for formatting
+    const adenaAmount = buyQuantityKk * 1_000_000;
+    setBuyQuantityKkDisplay(formatAdena(adenaAmount));
+  }, [buyQuantityKk]);
 
   const [selectedThreadBuyerId, setSelectedThreadBuyerId] = useState(null);
   const [feedbacksDialogOpen, setFeedbacksDialogOpen] = useState(false);
@@ -550,19 +559,30 @@ export default function OfferPDPPage() {
           />
           {isAdenaOffer ? (
             <TextField
-             type="text"
+              type="text"
               inputMode="decimal"
               label={t('toBeReceived')}
-              value={buyQuantityKk}
+              value={buyQuantityKkDisplay}
               onChange={(e) => {
-                const v = Number(e.target.value);
-                if (!Number.isFinite(v)) return;
-                setBuyQuantityKk(Math.min(maxKk, Math.max(0.001, v)));
+                const inputValue = e.target.value;
+                setBuyQuantityKkDisplay(inputValue);
+                
+                // Parse the input to get adena amount
+                const adenaAmount = parseAdenaInput(inputValue);
+                if (adenaAmount != null) {
+                  // Convert adena amount to kk units
+                  const kkAmount = adenaAmount / 1_000_000;
+                  const maxKk = (offer?.quantity ?? 0) / 1_000_000;
+                  const clampedKkAmount = Math.min(maxKk, Math.max(0.001, kkAmount));
+                  setBuyQuantityKk(clampedKkAmount);
+                }
               }}
-              // inputProps={{ min: 0.001, max: maxKk, step: 0.001 }}
-              InputProps={{
-                endAdornment: <InputAdornment position="end">kk</InputAdornment>,
+              onBlur={() => {
+                // On blur, sync display with the actual numeric value
+                const adenaAmount = buyQuantityKk * 1_000_000;
+                setBuyQuantityKkDisplay(formatAdena(adenaAmount));
               }}
+              placeholder="1kk"
               fullWidth
               sx={{ mb: 2 }}
             />
