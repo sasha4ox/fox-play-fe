@@ -9,13 +9,13 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "@react-oauth/google": "^0.12.1",
     "@emotion/cache": "^11.14.0",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
     "@mui/icons-material": "^7.3.7",
     "@mui/material": "^7.3.7",
     "@mui/material-nextjs": "^7.3.7",
+    "@react-oauth/google": "^0.12.2",
     "next": "16.1.4",
     "next-intl": "^4.7.0",
     "react": "19.2.3",
