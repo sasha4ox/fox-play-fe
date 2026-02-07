@@ -368,43 +368,68 @@ export default function OrderChatPage() {
         </Box>
 
         {order.offer && (
-          <Box sx={{ mb: 2, p: 2, border: '1px solid', borderColor: 'divider', borderRadius: 1, bgcolor: 'action.hover' }}>
-            <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-              {isBuyer ? t('youAreBuying') : t('youAreSelling')}
-            </Typography>
-            <Typography variant="body1" fontWeight={600}>{order.offer.title}</Typography>
-            {order.offer.offerType === 'ADENA' ? (
-              <>
+          <>
+            {/* Block 1: Offer & what you're selling / buying */}
+            <Box sx={{ mb: 2, p: 2, border: '1px solid', borderColor: 'divider', borderRadius: 1, bgcolor: 'action.hover' }}>
+              <Typography variant="overline" color="text.secondary" fontWeight={600} display="block" sx={{ mb: 1 }}>
+                {t('block1OfferAndDeal')}
+              </Typography>
+              <Typography variant="body2" color="text.secondary" gutterBottom>
+                {isBuyer ? t('youAreBuying') : t('youAreSelling')}
+              </Typography>
+              <Typography variant="h6" fontWeight={600} sx={{ mb: 0.5 }}>
+                {order.offer.title}
+              </Typography>
+              {order.offer.offerType === 'ADENA' ? (
                 <Typography variant="body2" color="text.secondary">
-                  {t('qty')}: {formatAdena(Number(order.quantity ?? 0))} · {t('priceFor100kk')}: {Number(order.offer?.price ?? 0) * 100} {order.sellerCurrency}
+                  {t('qty')}: {formatAdena(Number(order.quantity ?? 0))} · {t('priceFor100kk')}: {Number(order.offer?.price ?? 0) * 100} {order.sellerCurrency ?? order.buyerCurrency}
                 </Typography>
-                {isBuyer && order.buyerAmount != null && (
-                  <Typography variant="body2" color="text.primary" fontWeight={600} sx={{ mt: 0.5 }}>
-                    {t('yourTotal')}: {Number(order.buyerAmount).toFixed(2)} {order.buyerCurrency}
-                  </Typography>
-                )}
-              </>
-            ) : (
-              <Typography variant="body2" color="text.secondary">
-                {t('qty')}: {order.quantity} · {Number(order.sellerAmount ?? 0).toFixed(2)} {order.sellerCurrency} {t('total')}
-              </Typography>
-            )}
-            <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5 }}>
-              {t('amountsFixedAtPurchase')}
-            </Typography>
-            {isSeller && order.sellerAmount != null && (
-              <Typography variant="body2" color="primary.main" fontWeight={600} sx={{ mt: 1 }}>
-                {t('youReceive')}: {Number(order.sellerAmount).toFixed(2)} {order.sellerCurrency}
-                {' — '}
-                {order.transaction?.externalId ? t('toCard') : t('toBalance')}
-              </Typography>
-            )}
-            {order.buyerCharacterNick && (
+              ) : (
+                <Typography variant="body2" color="text.secondary">
+                  {t('qty')}: {order.quantity} · {Number(order.sellerAmount ?? 0).toFixed(2)} {order.sellerCurrency} {t('total')}
+                </Typography>
+              )}
               <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5 }}>
-                {t('buyerInGameNick')}: {order.buyerCharacterNick}
+                {t('amountsFixedAtPurchase')}
               </Typography>
-            )}
-          </Box>
+              {order.buyerCharacterNick && (
+                <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5 }}>
+                  {t('buyerInGameNick')}: {order.buyerCharacterNick}
+                </Typography>
+              )}
+            </Box>
+
+            {/* Block 2: Amount you receive or pay + adena/items give or get */}
+            <Box sx={{ mb: 2, p: 2, border: '1px solid', borderColor: 'primary.main', borderRadius: 1, bgcolor: (theme) => `${theme.palette.primary.main}08` }}>
+              <Typography variant="overline" color="primary.main" fontWeight={600} display="block" sx={{ mb: 1 }}>
+                {t('block2Payment')}
+              </Typography>
+              {isSeller && order.sellerAmount != null && (
+                <>
+                  <Typography variant="body1" color="primary.main" fontWeight={700}>
+                    {t('youReceive')}: {Number(order.sellerAmount).toFixed(2)} {order.sellerCurrency}
+                    {' — '}
+                    {order.transaction?.externalId ? t('toCard') : t('toBalance')}
+                  </Typography>
+                  <Typography variant="body2" color="text.primary" fontWeight={600} sx={{ mt: 0.5 }}>
+                    {t('youGiveToBuyer')}: {order.offer?.offerType === 'ADENA' ? formatAdena(Number(order.quantity ?? 0)) : order.quantity} {order.offer?.offerType === 'ADENA' ? 'adena' : (order.offer?.title ?? '')}
+                  </Typography>
+                </>
+              )}
+              {isBuyer && order.buyerAmount != null && (
+                <>
+                  <Typography variant="body1" color="primary.main" fontWeight={700}>
+                    {t('youPay')}: {Number(order.buyerAmount).toFixed(2)} {order.buyerCurrency}
+                    {' — '}
+                    {order.transaction?.externalId ? t('fromCard') : t('fromBalance')}
+                  </Typography>
+                  <Typography variant="body2" color="text.primary" fontWeight={600} sx={{ mt: 0.5 }}>
+                    {t('youGetFromSeller')}: {order.offer?.offerType === 'ADENA' ? formatAdena(Number(order.quantity ?? 0)) : order.quantity} {order.offer?.offerType === 'ADENA' ? 'adena' : (order.offer?.title ?? '')}
+                  </Typography>
+                </>
+              )}
+            </Box>
+          </>
         )}
 
         {actionInfo && <Alert severity="info" sx={{ mb: 1 }} onClose={() => setActionInfo(null)}>{actionInfo}</Alert>}

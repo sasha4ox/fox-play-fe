@@ -30,7 +30,7 @@ import { useAuthStore } from '@/store/authStore';
 import { useLoginModalStore } from '@/store/loginModalStore';
 import { useProfile } from '@/hooks/useProfile';
 import { fetchOfferById, createOrder, createFondyCheckout, createWayforpayCheckout, getOfferMessages, sendOfferMessage, getFeedbacksByUserId } from '@/lib/api';
-import { formatAdena, parseAdenaInput, MIN_ADENA } from '@/lib/adenaFormat';
+import { formatAdena } from '@/lib/adenaFormat';
 
 export default function OfferPDPPage() {
   const params = useParams();
@@ -52,7 +52,6 @@ export default function OfferPDPPage() {
   const [buyDialogOpen, setBuyDialogOpen] = useState(false);
   const [buyQuantity, setBuyQuantity] = useState(1);
   const [buyQuantityKk, setBuyQuantityKk] = useState(1);
-  const [buyQuantityKkDisplay, setBuyQuantityKkDisplay] = useState('1');
   const [buyCharacterNick, setBuyCharacterNick] = useState('');
   const [buySubmitting, setBuySubmitting] = useState(false);
   const [buyError, setBuyError] = useState(null);
@@ -81,7 +80,6 @@ export default function OfferPDPPage() {
         setOffer(data);
         setBuyQuantity(1);
         setBuyQuantityKk(1);
-        setBuyQuantityKkDisplay('1');
         setLoading(false);
       })
       .catch((err) => {
@@ -90,12 +88,6 @@ export default function OfferPDPPage() {
       });
   }, [offerId, token, preferredCurrency]);
 
-  // Sync display value when numeric value changes
-  useEffect(() => {
-    // Convert kk value to adena amount for formatting
-    const adenaAmount = buyQuantityKk * 1_000_000;
-    setBuyQuantityKkDisplay(formatAdena(adenaAmount));
-  }, [buyQuantityKk]);
 
   const [selectedThreadBuyerId, setSelectedThreadBuyerId] = useState(null);
   const [feedbacksDialogOpen, setFeedbacksDialogOpen] = useState(false);
@@ -558,34 +550,40 @@ export default function OfferPDPPage() {
             sx={{ mb: 2 }}
           />
           {isAdenaOffer ? (
-            <TextField
-              type="text"
-              inputMode="decimal"
-              label={t('toBeReceived')}
-              value={buyQuantityKkDisplay}
-              onChange={(e) => {
-                const inputValue = e.target.value;
-                setBuyQuantityKkDisplay(inputValue);
-                
-                // Parse the input to get adena amount
-                const adenaAmount = parseAdenaInput(inputValue);
-                if (adenaAmount != null) {
-                  // Convert adena amount to kk units
-                  const kkAmount = adenaAmount / 1_000_000;
+            <>
+              <TextField
+                type="number"
+                inputMode="decimal"
+                label={t('toBeReceived')}
+                value={buyQuantityKk}
+                onChange={(e) => {
+                  const inputValue = e.target.value;
+                  // Allow empty input while typing
+                  if (inputValue === '') {
+                    setBuyQuantityKk(0);
+                    return;
+                  }
+                  const value = Number(inputValue);
+                  if (!Number.isFinite(value) || value < 0) return;
                   const maxKk = (offer?.quantity ?? 0) / 1_000_000;
-                  const clampedKkAmount = Math.min(maxKk, Math.max(0.001, kkAmount));
-                  setBuyQuantityKk(clampedKkAmount);
-                }
-              }}
-              onBlur={() => {
-                // On blur, sync display with the actual numeric value
-                const adenaAmount = buyQuantityKk * 1_000_000;
-                setBuyQuantityKkDisplay(formatAdena(adenaAmount));
-              }}
-              placeholder="1kk"
-              fullWidth
-              sx={{ mb: 2 }}
-            />
+                  setBuyQuantityKk(Math.min(maxKk, value));
+                }}
+                InputProps={{
+                  endAdornment: <InputAdornment position="end">kk</InputAdornment>,
+                }}
+                inputProps={{ 
+                  min: 0.001, 
+                  step: 0.001,
+                  max: (offer?.quantity ?? 0) / 1_000_000
+                }}
+                placeholder="10"
+                fullWidth
+                sx={{ mb: 1 }}
+              />
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2, fontSize: '0.75rem' }}>
+                Max available: {formatAdena(offer?.quantity ?? 0)}
+              </Typography>
+            </>
           ) : (
             <TextField
               type="number"
@@ -633,16 +631,16 @@ export default function OfferPDPPage() {
         <DialogActions sx={{ flexWrap: 'wrap', gap: 1 }}>
           <Button onClick={() => setBuyDialogOpen(false)}>Cancel</Button>
           {fondyEnabled && (
-            <Button variant="contained" onClick={handlePayByCard} disabled={buySubmitting} color="secondary">
+            <Button variant="contained" onClick={handlePayByCard} disabled={buySubmitting || buyQuantityKk <= 0} color="secondary">
               {buySubmitting ? '…' : t('payByCard')}
             </Button>
           )}
           {wayforpayEnabled && (
-            <Button variant="contained" onClick={handlePayByWayforpay} disabled={buySubmitting} color="secondary">
+            <Button variant="contained" onClick={handlePayByWayforpay} disabled={buySubmitting || buyQuantityKk <= 0} color="secondary">
               {buySubmitting ? '…' : t('payByCardWayforpay')}
             </Button>
           )}
-          <Button variant={fondyEnabled || wayforpayEnabled ? 'outlined' : 'contained'} onClick={handleBuySubmit} disabled={buySubmitting}>
+          <Button variant={fondyEnabled || wayforpayEnabled ? 'outlined' : 'contained'} onClick={handleBuySubmit} disabled={buySubmitting || buyQuantityKk <= 0}>
             {buySubmitting ? 'Creating…' : t('payWithBalance')}
           </Button>
         </DialogActions>

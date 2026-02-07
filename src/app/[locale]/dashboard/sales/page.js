@@ -24,7 +24,8 @@ import Tooltip from '@mui/material/Tooltip';
 import IconButton from '@mui/material/IconButton';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import { useAuthStore } from '@/store/authStore';
-import { getMyOrdersAsBuyer, getMyOrdersAsSeller } from '@/lib/api';
+import { getMyOrdersAsBuyer, getMyOrdersAsSeller, getMyOrderChats } from '@/lib/api';
+import { formatAdena } from '@/lib/adenaFormat';
 
 const SOLD_STATUS_OPTIONS = ['', 'CREATED', 'PAID', 'DELIVERED', 'COMPLETED', 'CANCELED', 'DISPUTED'];
 
@@ -36,6 +37,7 @@ export default function MyOrdersPage() {
   const [soldStatusFilter, setSoldStatusFilter] = useState('');
   const [bought, setBought] = useState([]);
   const [sold, setSold] = useState([]);
+  const [unreadByOrderId, setUnreadByOrderId] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -58,6 +60,20 @@ export default function MyOrdersPage() {
       .finally(() => setLoading(false));
   }, [token, soldStatusFilter]);
 
+  useEffect(() => {
+    if (!token) return;
+    getMyOrderChats(token)
+      .then((data) => {
+        const orders = data?.orders ?? [];
+        const map = {};
+        orders.forEach((o) => {
+          if (o.id != null && (o.unreadCount ?? 0) > 0) map[o.id] = o.unreadCount;
+        });
+        setUnreadByOrderId(map);
+      })
+      .catch(() => setUnreadByOrderId({}));
+  }, [token]);
+
   if (!token) {
     return (
       <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', py: 4, px: 2 }}>
@@ -67,6 +83,16 @@ export default function MyOrdersPage() {
       </Box>
     );
   }
+
+  const sortByCreatedAtDesc = (a, b) => new Date(b.createdAt ?? 0).getTime() - new Date(a.createdAt ?? 0).getTime();
+  const boughtSorted = [...bought].sort(sortByCreatedAtDesc);
+  const soldSorted = [...sold].sort(sortByCreatedAtDesc);
+
+  const formatOrderQty = (order) => {
+    const qty = order.quantity ?? 1;
+    if (order.offer?.offerType === 'ADENA') return formatAdena(qty);
+    return String(qty);
+  };
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', py: 4, px: 2 }}>
@@ -124,42 +150,70 @@ export default function MyOrdersPage() {
             {bought.length === 0 ? (
               <Typography color="text.secondary">{t('noBought')}</Typography>
             ) : (
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-                {bought.map((order) => {
-                  const paidWithCard = order.transaction?.externalId != null;
-                  const sellerName = order.seller?.nickname ?? order.seller?.email ?? '—';
-                  const statusLabel = order.status ? t(`status_${order.status}`) : '—';
-                  return (
-                    <Card key={order.id} variant="outlined">
-                      <CardActionArea component={Link} href={`/${locale}/dashboard/orders/${order.id}`}>
-                        <CardContent sx={{ py: 2, px: 2 }}>
-                          <Typography variant="subtitle1" fontWeight={600}>
-                            {order.offer?.title ?? order.id?.slice(0, 8)}
-                          </Typography>
-                          <Typography variant="body2" color="text.secondary" component="span" sx={{ display: 'block' }}>
-                            {t('boughtFrom')}: {sellerName} · Qty: {order.quantity ?? 1} · {t('status')}:{' '}
-                            {order.status ? (
-                              <Tooltip title={t(`statusMeaning_${order.status}`)} placement="top" enterTouchDelay={0} leaveTouchDelay={5000}>
-                                <Box component="span" sx={{ borderBottom: '1px dotted currentColor', cursor: 'help' }}>{statusLabel}</Box>
-                              </Tooltip>
-                            ) : (
-                              statusLabel
+              <>
+                <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 1 }}>
+                  {t('newestFirst')}
+                </Typography>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                  {boughtSorted.map((order) => {
+                    const paidWithCard = order.transaction?.externalId != null;
+                    const sellerName = order.seller?.nickname ?? order.seller?.email ?? '—';
+                    const statusLabel = order.status ? t(`status_${order.status}`) : '—';
+                    const unread = unreadByOrderId[order.id] ?? 0;
+                    return (
+                      <Card
+                        key={order.id}
+                        variant="outlined"
+                        sx={
+                          unread > 0
+                            ? { borderLeft: '4px solid', borderLeftColor: 'primary.main', bgcolor: (theme) => `${theme.palette.primary.main}08` }
+                            : {}
+                        }
+                      >
+                        <CardActionArea component={Link} href={`/${locale}/dashboard/orders/${order.id}`}>
+                          <CardContent sx={{ py: 2, px: 2 }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+                              <Typography variant="subtitle1" fontWeight={600}>
+                                {order.offer?.title ?? order.id?.slice(0, 8)}
+                              </Typography>
+                              {unread > 0 && (
+                                <Badge badgeContent={unread} color="error" max={99}>
+                                  <Typography variant="caption" color="error.main" fontWeight={600}>
+                                    {t('unreadMessages')}
+                                  </Typography>
+                                </Badge>
+                              )}
+                            </Box>
+                            <Typography variant="body2" color="text.secondary" component="span" sx={{ display: 'block' }}>
+                              {t('boughtFrom')}: {sellerName} · Qty: {formatOrderQty(order)} · {t('status')}:{' '}
+                              {order.status ? (
+                                <Tooltip title={t(`statusMeaning_${order.status}`)} placement="top" enterTouchDelay={0} leaveTouchDelay={5000}>
+                                  <Box component="span" sx={{ borderBottom: '1px dotted currentColor', cursor: 'help' }}>{statusLabel}</Box>
+                                </Tooltip>
+                              ) : (
+                                statusLabel
+                              )}
+                            </Typography>
+                            {order.createdAt && (
+                              <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5 }}>
+                                {t('orderDate')}: {new Date(order.createdAt).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}
+                              </Typography>
                             )}
-                          </Typography>
-                          <Typography variant="body2" color="primary.main" fontWeight={600} sx={{ mt: 1 }}>
-                            {t('youPaid')}: {Number(order.buyerAmount ?? 0).toFixed(2)} {order.buyerCurrency ?? ''}
-                            {' — '}
-                            {paidWithCard ? t('paidWithCard') : t('paidWithBalance')}
-                          </Typography>
-                          <Button size="small" sx={{ mt: 1 }} component="span">
-                            {t('openChat')}
-                          </Button>
-                        </CardContent>
-                      </CardActionArea>
-                    </Card>
-                  );
-                })}
-              </Box>
+                            <Typography variant="body2" color="primary.main" fontWeight={600} sx={{ mt: 1 }}>
+                              {t('youPaid')}: {Number(order.buyerAmount ?? 0).toFixed(2)} {order.buyerCurrency ?? ''}
+                              {' — '}
+                              {paidWithCard ? t('paidWithCard') : t('paidWithBalance')}
+                            </Typography>
+                            <Button size="small" sx={{ mt: 1 }} component="span">
+                              {t('openChat')}
+                            </Button>
+                          </CardContent>
+                        </CardActionArea>
+                      </Card>
+                    );
+                  })}
+                </Box>
+              </>
             )}
           </Box>
         )}
@@ -207,42 +261,70 @@ export default function MyOrdersPage() {
             {sold.length === 0 ? (
               <Typography color="text.secondary">{t('noSales')}</Typography>
             ) : (
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-                {sold.map((order) => {
-                  const payoutToCard = order.transaction?.externalId != null;
-                  const buyerName = order.buyer?.nickname ?? order.buyer?.email ?? '—';
-                  const statusLabel = order.status ? t(`status_${order.status}`) : '—';
-                  return (
-                    <Card key={order.id} variant="outlined">
-                      <CardActionArea component={Link} href={`/${locale}/dashboard/orders/${order.id}`}>
-                        <CardContent sx={{ py: 2, px: 2 }}>
-                          <Typography variant="subtitle1" fontWeight={600}>
-                            {order.offer?.title ?? order.id?.slice(0, 8)}
-                          </Typography>
-                          <Typography variant="body2" color="text.secondary" component="span" sx={{ display: 'block' }}>
-                            {t('soldTo')}: {buyerName} · Qty: {order.quantity ?? 1} · {t('status')}:{' '}
-                            {order.status ? (
-                              <Tooltip title={t(`statusMeaning_${order.status}`)} placement="top" enterTouchDelay={0} leaveTouchDelay={5000}>
-                                <Box component="span" sx={{ borderBottom: '1px dotted currentColor', cursor: 'help' }}>{statusLabel}</Box>
-                              </Tooltip>
-                            ) : (
-                              statusLabel
+              <>
+                <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 1 }}>
+                  {t('newestFirst')}
+                </Typography>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                  {soldSorted.map((order) => {
+                    const payoutToCard = order.transaction?.externalId != null;
+                    const buyerName = order.buyer?.nickname ?? order.buyer?.email ?? '—';
+                    const statusLabel = order.status ? t(`status_${order.status}`) : '—';
+                    const unread = unreadByOrderId[order.id] ?? 0;
+                    return (
+                      <Card
+                        key={order.id}
+                        variant="outlined"
+                        sx={
+                          unread > 0
+                            ? { borderLeft: '4px solid', borderLeftColor: 'primary.main', bgcolor: (theme) => `${theme.palette.primary.main}08` }
+                            : {}
+                        }
+                      >
+                        <CardActionArea component={Link} href={`/${locale}/dashboard/orders/${order.id}`}>
+                          <CardContent sx={{ py: 2, px: 2 }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+                              <Typography variant="subtitle1" fontWeight={600}>
+                                {order.offer?.title ?? order.id?.slice(0, 8)}
+                              </Typography>
+                              {unread > 0 && (
+                                <Badge badgeContent={unread} color="error" max={99}>
+                                  <Typography variant="caption" color="error.main" fontWeight={600}>
+                                    {t('unreadMessages')}
+                                  </Typography>
+                                </Badge>
+                              )}
+                            </Box>
+                            <Typography variant="body2" color="text.secondary" component="span" sx={{ display: 'block' }}>
+                              {t('soldTo')}: {buyerName} · Qty: {formatOrderQty(order)} · {t('status')}:{' '}
+                              {order.status ? (
+                                <Tooltip title={t(`statusMeaning_${order.status}`)} placement="top" enterTouchDelay={0} leaveTouchDelay={5000}>
+                                  <Box component="span" sx={{ borderBottom: '1px dotted currentColor', cursor: 'help' }}>{statusLabel}</Box>
+                                </Tooltip>
+                              ) : (
+                                statusLabel
+                              )}
+                            </Typography>
+                            {order.createdAt && (
+                              <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5 }}>
+                                {t('orderDate')}: {new Date(order.createdAt).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}
+                              </Typography>
                             )}
-                          </Typography>
-                          <Typography variant="body2" color="primary.main" fontWeight={600} sx={{ mt: 1 }}>
-                            {t('youReceive')}: {Number(order.sellerAmount ?? 0).toFixed(2)} {order.sellerCurrency ?? ''}
-                            {' — '}
-                            {payoutToCard ? t('toCard') : t('toBalance')}
-                          </Typography>
-                          <Button size="small" sx={{ mt: 1 }} component="span">
-                            {t('openChat')}
-                          </Button>
-                        </CardContent>
-                      </CardActionArea>
-                    </Card>
-                  );
-                })}
-              </Box>
+                            <Typography variant="body2" color="primary.main" fontWeight={600} sx={{ mt: 1 }}>
+                              {t('youReceive')}: {Number(order.sellerAmount ?? 0).toFixed(2)} {order.sellerCurrency ?? ''}
+                              {' — '}
+                              {payoutToCard ? t('toCard') : t('toBalance')}
+                            </Typography>
+                            <Button size="small" sx={{ mt: 1 }} component="span">
+                              {t('openChat')}
+                            </Button>
+                          </CardContent>
+                        </CardActionArea>
+                      </Card>
+                    );
+                  })}
+                </Box>
+              </>
             )}
           </Box>
         )}
