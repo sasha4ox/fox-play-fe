@@ -31,7 +31,9 @@
     "emailAlreadyRegistered": "This email is already registered.",
     "nicknameRequired": "Nickname is required.",
     "loginSuccess": "You are logged in.",
-    "registerSuccess": "Account created. You are logged in."
+    "registerSuccess": "Account created. You are logged in.",
+    "or": "or",
+    "googleSignInError": "Google sign-in failed. Please try again."
   },
   "Header": {
     "home": "Home",

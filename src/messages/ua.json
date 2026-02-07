@@ -31,7 +31,9 @@
     "emailAlreadyRegistered": "Цей email вже зареєстровано.",
     "nicknameRequired": "Нікнейм обов'язковий.",
     "loginSuccess": "Ви увійшли в акаунт.",
-    "registerSuccess": "Акаунт створено. Ви увійшли."
+    "registerSuccess": "Акаунт створено. Ви увійшли.",
+    "or": "або",
+    "googleSignInError": "Увійти через Google не вдалося. Спробуйте ще раз."
   },
   "Header": {
     "home": "Головна",
