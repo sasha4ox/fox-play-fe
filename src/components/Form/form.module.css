@@ -54,6 +54,24 @@
     }
 }
 
+/* Google Sign-In: full-width container, soften default button look */
+.googleBtnWrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.googleBtnContainer {
+  width: 100% !important;
+  display: flex !important;
+  justify-content: center !important;
+}
+
+.googleBtnContainer iframe {
+  width: 100% !important;
+  min-width: 100% !important;
+}
+
 @media (max-width: 950px) {
   .formWrapper {
     width: 100%;

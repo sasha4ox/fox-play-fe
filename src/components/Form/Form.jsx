@@ -5,6 +5,8 @@ import TextField from '@mui/material/TextField';
 import Alert from '@mui/material/Alert';
 import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
+import Box from '@mui/material/Box';
+import Divider from '@mui/material/Divider';
 import { useForm, Controller } from 'react-hook-form';
 import { useTranslations } from 'next-intl';
 import { useLocale } from 'next-intl';
@@ -246,20 +248,39 @@ export default function Form({ popupMode = false, onLoginSuccess }) {
         </Button>
         {googleClientId && (
           <>
-            <Typography variant="body2" color="text.secondary" sx={{ my: 1.5, textAlign: 'center' }}>
-              {t('or')}
-            </Typography>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 8 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, width: '100%', my: 2 }}>
+              <Divider flexItem sx={{ borderColor: 'divider' }} />
+              <Typography variant="body2" color="text.secondary" sx={{ flexShrink: 0 }}>
+                {t('or')}
+              </Typography>
+              <Divider flexItem sx={{ borderColor: 'divider' }} />
+            </Box>
+            <Box
+              className={styles.googleBtnWrapper}
+              sx={{
+                width: '100%',
+                borderRadius: 2,
+                overflow: 'hidden',
+                border: '1px solid',
+                borderColor: 'divider',
+                bgcolor: 'action.hover',
+                '&:hover': { bgcolor: 'action.selected' },
+              }}
+            >
               <GoogleLogin
                 onSuccess={handleGoogleSuccess}
                 onError={handleGoogleError}
                 useOneTap={false}
-                theme="filled_black"
-                size="medium"
+                theme="outline"
+                size="large"
                 text="continue_with"
                 shape="rectangular"
+                containerProps={{
+                  style: { width: '100%', minHeight: 48 },
+                  className: styles.googleBtnContainer,
+                }}
               />
-            </div>
+            </Box>
           </>
         )}
         <Button type="button" variant="text" color="secondary" fullWidth onClick={handleChangeForm} sx={{ mt: 1 }}>
