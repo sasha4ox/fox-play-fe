@@ -226,6 +226,11 @@ export async function createDepositOrder({ amount, returnUrl, cancelUrl, provide
   return apiPost('/me/deposit/create', body, token)
 }
 
+/** Withdraw UAH to bank account via WayForPay Account2Account. body: { amount, currency: 'UAH', iban, okpo, accountName, description? }. Requires WayForPay configured. */
+export async function createWithdraw(body, token) {
+  return apiPost('/me/withdraw', body, token)
+}
+
 /** My orders as buyer (auth required) */
 export async function getMyOrdersAsBuyer(token) {
   return apiGet('/orders/me/buyer', token)
