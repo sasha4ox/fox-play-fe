@@ -55,6 +55,11 @@ export default function BalancePage() {
   const [withdrawLoading, setWithdrawLoading] = useState(false);
   const [withdrawError, setWithdrawError] = useState(null);
   const [withdrawSuccess, setWithdrawSuccess] = useState(null);
+  const [withdrawWbAmount, setWithdrawWbAmount] = useState('');
+  const [withdrawWbIban, setWithdrawWbIban] = useState('');
+  const [withdrawWbFirstName, setWithdrawWbFirstName] = useState('');
+  const [withdrawWbLastName, setWithdrawWbLastName] = useState('');
+  const [withdrawWbTin, setWithdrawWbTin] = useState('');
 
   const handleLoadDepositInfo = () => {
     if (!token) return;
@@ -128,6 +133,45 @@ export default function BalancePage() {
         setWithdrawOkpo('');
         setWithdrawAccountName('');
         setWithdrawDescription('');
+        refetch();
+      })
+      .catch((e) => setWithdrawError(e.message || t('withdrawFailed')))
+      .finally(() => setWithdrawLoading(false));
+  };
+
+  const handleWithdrawWhitebit = () => {
+    if (!token || !profile?.whitebitEnabled) return;
+    const amount = parseFloat(withdrawWbAmount);
+    if (!Number.isFinite(amount) || amount < 1) {
+      setWithdrawError(t('withdrawRequiredWhitebit'));
+      return;
+    }
+    if (uahAvailable < amount) {
+      setWithdrawError(t('withdrawInsufficient'));
+      return;
+    }
+    const iban = withdrawWbIban.trim();
+    const firstName = withdrawWbFirstName.trim();
+    const lastName = withdrawWbLastName.trim();
+    const tin = withdrawWbTin.replace(/\D/g, '');
+    if (!iban || !firstName || !lastName || tin.length !== 10) {
+      setWithdrawError(t('withdrawRequiredWhitebit'));
+      return;
+    }
+    setWithdrawError(null);
+    setWithdrawSuccess(null);
+    setWithdrawLoading(true);
+    createWithdraw(
+      { amount, currency: 'UAH', iban, provider: 'whitebit', firstName, lastName, tin },
+      token,
+    )
+      .then(() => {
+        setWithdrawSuccess(t('withdrawSuccess'));
+        setWithdrawWbAmount('');
+        setWithdrawWbIban('');
+        setWithdrawWbFirstName('');
+        setWithdrawWbLastName('');
+        setWithdrawWbTin('');
         refetch();
       })
       .catch((e) => setWithdrawError(e.message || t('withdrawFailed')))
@@ -479,6 +523,90 @@ export default function BalancePage() {
                       color="primary"
                       onClick={handleWithdraw}
                       disabled={withdrawLoading || uahAvailable < 0.01}
+                      sx={{ textTransform: 'none' }}
+                    >
+                      {withdrawLoading ? t('withdrawSubmitting') : t('withdrawSubmit')}
+                    </Button>
+                  </CardContent>
+                </Card>
+              </Box>
+            )}
+
+            {profile?.whitebitEnabled && (
+              <Box sx={{ mt: 4 }}>
+                <Typography variant="h6" fontWeight={600} gutterBottom>
+                  {t('withdrawWhitebitTitle')}
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                  {t('withdrawWhitebitHint')}
+                </Typography>
+                {uahBalance != null && (
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                    {t('totalIn', { currency: 'UAH' })}: {uahAvailable.toFixed(2)} UAH
+                  </Typography>
+                )}
+                {withdrawSuccess && (
+                  <Alert severity="success" sx={{ mb: 2 }} onClose={() => setWithdrawSuccess(null)}>
+                    {withdrawSuccess}
+                  </Alert>
+                )}
+                {withdrawError && (
+                  <Alert severity="error" sx={{ mb: 2 }} onClose={() => setWithdrawError(null)}>
+                    {withdrawError}
+                  </Alert>
+                )}
+                <Card variant="outlined" sx={{ maxWidth: 480 }}>
+                  <CardContent>
+                    <TextField
+                      type="number"
+                      label={t('withdrawAmount')}
+                      value={withdrawWbAmount}
+                      onChange={(e) => setWithdrawWbAmount(e.target.value)}
+                      inputProps={{ min: 1, step: 1 }}
+                      size="small"
+                      fullWidth
+                      sx={{ mb: 2 }}
+                    />
+                    <TextField
+                      label={t('withdrawIban')}
+                      placeholder={t('withdrawIbanPlaceholder')}
+                      value={withdrawWbIban}
+                      onChange={(e) => setWithdrawWbIban(e.target.value)}
+                      size="small"
+                      fullWidth
+                      sx={{ mb: 2 }}
+                    />
+                    <TextField
+                      label={t('withdrawFirstName')}
+                      value={withdrawWbFirstName}
+                      onChange={(e) => setWithdrawWbFirstName(e.target.value)}
+                      size="small"
+                      fullWidth
+                      sx={{ mb: 2 }}
+                    />
+                    <TextField
+                      label={t('withdrawLastName')}
+                      value={withdrawWbLastName}
+                      onChange={(e) => setWithdrawWbLastName(e.target.value)}
+                      size="small"
+                      fullWidth
+                      sx={{ mb: 2 }}
+                    />
+                    <TextField
+                      label={t('withdrawTin')}
+                      placeholder={t('withdrawTinPlaceholder')}
+                      value={withdrawWbTin}
+                      onChange={(e) => setWithdrawWbTin(e.target.value)}
+                      inputProps={{ maxLength: 10 }}
+                      size="small"
+                      fullWidth
+                      sx={{ mb: 2 }}
+                    />
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      onClick={handleWithdrawWhitebit}
+                      disabled={withdrawLoading || uahAvailable < 1}
                       sx={{ textTransform: 'none' }}
                     >
                       {withdrawLoading ? t('withdrawSubmitting') : t('withdrawSubmit')}

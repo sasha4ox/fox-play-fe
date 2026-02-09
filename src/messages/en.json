@@ -134,7 +134,14 @@
     "withdrawSuccess": "Withdrawal submitted successfully. Funds will be sent to your account.",
     "withdrawFailed": "Withdrawal failed. Try again or contact support.",
     "withdrawInsufficient": "Insufficient UAH balance.",
-    "withdrawRequired": "Amount, IBAN, OKPO and account name are required."
+    "withdrawRequired": "Amount, IBAN, OKPO and account name are required.",
+    "withdrawWhitebitTitle": "Withdraw via WhiteBIT (UAH)",
+    "withdrawWhitebitHint": "Withdraw UAH to a Ukrainian IBAN. Beneficiary first name, last name and TIN (10 digits) are required.",
+    "withdrawFirstName": "First name (beneficiary)",
+    "withdrawLastName": "Last name (beneficiary)",
+    "withdrawTin": "TIN / ЄДРПОУ (10 digits)",
+    "withdrawTinPlaceholder": "1234567890",
+    "withdrawRequiredWhitebit": "Amount, IBAN, first name, last name and TIN (10 digits) are required."
   },
   "Orders": {
     "chats": "Chats",

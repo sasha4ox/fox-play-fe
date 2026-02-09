@@ -134,7 +134,14 @@
     "withdrawSuccess": "Заявку на виведення прийнято. Кошти будуть переказані на ваш рахунок.",
     "withdrawFailed": "Виведення не вдалося. Спробуйте ще раз або зверніться в підтримку.",
     "withdrawInsufficient": "Недостатньо UAH на балансі.",
-    "withdrawRequired": "Потрібні сума, IBAN, ЄДРПОУ та назва отримувача."
+    "withdrawRequired": "Потрібні сума, IBAN, ЄДРПОУ та назва отримувача.",
+    "withdrawWhitebitTitle": "Виведення через WhiteBIT (UAH)",
+    "withdrawWhitebitHint": "Виведення UAH на український IBAN. Потрібні ім'я, прізвище та ІПН/ЄДРПОУ (10 цифр).",
+    "withdrawFirstName": "Ім'я (отримувач)",
+    "withdrawLastName": "Прізвище (отримувач)",
+    "withdrawTin": "ІПН / ЄДРПОУ (10 цифр)",
+    "withdrawTinPlaceholder": "1234567890",
+    "withdrawRequiredWhitebit": "Потрібні сума, IBAN, ім'я, прізвище та ІПН/ЄДРПОУ (10 цифр)."
   },
   "Orders": {
     "chats": "Чати",
