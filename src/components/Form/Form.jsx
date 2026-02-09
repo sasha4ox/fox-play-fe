@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import TextField from '@mui/material/TextField';
 import Alert from '@mui/material/Alert';
 import Button from '@mui/material/Button';
@@ -11,11 +11,11 @@ import { useForm, Controller } from 'react-hook-form';
 import { useTranslations } from 'next-intl';
 import { useLocale } from 'next-intl';
 import { redirect } from 'next/navigation';
-import { GoogleLogin } from '@react-oauth/google';
 import { useAuthStore } from '@/store/authStore';
 import styles from './form.module.css';
 
 const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '';
+const getApiBase = () => process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
 const conriesToShow = [
                     // EU
@@ -67,6 +67,16 @@ export default function Form({ popupMode = false, onLoginSuccess }) {
 
   const setAuth = useAuthStore((s) => s.setAuth);
 
+  useEffect(() => {
+    try {
+      const err = typeof sessionStorage !== 'undefined' && sessionStorage.getItem('googleSignInError');
+      if (err) {
+        sessionStorage.removeItem('googleSignInError');
+        setAuthError(err);
+      }
+    } catch (_) {}
+  }, []);
+
   const getAuthErrorMessage = (responseBody) => {
     const msg = responseBody?.error?.message ?? responseBody?.message ?? '';
     if (/invalid credentials/i.test(msg)) return t('invalidCredentials');
@@ -99,32 +109,14 @@ export default function Form({ popupMode = false, onLoginSuccess }) {
     }
   };
 
-  const handleGoogleSuccess = async (credentialResponse) => {
-    const credential = credentialResponse?.credential;
-    if (!credential) return;
+  // Redirect flow: no iframe; user is sent to Google then back with token
+  const handleGoogleRedirect = () => {
     setAuthError(null);
-    const response = await fetch('/api/google', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ credential }),
-    });
-    const res = await response.json();
-    if (response.ok && res?.token) {
-      const user = res.user ?? {};
-      setAuth(user, res.token);
-      setAuthSuccess(t('loginSuccess'));
-      if (popupMode && onLoginSuccess) {
-        onLoginSuccess();
-        return;
-      }
-      redirect(`/${locale}/dashboard`);
-    } else {
-      setAuthError(res?.message || getAuthErrorMessage(res));
-    }
-  };
-
-  const handleGoogleError = () => {
-    setAuthError(t('googleSignInError'));
+    const returnUrl = typeof window !== 'undefined'
+      ? `${window.location.origin}/${locale}/dashboard`
+      : '';
+    const url = `${getApiBase()}/auth/google?returnUrl=${encodeURIComponent(returnUrl)}`;
+    window.location.href = url;
   };
 
   const handleRegister = async (data) => {
@@ -255,32 +247,21 @@ export default function Form({ popupMode = false, onLoginSuccess }) {
               </Typography>
               <Divider flexItem sx={{ borderColor: 'divider' }} />
             </Box>
-            <Box
-              className={styles.googleBtnWrapper}
+            <Button
+              type="button"
+              variant="outlined"
+              fullWidth
+              onClick={handleGoogleRedirect}
               sx={{
-                width: '100%',
-                borderRadius: 2,
-                overflow: 'hidden',
-                border: '1px solid',
+                textTransform: 'none',
+                py: 1.5,
                 borderColor: 'divider',
-                bgcolor: 'action.hover',
-                '&:hover': { bgcolor: 'action.selected' },
+                color: 'text.primary',
+                '&:hover': { borderColor: 'text.secondary', bgcolor: 'action.hover' },
               }}
             >
-              <GoogleLogin
-                onSuccess={handleGoogleSuccess}
-                onError={handleGoogleError}
-                useOneTap={false}
-                theme="outline"
-                size="large"
-                text="continue_with"
-                shape="rectangular"
-                containerProps={{
-                  style: { width: '100%', minHeight: 48 },
-                  className: styles.googleBtnContainer,
-                }}
-              />
-            </Box>
+              {t('continueWithGoogle')}
+            </Button>
           </>
         )}
         <Button type="button" variant="text" color="secondary" fullWidth onClick={handleChangeForm} sx={{ mt: 1 }}>

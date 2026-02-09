@@ -33,7 +33,8 @@
     "loginSuccess": "Ви увійшли в акаунт.",
     "registerSuccess": "Акаунт створено. Ви увійшли.",
     "or": "або",
-    "googleSignInError": "Увійти через Google не вдалося. Спробуйте ще раз."
+    "googleSignInError": "Увійти через Google не вдалося. Спробуйте ще раз.",
+    "continueWithGoogle": "Продовжити з Google"
   },
   "Header": {
     "home": "Головна",

@@ -33,7 +33,8 @@
     "loginSuccess": "You are logged in.",
     "registerSuccess": "Account created. You are logged in.",
     "or": "or",
-    "googleSignInError": "Google sign-in failed. Please try again."
+    "googleSignInError": "Google sign-in failed. Please try again.",
+    "continueWithGoogle": "Continue with Google"
   },
   "Header": {
     "home": "Home",
