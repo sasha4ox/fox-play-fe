@@ -41,6 +41,12 @@ export default async function CryptoRiskPage({ params }) {
       <Typography variant="body1" component="div" sx={{ whiteSpace: 'pre-line', mb: 2 }}>
         {t('cryptoRisks')}
       </Typography>
+      <Typography variant="body1" component="div" sx={{ whiteSpace: 'pre-line', mb: 2 }}>
+        {t('highRiskIntro')}
+      </Typography>
+      <Typography variant="body1" component="div" sx={{ whiteSpace: 'pre-line', mb: 2 }}>
+        {t('notInvestmentAdvice')}
+      </Typography>
       <Typography variant="body1" component="div" sx={{ whiteSpace: 'pre-line' }}>
         {t('disclaimer')}
       </Typography>

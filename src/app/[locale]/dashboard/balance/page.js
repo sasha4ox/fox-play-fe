@@ -101,44 +101,6 @@ export default function BalancePage() {
   const uahBalance = balances.find((b) => b.currency === 'UAH');
   const uahAvailable = uahBalance ? Number(uahBalance.available) : 0;
 
-  const handleWithdraw = () => {
-    if (!token || !profile?.wayforpayEnabled) return;
-    const amount = parseFloat(withdrawAmount);
-    if (!Number.isFinite(amount) || amount < 0.01) {
-      setWithdrawError(t('withdrawRequired'));
-      return;
-    }
-    if (uahAvailable < amount) {
-      setWithdrawError(t('withdrawInsufficient'));
-      return;
-    }
-    const iban = withdrawIban.trim();
-    const okpo = withdrawOkpo.trim();
-    const accountName = withdrawAccountName.trim();
-    if (!iban || !okpo || !accountName) {
-      setWithdrawError(t('withdrawRequired'));
-      return;
-    }
-    setWithdrawError(null);
-    setWithdrawSuccess(null);
-    setWithdrawLoading(true);
-    createWithdraw(
-      { amount, currency: 'UAH', iban, okpo, accountName, description: withdrawDescription.trim() || undefined },
-      token,
-    )
-      .then(() => {
-        setWithdrawSuccess(t('withdrawSuccess'));
-        setWithdrawAmount('');
-        setWithdrawIban('');
-        setWithdrawOkpo('');
-        setWithdrawAccountName('');
-        setWithdrawDescription('');
-        refetch();
-      })
-      .catch((e) => setWithdrawError(e.message || t('withdrawFailed')))
-      .finally(() => setWithdrawLoading(false));
-  };
-
   const handleWithdrawWhitebit = () => {
     if (!token || !profile?.whitebitEnabled) return;
     const amount = parseFloat(withdrawWbAmount);
@@ -446,90 +408,6 @@ export default function BalancePage() {
                   )}
                 </CardContent>
               </Card>
-            )}
-
-            {profile?.wayforpayEnabled && (
-              <Box sx={{ mt: 4 }}>
-                <Typography variant="h6" fontWeight={600} gutterBottom>
-                  {t('withdrawTitle')}
-                </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                  {t('withdrawHint')}
-                </Typography>
-                {uahBalance != null && (
-                  <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                    {t('totalIn', { currency: 'UAH' })}: {uahAvailable.toFixed(2)} UAH
-                  </Typography>
-                )}
-                {withdrawSuccess && (
-                  <Alert severity="success" sx={{ mb: 2 }} onClose={() => setWithdrawSuccess(null)}>
-                    {withdrawSuccess}
-                  </Alert>
-                )}
-                {withdrawError && (
-                  <Alert severity="error" sx={{ mb: 2 }} onClose={() => setWithdrawError(null)}>
-                    {withdrawError}
-                  </Alert>
-                )}
-                <Card variant="outlined" sx={{ maxWidth: 480 }}>
-                  <CardContent>
-                    <TextField
-                      type="number"
-                      label={t('withdrawAmount')}
-                      value={withdrawAmount}
-                      onChange={(e) => setWithdrawAmount(e.target.value)}
-                      inputProps={{ min: 0.01, step: 0.01 }}
-                      size="small"
-                      fullWidth
-                      sx={{ mb: 2 }}
-                    />
-                    <TextField
-                      label={t('withdrawIban')}
-                      placeholder={t('withdrawIbanPlaceholder')}
-                      value={withdrawIban}
-                      onChange={(e) => setWithdrawIban(e.target.value)}
-                      size="small"
-                      fullWidth
-                      sx={{ mb: 2 }}
-                    />
-                    <TextField
-                      label={t('withdrawOkpo')}
-                      placeholder={t('withdrawOkpoPlaceholder')}
-                      value={withdrawOkpo}
-                      onChange={(e) => setWithdrawOkpo(e.target.value)}
-                      size="small"
-                      fullWidth
-                      sx={{ mb: 2 }}
-                    />
-                    <TextField
-                      label={t('withdrawAccountName')}
-                      placeholder={t('withdrawAccountNamePlaceholder')}
-                      value={withdrawAccountName}
-                      onChange={(e) => setWithdrawAccountName(e.target.value)}
-                      size="small"
-                      fullWidth
-                      sx={{ mb: 2 }}
-                    />
-                    <TextField
-                      label={t('withdrawDescription')}
-                      value={withdrawDescription}
-                      onChange={(e) => setWithdrawDescription(e.target.value)}
-                      size="small"
-                      fullWidth
-                      sx={{ mb: 2 }}
-                    />
-                    <Button
-                      variant="contained"
-                      color="primary"
-                      onClick={handleWithdraw}
-                      disabled={withdrawLoading || uahAvailable < 0.01}
-                      sx={{ textTransform: 'none' }}
-                    >
-                      {withdrawLoading ? t('withdrawSubmitting') : t('withdrawSubmit')}
-                    </Button>
-                  </CardContent>
-                </Card>
-              </Box>
             )}
 
             {profile?.whitebitEnabled && (

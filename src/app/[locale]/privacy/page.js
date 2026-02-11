@@ -49,8 +49,15 @@ export default async function PrivacyPage({ params }) {
       <Typography variant="h6" component="h2" fontWeight={600} gutterBottom>
         {t('dataSharingTitle')}
       </Typography>
-      <Typography variant="body1" component="div" sx={{ whiteSpace: 'pre-line' }}>
+      <Typography variant="body1" component="div" sx={{ whiteSpace: 'pre-line', mb: 3 }}>
         {t('dataSharingList')}
+      </Typography>
+
+      <Typography variant="h6" component="h2" fontWeight={600} gutterBottom>
+        {t('kycAmlTitle')}
+      </Typography>
+      <Typography variant="body1" component="div" sx={{ whiteSpace: 'pre-line' }}>
+        {t('kycAmlContent')}
       </Typography>
     </Container>
   );

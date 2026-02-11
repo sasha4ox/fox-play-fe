@@ -121,7 +121,7 @@
     "getTestCredit": "Get {amount} {currency} test credit",
     "testCreditFailed": "Failed to add test credit",
     "withdrawTitle": "Withdraw to bank (UAH)",
-    "withdrawHint": "Withdraw UAH from your balance to a Ukrainian settlement account (IBAN) via WayForPay.",
+    "withdrawHint": "Withdraw UAH from your balance to a Ukrainian settlement account (IBAN) via WhiteBIT.",
     "withdrawAmount": "Amount (UAH)",
     "withdrawIban": "IBAN",
     "withdrawIbanPlaceholder": "UA123456789012345678901234567",
@@ -167,14 +167,14 @@
     "paymentSuccessMessage": "Payment successful. Your order is in the list below.",
     "paymentProcessingMessage": "Payment is being processed. Your order will appear in the list shortly.",
     "paymentDeclinedMessage": "Payment was declined. You can try again or add funds from Balance.",
-    "paymentDeclinedCode": "WayForPay code",
+    "paymentDeclinedCode": "Error code",
     "paymentDeclinedCode1113": "Invalid signature",
     "paymentDeclinedCode1109": "Format error (check merchant settings)",
     "paymentDeclinedCode1115": "Required parameter missing"
   },
   "Sales": {
     "title": "My orders",
-    "hint": "What you bought and sold. See where money comes from: balance (coins) or card (Fondy).",
+    "hint": "What you bought and sold. See where money comes from: balance (coins).",
     "dashboard": "← Dashboard",
     "loginToSee": "Log in to see your orders.",
     "tabBought": "Bought",
@@ -186,9 +186,9 @@
     "youPaid": "You paid",
     "youReceive": "You receive",
     "paidWithBalance": "from balance (coins)",
-    "paidWithCard": "with card (Fondy)",
+    "paidWithCard": "with card",
     "toBalance": "to balance (coins)",
-    "toCard": "to card (Fondy)",
+    "toCard": "to card",
     "openChat": "Open chat",
     "status": "Status",
     "filterByStatus": "Filter by status",
@@ -232,9 +232,9 @@
     "youReceive": "You receive",
     "youPay": "You pay",
     "toBalance": "to your balance (coins)",
-    "toCard": "to your card (Fondy)",
+    "toCard": "to your card",
     "fromBalance": "from balance (coins)",
-    "fromCard": "with card (Fondy)",
+    "fromCard": "with card",
     "youGiveToBuyer": "You give to buyer",
     "youGetFromSeller": "You get from seller",
     "buyerInGameNick": "Buyer in-game nick",
@@ -354,8 +354,7 @@
     "yourInGameNick": "Your in-game character nickname",
     "toBeReceived": "To be received",
     "payWithBalance": "Pay with balance",
-    "payByCard": "Pay by card (Fondy)",
-    "payByCardWayforpay": "Pay by card (WayForPay)",
+    "payByCard": "Pay by card",
     "orPayByCard": "Or use «Pay by card» below to pay with a card.",
     "quantity": "Quantity",
     "buyNow": "Buy now",
@@ -492,7 +491,7 @@
     "s7Title": "Commission",
     "s7Content": "The Operator is entitled to charge a commission for use of the Platform.\n\nThe commission may include:\n\ncommission on conclusion of a deal;\ncommission on payment processing;\ncommission on payouts.",
     "s8Title": "User verification (KYC/AML)",
-    "s8Content": "The Platform may require users to undergo identification procedures.\n\nIdentification may be carried out through third-party partners.\n\nThe user agrees to the transfer of personal data to partners to the extent necessary to comply with legal requirements.",
+    "s8Content": "The Platform may require users to undergo identification procedures.\n\nIdentification may be carried out through third-party partners.\n\nThe user agrees to the transfer of personal data to partners to the extent necessary to comply with legal requirements.\n\nUser must complete identity verification (KYC) before performing financial operations beyond test transactions. Verification includes:\n• identity confirmation (passport/ID card/driver's license);\n• proof of address (utility bill or bank statement);\n• current selfie with document to verify face matches document;\n• other requirements in accordance with applicable law.\n\nFailure to comply with these requirements may result in blocking of access to the Platform's financial functions.",
     "s9Title": "Fraud prevention",
     "s9Content": "The Platform may:\n\nblock suspicious transactions;\nsuspend payouts;\nrequire additional identity verification.",
     "s10Title": "Disputes",
@@ -508,7 +507,8 @@
     "backToHome": "← Back to home",
     "intro": "The Platform complies with international AML/KYC standards.",
     "approach": "The Operator applies a risk-based approach.",
-    "platformMay": "The Platform may:\n\n• monitor transactions;\n• require documents proving the origin of funds;\n• block suspicious operations;\n• disclose information to competent authorities."
+    "platformMay": "The Platform may:\n\n• monitor transactions;\n• require documents proving the origin of funds;\n• block suspicious operations;\n• disclose information to competent authorities.",
+    "userAgreement": "The Platform implements an anti-money laundering (AML) and counter-terrorism financing (CTF) policy. Users agree to:\n• transaction monitoring in accordance with AML/CTF standards;\n• provision of requested information/documents for risk assessment;\n• temporary suspension of operations until verification is complete.\n\nNon-compliance with these requirements may result in blocking of the account."
   },
   "Privacy": {
     "title": "PRIVACY POLICY",
@@ -518,7 +518,9 @@
     "purposeTitle": "Purpose of processing:",
     "purposeList": "• performance of deals;\n• fraud prevention;\n• compliance with legal requirements.",
     "dataSharingTitle": "Data may be disclosed to:",
-    "dataSharingList": "• payment providers;\n• identification services;\n• regulatory authorities."
+    "dataSharingList": "• payment providers;\n• identification services;\n• regulatory authorities.",
+    "kycAmlTitle": "Data processing for KYC/AML",
+    "kycAmlContent": "We collect and process your personal data for:\n• identity verification (KYC);\n• compliance with AML/CTF requirements;\n• fraud prevention and other risk mitigation;\n• disclosure to partner verification services.\n\nThis processing is carried out in accordance with applicable personal data protection legislation."
   },
   "CryptoRisk": {
     "title": "CRYPTO RISK DISCLOSURE",
@@ -526,11 +528,13 @@
     "backToHome": "← Back to home",
     "awareness": "The user acknowledges that crypto assets:",
     "cryptoRisks": "• are highly volatile;\n• may be irreversibly lost;\n• are not covered by state insurance.",
+    "highRiskIntro": "Crypto assets are a high-risk financial product. You may:\n• lose the entire value of the asset;\n• experience volatile price movements;\n• face technical or regulatory risks.",
+    "notInvestmentAdvice": "This page is not investment advice.",
     "disclaimer": "The Platform is not liable for loss of crypto assets."
   },
   "Disclaimer": {
     "title": "MARKETPLACE DISCLAIMER",
     "backToHome": "← Back to home",
-    "content": "The Platform is a technological intermediary.\n\nThe Operator is not affiliated with video game developers.\n\nAll transactions are conducted between users."
+    "content": "The Platform is a technological intermediary.\n\nThe Operator is not affiliated with video game developers.\n\nAll transactions are conducted between users.\n\nThe Platform does not provide financial, legal, or investment advice. Nothing on this site should be construed as an offer or recommendation to buy or sell crypto assets or other financial products."
   }
 }

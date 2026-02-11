@@ -41,8 +41,11 @@ export default async function AmlCompliancePage({ params }) {
       <Typography variant="body1" component="div" sx={{ whiteSpace: 'pre-line', mb: 2 }}>
         {t('approach')}
       </Typography>
-      <Typography variant="body1" component="div" sx={{ whiteSpace: 'pre-line' }}>
+      <Typography variant="body1" component="div" sx={{ whiteSpace: 'pre-line', mb: 2 }}>
         {t('platformMay')}
+      </Typography>
+      <Typography variant="body1" component="div" sx={{ whiteSpace: 'pre-line' }}>
+        {t('userAgreement')}
       </Typography>
     </Container>
   );

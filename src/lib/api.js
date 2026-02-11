@@ -136,25 +136,6 @@ export async function createOrder(body, token) {
   return apiPost('/orders', body, token)
 }
 
-/** Fondy checkout: hold on card. Returns { checkoutUrl, pendingId }; redirect user to checkoutUrl. */
-export async function createFondyCheckout(body, token) {
-  return apiPost('/fondy/checkout', body, token)
-}
-
-/** WayForPay checkout: hold on card. Returns { postUrl, params, pendingId }; frontend POSTs form to postUrl. */
-export async function createWayforpayCheckout(body, token) {
-  return apiPost('/wayforpay/checkout', body, token)
-}
-
-/** WayForPay order status by reference (public, for polling after redirect). Returns { orderId } or { status: 'processing' | 'failed' }. */
-export async function getWayforpayOrderStatus(orderReference) {
-  const base = getApiBase()
-  const url = `${base}/wayforpay/order-status?orderReference=${encodeURIComponent(orderReference)}`
-  const res = await fetch(url, { method: 'GET', headers: { Accept: 'application/json' } })
-  const data = await res.json().catch(() => ({}))
-  return data
-}
-
 /** Profile: user + balances in preferred currency (auth required) */
 export async function getProfile(token) {
   return apiGet('/me', token)
@@ -226,7 +207,7 @@ export async function createDepositOrder({ amount, returnUrl, cancelUrl, provide
   return apiPost('/me/deposit/create', body, token)
 }
 
-/** Withdraw UAH to bank account via WayForPay Account2Account. body: { amount, currency: 'UAH', iban, okpo, accountName, description? }. Requires WayForPay configured. */
+/** Withdraw UAH to bank via WhiteBIT. body: { amount, currency: 'UAH', iban, provider: 'whitebit', firstName, lastName, tin }. Requires WhiteBIT configured. */
 export async function createWithdraw(body, token) {
   return apiPost('/me/withdraw', body, token)
 }

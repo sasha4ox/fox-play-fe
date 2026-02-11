@@ -6,7 +6,7 @@ const intlMiddleware = createMiddleware({
   defaultLocale: 'en'
 });
 
-/** Fix bad redirects like /ua/en/dashboard/... -> /ua/dashboard/... (Fondy redirect had double locale). */
+/** Fix bad redirects like /ua/en/dashboard/... -> /ua/dashboard/... */
 export default function middleware(request) {
   const pathname = request.nextUrl.pathname;
   const badMatch = pathname.match(/^\/(en|ua)\/(en|ua)(\/.*|$)/);
