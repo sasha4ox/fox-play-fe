@@ -19,11 +19,14 @@ pnpm install
 
 ### 2. Environment
 
-Create `.env.local` in the project root:
+Copy `.env.example` to `.env.local` and fill in:
 
 ```env
 # Backend API – local dev
 NEXT_PUBLIC_API_URL=http://localhost:8080
+
+# Google sign-in – optional; see foxplay/docs/GOOGLE_OAUTH_SETUP.md
+# NEXT_PUBLIC_GOOGLE_CLIENT_ID=your-client-id.apps.googleusercontent.com
 
 # Optional
 NEXT_PUBLIC_APP_URL=https://your-app.vercel.app
@@ -51,6 +54,7 @@ Open **http://localhost:3000**. You’ll be redirected to a locale (e.g. `/en`).
    | Variable                    | Value                                 | Notes                                                                                               |
    | --------------------------- | ------------------------------------- | --------------------------------------------------------------------------------------------------- |
    | `NEXT_PUBLIC_API_URL`       | `https://your-backend.up.railway.app` | Your **Railway backend** URL (no trailing slash). Required so the app can call `/games`, auth, etc. |
+   | `NEXT_PUBLIC_GOOGLE_CLIENT_ID` | Your Google OAuth client ID          | Optional; for "Continue with Google". See backend docs `GOOGLE_OAUTH_SETUP.md`. |
    | `NEXT_PUBLIC_APP_URL`       | `https://your-app.vercel.app`         | Optional; your Vercel app URL.                                                                      |
    | `NEXT_PUBLIC_LOCAL_APP_URL` | `http://localhost:3000`               | Optional; for local.                                                                                |
 

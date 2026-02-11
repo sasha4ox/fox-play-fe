@@ -10,12 +10,12 @@ import Divider from '@mui/material/Divider';
 import { useForm, Controller } from 'react-hook-form';
 import { useTranslations } from 'next-intl';
 import { useLocale } from 'next-intl';
-import { redirect } from 'next/navigation';
+import { redirect, useRouter } from 'next/navigation';
+import { GoogleLogin } from '@react-oauth/google';
 import { useAuthStore } from '@/store/authStore';
 import styles from './form.module.css';
 
 const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '';
-const getApiBase = () => process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
 const conriesToShow = [
                     // EU
@@ -56,6 +56,7 @@ export default function Form({ popupMode = false, onLoginSuccess }) {
     },
   });
   const locale = useLocale();
+  const router = useRouter();
   const t = useTranslations('Form');
 
   const handleChangeForm = () => {
@@ -109,14 +110,31 @@ export default function Form({ popupMode = false, onLoginSuccess }) {
     }
   };
 
-  // Redirect flow: no iframe; user is sent to Google then back with token
-  const handleGoogleRedirect = () => {
+  // Popup/iframe flow: Google returns credential (id_token) in-page; we send to backend
+  const handleGoogleCredential = async (credentialResponse) => {
     setAuthError(null);
-    const returnUrl = typeof window !== 'undefined'
-      ? `${window.location.origin}/${locale}/dashboard`
-      : '';
-    const url = `${getApiBase()}/auth/google?returnUrl=${encodeURIComponent(returnUrl)}`;
-    window.location.href = url;
+    try {
+      const res = await fetch('/api/google', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ credential: credentialResponse.credential }),
+      });
+      const data = await res.json();
+      if (res.ok && data?.token) {
+        const user = data.user ?? { id: data.userId, email: data.email, nickname: data.nickname };
+        setAuth(user, data.token);
+        setAuthSuccess(t('loginSuccess'));
+        if (popupMode && onLoginSuccess) {
+          onLoginSuccess();
+          return;
+        }
+        router.push(`/${locale}/dashboard`);
+      } else {
+        setAuthError(getAuthErrorMessage(data) || t('googleSignInError'));
+      }
+    } catch (err) {
+      setAuthError(t('googleSignInError'));
+    }
   };
 
   const handleRegister = async (data) => {
@@ -247,21 +265,20 @@ export default function Form({ popupMode = false, onLoginSuccess }) {
               </Typography>
               <Divider flexItem sx={{ borderColor: 'divider' }} />
             </Box>
-            <Button
-              type="button"
-              variant="outlined"
-              fullWidth
-              onClick={handleGoogleRedirect}
-              sx={{
-                textTransform: 'none',
-                py: 1.5,
-                borderColor: 'divider',
-                color: 'text.primary',
-                '&:hover': { borderColor: 'text.secondary', bgcolor: 'action.hover' },
-              }}
-            >
-              {t('continueWithGoogle')}
-            </Button>
+            <div className={styles.googleBtnWrapper}>
+              <div className={styles.googleBtnContainer}>
+                <GoogleLogin
+                  onSuccess={handleGoogleCredential}
+                  onError={() => setAuthError(t('googleSignInError'))}
+                  theme="outline"
+                  size="large"
+                  text="continue_with"
+                  shape="rectangular"
+                  width="100%"
+                  locale={locale === 'ua' ? 'uk' : 'en'}
+                />
+              </div>
+            </div>
           </>
         )}
         <Button type="button" variant="text" color="secondary" fullWidth onClick={handleChangeForm} sx={{ mt: 1 }}>

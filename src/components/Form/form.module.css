@@ -54,22 +54,29 @@
     }
 }
 
-/* Google Sign-In: full-width container, soften default button look */
+/* Google Sign-In: match primary button height and radius */
 .googleBtnWrapper {
   display: flex;
   justify-content: center;
   align-items: center;
+  width: 100%;
+  min-height: 48px;
+  overflow: hidden;
+  border-radius: 10px;
 }
 
 .googleBtnContainer {
   width: 100% !important;
+  min-height: 48px !important;
   display: flex !important;
   justify-content: center !important;
+  align-items: center !important;
 }
 
 .googleBtnContainer iframe {
   width: 100% !important;
   min-width: 100% !important;
+  min-height: 48px !important;
 }
 
 @media (max-width: 950px) {
