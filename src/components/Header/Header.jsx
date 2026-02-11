@@ -473,6 +473,13 @@ export default function Header() {
           </Button>
         )
       })}
+      <Divider sx={{ my: 1 }} />
+      <Box sx={{ px: 2, py: 1 }}>
+        <Typography variant="caption" color="text.secondary">{t('language')}</Typography>
+        <Box sx={{ mt: 0.5 }}>
+          <LocaleSwitcher />
+        </Box>
+      </Box>
       {isAuth && (
         <>
           <Divider sx={{ my: 1 }} />
@@ -528,12 +535,6 @@ export default function Header() {
               </Button>
             </Box>
           </Box>
-          <Box sx={{ px: 2, py: 1 }}>
-            <Typography variant="caption" color="text.secondary">{t('language')}</Typography>
-            <Box sx={{ mt: 0.5 }}>
-              <LocaleSwitcher />
-            </Box>
-          </Box>
           <Divider sx={{ my: 1 }} />
           <Button fullWidth sx={{ justifyContent: 'flex-start', px: 2, py: 1.5 }} onClick={handleLogout} startIcon={<LogoutIcon />}>
             {t('logout')}
@@ -559,6 +560,8 @@ export default function Header() {
       position="static"
       elevation={0}
       sx={{
+        width: '100%',
+        maxWidth: '100%',
         bgcolor: 'background.paper',
         color: 'text.primary',
         borderBottom: 1,
@@ -585,10 +588,10 @@ export default function Header() {
                 alignItems: 'center',
                 justifyContent: 'center',
                 fontWeight: 700,
-                fontSize: 18,
+                fontSize: 16,
               }}
             >
-              F
+              FP
             </Box>
             {!isMobile && (
               <Typography variant="h6" component="span" fontWeight={700} sx={{ letterSpacing: '-0.02em' }}>
@@ -609,9 +612,16 @@ export default function Header() {
           {isAuth ? (
             <UserMenu />
           ) : (
-            <Button size="small" variant="outlined" color="secondary" sx={{ textTransform: 'none' }} onClick={() => openLoginModal()}>
-              {t('login')}
-            </Button>
+            <>
+              {!isMobile && (
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  <LocaleSwitcher />
+                </Box>
+              )}
+              <Button size="small" variant="outlined" color="secondary" sx={{ textTransform: 'none' }} onClick={() => openLoginModal()}>
+                {t('login')}
+              </Button>
+            </>
           )}
         </Box>
       </Toolbar>

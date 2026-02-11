@@ -46,7 +46,7 @@
     "profile": "Profile",
     "logout": "Logout",
     "login": "Login",
-    "foxPlay": "Fox Play",
+    "foxPlay": "FoxyPlay",
     "themeLight": "Light",
     "themeDark": "Dark",
     "theme": "Theme",
@@ -463,5 +463,74 @@
     "serverName": "Server name",
     "add": "Add",
     "cancel": "Cancel"
+  },
+  "Footer": {
+    "brand": "FoxyPlay",
+    "termsOfService": "Terms of Service",
+    "amlCompliance": "AML & Compliance",
+    "privacy": "Privacy Policy",
+    "cryptoRisk": "Crypto Risk",
+    "disclaimer": "Disclaimer"
+  },
+  "Terms": {
+    "title": "TERMS OF SERVICE",
+    "subtitle": "Terms of Use of the Platform",
+    "effectiveDate": "Effective date",
+    "backToHome": "← Back to home",
+    "s1Title": "General provisions",
+    "s1Content": "These Terms of Use (the \"Terms\") govern access to and use of the FoxyPlay online platform (the \"Platform\").\n\nThe Operator of the Platform is:\n\nIndividual entrepreneur\nLysytsia Oleksandr\nCountry of registration: Ukraine\n(the \"Operator\")\n\nThe Platform provides exclusively information and technical services.\n\nUse of the Platform constitutes the User's full and unconditional acceptance of these Terms.",
+    "s2Title": "Nature of the Platform's activity",
+    "s2Content": "The Platform is a technological service that enables interaction between users for concluding transactions in respect of digital goods.\n\nThe Operator:\n\nis not a seller or buyer of goods;\nis not a financial institution;\ndoes not provide payment or banking services;\ndoes not hold users' funds or crypto assets.\n\nThe Platform only provides technical processing of transactions related to the performance of deals.",
+    "s3Title": "Subject of transactions",
+    "s3Content": "Users may enter into transactions in respect of:\n\ndigital in-game items;\ngame currency;\naccounts;\ngame-related services.\n\nThe Operator does not guarantee the lawfulness of use of digital assets in video games and is not liable for sanctions imposed by third parties.",
+    "s4Title": "Payments and use of crypto assets",
+    "s4Content": "Crypto assets may be used solely as a means of payment for the Platform's services and for the performance of deals between users.\n\nThe Platform:\n\ndoes not manage users' crypto assets;\ndoes not provide crypto asset custody services;\ndoes not open user accounts or e-wallets.\n\nCrypto assets are accepted only in connection with a specific deal.\n\nPayments in crypto assets may be irreversible.",
+    "s5Title": "Performance of deals",
+    "s5Content": "After payment is confirmed:\n\nThe Platform records payment for the deal.\nThe seller performs their obligations.\nThe buyer confirms receipt of the goods.\n\nPayout to the seller is made after confirmation of performance of the deal or automatically upon expiry of the set period.",
+    "s6Title": "Temporary holding of crypto assets",
+    "s6Content": "In the course of performing a deal, the Platform may temporarily hold crypto assets for technical purposes solely to secure performance of the deal.\n\nSuch holding:\n\nis not an asset custody service;\nis limited in time;\nis carried out only in the framework of the specific transaction.",
+    "s7Title": "Commission",
+    "s7Content": "The Operator is entitled to charge a commission for use of the Platform.\n\nThe commission may include:\n\ncommission on conclusion of a deal;\ncommission on payment processing;\ncommission on payouts.",
+    "s8Title": "User verification (KYC/AML)",
+    "s8Content": "The Platform may require users to undergo identification procedures.\n\nIdentification may be carried out through third-party partners.\n\nThe user agrees to the transfer of personal data to partners to the extent necessary to comply with legal requirements.",
+    "s9Title": "Fraud prevention",
+    "s9Content": "The Platform may:\n\nblock suspicious transactions;\nsuspend payouts;\nrequire additional identity verification.",
+    "s10Title": "Disputes",
+    "s10Content": "The user may submit a complaint regarding performance of a deal.\n\nThe Platform may make a final decision on the dispute.\n\nAfter a payout has been completed, disputes are not accepted.",
+    "s11Title": "Prohibited conduct",
+    "s11Content": "Users are prohibited from:\n\nusing stolen accounts;\nmanipulating transactions;\nmoney laundering;\nviolating the law.",
+    "s12Title": "Limitation of liability",
+    "s12Content": "The Operator is not liable for:\n\nusers' actions;\nblocking of accounts in video games;\nloss of digital assets;\ntechnical failures of third parties."
+  },
+  "AmlCompliance": {
+    "title": "AML & COMPLIANCE POLICY",
+    "subtitle": "Anti‑money laundering and counter‑terrorism financing policy",
+    "backToHome": "← Back to home",
+    "intro": "The Platform complies with international AML/KYC standards.",
+    "approach": "The Operator applies a risk-based approach.",
+    "platformMay": "The Platform may:\n\n• monitor transactions;\n• require documents proving the origin of funds;\n• block suspicious operations;\n• disclose information to competent authorities."
+  },
+  "Privacy": {
+    "title": "PRIVACY POLICY",
+    "subtitle": "GDPR-oriented",
+    "backToHome": "← Back to home",
+    "intro": "The Platform processes personal data in accordance with GDPR principles.",
+    "purposeTitle": "Purpose of processing:",
+    "purposeList": "• performance of deals;\n• fraud prevention;\n• compliance with legal requirements.",
+    "dataSharingTitle": "Data may be disclosed to:",
+    "dataSharingList": "• payment providers;\n• identification services;\n• regulatory authorities."
+  },
+  "CryptoRisk": {
+    "title": "CRYPTO RISK DISCLOSURE",
+    "subtitle": "Crypto asset risk warning",
+    "backToHome": "← Back to home",
+    "awareness": "The user acknowledges that crypto assets:",
+    "cryptoRisks": "• are highly volatile;\n• may be irreversibly lost;\n• are not covered by state insurance.",
+    "disclaimer": "The Platform is not liable for loss of crypto assets."
+  },
+  "Disclaimer": {
+    "title": "MARKETPLACE DISCLAIMER",
+    "backToHome": "← Back to home",
+    "content": "The Platform is a technological intermediary.\n\nThe Operator is not affiliated with video game developers.\n\nAll transactions are conducted between users."
   }
 }
