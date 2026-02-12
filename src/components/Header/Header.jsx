@@ -218,7 +218,7 @@ export default function Header() {
   ];
 
   const NavBlock = () => (
-    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25, flexWrap: 'wrap' }}>
       {navLinks.map(({ href, label, active, badge }) => (
         <Link key={href + label} href={href} style={{ textDecoration: 'none' }}>
           <Badge
@@ -227,18 +227,29 @@ export default function Header() {
             invisible={!(badge > 0)}
             sx={{
               '& .MuiBadge-badge': {
-                right: 2,
-                top: 4,
+                right: 1,
+                top: 2,
+                fontSize: '0.65rem',
+                minWidth: 16,
+                height: 16,
               },
             }}
           >
             <Button
+              size="small"
               sx={{
-                color: 'text.primary',
+                color: active ? 'primary.main' : 'text.secondary',
                 fontWeight: active ? 600 : 500,
-                '&:hover': { bgcolor: 'action.hover' },
-                px: 1.5,
+                fontSize: '0.8125rem',
+                px: 1.25,
+                py: 0.5,
                 minWidth: 0,
+                borderRadius: 2,
+                bgcolor: active ? 'action.selected' : 'transparent',
+                '&:hover': {
+                  bgcolor: active ? 'action.selected' : 'action.hover',
+                  color: active ? 'primary.main' : 'text.primary',
+                },
               }}
             >
               {label}

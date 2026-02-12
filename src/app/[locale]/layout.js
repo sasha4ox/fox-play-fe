@@ -6,6 +6,8 @@ import { setRequestLocale } from 'next-intl/server';
 import Header from '@/components/Header/Header';
 import Footer from '@/components/Footer/Footer';
 import LoginModal from '@/components/LoginModal/LoginModal';
+import CookieConsent from '@/components/CookieConsent/CookieConsent';
+import ConditionalAnalytics from '@/components/ConditionalAnalytics/ConditionalAnalytics';
 import Providers from '@/components/Providers/Providers';
 import GoogleAuthReturnHandler from '@/components/GoogleAuthReturnHandler';
 import "./globals.css";
@@ -50,6 +52,8 @@ export default async function RootLayout({ children, params }) {
               <main style={{ flex: 1 }}>{children}</main>
               <Footer />
               <LoginModal />
+              <CookieConsent />
+              <ConditionalAnalytics />
             </div>
           </NextIntlClientProvider>
         </Providers>

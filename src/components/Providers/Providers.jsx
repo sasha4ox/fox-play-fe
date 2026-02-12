@@ -6,6 +6,7 @@ import CssBaseline from '@mui/material/CssBaseline';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { useThemeStore } from '@/store/themeStore';
 import { getTheme } from '@/theme/theme';
+import { CookieConsentProvider } from '@/contexts/CookieConsentContext';
 
 const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '';
 
@@ -33,7 +34,9 @@ export default function Providers({ children }) {
   const content = (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      {children}
+      <CookieConsentProvider>
+        {children}
+      </CookieConsentProvider>
     </ThemeProvider>
   );
 
