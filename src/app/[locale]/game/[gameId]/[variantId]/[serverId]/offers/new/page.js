@@ -29,7 +29,7 @@ export default function NewOfferPage() {
   const t = useTranslations('NewOffer');
   const tOffers = useTranslations('Offers');
   const gameId = params?.gameId;
-  const OFFER_TYPES = [
+  const ALL_OFFER_TYPES = [
     { value: 'ADENA', label: tOffers('adena') },
     { value: 'ITEMS', label: tOffers('items') },
     { value: 'ACCOUNTS', label: tOffers('accounts') },
@@ -42,6 +42,13 @@ export default function NewOfferPage() {
   const game = tree ? getGameFromTree(tree, gameId) : null;
   const variant = tree ? getVariantFromTree(tree, gameId, variantId) : null;
   const server = tree ? getServerFromTree(tree, gameId, variantId, serverId) : null;
+  const serverTypes = server?.enabledOfferTypes && server.enabledOfferTypes.length > 0
+    ? server.enabledOfferTypes
+    : null;
+  const allowedOfferTypes = serverTypes ?? [...ALL_OFFER_TYPES.map((t) => t.value), ...(server?.customCategories?.map((c) => c.id) ?? [])];
+  const standardTabs = ALL_OFFER_TYPES.filter((t) => allowedOfferTypes.includes(t.value));
+  const customTabs = (server?.customCategories ?? []).map((c) => ({ value: c.id, label: c.name, custom: true }));
+  const OFFER_TYPES = [...standardTabs, ...customTabs];
   const token = useAuthStore((s) => s.token);
   const { preferredCurrency } = useProfile();
   const currency = preferredCurrency ?? 'EUR';
@@ -57,8 +64,10 @@ export default function NewOfferPage() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
 
-  const offerType = OFFER_TYPES[tab]?.value ?? 'OTHER';
-  const isAdena = offerType === 'ADENA';
+  const selectedTab = OFFER_TYPES[tab];
+  const offerType = selectedTab?.custom ? 'OTHER' : (selectedTab?.value ?? 'OTHER');
+  const customCategoryId = selectedTab?.custom ? selectedTab.value : null;
+  const isAdena = !selectedTab?.custom && selectedTab?.value === 'ADENA';
 
   const MIN_KK = 1;
   const MIN_PRICE_PER_100KK = 0.01;
@@ -91,6 +100,7 @@ export default function NewOfferPage() {
       description: isAdena ? `Selling ${formatAdena(quantityNum)} adena` : description,
       quantity: quantityNum,
       price: priceNum,
+      ...(customCategoryId && { customCategoryId }),
     };
     try {
       await createOffer(payload, token);
@@ -151,8 +161,8 @@ export default function NewOfferPage() {
         </Alert>
 
         <Tabs value={tab} onChange={(_, v) => setTab(v)} sx={{ mb: 2 }}>
-          {OFFER_TYPES.map((t, i) => (
-            <Tab key={t.value} label={t.label} value={i} />
+          {OFFER_TYPES.map((tabItem, i) => (
+            <Tab key={tabItem.value} label={tabItem.label} value={i} />
           ))}
         </Tabs>
 

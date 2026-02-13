@@ -15,6 +15,7 @@ import Alert from '@mui/material/Alert';
 import { useGames } from '@/hooks/useGames';
 import { useAuthStore } from '@/store/authStore';
 import { getRecentServers } from '@/lib/api';
+import { getFlatGameOfferTarget } from '@/lib/games';
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -37,8 +38,13 @@ export default function DashboardPage() {
       .finally(() => setRecentLoading(false));
   }, [token]);
 
-  const handleGameClick = (gameId) => {
-    router.push(`/${locale}/game/${gameId}`);
+  const handleGameClick = (game) => {
+    const target = getFlatGameOfferTarget(game);
+    if (target) {
+      router.push(`/${locale}/game/${game.id}/${target.variantId}/${target.serverId}/offers`);
+    } else {
+      router.push(`/${locale}/game/${game.id}`);
+    }
   };
 
   return (
@@ -128,7 +134,7 @@ export default function DashboardPage() {
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}>
             {games.map((game) => (
               <Card key={game.id} variant="outlined">
-                <CardActionArea onClick={() => handleGameClick(game.id)}>
+                <CardActionArea onClick={() => handleGameClick(game)}>
                   <CardContent sx={{ py: 3, px: 3 }}>
                     <Typography variant="h6" fontWeight={500} color="text.primary">
                       {game.name}

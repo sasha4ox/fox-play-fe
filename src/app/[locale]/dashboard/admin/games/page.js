@@ -8,11 +8,16 @@ import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
 import Switch from '@mui/material/Switch';
+import FormControl from '@mui/material/FormControl';
 import FormControlLabel from '@mui/material/FormControlLabel';
+import InputLabel from '@mui/material/InputLabel';
+import Select from '@mui/material/Select';
+import MenuItem from '@mui/material/MenuItem';
+import Card from '@mui/material/Card';
+import Chip from '@mui/material/Chip';
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
 import ListItemText from '@mui/material/ListItemText';
-import ListItemSecondaryAction from '@mui/material/ListItemSecondaryAction';
 import Collapse from '@mui/material/Collapse';
 import IconButton from '@mui/material/IconButton';
 import AddIcon from '@mui/icons-material/Add';
@@ -33,7 +38,11 @@ import {
   adminCreateGame,
   adminCreateVariant,
   adminCreateServer,
+  adminCreateServerCustomCategory,
+  adminDeleteServerCustomCategory,
 } from '@/lib/api';
+
+const STANDARD_OFFER_TYPES = ['ADENA', 'ITEMS', 'ACCOUNTS', 'BOOSTING', 'OTHER'];
 
 export default function AdminGamesPage() {
   const t = useTranslations('Admin');
@@ -49,6 +58,9 @@ export default function AdminGamesPage() {
   const [addVariantName, setAddVariantName] = useState('');
   const [addServerOpen, setAddServerOpen] = useState(null);
   const [addServerName, setAddServerName] = useState('');
+  const [addCategoryOpen, setAddCategoryOpen] = useState(null); // serverId
+  const [addCategoryName, setAddCategoryName] = useState('');
+  const [addGameStructureType, setAddGameStructureType] = useState('FULL');
   const [submitting, setSubmitting] = useState(false);
 
   const load = () => {
@@ -69,6 +81,24 @@ export default function AdminGamesPage() {
     if (!token) return;
     setSubmitting(true);
     adminUpdateGame(gameId, { enabled }, token)
+      .then(load)
+      .catch((e) => setError(e.message || 'Failed to update'))
+      .finally(() => setSubmitting(false));
+  };
+
+  const handleGameStructureType = (gameId, structureType) => {
+    if (!token) return;
+    setSubmitting(true);
+    adminUpdateGame(gameId, { structureType }, token)
+      .then(load)
+      .catch((e) => setError(e.message || 'Failed to update'))
+      .finally(() => setSubmitting(false));
+  };
+
+  const handleServerOfferTypes = (serverId, enabledOfferTypes) => {
+    if (!token) return;
+    setSubmitting(true);
+    adminUpdateServer(serverId, { enabledOfferTypes }, token)
       .then(load)
       .catch((e) => setError(e.message || 'Failed to update'))
       .finally(() => setSubmitting(false));
@@ -95,10 +125,11 @@ export default function AdminGamesPage() {
   const handleAddGame = () => {
     if (!token || !addGameName.trim()) return;
     setSubmitting(true);
-    adminCreateGame({ name: addGameName.trim() }, token)
+    adminCreateGame({ name: addGameName.trim(), structureType: addGameStructureType }, token)
       .then(() => {
         setAddGameOpen(false);
         setAddGameName('');
+        setAddGameStructureType('FULL');
         load();
       })
       .catch((e) => setError(e.message || 'Failed to create game'))
@@ -133,10 +164,49 @@ export default function AdminGamesPage() {
       .finally(() => setSubmitting(false));
   };
 
+  const handleAddCustomCategory = () => {
+    const serverId = addCategoryOpen;
+    if (!token || !serverId || !addCategoryName.trim()) return;
+    setSubmitting(true);
+    adminCreateServerCustomCategory(serverId, { name: addCategoryName.trim() }, token)
+      .then(() => {
+        setAddCategoryOpen(null);
+        setAddCategoryName('');
+        load();
+      })
+      .catch((e) => setError(e.message || 'Failed to create category'))
+      .finally(() => setSubmitting(false));
+  };
+
+  const handleDeleteCustomCategory = (id) => {
+    if (!token) return;
+    setSubmitting(true);
+    adminDeleteServerCustomCategory(id, token)
+      .then(load)
+      .catch((e) => setError(e.message || 'Failed to delete category'))
+      .finally(() => setSubmitting(false));
+  };
+
+  const getCategoryLabel = (typeOrId, server) => {
+    if (STANDARD_OFFER_TYPES.includes(typeOrId)) {
+      return t(`offerType${typeOrId.charAt(0) + typeOrId.slice(1).toLowerCase()}`);
+    }
+    const custom = server?.customCategories?.find((c) => c.id === typeOrId);
+    return custom?.name ?? typeOrId;
+  };
+
+  const getAllCategoriesForServer = (server) => {
+    const standard = STANDARD_OFFER_TYPES.map((id) => ({ id, name: id }));
+    const custom = (server?.customCategories ?? []).map((c) => ({ id: c.id, name: c.name }));
+    return [...standard, ...custom];
+  };
+
   return (
-    <Container maxWidth="md">
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2, flexWrap: 'wrap', gap: 1 }}>
-        <Typography variant="h5">{t('games')}</Typography>
+    <Container maxWidth="lg">
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3, flexWrap: 'wrap', gap: 2 }}>
+        <Typography variant="h5" fontWeight={600}>
+          {t('games')}
+        </Typography>
         <Button variant="contained" startIcon={<AddIcon />} onClick={() => setAddGameOpen(true)} disabled={loading}>
           {t('addGame')}
         </Button>
@@ -147,100 +217,214 @@ export default function AdminGamesPage() {
         </Alert>
       )}
       {loading ? (
-        <Skeleton variant="rectangular" height={300} />
+        <Skeleton variant="rounded" height={400} sx={{ borderRadius: 2 }} />
+      ) : games.length === 0 ? (
+        <Card variant="outlined" sx={{ p: 4, textAlign: 'center' }}>
+          <Typography color="text.secondary">{t('noGames')}</Typography>
+        </Card>
       ) : (
-        <List disablePadding>
-          {games.length === 0 ? (
-            <Typography color="text.secondary">{t('noGames')}</Typography>
-          ) : (
-            games.map((game) => (
-              <Box key={game.id}>
-                <ListItem
-                  sx={{ bgcolor: 'action.hover', borderRadius: 1, mb: 0.5 }}
-                  secondaryAction={
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                      <FormControlLabel
-                        control={
-                          <Switch
-                            checked={game.enabled}
-                            onChange={(e) => handleGameEnabled(game.id, e.target.checked)}
-                            disabled={submitting}
-                          />
-                        }
-                        label={t('enabled')}
-                        labelPlacement="start"
-                      />
-                      <IconButton
-                        size="small"
-                        onClick={() => setAddVariantOpen(game.id)}
-                        title={t('addVariant')}
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          {games.map((game) => (
+            <Card key={game.id} variant="outlined" sx={{ overflow: 'hidden', borderRadius: 2 }}>
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  p: 2,
+                  bgcolor: 'action.hover',
+                  flexWrap: 'wrap',
+                  gap: 2,
+                }}
+              >
+                <Typography variant="h6" fontWeight={600}>
+                  {game.name}
+                </Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
+                  <FormControl size="small" sx={{ minWidth: 200 }}>
+                    <InputLabel>{t('structureType')}</InputLabel>
+                    <Select
+                      value={game.structureType ?? 'FULL'}
+                      label={t('structureType')}
+                      onChange={(e) => handleGameStructureType(game.id, e.target.value)}
+                      disabled={submitting}
+                      sx={{ bgcolor: 'background.paper' }}
+                    >
+                      <MenuItem value="FULL">{t('structureFull')}</MenuItem>
+                      <MenuItem value="FLAT">{t('structureFlat')}</MenuItem>
+                    </Select>
+                  </FormControl>
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={game.enabled}
+                        onChange={(e) => handleGameEnabled(game.id, e.target.checked)}
                         disabled={submitting}
+                        color="primary"
+                      />
+                    }
+                    label={t('enabled')}
+                  />
+                  <IconButton
+                    size="small"
+                    onClick={() => setAddVariantOpen(game.id)}
+                    title={t('addVariant')}
+                    disabled={submitting}
+                    sx={{ color: 'primary.main' }}
+                  >
+                    <AddIcon />
+                  </IconButton>
+                  <IconButton
+                    size="small"
+                    onClick={() => setExpandedGame(expandedGame === game.id ? null : game.id)}
+                    aria-label={expandedGame === game.id ? 'Collapse' : 'Expand'}
+                  >
+                    {expandedGame === game.id ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                  </IconButton>
+                </Box>
+              </Box>
+
+              <Collapse in={expandedGame === game.id} timeout="auto">
+                <Box sx={{ p: 2 }}>
+                  {(game.variants || []).map((variant) => (
+                    <Card key={variant.id} variant="outlined" sx={{ mb: 2, borderRadius: 1.5 }}>
+                      <Box
+                        sx={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          p: 1.5,
+                          bgcolor: 'action.hover',
+                          borderRadius: '4px 4px 0 0',
+                        }}
                       >
-                        <AddIcon fontSize="small" />
-                      </IconButton>
-                      <IconButton
-                        size="small"
-                        onClick={() => setExpandedGame(expandedGame === game.id ? null : game.id)}
-                      >
-                        {expandedGame === game.id ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-                      </IconButton>
-                    </Box>
-                  }
-                >
-                  <ListItemText primary={game.name} primaryTypographyProps={{ fontWeight: 600 }} />
-                </ListItem>
-                <Collapse in={expandedGame === game.id} timeout="auto" unmountOnExit>
-                  <List disablePadding sx={{ pl: 2 }}>
-                    {(game.variants || []).map((variant) => (
-                      <Box key={variant.id}>
-                        <ListItem
-                          sx={{ py: 0.5 }}
-                          secondaryAction={
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                              <FormControlLabel
-                                control={
-                                  <Switch
-                                    size="small"
-                                    checked={variant.enabled}
-                                    onChange={(e) => handleVariantEnabled(variant.id, e.target.checked)}
-                                    disabled={submitting}
-                                  />
-                                }
-                                label={t('enabled')}
-                                labelPlacement="start"
-                              />
-                              <IconButton
+                        <Typography variant="subtitle2" fontWeight={600}>
+                          {variant.name}
+                        </Typography>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <FormControlLabel
+                            control={
+                              <Switch
                                 size="small"
-                                onClick={() => setAddServerOpen({ gameId: game.id, variantId: variant.id })}
-                                title={t('addServer')}
+                                checked={variant.enabled}
+                                onChange={(e) => handleVariantEnabled(variant.id, e.target.checked)}
                                 disabled={submitting}
-                              >
-                                <AddIcon fontSize="small" />
-                              </IconButton>
-                              <IconButton
-                                size="small"
-                                onClick={() =>
-                                  setExpandedVariant(expandedVariant === variant.id ? null : variant.id)
-                                }
-                              >
-                                {expandedVariant === variant.id ? (
-                                  <ExpandLessIcon fontSize="small" />
-                                ) : (
-                                  <ExpandMoreIcon fontSize="small" />
-                                )}
-                              </IconButton>
-                            </Box>
-                          }
-                        >
-                          <ListItemText primary={variant.name} primaryTypographyProps={{ variant: 'body2' }} />
-                        </ListItem>
-                        <Collapse in={expandedVariant === variant.id} timeout="auto" unmountOnExit>
-                          <List disablePadding sx={{ pl: 2 }}>
-                            {(variant.servers || []).map((server) => (
+                              />
+                            }
+                            label={t('enabled')}
+                            sx={{ '& .MuiFormControlLabel-label': { fontSize: '0.8rem' } }}
+                          />
+                          <IconButton
+                            size="small"
+                            onClick={() => setAddServerOpen({ gameId: game.id, variantId: variant.id })}
+                            title={t('addServer')}
+                            disabled={submitting}
+                          >
+                            <AddIcon fontSize="small" />
+                          </IconButton>
+                          <IconButton
+                            size="small"
+                            onClick={() =>
+                              setExpandedVariant(expandedVariant === variant.id ? null : variant.id)
+                            }
+                          >
+                            {expandedVariant === variant.id ? (
+                              <ExpandLessIcon fontSize="small" />
+                            ) : (
+                              <ExpandMoreIcon fontSize="small" />
+                            )}
+                          </IconButton>
+                        </Box>
+                      </Box>
+                      <Collapse in={expandedVariant === variant.id}>
+                        <List dense disablePadding>
+                          {(variant.servers || []).map((server) => {
+                            const isAllTypes =
+                              !server.enabledOfferTypes || server.enabledOfferTypes.length === 0;
+                            const selectedTypes = isAllTypes
+                              ? []
+                              : [...(server.enabledOfferTypes || [])];
+                            const allCats = getAllCategoriesForServer(server);
+                            return (
                               <ListItem
                                 key={server.id}
-                                sx={{ py: 0.25 }}
-                                secondaryAction={
+                                sx={{
+                                  borderBottom: '1px solid',
+                                  borderColor: 'divider',
+                                  '&:last-child': { borderBottom: 'none' },
+                                  py: 1.5,
+                                }}
+                              >
+                                <ListItemText
+                                  primary={
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+                                      <span>{server.name}</span>
+                                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                                        {(server.customCategories ?? []).map((cat) => (
+                                          <Chip
+                                            key={cat.id}
+                                            label={cat.name}
+                                            size="small"
+                                            onDelete={() => handleDeleteCustomCategory(cat.id)}
+                                            disabled={submitting}
+                                            sx={{ height: 22, fontSize: '0.7rem' }}
+                                          />
+                                        ))}
+                                        <Chip
+                                          icon={<AddIcon sx={{ fontSize: 14 }} />}
+                                          label={t('addCustomCategory')}
+                                          size="small"
+                                          variant="outlined"
+                                          onClick={() => setAddCategoryOpen(server.id)}
+                                          disabled={submitting}
+                                          sx={{ height: 22, fontSize: '0.7rem' }}
+                                        />
+                                      </Box>
+                                    </Box>
+                                  }
+                                  primaryTypographyProps={{ variant: 'body2', fontWeight: 500 }}
+                                />
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
+                                  <FormControl size="small" sx={{ minWidth: 130 }}>
+                                    <InputLabel>{t('offerCategories')}</InputLabel>
+                                    <Select
+                                      value={isAllTypes ? '__ALL__' : '__CUSTOM__'}
+                                      label={t('offerCategories')}
+                                      onChange={(e) => {
+                                        const v = e.target.value;
+                                        handleServerOfferTypes(
+                                          server.id,
+                                          v === '__ALL__' ? null : selectedTypes.length ? selectedTypes : allCats.map((c) => c.id)
+                                        );
+                                      }}
+                                      disabled={submitting}
+                                      sx={{ height: 36 }}
+                                    >
+                                      <MenuItem value="__ALL__">{t('offerCategoriesAll')}</MenuItem>
+                                      <MenuItem value="__CUSTOM__">{t('offerCategoriesCustom')}</MenuItem>
+                                    </Select>
+                                  </FormControl>
+                                  {!isAllTypes && (
+                                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                                      {allCats.map(({ id }) => (
+                                        <Chip
+                                          key={id}
+                                          label={getCategoryLabel(id, server)}
+                                          size="small"
+                                          color={selectedTypes.includes(id) ? 'primary' : 'default'}
+                                          variant={selectedTypes.includes(id) ? 'filled' : 'outlined'}
+                                          onClick={() => {
+                                            const next = selectedTypes.includes(id)
+                                              ? selectedTypes.filter((x) => x !== id)
+                                              : [...selectedTypes, id];
+                                            handleServerOfferTypes(server.id, next.length ? next : null);
+                                          }}
+                                          disabled={submitting}
+                                          sx={{ height: 28 }}
+                                        />
+                                      ))}
+                                    </Box>
+                                  )}
                                   <FormControlLabel
                                     control={
                                       <Switch
@@ -251,31 +435,26 @@ export default function AdminGamesPage() {
                                       />
                                     }
                                     label={t('enabled')}
-                                    labelPlacement="start"
+                                    sx={{ '& .MuiFormControlLabel-label': { fontSize: '0.75rem' } }}
                                   />
-                                }
-                              >
-                                <ListItemText
-                                  primary={server.name}
-                                  primaryTypographyProps={{ variant: 'body2', color: 'text.secondary' }}
-                                />
+                                </Box>
                               </ListItem>
-                            ))}
-                          </List>
-                        </Collapse>
-                      </Box>
-                    ))}
-                  </List>
-                </Collapse>
-              </Box>
-            ))
-          )}
-        </List>
+                            );
+                          })}
+                        </List>
+                      </Collapse>
+                    </Card>
+                  ))}
+                </Box>
+              </Collapse>
+            </Card>
+          ))}
+        </Box>
       )}
 
-      <Dialog open={addGameOpen} onClose={() => !submitting && setAddGameOpen(false)}>
+      <Dialog open={addGameOpen} onClose={() => !submitting && setAddGameOpen(false)} maxWidth="xs" fullWidth>
         <DialogTitle>{t('addGame')}</DialogTitle>
-        <DialogContent>
+        <DialogContent sx={{ pt: 1 }}>
           <TextField
             autoFocus
             margin="dense"
@@ -285,6 +464,17 @@ export default function AdminGamesPage() {
             onChange={(e) => setAddGameName(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleAddGame()}
           />
+          <FormControl fullWidth margin="dense">
+            <InputLabel>{t('structureType')}</InputLabel>
+            <Select
+              value={addGameStructureType}
+              label={t('structureType')}
+              onChange={(e) => setAddGameStructureType(e.target.value)}
+            >
+              <MenuItem value="FULL">{t('structureFull')}</MenuItem>
+              <MenuItem value="FLAT">{t('structureFlat')}</MenuItem>
+            </Select>
+          </FormControl>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setAddGameOpen(false)} disabled={submitting}>
@@ -296,7 +486,7 @@ export default function AdminGamesPage() {
         </DialogActions>
       </Dialog>
 
-      <Dialog open={!!addVariantOpen} onClose={() => !submitting && setAddVariantOpen(null)}>
+      <Dialog open={!!addVariantOpen} onClose={() => !submitting && setAddVariantOpen(null)} maxWidth="xs" fullWidth>
         <DialogTitle>{t('addVariant')}</DialogTitle>
         <DialogContent>
           <TextField
@@ -323,7 +513,7 @@ export default function AdminGamesPage() {
         </DialogActions>
       </Dialog>
 
-      <Dialog open={!!addServerOpen} onClose={() => !submitting && setAddServerOpen(null)}>
+      <Dialog open={!!addServerOpen} onClose={() => !submitting && setAddServerOpen(null)} maxWidth="xs" fullWidth>
         <DialogTitle>{t('addServer')}</DialogTitle>
         <DialogContent>
           <TextField
@@ -344,6 +534,34 @@ export default function AdminGamesPage() {
             onClick={handleAddServer}
             variant="contained"
             disabled={submitting || !addServerName.trim()}
+          >
+            {t('add')}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={!!addCategoryOpen} onClose={() => !submitting && setAddCategoryOpen(null)} maxWidth="xs" fullWidth>
+        <DialogTitle>{t('addCustomCategory')}</DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            margin="dense"
+            label={t('customCategoryName')}
+            fullWidth
+            placeholder="e.g. Skins, Coins"
+            value={addCategoryName}
+            onChange={(e) => setAddCategoryName(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleAddCustomCategory()}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setAddCategoryOpen(null)} disabled={submitting}>
+            {t('cancel')}
+          </Button>
+          <Button
+            onClick={handleAddCustomCategory}
+            variant="contained"
+            disabled={submitting || !addCategoryName.trim()}
           >
             {t('add')}
           </Button>

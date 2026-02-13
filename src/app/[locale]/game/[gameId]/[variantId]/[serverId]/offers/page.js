@@ -32,7 +32,7 @@ import { useProfile } from '@/hooks/useProfile';
 import { fetchOffersByServer, addRecentServer } from '@/lib/api';
 import { formatAdena } from '@/lib/adenaFormat';
 
-const OFFER_TYPES = ['ADENA', 'ITEMS', 'ACCOUNTS', 'BOOSTING', 'OTHER'];
+const ALL_OFFER_TYPES = ['ADENA', 'ITEMS', 'ACCOUNTS', 'BOOSTING', 'OTHER'];
 
 export default function GameOffersPage() {
   const params = useParams();
@@ -47,6 +47,10 @@ export default function GameOffersPage() {
   const game = tree ? getGameFromTree(tree, gameId) : null;
   const variant = tree ? getVariantFromTree(tree, gameId, variantId) : null;
   const server = tree ? getServerFromTree(tree, gameId, variantId, serverId) : null;
+  const serverTypes = server?.enabledOfferTypes && server.enabledOfferTypes.length > 0
+    ? server.enabledOfferTypes
+    : null;
+  const allowedOfferTypes = serverTypes ?? [...ALL_OFFER_TYPES, ...(server?.customCategories?.map((c) => c.id) ?? [])];
   const isAuthenticated = useIsAuthenticated();
   const token = useAuthStore((s) => s.token);
   const openLoginModal = useLoginModalStore((s) => s.openModal);
@@ -68,11 +72,17 @@ export default function GameOffersPage() {
   }, [serverId, token]);
 
   useEffect(() => {
+    if (allowedOfferTypes?.length && !allowedOfferTypes.includes(categoryFilter)) {
+      setCategoryFilter(allowedOfferTypes.includes('ADENA') ? 'ADENA' : allowedOfferTypes[0]);
+    }
+  }, [allowedOfferTypes, categoryFilter]);
+
+  useEffect(() => {
     if (!serverId) return;
     setOffersLoading(true);
     setOffersError(null);
     const params = {
-      offerType: categoryFilter || undefined,
+      offerType: categoryFilter || undefined, // can be standard type or custom category UUID
       displayCurrency: token ? undefined : 'USD',
     };
     fetchOffersByServer(serverId, token, params)
@@ -117,7 +127,14 @@ export default function GameOffersPage() {
   const backHref = singleServer ? `/${locale}/game/${gameId}` : `/${locale}/game/${gameId}/${variantId}`;
   const backLabel = singleServer ? t('backToVariants') : t('backToServers');
 
-  const categoryLabel = (type) => (type ? tOffers(type.toLowerCase()) : type);
+  const categoryLabel = (typeOrId) => {
+    if (!typeOrId) return typeOrId;
+    if (ALL_OFFER_TYPES.includes(typeOrId)) return tOffers(typeOrId.toLowerCase());
+    const custom = server?.customCategories?.find((c) => c.id === typeOrId);
+    return custom?.name ?? typeOrId;
+  };
+  const getOfferCategoryLabel = (offer) =>
+    offer?.customCategory?.name ?? categoryLabel(offer?.offerType);
 
   const handleSort = (column) => {
     if (sortBy === column) {
@@ -165,7 +182,7 @@ export default function GameOffersPage() {
             {t('categoryFilter')}:
           </Typography>
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-            {OFFER_TYPES.map((type) => (
+            {allowedOfferTypes.map((type) => (
               <Button
                 key={type}
                 size="small"
@@ -418,7 +435,7 @@ export default function GameOffersPage() {
                                 {offer.title}
                               </Typography>
                               <Typography variant="body2" color="text.secondary" sx={{ mt: 0.25 }}>
-                                {categoryLabel(offer.offerType)}
+                                {getOfferCategoryLabel(offer)}
                                 {seller && ` · ${t('byCreator')} ${sellerName}`}
                               </Typography>
                               <Typography variant="body2" color="primary.main" fontWeight={600} sx={{ mt: 1 }}>

@@ -200,7 +200,7 @@ export default function Header() {
     }
   };
 
-  const isHome = !pathname || pathname === '/' || pathname === `/${locale}` || pathname?.includes('/dashboard');
+  const isHome = !pathname || pathname === '/' || pathname === `/${locale}` || pathname === `/${locale}/`;
 
   const navLinks = [
     { href: base, label: t('home'), active: isHome },

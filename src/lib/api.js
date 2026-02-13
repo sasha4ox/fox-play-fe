@@ -184,7 +184,7 @@ export async function uploadAvatar(formData, token) {
   return res.json()
 }
 
-/** Deposit info for MVP – Binance (auth required). When mock: true, use simulateDeposit for dev. */
+/** Deposit info (auth required). WhiteBIT only. When mock: true, use simulateDeposit for dev. */
 export async function getDepositInfo(token) {
   return apiGet('/me/deposit', token)
 }
@@ -199,7 +199,7 @@ export async function addTestCredit(token) {
   return apiPost('/me/test-credit', {}, token)
 }
 
-/** Create deposit order. Binance: returns { checkoutUrl }. WhiteBIT: pass provider: 'whitebit', currency: 'UAH' (or USD/EUR), returns { depositUrl }. Redirect user to the URL. */
+/** Create deposit order. WhiteBIT: pass provider: 'whitebit', currency: 'UAH' (or USD/EUR), returns { depositUrl }. Redirect user to the URL. */
 export async function createDepositOrder({ amount, returnUrl, cancelUrl, provider, currency }, token) {
   const body = { amount, returnUrl, cancelUrl }
   if (provider) body.provider = provider
@@ -363,6 +363,16 @@ export async function adminCreateVariant(gameId, body, token) {
 /** Create server. body: { name } */
 export async function adminCreateServer(gameId, variantId, body, token) {
   return apiPost(`/admin/games/${gameId}/variants/${variantId}/servers`, body, token)
+}
+
+/** Create custom category for server. body: { name } */
+export async function adminCreateServerCustomCategory(serverId, body, token) {
+  return apiPost(`/admin/servers/${serverId}/custom-categories`, body, token)
+}
+
+/** Delete custom category */
+export async function adminDeleteServerCustomCategory(categoryId, token) {
+  return apiFetch(`/admin/servers/custom-categories/${categoryId}`, { method: 'DELETE' }, token)
 }
 
 /** List users (admin). query: { skip?, take?, banned?: 'true'|'false' } */

@@ -3,6 +3,7 @@
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { useLocale, useTranslations } from 'next-intl';
+import { useEffect } from 'react';
 import Container from '@mui/material/Container';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
@@ -13,7 +14,7 @@ import MuiLink from '@mui/material/Link';
 import CircularProgress from '@mui/material/CircularProgress';
 import Alert from '@mui/material/Alert';
 import { useGames } from '@/hooks/useGames';
-import { getGameFromTree } from '@/lib/games';
+import { getGameFromTree, getFlatGameOfferTarget } from '@/lib/games';
 
 export default function GameVariantsPage() {
   const router = useRouter();
@@ -24,6 +25,16 @@ export default function GameVariantsPage() {
   const game = tree ? getGameFromTree(tree, gameId) : null;
   const t = useTranslations('Game');
   const tCommon = useTranslations('Common');
+
+  // FLAT games: redirect directly to offers (no variant/server picker)
+  useEffect(() => {
+    if (loading || error || !game) return;
+    const target = getFlatGameOfferTarget(game);
+    if (target) {
+      router.replace(`/${locale}/game/${gameId}/${target.variantId}/${target.serverId}/offers`);
+    }
+  }, [loading, error, game, gameId, locale, router]);
+
   const handleVariantClick = (variantId) => {
     router.push(`/${locale}/game/${gameId}/${variantId}`);
   };
