@@ -10,6 +10,8 @@ import CookieConsent from '@/components/CookieConsent/CookieConsent';
 import ConditionalAnalytics from '@/components/ConditionalAnalytics/ConditionalAnalytics';
 import Providers from '@/components/Providers/Providers';
 import GoogleAuthReturnHandler from '@/components/GoogleAuthReturnHandler';
+import CompleteProfileGate from '@/components/CompleteProfileGate/CompleteProfileGate';
+import RecentServersBar from '@/components/RecentServersBar/RecentServersBar';
 import "./globals.css";
 
 const geistSans = Geist({
@@ -47,8 +49,10 @@ export default async function RootLayout({ children, params }) {
             <Suspense fallback={null}>
               <GoogleAuthReturnHandler />
             </Suspense>
+            <CompleteProfileGate />
             <div style={{ width: '100%', minWidth: '100%', maxWidth: '100vw', overflowX: 'hidden', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
               <Header />
+              <RecentServersBar />
               <main style={{ flex: 1 }}>{children}</main>
               <Footer />
               <LoginModal />

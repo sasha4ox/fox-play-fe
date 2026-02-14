@@ -77,6 +77,11 @@
   "LoginModal": {
     "title": "Увійти або зареєструватися"
   },
+  "CompleteProfile": {
+    "title": "Оберіть нікнейм",
+    "description": "Ви увійшли через Google. Встановіть нікнейм, щоб продовжити. Він буде видно іншим користувачам.",
+    "submit": "Продовжити"
+  },
   "Dashboard": {
     "balance": "Баланс",
     "myOrdersChat": "Мої замовлення та чати",
@@ -457,6 +462,7 @@
     "gameName": "Назва гри",
     "variantName": "Назва варіанту",
     "serverName": "Назва сервера",
+    "editServerName": "Редагувати назву сервера",
     "add": "Додати",
     "cancel": "Скасувати",
     "structureType": "Структура",
@@ -476,14 +482,20 @@
   },
   "Footer": {
     "brand": "FoxyPlay",
-    "contactUs": "Contact us",
-    "termsOfService": "Terms of Service",
-    "amlCompliance": "AML & Compliance",
-    "privacy": "Privacy Policy",
-    "cookiePolicy": "Cookie Policy",
-    "cryptoRisk": "Crypto Risk",
-    "disclaimer": "Disclaimer",
-    "cookiePreferences": "Cookie preferences"
+    "tagline": "Маркетплейс ігрових предметів та послуг.",
+    "slogan": "Торгуй. Грай. Вигравай.",
+    "contactUs": "Зв'язатися з нами",
+    "termsOfService": "Умови використання",
+    "amlCompliance": "AML та відповідність",
+    "privacy": "Політика конфіденційності",
+    "cookiePolicy": "Політика cookies",
+    "cryptoRisk": "Ризики крипто",
+    "disclaimer": "Відмова від відповідальності",
+    "cookiePreferences": "Налаштування cookies",
+    "legal": "Правове",
+    "policies": "Політики",
+    "support": "Підтримка",
+    "copyright": "Усі права захищені."
   },
   "CookieConsent": {
     "title": "Ми використовуємо cookies",

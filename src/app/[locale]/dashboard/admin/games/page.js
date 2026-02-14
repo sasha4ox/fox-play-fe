@@ -21,6 +21,7 @@ import ListItemText from '@mui/material/ListItemText';
 import Collapse from '@mui/material/Collapse';
 import IconButton from '@mui/material/IconButton';
 import AddIcon from '@mui/icons-material/Add';
+import EditIcon from '@mui/icons-material/Edit';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import Skeleton from '@mui/material/Skeleton';
@@ -62,6 +63,8 @@ export default function AdminGamesPage() {
   const [addCategoryName, setAddCategoryName] = useState('');
   const [addGameStructureType, setAddGameStructureType] = useState('FULL');
   const [submitting, setSubmitting] = useState(false);
+  const [editServerId, setEditServerId] = useState(null);
+  const [editServerName, setEditServerName] = useState('');
 
   const load = () => {
     if (!token) return;
@@ -119,6 +122,19 @@ export default function AdminGamesPage() {
     adminUpdateServer(serverId, { enabled }, token)
       .then(load)
       .catch((e) => setError(e.message || 'Failed to update'))
+      .finally(() => setSubmitting(false));
+  };
+
+  const handleServerNameChange = (serverId, newName) => {
+    if (!token || !newName?.trim()) return;
+    setSubmitting(true);
+    adminUpdateServer(serverId, { name: newName.trim() }, token)
+      .then(() => {
+        setEditServerId(null);
+        setEditServerName('');
+        load();
+      })
+      .catch((e) => setError(e.message || 'Failed to update server name'))
       .finally(() => setSubmitting(false));
   };
 
@@ -358,28 +374,69 @@ export default function AdminGamesPage() {
                                 <ListItemText
                                   primary={
                                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
-                                      <span>{server.name}</span>
-                                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                                        {(server.customCategories ?? []).map((cat) => (
-                                          <Chip
-                                            key={cat.id}
-                                            label={cat.name}
+                                      {editServerId === server.id ? (
+                                        <TextField
+                                          size="small"
+                                          value={editServerName}
+                                          onChange={(e) => setEditServerName(e.target.value)}
+                                          onKeyDown={(e) => {
+                                            if (e.key === 'Enter') handleServerNameChange(server.id, editServerName);
+                                            if (e.key === 'Escape') {
+                                              setEditServerId(null);
+                                              setEditServerName('');
+                                            }
+                                          }}
+                                          onBlur={() => {
+                                            if (editServerName.trim() && editServerName.trim() !== server.name) {
+                                              handleServerNameChange(server.id, editServerName);
+                                            } else {
+                                              setEditServerId(null);
+                                              setEditServerName('');
+                                            }
+                                          }}
+                                          autoFocus
+                                          sx={{ minWidth: 140, '& .MuiInputBase-input': { py: 0.5 } }}
+                                        />
+                                      ) : (
+                                        <>
+                                          <span>{server.name}</span>
+                                          <IconButton
                                             size="small"
-                                            onDelete={() => handleDeleteCustomCategory(cat.id)}
+                                            onClick={() => {
+                                              setEditServerId(server.id);
+                                              setEditServerName(server.name);
+                                            }}
+                                            title={t('editServerName')}
+                                            disabled={submitting}
+                                            sx={{ color: 'text.secondary', p: 0.25 }}
+                                          >
+                                            <EditIcon sx={{ fontSize: 16 }} />
+                                          </IconButton>
+                                        </>
+                                      )}
+                                      {editServerId !== server.id && (
+                                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                                          {(server.customCategories ?? []).map((cat) => (
+                                            <Chip
+                                              key={cat.id}
+                                              label={cat.name}
+                                              size="small"
+                                              onDelete={() => handleDeleteCustomCategory(cat.id)}
+                                              disabled={submitting}
+                                              sx={{ height: 22, fontSize: '0.7rem' }}
+                                            />
+                                          ))}
+                                          <Chip
+                                            icon={<AddIcon sx={{ fontSize: 14 }} />}
+                                            label={t('addCustomCategory')}
+                                            size="small"
+                                            variant="outlined"
+                                            onClick={() => setAddCategoryOpen(server.id)}
                                             disabled={submitting}
                                             sx={{ height: 22, fontSize: '0.7rem' }}
                                           />
-                                        ))}
-                                        <Chip
-                                          icon={<AddIcon sx={{ fontSize: 14 }} />}
-                                          label={t('addCustomCategory')}
-                                          size="small"
-                                          variant="outlined"
-                                          onClick={() => setAddCategoryOpen(server.id)}
-                                          disabled={submitting}
-                                          sx={{ height: 22, fontSize: '0.7rem' }}
-                                        />
-                                      </Box>
+                                        </Box>
+                                      )}
                                     </Box>
                                   }
                                   primaryTypographyProps={{ variant: 'body2', fontWeight: 500 }}

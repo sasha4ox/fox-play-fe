@@ -48,6 +48,7 @@ import Badge from '@mui/material/Badge';
 import Alert from '@mui/material/Alert';
 import Switch from '@mui/material/Switch';
 import FormControl from '@mui/material/FormControl';
+import Image from 'next/image';
 import MenuIcon from '@mui/icons-material/Menu';
 import PersonIcon from '@mui/icons-material/Person';
 import LogoutIcon from '@mui/icons-material/Logout';
@@ -85,6 +86,7 @@ export default function Header() {
   const [messageSoundPreset, setMessageSoundPresetState] = useState('chime');
   const [soldSoundOn, setSoldSoundOn] = useState(true);
   const [soldSoundPreset, setSoldSoundPresetState] = useState('chime');
+  const [logoError, setLogoError] = useState(false);
   useEffect(() => {
     setMessageSoundOn(getMessageSoundEnabled());
     setMessageSoundPresetState(getMessageSoundPreset());
@@ -152,6 +154,10 @@ export default function Header() {
     return () => { if (typeof cleanup === 'function') cleanup(); };
   }, []);
   const effectiveMode = themeMode === 'system' ? (systemDark ? 'dark' : 'light') : themeMode;
+
+  useEffect(() => {
+    setLogoError(false);
+  }, [effectiveMode]);
 
   useEffect(() => {
     if (!isAuth || !token) {
@@ -588,26 +594,40 @@ export default function Header() {
         )}
         <Link href={base} style={{ textDecoration: 'none', color: 'inherit' }} aria-label="Home">
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
-            <Box
-              sx={{
-                width: 32,
-                height: 32,
-                borderRadius: 1,
-                bgcolor: 'secondary.main',
-                color: 'white',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontWeight: 700,
-                fontSize: 16,
-              }}
-            >
-              FP
-            </Box>
-            {!isMobile && (
-              <Typography variant="h6" component="span" fontWeight={700} sx={{ letterSpacing: '-0.02em' }}>
-                {t('foxPlay')}
-              </Typography>
+            {logoError ? (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
+                <Box
+                  sx={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: 1,
+                    bgcolor: 'secondary.main',
+                    color: 'white',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontWeight: 700,
+                    fontSize: 16,
+                  }}
+                >
+                  FP
+                </Box>
+                {!isMobile && (
+                  <Typography variant="h6" component="span" fontWeight={700} sx={{ letterSpacing: '-0.02em' }}>
+                    {t('foxPlay')}
+                  </Typography>
+                )}
+              </Box>
+            ) : (
+              <Image
+                src={effectiveMode === 'dark' ? '/images/logo-purple-horizontal.png' : '/images/logo-orange-horizontal.png'}
+                alt="FoxyPlay"
+                width={isMobile ? 120 : 140}
+                height={isMobile ? 28 : 32}
+                style={{ objectFit: 'contain' }}
+                unoptimized
+                onError={() => setLogoError(true)}
+              />
             )}
           </Box>
         </Link>

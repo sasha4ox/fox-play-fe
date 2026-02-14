@@ -77,6 +77,11 @@
   "LoginModal": {
     "title": "Log in or sign up"
   },
+  "CompleteProfile": {
+    "title": "Choose your nickname",
+    "description": "You signed in with Google. Please set a nickname to continue. It will be visible to other users.",
+    "submit": "Continue"
+  },
   "Dashboard": {
     "balance": "Balance",
     "myOrdersChat": "My orders & chat",
@@ -457,6 +462,7 @@
     "gameName": "Game name",
     "variantName": "Variant name",
     "serverName": "Server name",
+    "editServerName": "Edit server name",
     "add": "Add",
     "cancel": "Cancel",
     "structureType": "Structure",
@@ -476,6 +482,8 @@
   },
   "Footer": {
     "brand": "FoxyPlay",
+    "tagline": "Marketplace for in-game items and services.",
+    "slogan": "Trade. Play. Win.",
     "contactUs": "Contact us",
     "termsOfService": "Terms of Service",
     "amlCompliance": "AML & Compliance",
@@ -483,7 +491,11 @@
     "cookiePolicy": "Cookie Policy",
     "cryptoRisk": "Crypto Risk",
     "disclaimer": "Disclaimer",
-    "cookiePreferences": "Cookie preferences"
+    "cookiePreferences": "Cookie preferences",
+    "legal": "Legal",
+    "policies": "Policies",
+    "support": "Support",
+    "copyright": "All rights reserved."
   },
   "CookieConsent": {
     "title": "We use cookies",
