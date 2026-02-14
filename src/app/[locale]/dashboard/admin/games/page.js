@@ -62,6 +62,8 @@ export default function AdminGamesPage() {
   const [addCategoryOpen, setAddCategoryOpen] = useState(null); // serverId
   const [addCategoryName, setAddCategoryName] = useState('');
   const [addGameStructureType, setAddGameStructureType] = useState('FULL');
+  const isSimple = (game) => game?.structureType === 'SIMPLE';
+  const isVariantOnly = (game) => game?.structureType === 'VARIANT_ONLY';
   const [submitting, setSubmitting] = useState(false);
   const [editServerId, setEditServerId] = useState(null);
   const [editServerName, setEditServerName] = useState('');
@@ -266,8 +268,9 @@ export default function AdminGamesPage() {
                       disabled={submitting}
                       sx={{ bgcolor: 'background.paper' }}
                     >
+                      <MenuItem value="SIMPLE">{t('structureSimple')}</MenuItem>
+                      <MenuItem value="VARIANT_ONLY">{t('structureVariantOnly')}</MenuItem>
                       <MenuItem value="FULL">{t('structureFull')}</MenuItem>
-                      <MenuItem value="FLAT">{t('structureFlat')}</MenuItem>
                     </Select>
                   </FormControl>
                   <FormControlLabel
@@ -281,15 +284,17 @@ export default function AdminGamesPage() {
                     }
                     label={t('enabled')}
                   />
-                  <IconButton
-                    size="small"
-                    onClick={() => setAddVariantOpen(game.id)}
-                    title={t('addVariant')}
-                    disabled={submitting}
-                    sx={{ color: 'primary.main' }}
-                  >
-                    <AddIcon />
-                  </IconButton>
+                  {!isSimple(game) && (
+                    <IconButton
+                      size="small"
+                      onClick={() => setAddVariantOpen(game.id)}
+                      title={t('addVariant')}
+                      disabled={submitting}
+                      sx={{ color: 'primary.main' }}
+                    >
+                      <AddIcon />
+                    </IconButton>
+                  )}
                   <IconButton
                     size="small"
                     onClick={() => setExpandedGame(expandedGame === game.id ? null : game.id)}
@@ -330,14 +335,16 @@ export default function AdminGamesPage() {
                             label={t('enabled')}
                             sx={{ '& .MuiFormControlLabel-label': { fontSize: '0.8rem' } }}
                           />
-                          <IconButton
-                            size="small"
-                            onClick={() => setAddServerOpen({ gameId: game.id, variantId: variant.id })}
-                            title={t('addServer')}
-                            disabled={submitting}
-                          >
-                            <AddIcon fontSize="small" />
-                          </IconButton>
+                          {!isVariantOnly(game) && (
+                            <IconButton
+                              size="small"
+                              onClick={() => setAddServerOpen({ gameId: game.id, variantId: variant.id })}
+                              title={t('addServer')}
+                              disabled={submitting}
+                            >
+                              <AddIcon fontSize="small" />
+                            </IconButton>
+                          )}
                           <IconButton
                             size="small"
                             onClick={() =>
@@ -528,8 +535,9 @@ export default function AdminGamesPage() {
               label={t('structureType')}
               onChange={(e) => setAddGameStructureType(e.target.value)}
             >
+              <MenuItem value="SIMPLE">{t('structureSimple')}</MenuItem>
+              <MenuItem value="VARIANT_ONLY">{t('structureVariantOnly')}</MenuItem>
               <MenuItem value="FULL">{t('structureFull')}</MenuItem>
-              <MenuItem value="FLAT">{t('structureFlat')}</MenuItem>
             </Select>
           </FormControl>
         </DialogContent>

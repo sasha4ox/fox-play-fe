@@ -84,7 +84,7 @@ export default function Footer() {
                   alt={t('brand')}
                   width={130}
                   height={28}
-                  style={{ objectFit: 'contain' }}
+                  style={{ objectFit: 'contain', marginLeft: '-25px' }}
                   unoptimized
                   onError={() => setLogoError(true)}
                 />
@@ -248,23 +248,6 @@ export default function Footer() {
           >
             © {new Date().getFullYear()} {t('brand')}. {t('copyright')}
           </Typography>
-          <Link href={base} style={{ textDecoration: 'none' }} aria-label={t('brand')}>
-            {logoError ? (
-              <Typography variant="body2" sx={{ color: '#888', fontWeight: 600 }}>
-                {t('brand')}
-              </Typography>
-            ) : (
-              <Image
-                src="/images/logo-purple-horizontal.png"
-                alt={t('brand')}
-                width={100}
-                height={22}
-                style={{ objectFit: 'contain', opacity: 0.85 }}
-                unoptimized
-                onError={() => setLogoError(true)}
-              />
-            )}
-          </Link>
         </Box>
       </Box>
     </Box>

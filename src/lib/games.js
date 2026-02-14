@@ -20,16 +20,26 @@ export function getServerFromTree(tree, gameId, variantId, serverId) {
   return variant.servers.find((s) => s.id === serverId) ?? null
 }
 
-/** True if game uses flat structure (no variant/server picker, e.g. Dota, CS2). */
-export function isFlatGame(game) {
-  return game?.structureType === 'FLAT'
+/** True if game uses SIMPLE structure (game only, no variant/server picker). Includes legacy FLAT. */
+export function isSimpleGame(game) {
+  return game?.structureType === 'SIMPLE' || game?.structureType === 'FLAT'
 }
 
-/** For FLAT games with exactly 1 variant and 1 server, returns { variantId, serverId } for direct redirect to offers. */
-export function getFlatGameOfferTarget(game) {
-  if (!game || !isFlatGame(game) || !game.variants?.length) return null
+/** True if game uses VARIANT_ONLY structure (variants, no servers). */
+export function isVariantOnlyGame(game) {
+  return game?.structureType === 'VARIANT_ONLY'
+}
+
+/** For SIMPLE games: returns { variantId, serverId } for direct redirect to offers (uses default variant+server). */
+export function getDirectOfferTarget(game) {
+  if (!game || !isSimpleGame(game) || !game.variants?.length) return null
   const variant = game.variants[0]
   if (!variant?.servers?.length) return null
   const server = variant.servers[0]
   return { variantId: variant.id, serverId: server.id }
+}
+
+/** @deprecated Use getDirectOfferTarget */
+export function getFlatGameOfferTarget(game) {
+  return getDirectOfferTarget(game)
 }

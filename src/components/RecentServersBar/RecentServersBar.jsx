@@ -37,7 +37,7 @@ export default function RecentServersBar() {
 
   if (loading) {
     return (
-      <Box sx={{ px: 2, py: 1.5, bgcolor: 'action.hover', borderBottom: 1, borderColor: 'divider' }}>
+      <Box sx={{ px: 2, py: 1.5, bgcolor: 'action.hover', borderBottom: '2px solid', borderColor: 'divider' }}>
         <Skeleton variant="rounded" height={24} width="60%" />
       </Box>
     );
@@ -45,14 +45,17 @@ export default function RecentServersBar() {
 
   if (recentServers.length === 0) return null;
 
+  const pathColors = ['primary.main', 'success.main', 'info.main'];
+
   return (
     <Box
       sx={{
         px: 2,
         py: 1.5,
         bgcolor: 'action.hover',
-        borderBottom: 1,
+        borderBottom: '2px solid',
         borderColor: 'divider',
+        boxShadow: '0 1px 0 rgba(0,0,0,0.08)',
         display: 'flex',
         alignItems: 'center',
         gap: 1,
@@ -65,7 +68,15 @@ export default function RecentServersBar() {
       {recentServers.map((s, i) => (
         <Box key={s.serverId} component="span" sx={{ display: 'inline-flex', alignItems: 'center', gap: 1 }}>
           {i > 0 && (
-            <Typography component="span" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
+            <Typography
+              component="span"
+              sx={{
+                fontSize: '0.85rem',
+                fontWeight: 700,
+                color: 'text.secondary',
+                opacity: 0.8,
+              }}
+            >
               ·
             </Typography>
           )}
@@ -78,7 +89,7 @@ export default function RecentServersBar() {
               variant="body2"
               fontWeight={500}
               sx={{
-                color: 'primary.main',
+                color: pathColors[i % pathColors.length],
                 '&:hover': { textDecoration: 'underline' },
               }}
             >

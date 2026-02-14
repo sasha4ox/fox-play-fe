@@ -14,14 +14,20 @@ import InputLabel from '@mui/material/InputLabel';
 import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
 import IconButton from '@mui/material/IconButton';
+import Avatar from '@mui/material/Avatar';
 import Alert from '@mui/material/Alert';
 import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
-import MuiLink from '@mui/material/Link';
 import CircularProgress from '@mui/material/CircularProgress';
 import AttachFileIcon from '@mui/icons-material/AttachFile';
+import SendIcon from '@mui/icons-material/Send';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+import useMediaQuery from '@mui/material/useMediaQuery';
+import { useTheme } from '@mui/material/styles';
 import { useAuthStore } from '@/store/authStore';
 import { useProfile } from '@/hooks/useProfile';
 import {
@@ -42,9 +48,12 @@ export default function OrderChatPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const locale = useLocale();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const t = useTranslations('OrderDetail');
   const tCommon = useTranslations('Common');
   const tOrders = useTranslations('Orders');
+  const tSales = useTranslations('Sales');
   const orderId = params?.orderId;
   const token = useAuthStore((s) => s.token);
   const user = useAuthStore((s) => s.user);
@@ -58,7 +67,7 @@ export default function OrderChatPage() {
   const [sendError, setSendError] = useState(null);
   const fileInputRef = useRef(null);
   const [files, setFiles] = useState([]);
-  const messagesEndRef = useRef(null);
+  const messagesContainerRef = useRef(null);
   const [actionError, setActionError] = useState(null);
   const [actionInfo, setActionInfo] = useState(null);
   const [deliverSubmitting, setDeliverSubmitting] = useState(false);
@@ -77,6 +86,7 @@ export default function OrderChatPage() {
   const [feedbackComment, setFeedbackComment] = useState('');
   const [feedbackSubmitting, setFeedbackSubmitting] = useState(false);
   const [paymentSuccessShown, setPaymentSuccessShown] = useState(false);
+  const [infoExpandedOnMobile, setInfoExpandedOnMobile] = useState(false);
   const tAdmin = useTranslations('Admin');
 
   const paymentFromUrl = searchParams.get('payment');
@@ -111,7 +121,10 @@ export default function OrderChatPage() {
   }, [orderId, token]);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const el = messagesContainerRef.current;
+    if (el) {
+      el.scrollTop = el.scrollHeight;
+    }
   }, [messages]);
 
   // Refetch order periodically so read receipts (Seen) update when the other user reads
@@ -312,62 +325,101 @@ export default function OrderChatPage() {
 
   const isMe = (senderId) => currentUserId && senderId === currentUserId;
 
+  const otherParty = order?.buyerId === currentUserId ? order?.seller : order?.buyer;
+  const otherName = otherParty?.nickname ?? (isBuyer ? t('seller') : t('buyer'));
+  const SENDER_BUBBLE = '#1B4332';
+
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', py: 2, px: 2, display: 'flex', flexDirection: 'column' }}>
-      <Container sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-        <Link href={`/${locale}/dashboard/orders`} style={{ textDecoration: 'none' }}>
-          <MuiLink component="span" color="secondary" sx={{ display: 'inline-block', mb: 1 }}>
-            {tOrders('chats')}
-          </MuiLink>
-        </Link>
-        {/* Unique UI: order / sold-item chat banner */}
+    <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', bgcolor: '#f5f5f5' }}>
+      {/* Chat header – fixed at top */}
+      <Box
+        sx={{
+          flexShrink: 0,
+          display: 'flex',
+          alignItems: 'center',
+          gap: { xs: 1, md: 2 },
+          py: { xs: 1, md: 1.5 },
+          px: { xs: 1.5, md: 2 },
+          bgcolor: 'background.paper',
+          borderBottom: '1px solid',
+          borderColor: 'divider',
+        }}
+      >
+        {isMobile && (
+          <IconButton component={Link} href={`/${locale}/dashboard/orders`} size="small" sx={{ flexShrink: 0 }} aria-label={tOrders('chats')}>
+            <ArrowBackIcon />
+          </IconButton>
+        )}
+        <Avatar
+          src={otherParty?.avatarUrl}
+          sx={{ width: { xs: 36, md: 44 }, height: { xs: 36, md: 44 }, bgcolor: SENDER_BUBBLE }}
+        >
+          {(otherName || '?').charAt(0).toUpperCase()}
+        </Avatar>
+        <Box sx={{ flex: 1, minWidth: 0 }}>
+          <Typography variant="subtitle1" fontWeight={600} noWrap>
+            {otherName}
+          </Typography>
+          <Typography variant="caption" color="success.main" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+            <Box component="span" sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: 'success.main' }} />
+            {connected ? t('online') : t('live')}
+          </Typography>
+        </Box>
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', minWidth: 0 }}>
+          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }} noWrap>
+            {order.offer?.title || tOrders('offer')}
+          </Typography>
+          <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
+            {tOrders('status')}: {order.status ? tSales(`status_${order.status}`) : '—'}
+          </Typography>
+        </Box>
+      </Box>
+      {showPaymentSuccess && (
+        <Alert severity="success" onClose={() => setPaymentSuccessShown(true)} sx={{ mx: { xs: 1, md: 2 }, mt: 1 }}>
+          {t('paymentSuccessMessage')}
+        </Alert>
+      )}
+      {actionInfo && <Alert severity="info" sx={{ mx: { xs: 1, md: 2 }, mt: 1 }} onClose={() => setActionInfo(null)}>{actionInfo}</Alert>}
+      {actionError && <Alert severity="error" sx={{ mx: { xs: 1, md: 2 }, mt: 1 }}>{actionError}</Alert>}
+      {/* Two-panel layout: info + chat. Desktop: both panels fill height; info scrolls internally, chat fills remaining. Mobile: info collapsible on top. */}
+      <Box
+        sx={{
+          flex: 1,
+          minHeight: 0,
+          display: 'flex',
+          flexDirection: { xs: 'column', md: 'row' },
+          overflow: 'hidden',
+        }}
+      >
+        {/* Left panel – Order info (scrolls internally on desktop; collapsible on mobile) */}
         <Box
           sx={{
-            mb: 2,
-            py: 1.5,
-            px: 2,
-            borderRadius: 1,
-            background: (theme) => `linear-gradient(135deg, ${theme.palette.primary.main}14 0%, ${theme.palette.secondary.main}12 100%)`,
-            border: '1px solid',
-            borderColor: 'primary.main',
-            borderLeftWidth: 4,
+            width: isMobile ? '100%' : 340,
+            minWidth: isMobile ? undefined : 280,
+            maxWidth: isMobile ? '100%' : '40%',
+            maxHeight: isMobile && infoExpandedOnMobile ? '70%' : (isMobile ? 'auto' : '100%'),
+            bgcolor: 'background.paper',
+            borderRight: isMobile ? 'none' : '1px solid',
+            borderBottom: isMobile ? '1px solid' : 'none',
+            borderColor: 'divider',
+            overflow: 'auto',
+            flexShrink: 0,
+            minHeight: 0,
           }}
         >
-          <Typography variant="overline" color="primary.main" fontWeight={700} sx={{ letterSpacing: 1 }}>
-            {t('orderChatBadge')}
-          </Typography>
-          <Typography variant="h6" fontWeight={600} sx={{ mt: 0.25 }}>
-            {t('orderChat')}
-            {order.offer?.title && (
-              <Typography component="span" variant="body2" color="text.secondary" fontWeight={400} sx={{ ml: 1 }}>
-                · {order.offer.title}
-              </Typography>
-            )}
-          </Typography>
-        </Box>
-        {showPaymentSuccess && (
-          <Alert severity="success" onClose={() => setPaymentSuccessShown(true)} sx={{ mb: 2 }}>
-            {t('paymentSuccessMessage')}
-          </Alert>
-        )}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1, flexWrap: 'wrap' }}>
-          <Typography variant="body2" color="text.secondary">
-            {tOrders('status')}: <strong>{order.status}</strong>
-          </Typography>
-          {connected && (
-            <Typography variant="caption" color="success.main">{t('live')}</Typography>
+          {isMobile && (
+            <Button
+              fullWidth
+              size="small"
+              onClick={() => setInfoExpandedOnMobile((v) => !v)}
+              endIcon={infoExpandedOnMobile ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+              sx={{ justifyContent: 'space-between', py: 1.25, px: 2, borderRadius: 0 }}
+            >
+              {infoExpandedOnMobile ? t('hideOrderDetails') : t('orderDetails')}
+            </Button>
           )}
-          {Array.isArray(onlineUserIds) && onlineUserIds.length > 0 && (
-            <Typography variant="caption" color="text.secondary">
-              {t('online')}: {[order.buyerId, order.sellerId]
-                .filter((id) => onlineUserIds.includes(id))
-                .map((id) => (id === order.buyerId ? t('buyer') : t('seller')))
-                .join(', ')}
-            </Typography>
-          )}
-        </Box>
-
-        {order.offer && (
+          <Box sx={{ p: { xs: isMobile ? 2 : 1.5, md: 2 }, pt: isMobile ? 0 : undefined, display: isMobile && !infoExpandedOnMobile ? 'none' : 'block' }}>
+          {order.offer && (
           <>
             {/* Block 1: Offer & what you're selling / buying */}
             <Box sx={{ mb: 2, p: 2, border: '1px solid', borderColor: 'divider', borderRadius: 1, bgcolor: 'action.hover' }}>
@@ -432,9 +484,6 @@ export default function OrderChatPage() {
           </>
         )}
 
-        {actionInfo && <Alert severity="info" sx={{ mb: 1 }} onClose={() => setActionInfo(null)}>{actionInfo}</Alert>}
-        {actionError && <Alert severity="error" sx={{ mb: 1 }}>{actionError}</Alert>}
-
         {canSellerDeliver && (
           <Box sx={{ mb: 2, p: 2, border: '1px solid', borderColor: 'divider', borderRadius: 1, bgcolor: 'background.paper' }}>
             <Typography variant="subtitle2" gutterBottom>{t('iTransferred')}</Typography>
@@ -496,7 +545,7 @@ export default function OrderChatPage() {
         )}
 
         {order.status === 'COMPLETED' && (
-          <Alert severity="success" sx={{ mb: 1 }}>Order completed. Seller has been paid.</Alert>
+          <Alert severity="success" sx={{ mb: 2 }}>Order completed. Seller has been paid.</Alert>
         )}
 
         {order.status === 'COMPLETED' && !currentUserLeftFeedback && (
@@ -537,7 +586,7 @@ export default function OrderChatPage() {
         )}
 
         {order.status === 'DISPUTED' && (
-          <Alert severity="warning" sx={{ mb: 1 }}>{t('orderDisputed')}</Alert>
+          <Alert severity="warning" sx={{ mb: 2 }}>{t('orderDisputed')}</Alert>
         )}
 
         {/* Dispute: reason, evidence (visible to seller), and verdict when resolved */}
@@ -578,7 +627,7 @@ export default function OrderChatPage() {
         )}
 
         {isModerator && (
-          <Alert severity="info" sx={{ mb: 1 }}>{t('viewingAsModerator')}</Alert>
+          <Alert severity="info" sx={{ mb: 2 }}>{t('viewingAsModerator')}</Alert>
         )}
 
         {isModerator && order?.status === 'DISPUTED' && order?.dispute?.id && (
@@ -607,7 +656,11 @@ export default function OrderChatPage() {
             </Box>
           </Box>
         )}
+          </Box>
+        </Box>
 
+        {/* Right panel – Chat (fills remaining height, messages scroll internally) */}
+        <Box sx={{ flex: 1, minWidth: 0, minHeight: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden', bgcolor: '#f5f5f5' }}>
         <Dialog open={resolveVerdictDialog.open} onClose={closeResolveVerdictDialog} maxWidth="sm" fullWidth>
           <DialogTitle>
             {resolveVerdictDialog.action === 'RELEASE' ? t('releaseToSeller') : t('refundBuyer')} — {tAdmin('verdictRequired')}
@@ -633,23 +686,21 @@ export default function OrderChatPage() {
           </DialogActions>
         </Dialog>
 
+        {/* Messages area – reference style: dark green for sender, light grey for me */}
         <Box
+          ref={messagesContainerRef}
           sx={{
             flex: 1,
-            minHeight: 300,
-            maxHeight: '50vh',
+            minHeight: 200,
             overflow: 'auto',
-            border: '2px solid',
-            borderColor: 'primary.light',
-            borderRadius: 1.5,
-            p: 2,
-            mb: 2,
-            bgcolor: 'background.paper',
-            boxShadow: (theme) => `inset 0 0 0 1px ${theme.palette.primary.main}08`,
+            p: { xs: 1.5, md: 2 },
+            bgcolor: '#f5f5f5',
+            display: 'flex',
+            flexDirection: 'column',
           }}
         >
           {messages.length === 0 && (
-            <Typography color="text.secondary" variant="body2">
+            <Typography color="text.secondary" variant="body2" sx={{ alignSelf: 'center', mt: 4 }}>
               {t('noMessages')}
             </Typography>
           )}
@@ -662,57 +713,73 @@ export default function OrderChatPage() {
               <Box
                 key={msg.id}
                 sx={{
-                  textAlign: myMessage ? 'right' : 'left',
+                  display: 'flex',
+                  justifyContent: myMessage ? 'flex-end' : 'flex-start',
                   mb: 1.5,
                 }}
               >
-                <Typography variant="caption" color="text.secondary" display="block">
-                  {msg.sender?.nickname ?? msg.sender?.email ?? tCommon('user')}
-                  {(msg.sender?.role === 'ADMIN' || msg.sender?.role === 'MODERATOR') && (
-                    <Typography component="span" variant="caption" sx={{ ml: 0.5, fontWeight: 600 }}>
-                      ({msg.sender?.role === 'ADMIN' ? t('adminBadge') : t('moderatorBadge')})
-                    </Typography>
-                  )}
-                  {msg.createdAt && (
-                    <Typography component="span" variant="caption" color="text.secondary" sx={{ ml: 0.5, opacity: 0.9 }}>
-                      · {new Date(msg.createdAt).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' })}
-                    </Typography>
-                  )}
-                </Typography>
                 <Box
                   sx={{
-                    display: 'inline-block',
-                    px: 1.5,
-                    py: 1,
-                    borderRadius: 1,
-                    bgcolor: myMessage ? 'primary.main' : 'action.hover',
-                    color: myMessage ? 'primary.contrastText' : 'text.primary',
+                    maxWidth: '75%',
+                    px: 2,
+                    py: 1.25,
+                    borderRadius: 2,
+                    borderTopRightRadius: myMessage ? 4 : 12,
+                    borderTopLeftRadius: myMessage ? 12 : 4,
+                    bgcolor: myMessage ? '#E8E8E8' : SENDER_BUBBLE,
+                    color: myMessage ? '#1f1f1f' : '#fff',
+                    boxShadow: '0 1px 2px rgba(0,0,0,0.08)',
                   }}
                 >
-                  <Typography variant="body2">{msg.text}</Typography>
+                  <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                    {msg.text}
+                  </Typography>
                   {msg.attachments?.length > 0 && (
-                    <Box sx={{ mt: 1 }}>
+                    <Box sx={{ mt: 1, display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                       {msg.attachments.map((att) => (
-                        <a key={att.id} href={att.url} target="_blank" rel="noopener noreferrer" style={{ display: 'block' }}>
-                          <img src={att.url} alt="" style={{ maxWidth: 200, maxHeight: 150, borderRadius: 4 }} />
+                        <a key={att.id} href={att.url} target="_blank" rel="noopener noreferrer">
+                          <Box
+                            component="img"
+                            src={att.url}
+                            alt=""
+                            sx={{ maxWidth: 180, maxHeight: 140, borderRadius: 1, objectFit: 'cover' }}
+                          />
                         </a>
                       ))}
                     </Box>
                   )}
-                  {seen && (
-                    <Typography variant="caption" sx={{ display: 'block', mt: 0.5, opacity: 0.9 }}>
-                      {t('seen')}
-                    </Typography>
-                  )}
+                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 0.5, mt: 0.5, color: myMessage ? '#5a5a5a' : 'rgba(255,255,255,0.9)' }}>
+                    {msg.createdAt && (
+                      <Typography variant="caption" sx={{ fontSize: '0.7rem' }}>
+                        {new Date(msg.createdAt).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}
+                      </Typography>
+                    )}
+                    {seen && (
+                      <Typography variant="caption">✓✓</Typography>
+                    )}
+                  </Box>
                 </Box>
               </Box>
             );
           })}
-          <div ref={messagesEndRef} />
         </Box>
 
-        {sendError && <Alert severity="error" sx={{ mb: 1 }}>{sendError}</Alert>}
-        <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-end' }}>
+        {sendError && <Alert severity="error" sx={{ mx: { xs: 1, md: 2 }, mb: 1 }}>{sendError}</Alert>}
+        {/* Input area – fixed at bottom of chat panel, always visible on mobile */}
+        <Box
+        sx={{
+          flexShrink: 0,
+          display: 'flex',
+          alignItems: 'flex-end',
+          gap: 1,
+          p: { xs: 1.5, md: 2 },
+          pb: { xs: 'max(12px, env(safe-area-inset-bottom))', md: 2 },
+          bgcolor: 'background.paper',
+          borderTop: '1px solid',
+          borderColor: 'divider',
+          boxShadow: '0 -2px 8px rgba(0,0,0,0.06)',
+        }}
+      >
           <input
             type="file"
             ref={fileInputRef}
@@ -721,7 +788,11 @@ export default function OrderChatPage() {
             style={{ display: 'none' }}
             onChange={(e) => setFiles(Array.from(e.target.files || []))}
           />
-          <IconButton color="secondary" onClick={() => fileInputRef.current?.click()} title={t('attachImage')}>
+          <IconButton
+            onClick={() => fileInputRef.current?.click()}
+            title={t('attachImage')}
+            sx={{ color: 'text.secondary' }}
+          >
             <AttachFileIcon />
           </IconButton>
           <TextField
@@ -730,17 +801,32 @@ export default function OrderChatPage() {
             onChange={(e) => setText(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), handleSend())}
             multiline
-            maxRows={3}
+            maxRows={4}
             size="small"
             fullWidth
             variant="outlined"
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                borderRadius: 3,
+                bgcolor: 'action.hover',
+              },
+            }}
           />
-          <Button variant="contained" color="secondary" onClick={handleSend} disabled={sending}>
-            {tCommon('send')}
-          </Button>
+          <IconButton
+            onClick={handleSend}
+            disabled={sending || (!text.trim() && files.length === 0)}
+            sx={{
+              bgcolor: SENDER_BUBBLE,
+              color: '#fff',
+              '&:hover': { bgcolor: '#2d6a4f' },
+              '&.Mui-disabled': { bgcolor: 'action.disabledBackground', color: 'action.disabled' },
+            }}
+          >
+            <SendIcon fontSize="small" />
+          </IconButton>
         </Box>
         {files.length > 0 && (
-          <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5 }}>
+          <Typography variant="caption" color="text.secondary" sx={{ px: 2, pb: 1 }}>
             {t('imagesAttached', { count: files.length })}
           </Typography>
         )}
@@ -784,7 +870,8 @@ export default function OrderChatPage() {
             </Button>
           </DialogActions>
         </Dialog>
-      </Container>
+        </Box>
+      </Box>
     </Box>
   );
 }

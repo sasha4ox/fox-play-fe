@@ -14,7 +14,7 @@ import MuiLink from '@mui/material/Link';
 import CircularProgress from '@mui/material/CircularProgress';
 import Alert from '@mui/material/Alert';
 import { useGames } from '@/hooks/useGames';
-import { getGameFromTree, getFlatGameOfferTarget } from '@/lib/games';
+import { getGameFromTree, getDirectOfferTarget } from '@/lib/games';
 
 export default function GameVariantsPage() {
   const router = useRouter();
@@ -26,10 +26,10 @@ export default function GameVariantsPage() {
   const t = useTranslations('Game');
   const tCommon = useTranslations('Common');
 
-  // FLAT games: redirect directly to offers (no variant/server picker)
+  // SIMPLE games: redirect directly to offers (no variant/server picker)
   useEffect(() => {
     if (loading || error || !game) return;
-    const target = getFlatGameOfferTarget(game);
+    const target = getDirectOfferTarget(game);
     if (target) {
       router.replace(`/${locale}/game/${gameId}/${target.variantId}/${target.serverId}/offers`);
     }
