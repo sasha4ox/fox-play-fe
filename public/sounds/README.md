@@ -1,10 +1,11 @@
-# Custom notification sounds
+# Notification sounds
 
-As the site creator, you can place your own sound files here so users can choose "Custom" in the header sound settings.
+Sounds are played only in two cases:
+1. **message.mp3** – when you receive a new message in an order chat
+2. **sold.mp3** – when someone buys your item
 
-- **message.mp3** – played when a new message arrives in an order chat
-- **sold.mp3** – played when someone buys your item (sold notification)
+Place your own MP3 files here to use as notification sounds. Users can only enable or disable each sound; they cannot choose different files.
 
-Supported format: MP3. Keep files short (1–3 seconds). If a file is missing, the app falls back to the built-in Chime preset.
+Supported format: MP3. Keep files short (1–3 seconds). If a file is missing, the app falls back to a built-in tone.
 
-User choices (which preset, on/off) are stored in the browser (localStorage) on the frontend.
+Sound settings (on/off) are stored in the browser (localStorage).

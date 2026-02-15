@@ -11,16 +11,19 @@ const getSocketUrl = () => {
 /**
  * Connect to order chat room via Socket.IO. Joins order room when orderId and token are set.
  * Returns { socket, connected, lastMessage, onlineUserIds }.
- * Pass onMessage(msg) to get every received message immediately (avoids losing rapid messages).
+ * Pass onMessage(msg) to get every received message immediately.
+ * Pass onOrderRead(payload) for Telegram-style read receipts: { orderId, userId, lastReadAt }.
  */
 export function useOrderSocket(orderId, token, options = {}) {
-  const { onMessage } = options;
+  const { onMessage, onOrderRead } = options;
   const [connected, setConnected] = useState(false);
   const [lastMessage, setLastMessage] = useState(null);
   const [onlineUserIds, setOnlineUserIds] = useState([]);
   const socketRef = useRef(null);
   const onMessageRef = useRef(onMessage);
+  const onOrderReadRef = useRef(onOrderRead);
   onMessageRef.current = onMessage;
+  onOrderReadRef.current = onOrderRead;
 
   useEffect(() => {
     if (!token || !orderId) return;
@@ -38,6 +41,11 @@ export function useOrderSocket(orderId, token, options = {}) {
     socket.on('message', (msg) => {
       setLastMessage(msg);
       onMessageRef.current?.(msg);
+    });
+    socket.on('order_read', (payload) => {
+      if (payload?.orderId === orderId) {
+        onOrderReadRef.current?.(payload);
+      }
     });
     socket.on('presence', (data) => setOnlineUserIds(Array.isArray(data?.userIds) ? data.userIds : []));
     socket.emit('join_order', orderId);

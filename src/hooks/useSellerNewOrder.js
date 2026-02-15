@@ -11,16 +11,20 @@ const getSocketUrl = () => {
 /**
  * Connect to app socket and listen for:
  * - 'new_order': seller notification when someone buys.
- * - 'order_activity': order changed (e.g. new message) so badges can refresh.
- * options.onOrderActivity: () => void — called when order_activity is received (e.g. refetch unread count).
+ * - 'order_activity': order changed so badges can refresh (no message sound).
+ * - 'new_message': new message received in an order chat (for message sound only).
+ * options.onOrderActivity: () => void — called when order_activity (e.g. refetch unread).
+ * options.onNewMessage: () => void — called when new_message (e.g. play sound + refetch).
  * Returns { lastNewOrder, clearNewOrder }.
  */
 export function useSellerNewOrder(token, options = {}) {
-  const { onOrderActivity } = options;
+  const { onOrderActivity, onNewMessage } = options;
   const [lastNewOrder, setLastNewOrder] = useState(null);
   const socketRef = useRef(null);
   const onOrderActivityRef = useRef(onOrderActivity);
+  const onNewMessageRef = useRef(onNewMessage);
   onOrderActivityRef.current = onOrderActivity;
+  onNewMessageRef.current = onNewMessage;
 
   useEffect(() => {
     if (!token) {
@@ -49,6 +53,11 @@ export function useSellerNewOrder(token, options = {}) {
     socket.on('order_activity', () => {
       if (typeof onOrderActivityRef.current === 'function') {
         onOrderActivityRef.current();
+      }
+    });
+    socket.on('new_message', () => {
+      if (typeof onNewMessageRef.current === 'function') {
+        onNewMessageRef.current();
       }
     });
     return () => {

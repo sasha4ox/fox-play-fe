@@ -23,12 +23,16 @@ import DialogActions from '@mui/material/DialogActions';
 import CircularProgress from '@mui/material/CircularProgress';
 import AttachFileIcon from '@mui/icons-material/AttachFile';
 import SendIcon from '@mui/icons-material/Send';
+import DoneAllIcon from '@mui/icons-material/DoneAll';
+import DoneIcon from '@mui/icons-material/Done';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useTheme } from '@mui/material/styles';
 import { useAuthStore } from '@/store/authStore';
+import { useLoginModalStore } from '@/store/loginModalStore';
 import { useProfile } from '@/hooks/useProfile';
 import {
   getOrderById,
@@ -57,6 +61,8 @@ export default function OrderChatPage() {
   const orderId = params?.orderId;
   const token = useAuthStore((s) => s.token);
   const user = useAuthStore((s) => s.user);
+  const openLoginModal = useLoginModalStore((s) => s.openModal);
+  const base = `/${locale}`;
   const { profile } = useProfile();
   const [order, setOrder] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -94,11 +100,26 @@ export default function OrderChatPage() {
 
   const setMessagesRef = useRef(setMessages);
   setMessagesRef.current = setMessages;
+  const setOrderRef = useRef(setOrder);
+  setOrderRef.current = setOrder;
   const { connected, onlineUserIds } = useOrderSocket(orderId, token, {
     onMessage: (msg) => {
       setMessagesRef.current((prev) => {
         if (prev.some((m) => m.id === msg.id)) return prev;
         return [...prev, msg];
+      });
+    },
+    onOrderRead: (payload) => {
+      if (!payload?.userId || !payload?.lastReadAt) return;
+      setOrderRef.current?.((prev) => {
+        if (!prev) return prev;
+        const existing = prev.orderReads ?? [];
+        const idx = existing.findIndex((r) => r.userId === payload.userId);
+        const newRead = { userId: payload.userId, lastReadAt: payload.lastReadAt };
+        const nextReads = idx >= 0
+          ? existing.map((r, i) => (i === idx ? newRead : r))
+          : [...existing, newRead];
+        return { ...prev, orderReads: nextReads };
       });
     },
   });
@@ -294,10 +315,41 @@ export default function OrderChatPage() {
 
   if (!token) {
     return (
-      <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', py: 4, px: 2 }}>
-        <Container>
-          <Alert severity="info">Log in to open chat.</Alert>
-        </Container>
+      <Box
+        sx={{
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          minHeight: 'calc(100vh - 64px)',
+          bgcolor: '#f5f5f5',
+          p: 4,
+        }}
+      >
+        <ChatBubbleOutlineIcon sx={{ fontSize: 80, color: 'action.disabled', mb: 2 }} />
+        <Typography variant="h5" fontWeight={600} color="text.primary" gutterBottom>
+          {t('orderChat')}
+        </Typography>
+        <Typography variant="body1" color="text.secondary" sx={{ textAlign: 'center', maxWidth: 360, mb: 3 }}>
+          {t('loginToChatHint')}
+        </Typography>
+        <Button
+          variant="contained"
+          color="secondary"
+          size="large"
+          sx={{ textTransform: 'none', px: 3 }}
+          onClick={() => openLoginModal(() => router.push(`${base}/dashboard/orders/${orderId}`))}
+        >
+          {t('loginToOpenChat')}
+        </Button>
+        <Button
+          component={Link}
+          href={base}
+          sx={{ mt: 2, textTransform: 'none' }}
+        >
+          {t('backToHome')}
+        </Button>
       </Box>
     );
   }
@@ -754,8 +806,10 @@ export default function OrderChatPage() {
                         {new Date(msg.createdAt).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}
                       </Typography>
                     )}
-                    {seen && (
-                      <Typography variant="caption">✓✓</Typography>
+                    {myMessage && (
+                      seen
+                        ? <DoneAllIcon sx={{ fontSize: 14, color: 'primary.main' }} titleAccess={t('read')} />
+                        : <DoneIcon sx={{ fontSize: 14 }} titleAccess={t('sent')} />
                     )}
                   </Box>
                 </Box>

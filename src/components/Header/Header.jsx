@@ -33,21 +33,14 @@ import {
   playNewMessageSound,
   unlockAudio,
   setupUnlockOnFirstClick,
-  getNotificationSoundEnabled,
   getMessageSoundEnabled,
   setMessageSoundEnabled,
-  getMessageSoundPreset,
-  setMessageSoundPreset,
   getSoldSoundEnabled,
   setSoldSoundEnabled,
-  getSoldSoundPreset,
-  setSoldSoundPreset,
-  getPresetIds,
 } from '@/lib/notificationSound';
 import Badge from '@mui/material/Badge';
 import Alert from '@mui/material/Alert';
 import Switch from '@mui/material/Switch';
-import FormControl from '@mui/material/FormControl';
 import Image from 'next/image';
 import MenuIcon from '@mui/icons-material/Menu';
 import PersonIcon from '@mui/icons-material/Person';
@@ -83,15 +76,11 @@ export default function Header() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [sellerOrderCount, setSellerOrderCount] = useState(0);
   const [messageSoundOn, setMessageSoundOn] = useState(true);
-  const [messageSoundPreset, setMessageSoundPresetState] = useState('chime');
   const [soldSoundOn, setSoldSoundOn] = useState(true);
-  const [soldSoundPreset, setSoldSoundPresetState] = useState('chime');
   const [logoError, setLogoError] = useState(false);
   useEffect(() => {
     setMessageSoundOn(getMessageSoundEnabled());
-    setMessageSoundPresetState(getMessageSoundPreset());
     setSoldSoundOn(getSoldSoundEnabled());
-    setSoldSoundPresetState(getSoldSoundPreset());
   }, []);
   const refetchUnread = () => {
     if (!token) return;
@@ -102,12 +91,14 @@ export default function Header() {
       })
       .catch(() => {});
   };
-  const handleOrderActivity = () => {
+  const handleOrderActivity = () => refetchUnread();
+  const handleNewMessage = () => {
     refetchUnread();
     playNewMessageSound();
   };
   const { lastNewOrder, clearNewOrder } = useSellerNewOrder(isAuth ? token : null, {
     onOrderActivity: handleOrderActivity,
+    onNewMessage: handleNewMessage,
   });
   useEffect(() => {
     if (lastNewOrder) {
@@ -123,22 +114,11 @@ export default function Header() {
     setMessageSoundOn(checked);
     setMessageSoundEnabled(checked);
   };
-  const handleMessagePresetChange = (e) => {
-    const v = e.target.value;
-    setMessageSoundPresetState(v);
-    setMessageSoundPreset(v);
-  };
   const handleSoldSoundToggle = (e) => {
     const checked = e.target.checked;
     setSoldSoundOn(checked);
     setSoldSoundEnabled(checked);
   };
-  const handleSoldPresetChange = (e) => {
-    const v = e.target.value;
-    setSoldSoundPresetState(v);
-    setSoldSoundPreset(v);
-  };
-  const presetIds = getPresetIds();
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -394,31 +374,17 @@ export default function Header() {
           <Box sx={{ px: 2, py: 0.5 }}>
             <Typography variant="caption" color="text.secondary">{t('sounds')}</Typography>
           </Box>
-          <MenuItem component="div" sx={{ cursor: 'default', flexDirection: 'column', alignItems: 'stretch' }} onClick={(e) => e.stopPropagation()}>
+          <MenuItem component="div" sx={{ cursor: 'default' }} onClick={(e) => e.stopPropagation()}>
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
               <ListItemText primary={t('soundMessageReceived')} primaryTypographyProps={{ variant: 'body2' }} />
               <Switch size="small" checked={messageSoundOn} onChange={handleMessageSoundToggle} onClick={(e) => e.stopPropagation()} />
             </Box>
-            <FormControl size="small" sx={{ minWidth: 100, mt: 0.5 }} onClick={(e) => e.stopPropagation()}>
-              <Select value={messageSoundPreset} onChange={handleMessagePresetChange} displayEmpty size="small" sx={{ height: 28, fontSize: '0.8rem' }}>
-                {presetIds.map((id) => (
-                  <MenuItem key={id} value={id}>{t(`soundPreset_${id}`)}</MenuItem>
-                ))}
-              </Select>
-            </FormControl>
           </MenuItem>
-          <MenuItem component="div" sx={{ cursor: 'default', flexDirection: 'column', alignItems: 'stretch' }} onClick={(e) => e.stopPropagation()}>
+          <MenuItem component="div" sx={{ cursor: 'default' }} onClick={(e) => e.stopPropagation()}>
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
               <ListItemText primary={t('soundSoldItem')} primaryTypographyProps={{ variant: 'body2' }} />
               <Switch size="small" checked={soldSoundOn} onChange={handleSoldSoundToggle} onClick={(e) => e.stopPropagation()} />
             </Box>
-            <FormControl size="small" sx={{ minWidth: 100, mt: 0.5 }} onClick={(e) => e.stopPropagation()}>
-              <Select value={soldSoundPreset} onChange={handleSoldPresetChange} displayEmpty size="small" sx={{ height: 28, fontSize: '0.8rem' }}>
-                {presetIds.map((id) => (
-                  <MenuItem key={id} value={id}>{t(`soundPreset_${id}`)}</MenuItem>
-                ))}
-              </Select>
-            </FormControl>
           </MenuItem>
           <Divider />
           <Box sx={{ px: 2, py: 0.5 }}>
@@ -525,20 +491,10 @@ export default function Header() {
                 <Typography variant="body2">{t('soundMessageReceived')}</Typography>
                 <Switch size="small" checked={messageSoundOn} onChange={handleMessageSoundToggle} />
               </Box>
-              <Select value={messageSoundPreset} onChange={handleMessagePresetChange} size="small" sx={{ mt: 0.5, width: '100%' }}>
-                {presetIds.map((id) => (
-                  <MenuItem key={id} value={id}>{t(`soundPreset_${id}`)}</MenuItem>
-                ))}
-              </Select>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', py: 0.5, mt: 0.5 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', py: 0.5 }}>
                 <Typography variant="body2">{t('soundSoldItem')}</Typography>
                 <Switch size="small" checked={soldSoundOn} onChange={handleSoldSoundToggle} />
               </Box>
-              <Select value={soldSoundPreset} onChange={handleSoldPresetChange} size="small" sx={{ mt: 0.5, width: '100%' }}>
-                {presetIds.map((id) => (
-                  <MenuItem key={id} value={id}>{t(`soundPreset_${id}`)}</MenuItem>
-                ))}
-              </Select>
             </Box>
           </Box>
           <Box sx={{ px: 2, py: 1 }}>
