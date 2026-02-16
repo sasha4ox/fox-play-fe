@@ -7,14 +7,12 @@ import { useEffect } from 'react';
 import Container from '@mui/material/Container';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
-import Card from '@mui/material/Card';
-import CardActionArea from '@mui/material/CardActionArea';
-import CardContent from '@mui/material/CardContent';
 import MuiLink from '@mui/material/Link';
 import CircularProgress from '@mui/material/CircularProgress';
 import Alert from '@mui/material/Alert';
 import { useGames } from '@/hooks/useGames';
-import { getGameFromTree, getDirectOfferTarget } from '@/lib/games';
+import { getGameFromTree, getDirectOfferTarget, getGameImageUrl } from '@/lib/games';
+import SelectCard from '@/components/SelectCard/SelectCard';
 
 export default function GameVariantsPage() {
   const router = useRouter();
@@ -74,17 +72,14 @@ export default function GameVariantsPage() {
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
           {t('variantsHint', { game: game.name })}
         </Typography>
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' }, gap: 2 }}>
           {variants.map((variant) => (
-            <Card key={variant.id} variant="outlined">
-              <CardActionArea onClick={() => handleVariantClick(variant.id)}>
-                <CardContent sx={{ py: 3, px: 3 }}>
-                  <Typography variant="h6" fontWeight={500}>
-                    {variant.name}
-                  </Typography>
-                </CardContent>
-              </CardActionArea>
-            </Card>
+            <SelectCard
+              key={variant.id}
+              name={variant.name}
+              imageUrl={getGameImageUrl(game)}
+              onClick={() => handleVariantClick(variant.id)}
+            />
           ))}
         </Box>
       </Container>

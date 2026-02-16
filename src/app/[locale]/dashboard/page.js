@@ -3,19 +3,18 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
-import Link from 'next/link';
 import Container from '@mui/material/Container';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Card from '@mui/material/Card';
-import CardActionArea from '@mui/material/CardActionArea';
 import CardContent from '@mui/material/CardContent';
 import Skeleton from '@mui/material/Skeleton';
 import Alert from '@mui/material/Alert';
 import InputBase from '@mui/material/InputBase';
 import SearchIcon from '@mui/icons-material/Search';
 import { useGames } from '@/hooks/useGames';
-import { getDirectOfferTarget } from '@/lib/games';
+import SelectCard from '@/components/SelectCard/SelectCard';
+import { getDirectOfferTarget, getGameImageUrl } from '@/lib/games';
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -79,11 +78,12 @@ export default function DashboardPage() {
         )}
 
         {loading && (
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}>
-            {[1, 2, 3, 4].map((i) => (
-              <Card key={i} variant="outlined">
-                <CardContent sx={{ py: 3, px: 3 }}>
-                  <Skeleton variant="text" width="40%" height={32} />
+          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' }, gap: 2, mt: 2 }}>
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <Card key={i} variant="outlined" sx={{ overflow: 'hidden', borderRadius: 2 }}>
+                <Skeleton variant="rectangular" height={160} />
+                <CardContent sx={{ py: 1.5, textAlign: 'center' }}>
+                  <Skeleton variant="text" width="60%" height={28} sx={{ mx: 'auto' }} />
                 </CardContent>
               </Card>
             ))}
@@ -97,18 +97,18 @@ export default function DashboardPage() {
         )}
 
         {!loading && !error && games.length > 0 && (
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}>
-            {filteredGames.map((game) => (
-              <Card key={game.id} variant="outlined">
-                <CardActionArea onClick={() => handleGameClick(game)}>
-                  <CardContent sx={{ py: 3, px: 3 }}>
-                    <Typography variant="h6" fontWeight={500} color="text.primary">
-                      {game.name}
-                    </Typography>
-                  </CardContent>
-                </CardActionArea>
-              </Card>
-            ))}
+          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' }, gap: 2, mt: 2 }}>
+            {filteredGames.map((game) => {
+              const imageUrl = getGameImageUrl(game);
+              return (
+                <SelectCard
+                  key={game.id}
+                  name={game.name}
+                  imageUrl={imageUrl}
+                  onClick={() => handleGameClick(game)}
+                />
+              );
+            })}
           </Box>
         )}
 

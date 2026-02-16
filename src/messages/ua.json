@@ -334,9 +334,9 @@
     "noOffers": "На цьому сервері оголошень ще немає.",
     "sellItems": "Продати",
     "loginToSell": "Увійдіть, щоб продати",
-    "backToGames": "← До ігор",
-    "backToServers": "← До серверів",
-    "backToVariants": "← До варіантів",
+    "backToGames": "До ігор",
+    "backToServers": "До серверів",
+    "backToVariants": "До варіантів",
     "sellerOnline": "Онлайн",
     "sellerOffline": "Офлайн",
     "categoryFilter": "Категорія",
@@ -493,7 +493,11 @@
     "offerTypeOther": "Інше",
     "customCategories": "Власні категорії",
     "addCustomCategory": "Додати категорію",
-    "customCategoryName": "Назва категорії"
+    "customCategoryName": "Назва категорії",
+    "editGameImage": "Змінити зображення гри",
+    "gameImageUrl": "URL зображення",
+    "gameImageUrlHint": "URL або шлях (наприклад /images/games/lineage-2.png). Залиште пустим, щоб використовувати локальний файл за назвою гри.",
+    "save": "Зберегти"
   },
   "Footer": {
     "brand": "FoxyPlay",

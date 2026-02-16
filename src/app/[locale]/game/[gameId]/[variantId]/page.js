@@ -7,14 +7,12 @@ import { useEffect } from 'react';
 import Container from '@mui/material/Container';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
-import Card from '@mui/material/Card';
-import CardActionArea from '@mui/material/CardActionArea';
-import CardContent from '@mui/material/CardContent';
 import MuiLink from '@mui/material/Link';
 import CircularProgress from '@mui/material/CircularProgress';
 import Alert from '@mui/material/Alert';
 import { useGames } from '@/hooks/useGames';
-import { getGameFromTree, getVariantFromTree } from '@/lib/games';
+import { getGameFromTree, getVariantFromTree, getGameImageUrl } from '@/lib/games';
+import SelectCard from '@/components/SelectCard/SelectCard';
 
 export default function GameServersPage() {
   const router = useRouter();
@@ -74,17 +72,14 @@ export default function GameServersPage() {
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
           {servers.length !== 1 ? t('serversHintPlural', { game: game.name, variant: variant.name, count: servers.length }) : t('serversHint', { game: game.name, variant: variant.name, count: servers.length })}
         </Typography>
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' }, gap: 2 }}>
           {servers.map((server) => (
-            <Card key={server.id} variant="outlined">
-              <CardActionArea onClick={() => handleServerClick(server.id)}>
-                <CardContent sx={{ py: 3, px: 3 }}>
-                  <Typography variant="h6" fontWeight={500}>
-                    {server.name}
-                  </Typography>
-                </CardContent>
-              </CardActionArea>
-            </Card>
+            <SelectCard
+              key={server.id}
+              name={server.name}
+              imageUrl={getGameImageUrl(game)}
+              onClick={() => handleServerClick(server.id)}
+            />
           ))}
         </Box>
       </Container>

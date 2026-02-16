@@ -17,6 +17,7 @@ import TableCell from '@mui/material/TableCell';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import MuiLink from '@mui/material/Link';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import CircularProgress from '@mui/material/CircularProgress';
 import Alert from '@mui/material/Alert';
 import Avatar from '@mui/material/Avatar';
@@ -25,7 +26,7 @@ import Rating from '@mui/material/Rating';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useTheme } from '@mui/material/styles';
 import { useGames } from '@/hooks/useGames';
-import { getGameFromTree, getVariantFromTree, getServerFromTree } from '@/lib/games';
+import { getGameFromTree, getVariantFromTree, getServerFromTree, isSimpleGame } from '@/lib/games';
 import { useAuthStore, useIsAuthenticated } from '@/store/authStore';
 import { useLoginModalStore } from '@/store/loginModalStore';
 import { useProfile } from '@/hooks/useProfile';
@@ -123,9 +124,22 @@ export default function GameOffersPage() {
 
   const breadcrumb = `${game.name} → ${variant.name} → ${server.name}`;
   const servers = variant?.servers ?? [];
+  const variants = game?.variants ?? [];
   const singleServer = servers.length === 1;
-  const backHref = singleServer ? `/${locale}/game/${gameId}` : `/${locale}/game/${gameId}/${variantId}`;
-  const backLabel = singleServer ? t('backToVariants') : t('backToServers');
+  const singleVariant = variants.length === 1;
+  const isSimple = isSimpleGame(game);
+
+  let backHref, backLabel;
+  if (isSimple || (singleVariant && singleServer)) {
+    backHref = `/${locale}/dashboard`;
+    backLabel = t('backToGames');
+  } else if (singleServer) {
+    backHref = `/${locale}/game/${gameId}`;
+    backLabel = t('backToVariants');
+  } else {
+    backHref = `/${locale}/game/${gameId}/${variantId}`;
+    backLabel = t('backToServers');
+  }
 
   const categoryLabel = (typeOrId) => {
     if (!typeOrId) return typeOrId;
@@ -161,9 +175,27 @@ export default function GameOffersPage() {
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', py: 4, px: 2 }}>
       <Container>
-        <MuiLink component={Link} href={backHref} color="secondary" sx={{ display: 'inline-block', mb: 2 }}>
+        <Button
+          component={Link}
+          href={backHref}
+          startIcon={<ArrowBackIcon />}
+          variant="outlined"
+          size="small"
+          color="inherit"
+          sx={{
+            mb: 2,
+            textTransform: 'none',
+            fontWeight: 500,
+            borderRadius: 2,
+            borderColor: 'divider',
+            '&:hover': {
+              borderColor: 'primary.main',
+              bgcolor: 'action.hover',
+            },
+          }}
+        >
           {backLabel}
-        </MuiLink>
+        </Button>
         <Typography variant="h4" fontWeight={600} color="text.primary" gutterBottom>
           {t('offersFor', { server: server?.name ?? '' })}
         </Typography>

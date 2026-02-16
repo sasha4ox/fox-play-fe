@@ -22,6 +22,7 @@ import Collapse from '@mui/material/Collapse';
 import IconButton from '@mui/material/IconButton';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
+import ImageIcon from '@mui/icons-material/Image';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import Skeleton from '@mui/material/Skeleton';
@@ -67,6 +68,8 @@ export default function AdminGamesPage() {
   const [submitting, setSubmitting] = useState(false);
   const [editServerId, setEditServerId] = useState(null);
   const [editServerName, setEditServerName] = useState('');
+  const [editGameImageOpen, setEditGameImageOpen] = useState(null); // game
+  const [editGameImageUrl, setEditGameImageUrl] = useState('');
 
   const load = () => {
     if (!token) return;
@@ -205,6 +208,25 @@ export default function AdminGamesPage() {
       .finally(() => setSubmitting(false));
   };
 
+  const handleOpenEditGameImage = (game) => {
+    setEditGameImageOpen(game);
+    setEditGameImageUrl(game?.imageUrl ?? '');
+  };
+
+  const handleSaveGameImage = () => {
+    const game = editGameImageOpen;
+    if (!token || !game) return;
+    setSubmitting(true);
+    adminUpdateGame(game.id, { imageUrl: editGameImageUrl.trim() || null }, token)
+      .then(() => {
+        setEditGameImageOpen(null);
+        setEditGameImageUrl('');
+        load();
+      })
+      .catch((e) => setError(e.message || 'Failed to update image'))
+      .finally(() => setSubmitting(false));
+  };
+
   const getCategoryLabel = (typeOrId, server) => {
     if (STANDARD_OFFER_TYPES.includes(typeOrId)) {
       return t(`offerType${typeOrId.charAt(0) + typeOrId.slice(1).toLowerCase()}`);
@@ -255,9 +277,20 @@ export default function AdminGamesPage() {
                   gap: 2,
                 }}
               >
-                <Typography variant="h6" fontWeight={600}>
-                  {game.name}
-                </Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Typography variant="h6" fontWeight={600}>
+                    {game.name}
+                  </Typography>
+                  <IconButton
+                    size="small"
+                    onClick={() => handleOpenEditGameImage(game)}
+                    title={t('editGameImage')}
+                    disabled={submitting}
+                    sx={{ color: 'text.secondary' }}
+                  >
+                    <ImageIcon sx={{ fontSize: 20 }} />
+                  </IconButton>
+                </Box>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
                   <FormControl size="small" sx={{ minWidth: 200 }}>
                     <InputLabel>{t('structureType')}</InputLabel>
@@ -601,6 +634,31 @@ export default function AdminGamesPage() {
             disabled={submitting || !addServerName.trim()}
           >
             {t('add')}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={!!editGameImageOpen} onClose={() => !submitting && setEditGameImageOpen(null)} maxWidth="sm" fullWidth>
+        <DialogTitle>{t('editGameImage')} — {editGameImageOpen?.name}</DialogTitle>
+        <DialogContent sx={{ pt: 1 }}>
+          <TextField
+            autoFocus
+            margin="dense"
+            label={t('gameImageUrl')}
+            placeholder="/images/games/lineage-2.png"
+            fullWidth
+            value={editGameImageUrl}
+            onChange={(e) => setEditGameImageUrl(e.target.value)}
+            helperText={t('gameImageUrlHint')}
+            onKeyDown={(e) => e.key === 'Enter' && handleSaveGameImage()}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setEditGameImageOpen(null)} disabled={submitting}>
+            {t('cancel')}
+          </Button>
+          <Button onClick={handleSaveGameImage} variant="contained" disabled={submitting}>
+            {t('save')}
           </Button>
         </DialogActions>
       </Dialog>

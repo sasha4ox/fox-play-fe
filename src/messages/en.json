@@ -334,9 +334,9 @@
     "noOffers": "No offers on this server yet.",
     "sellItems": "Sell items",
     "loginToSell": "Log in to sell items",
-    "backToGames": "← Back to games",
-    "backToServers": "← Back to servers",
-    "backToVariants": "← Back to variants",
+    "backToGames": "Back to games",
+    "backToServers": "Back to servers",
+    "backToVariants": "Back to variants",
     "sellerOnline": "Online",
     "sellerOffline": "Offline",
     "categoryFilter": "Category",
@@ -493,7 +493,11 @@
     "offerTypeOther": "Other",
     "customCategories": "Custom categories",
     "addCustomCategory": "Add category",
-    "customCategoryName": "Category name"
+    "customCategoryName": "Category name",
+    "editGameImage": "Edit game image",
+    "gameImageUrl": "Image URL",
+    "gameImageUrlHint": "URL or path (e.g. /images/games/lineage-2.png). Leave empty to use local file by game name.",
+    "save": "Save"
   },
   "Footer": {
     "brand": "FoxyPlay",

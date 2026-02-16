@@ -515,15 +515,29 @@ export default function Header() {
         </>
       )}
       {!isAuth && (
-        <Button
-          fullWidth
-          variant="contained"
-          color="secondary"
-          sx={{ mx: 2, mt: 1 }}
-          onClick={() => { setMobileOpen(false); openLoginModal(); }}
-        >
-          {t('login')}
-        </Button>
+        <>
+          <Box sx={{ px: 2, py: 1 }}>
+            <Typography variant="caption" color="text.secondary">{t('theme')}</Typography>
+            <Box sx={{ display: 'flex', gap: 0.5, mt: 0.5 }}>
+              <Button size="small" variant={themeMode === 'light' ? 'contained' : 'outlined'} onClick={() => setThemeMode('light')}>
+                {t('themeLight')}
+              </Button>
+              <Button size="small" variant={themeMode === 'dark' ? 'contained' : 'outlined'} onClick={() => setThemeMode('dark')}>
+                {t('themeDark')}
+              </Button>
+            </Box>
+          </Box>
+          <Divider sx={{ my: 1 }} />
+          <Button
+            fullWidth
+            variant="contained"
+            color="secondary"
+            sx={{ mx: 2, mt: 1 }}
+            onClick={() => { setMobileOpen(false); openLoginModal(); }}
+          >
+            {t('login')}
+          </Button>
+        </>
       )}
     </Box>
   );
@@ -601,9 +615,19 @@ export default function Header() {
           ) : (
             <>
               {!isMobile && (
-                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                  <LocaleSwitcher />
-                </Box>
+                <>
+                  <IconButton
+                    size="small"
+                    onClick={() => setThemeMode(effectiveMode === 'dark' ? 'light' : 'dark')}
+                    aria-label={effectiveMode === 'dark' ? t('themeLight') : t('themeDark')}
+                    sx={{ color: 'text.secondary' }}
+                  >
+                    {effectiveMode === 'dark' ? <LightModeIcon fontSize="small" /> : <DarkModeIcon fontSize="small" />}
+                  </IconButton>
+                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    <LocaleSwitcher />
+                  </Box>
+                </>
               )}
               <Button size="small" variant="outlined" color="secondary" sx={{ textTransform: 'none' }} onClick={() => openLoginModal()}>
                 {t('login')}

@@ -43,3 +43,18 @@ export function getDirectOfferTarget(game) {
 export function getFlatGameOfferTarget(game) {
   return getDirectOfferTarget(game)
 }
+
+const DEFAULT_GAME_IMAGE = '/images/games/default.png'
+
+/** Resolve game image URL: use imageUrl from DB if set, else /images/games/{slug}.png, else default.png. */
+export function getGameImageUrl(game) {
+  if (game?.imageUrl?.trim()) return game.imageUrl
+  const slug = (game?.name ?? '')
+    .toLowerCase()
+    .replace(/\s+/g, '-')
+    .replace(/[^a-z0-9-]/g, '')
+  if (slug) return `/images/games/${slug}.png`
+  return DEFAULT_GAME_IMAGE
+}
+
+export { DEFAULT_GAME_IMAGE }
