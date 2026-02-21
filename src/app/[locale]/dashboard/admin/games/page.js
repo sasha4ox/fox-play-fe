@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useDeferredValue } from 'react';
 import { useTranslations } from 'next-intl';
 import Container from '@mui/material/Container';
 import Box from '@mui/material/Box';
@@ -10,6 +10,7 @@ import TextField from '@mui/material/TextField';
 import Switch from '@mui/material/Switch';
 import FormControl from '@mui/material/FormControl';
 import FormControlLabel from '@mui/material/FormControlLabel';
+import InputBase from '@mui/material/InputBase';
 import InputLabel from '@mui/material/InputLabel';
 import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
@@ -25,6 +26,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import ImageIcon from '@mui/icons-material/Image';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+import SearchIcon from '@mui/icons-material/Search';
 import Skeleton from '@mui/material/Skeleton';
 import Alert from '@mui/material/Alert';
 import Dialog from '@mui/material/Dialog';
@@ -45,6 +47,23 @@ import {
 } from '@/lib/api';
 
 const STANDARD_OFFER_TYPES = ['ADENA', 'ITEMS', 'ACCOUNTS', 'BOOSTING', 'OTHER'];
+
+function filterAdminGamesBySearch(games, searchQuery) {
+  if (!searchQuery) return games;
+  return games.filter((game) => {
+    const gameName = String(game?.name ?? '').toLowerCase();
+    if (gameName.includes(searchQuery)) return true;
+    for (const v of game?.variants ?? []) {
+      const variantName = String(v?.name ?? '').toLowerCase();
+      if (variantName.includes(searchQuery)) return true;
+      for (const s of v?.servers ?? []) {
+        const serverName = String(s?.name ?? '').toLowerCase();
+        if (serverName.includes(searchQuery)) return true;
+      }
+    }
+    return false;
+  });
+}
 
 export default function AdminGamesPage() {
   const t = useTranslations('Admin');
@@ -70,6 +89,13 @@ export default function AdminGamesPage() {
   const [editServerName, setEditServerName] = useState('');
   const [editGameImageOpen, setEditGameImageOpen] = useState(null); // game
   const [editGameImageUrl, setEditGameImageUrl] = useState('');
+  const [search, setSearch] = useState('');
+  const deferredSearch = useDeferredValue(search);
+  const searchQuery = deferredSearch.trim().toLowerCase();
+  const filteredGames = useMemo(
+    () => filterAdminGamesBySearch(games, searchQuery),
+    [games, searchQuery]
+  );
 
   const load = () => {
     if (!token) return;
@@ -247,9 +273,27 @@ export default function AdminGamesPage() {
         <Typography variant="h5" fontWeight={600}>
           {t('games')}
         </Typography>
-        <Button variant="contained" startIcon={<AddIcon />} onClick={() => setAddGameOpen(true)} disabled={loading}>
-          {t('addGame')}
-        </Button>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
+          <InputBase
+            placeholder={t('searchGames')}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            startAdornment={<SearchIcon sx={{ color: 'text.secondary', mr: 1.5, fontSize: 20 }} />}
+            sx={{
+              minWidth: 240,
+              py: 1,
+              px: 2,
+              borderRadius: 1,
+              bgcolor: 'action.hover',
+              fontSize: '0.95rem',
+              border: '1px solid',
+              borderColor: 'divider',
+            }}
+          />
+          <Button variant="contained" startIcon={<AddIcon />} onClick={() => setAddGameOpen(true)} disabled={loading}>
+            {t('addGame')}
+          </Button>
+        </Box>
       </Box>
       {error && (
         <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
@@ -262,9 +306,13 @@ export default function AdminGamesPage() {
         <Card variant="outlined" sx={{ p: 4, textAlign: 'center' }}>
           <Typography color="text.secondary">{t('noGames')}</Typography>
         </Card>
+      ) : filteredGames.length === 0 ? (
+        <Card variant="outlined" sx={{ p: 4, textAlign: 'center' }}>
+          <Typography color="text.secondary">{t('noSearchResults')}</Typography>
+        </Card>
       ) : (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          {games.map((game) => (
+          {filteredGames.map((game) => (
             <Card key={game.id} variant="outlined" sx={{ overflow: 'hidden', borderRadius: 2 }}>
               <Box
                 sx={{

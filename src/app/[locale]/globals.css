@@ -1,12 +1,12 @@
-/* Light mode: soft background, high-contrast text (WCAG-friendly) */
+/* Light mode: modern warm neutrals, refined contrast */
 :root {
-  --background: #f8fafc;
-  --foreground: #0f172a;
-  --text-primary: #0f172a;
-  --text-second-color: #64748b;
-  --second-color: #e2e8f0;
-  --third-color: #0f172a;
-  --fourth-color: #475569;
+  --background: #fafaf9;
+  --foreground: #1c1917;
+  --text-primary: #1c1917;
+  --text-second-color: #78716c;
+  --second-color: #e7e5e4;
+  --third-color: #1c1917;
+  --fourth-color: #64748b;
 }
 
 /* Dark mode: true dark surfaces, readable text */

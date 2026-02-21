@@ -8,6 +8,7 @@ import Footer from '@/components/Footer/Footer';
 import LoginModal from '@/components/LoginModal/LoginModal';
 import CookieConsent from '@/components/CookieConsent/CookieConsent';
 import ConditionalAnalytics from '@/components/ConditionalAnalytics/ConditionalAnalytics';
+import ScrollToTop from '@/components/ScrollToTop/ScrollToTop';
 import Providers from '@/components/Providers/Providers';
 import GoogleAuthReturnHandler from '@/components/GoogleAuthReturnHandler';
 import CompleteProfileGate from '@/components/CompleteProfileGate/CompleteProfileGate';
@@ -57,6 +58,7 @@ export default async function RootLayout({ children, params }) {
               <Footer />
               <LoginModal />
               <CookieConsent />
+              <ScrollToTop />
               <ConditionalAnalytics />
             </div>
           </NextIntlClientProvider>

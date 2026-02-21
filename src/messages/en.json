@@ -10,7 +10,8 @@
     "close": "Close",
     "back": "← Back",
     "backToGames": "← Back to games",
-    "user": "User"
+    "user": "User",
+    "scrollToTop": "Scroll to top"
   },
   "Form": {
     "mandatatory": "This field is required",
@@ -88,6 +89,7 @@
     "mySales": "My sales",
     "chooseGame": "Choose a game",
     "searchGames": "Search by game or variant",
+    "filterByLetter": "Filter by letter",
     "noGames": "No games available.",
     "noSearchResults": "No games match your search.",
     "recentServers": "Your recent servers",
@@ -473,6 +475,8 @@
     "addServer": "Add server",
     "enabled": "Enabled",
     "noGames": "No games.",
+    "searchGames": "Search by game, variant, or server",
+    "noSearchResults": "No games match your search.",
     "gameName": "Game name",
     "variantName": "Variant name",
     "serverName": "Server name",

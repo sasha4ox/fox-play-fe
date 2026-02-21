@@ -3,19 +3,19 @@
 import { createTheme } from '@mui/material/styles';
 
 /**
- * Best-practice light palette: soft background, clear primary, WCAG-friendly contrast.
- * Background #fafafa reduces glare; primary blue for clarity and trust.
+ * Modern light palette: warm neutrals, refined violet accent, soft contrast.
+ * Warmer background (#fafaf9), distinctive primary (#6366f1), WCAG-friendly.
  */
 const lightPalette = {
   mode: 'light',
-  primary: { main: '#2563eb', contrastText: '#ffffff' },
-  secondary: { main: '#475569', contrastText: '#ffffff' },
-  background: { default: '#f8fafc', paper: '#ffffff' },
-  text: { primary: '#0f172a', secondary: '#64748b' },
-  divider: 'rgba(15, 23, 42, 0.12)',
+  primary: { main: '#6366f1', contrastText: '#ffffff' },
+  secondary: { main: '#64748b', contrastText: '#ffffff' },
+  background: { default: '#fafaf9', paper: '#ffffff' },
+  text: { primary: '#1c1917', secondary: '#78716c' },
+  divider: 'rgba(28, 25, 23, 0.08)',
   action: {
-    hover: 'rgba(15, 23, 42, 0.04)',
-    selected: 'rgba(37, 99, 235, 0.08)',
+    hover: 'rgba(28, 25, 23, 0.04)',
+    selected: 'rgba(99, 102, 241, 0.1)',
   },
 };
 
@@ -52,12 +52,21 @@ const shared = {
     },
     MuiCard: {
       styleOverrides: {
-        root: ({ theme }) => ({
-          borderRadius: 12,
-          border: `1px solid ${theme.palette.divider}`,
-          transition: 'background 0.2s, border-color 0.2s',
-          '&:hover': { borderColor: theme.palette.divider },
-        }),
+        root: ({ theme }) => {
+          const isLight = theme.palette.mode === 'light';
+          return {
+            borderRadius: 12,
+            border: isLight
+              ? `1px solid rgba(28, 25, 23, 0.12)`
+              : `1px solid ${theme.palette.divider}`,
+            boxShadow: isLight ? '0 1px 3px rgba(0, 0, 0, 0.06)' : 'none',
+            transition: 'background 0.2s, border-color 0.2s, box-shadow 0.2s',
+            '&:hover': {
+              borderColor: isLight ? 'rgba(99, 102, 241, 0.4)' : theme.palette.divider,
+              boxShadow: isLight ? '0 4px 12px rgba(0, 0, 0, 0.08)' : undefined,
+            },
+          };
+        },
       },
     },
     MuiLink: {

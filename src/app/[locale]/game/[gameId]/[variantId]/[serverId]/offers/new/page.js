@@ -36,6 +36,7 @@ export default function NewOfferPage() {
     { value: 'BOOSTING', label: tOffers('boosting') },
     { value: 'OTHER', label: tOffers('other') },
   ];
+  const STANDARD_CATEGORY_NAMES = new Set(['adena', 'items', 'accounts', 'boosting', 'other']);
   const variantId = params?.variantId;
   const serverId = params?.serverId;
   const { tree, loading: gamesLoading, error: gamesError } = useGames();
@@ -45,9 +46,12 @@ export default function NewOfferPage() {
   const serverTypes = server?.enabledOfferTypes && server.enabledOfferTypes.length > 0
     ? server.enabledOfferTypes
     : null;
-  const allowedOfferTypes = serverTypes ?? [...ALL_OFFER_TYPES.map((t) => t.value), ...(server?.customCategories?.map((c) => c.id) ?? [])];
+  const customCategoriesOnly = (server?.customCategories ?? []).filter(
+    (c) => !STANDARD_CATEGORY_NAMES.has(c.name.toLowerCase())
+  );
+  const allowedOfferTypes = serverTypes ?? [...ALL_OFFER_TYPES.map((t) => t.value), ...customCategoriesOnly.map((c) => c.id)];
   const standardTabs = ALL_OFFER_TYPES.filter((t) => allowedOfferTypes.includes(t.value));
-  const customTabs = (server?.customCategories ?? []).map((c) => ({ value: c.id, label: c.name, custom: true }));
+  const customTabs = customCategoriesOnly.map((c) => ({ value: c.id, label: c.name, custom: true }));
   const OFFER_TYPES = [...standardTabs, ...customTabs];
   const token = useAuthStore((s) => s.token);
   const { preferredCurrency } = useProfile();

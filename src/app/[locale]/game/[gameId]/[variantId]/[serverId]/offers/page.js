@@ -34,6 +34,7 @@ import { fetchOffersByServer, addRecentServer } from '@/lib/api';
 import { formatAdena } from '@/lib/adenaFormat';
 
 const ALL_OFFER_TYPES = ['ADENA', 'ITEMS', 'ACCOUNTS', 'BOOSTING', 'OTHER'];
+const STANDARD_CATEGORY_NAMES = new Set(['adena', 'items', 'accounts', 'boosting', 'other']);
 
 export default function GameOffersPage() {
   const params = useParams();
@@ -51,7 +52,10 @@ export default function GameOffersPage() {
   const serverTypes = server?.enabledOfferTypes && server.enabledOfferTypes.length > 0
     ? server.enabledOfferTypes
     : null;
-  const allowedOfferTypes = serverTypes ?? [...ALL_OFFER_TYPES, ...(server?.customCategories?.map((c) => c.id) ?? [])];
+  const customCategoriesOnly = (server?.customCategories ?? []).filter(
+    (c) => !STANDARD_CATEGORY_NAMES.has(c.name.toLowerCase())
+  );
+  const allowedOfferTypes = serverTypes ?? [...ALL_OFFER_TYPES, ...customCategoriesOnly.map((c) => c.id)];
   const isAuthenticated = useIsAuthenticated();
   const token = useAuthStore((s) => s.token);
   const openLoginModal = useLoginModalStore((s) => s.openModal);
