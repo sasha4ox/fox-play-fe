@@ -521,9 +521,14 @@ export default function BalancePage() {
 
             {cardPaymentEnabled && (
               <Box sx={{ mt: 4 }}>
-                <Typography variant="h6" fontWeight={600} gutterBottom>
-                  {t('withdrawToCardTitle')}
-                </Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 1, mb: 1 }}>
+                  <Typography variant="h6" fontWeight={600}>
+                    {t('withdrawToCardTitle')}
+                  </Typography>
+                  <Button component={Link} href={`${base}/dashboard/balance/withdrawals`} variant="outlined" size="small">
+                    {t('viewWithdrawals')}
+                  </Button>
+                </Box>
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
                   {t('withdrawToCardHint')}
                 </Typography>

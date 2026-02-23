@@ -40,6 +40,7 @@ import {
   sendOrderMessage,
   markOrderDelivered,
   completeOrder as apiCompleteOrder,
+  cancelOrder as apiCancelOrder,
   leaveOrderFeedback,
   openDispute,
   resolveDispute,
@@ -91,6 +92,7 @@ export default function OrderChatPage() {
   const [feedbackRating, setFeedbackRating] = useState(5);
   const [feedbackComment, setFeedbackComment] = useState('');
   const [feedbackSubmitting, setFeedbackSubmitting] = useState(false);
+  const [cancelSubmitting, setCancelSubmitting] = useState(false);
   const [paymentSuccessShown, setPaymentSuccessShown] = useState(false);
   const [infoExpandedOnMobile, setInfoExpandedOnMobile] = useState(false);
   const tAdmin = useTranslations('Admin');
@@ -187,6 +189,10 @@ export default function OrderChatPage() {
     (order.status === 'CREATED' || order.status === 'PAID');
   const canBuyerCompleteOrDispute =
     isBuyer && order && order.status === 'DELIVERED';
+  const canCancel =
+    order &&
+    (isBuyer || isSeller) &&
+    ['CREATED', 'PAID', 'DELIVERED'].includes(order.status);
 
   const handleMarkDelivered = async () => {
     if (!orderId || !token || deliverProofFiles.length === 0) {
@@ -220,6 +226,25 @@ export default function OrderChatPage() {
       setActionError(err.message || 'Failed to complete order');
     } finally {
       setCompleteSubmitting(false);
+    }
+  };
+
+  const handleCancelOrder = async () => {
+    if (!orderId || !token || !window.confirm(t('cancelOrderConfirm'))) return;
+    setCancelSubmitting(true);
+    setActionError(null);
+    try {
+      await apiCancelOrder(orderId, token);
+      const [updatedOrder, updatedMessages] = await Promise.all([
+        getOrderById(orderId, token),
+        getOrderMessages(orderId, token),
+      ]);
+      setOrder(updatedOrder);
+      setMessages(updatedMessages ?? []);
+    } catch (err) {
+      setActionError(err.message || 'Failed to cancel order');
+    } finally {
+      setCancelSubmitting(false);
     }
   };
 
@@ -601,6 +626,22 @@ export default function OrderChatPage() {
                 {t('notReceivedDispute')}
               </Button>
             </Box>
+          </Box>
+        )}
+
+        {canCancel && (
+          <Box sx={{ mb: 2, p: 2, border: '1px solid', borderColor: 'divider', borderRadius: 1, bgcolor: 'background.paper' }}>
+            <Typography variant="subtitle2" gutterBottom>{t('cancelOrderTitle')}</Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>{t('cancelOrderHint')}</Typography>
+            <Button
+              size="small"
+              variant="outlined"
+              color="error"
+              onClick={handleCancelOrder}
+              disabled={cancelSubmitting}
+            >
+              {cancelSubmitting ? t('submitting') : t('cancelOrder')}
+            </Button>
           </Box>
         )}
 

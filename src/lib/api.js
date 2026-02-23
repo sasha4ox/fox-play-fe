@@ -234,6 +234,15 @@ export async function createCardPayoutRequest(body, token) {
   return apiPost('/me/card-payout-request', body, token)
 }
 
+/** List current user's card payout requests (withdrawals to card). */
+export async function getMyCardPayoutRequests(token, params = {}) {
+  const q = new URLSearchParams()
+  if (params.skip != null) q.set('skip', String(params.skip))
+  if (params.take != null) q.set('take', String(params.take))
+  const s = q.toString()
+  return apiGet(`/me/card-payout-requests${s ? `?${s}` : ''}`, token)
+}
+
 /** My orders as buyer (auth required) */
 export async function getMyOrdersAsBuyer(token) {
   return apiGet('/orders/me/buyer', token)
@@ -281,6 +290,11 @@ export async function markOrderDelivered(orderId, formData, token) {
 /** Buyer: confirm order completed – releases payment to seller (auth required) */
 export async function completeOrder(orderId, token) {
   return apiPost(`/orders/${orderId}/complete`, {}, token)
+}
+
+/** Cancel order (buyer or seller). Refund goes to buyer balance; both receive a message. */
+export async function cancelOrder(orderId, token) {
+  return apiPost(`/orders/${orderId}/cancel`, {}, token)
 }
 
 /** Leave mandatory feedback for the other party (buyer or seller). Auth required. Body: { rating: 1–5, comment?: string } */

@@ -1,0 +1,110 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useLocale } from 'next-intl';
+import Link from 'next/link';
+import Box from '@mui/material/Box';
+import Container from '@mui/material/Container';
+import Typography from '@mui/material/Typography';
+import Button from '@mui/material/Button';
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableCell from '@mui/material/TableCell';
+import TableHead from '@mui/material/TableHead';
+import TableRow from '@mui/material/TableRow';
+import Skeleton from '@mui/material/Skeleton';
+import Chip from '@mui/material/Chip';
+import { useAuthStore, useIsAuthenticated } from '@/store/authStore';
+import { getMyCardPayoutRequests } from '@/lib/api';
+import { useLoginModalStore } from '@/store/loginModalStore';
+import { useTranslations } from 'next-intl';
+
+export default function BalanceWithdrawalsPage() {
+  const locale = useLocale();
+  const t = useTranslations('Balance');
+  const base = `/${locale}`;
+  const isAuth = useIsAuthenticated();
+  const token = useAuthStore((s) => s.token);
+  const openLoginModal = useLoginModalStore((s) => s.openModal);
+  const [items, setItems] = useState([]);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!token) {
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    getMyCardPayoutRequests(token, { take: 100 })
+      .then((data) => {
+        setItems(data?.items ?? []);
+        setTotal(data?.total ?? 0);
+      })
+      .catch(() => setItems([]))
+      .finally(() => setLoading(false));
+  }, [token]);
+
+  useEffect(() => {
+    if (!isAuth) openLoginModal();
+  }, [isAuth, openLoginModal]);
+
+  const formatDate = (d) => (d ? new Date(d).toLocaleString(locale) : '—');
+
+  return (
+    <Box sx={{ bgcolor: '#f5f5f5', minHeight: '100vh', py: 3 }}>
+      <Container maxWidth="md">
+        <Typography variant="h5" fontWeight={600} gutterBottom>
+          {t('withdrawalsTitle')}
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          {t('withdrawalsHint')}
+        </Typography>
+        <Button component={Link} href={`${base}/dashboard/balance`} variant="outlined" size="small" sx={{ mb: 2 }}>
+          {t('dashboard')}
+        </Button>
+
+        {loading ? (
+          <Skeleton height={200} />
+        ) : items.length === 0 ? (
+          <Typography color="text.secondary">{t('noWithdrawals')}</Typography>
+        ) : (
+          <Table size="small" sx={{ bgcolor: 'background.paper', borderRadius: 2, overflow: 'hidden' }}>
+            <TableHead>
+              <TableRow>
+                <TableCell>{t('date')}</TableCell>
+                <TableCell align="right">{t('amount')}</TableCell>
+                <TableCell>{t('status')}</TableCell>
+                <TableCell>{t('processedAt')}</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {items.map((r) => (
+                <TableRow key={r.id}>
+                  <TableCell>{formatDate(r.createdAt)}</TableCell>
+                  <TableCell align="right">
+                    {r.amount} {r.currency}
+                  </TableCell>
+                  <TableCell>
+                    <Chip
+                      size="small"
+                      label={r.status}
+                      color={r.status === 'COMPLETED' ? 'success' : r.status === 'FAILED' ? 'error' : 'default'}
+                      variant={r.status === 'PENDING' ? 'outlined' : 'filled'}
+                    />
+                    {r.status === 'PENDING' && (
+                      <Typography variant="caption" display="block" color="text.secondary" sx={{ mt: 0.5 }}>
+                        {t('typicallyProcessedInDays')}
+                      </Typography>
+                    )}
+                  </TableCell>
+                  <TableCell>{r.processedAt ? formatDate(r.processedAt) : '—'}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
+      </Container>
+    </Box>
+  );
+}

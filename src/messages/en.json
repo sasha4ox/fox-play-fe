@@ -160,7 +160,15 @@
     "cardPayoutCardRequired": "Enter a valid card number (at least 12 digits) and cardholder name.",
     "cardPayoutSuccess": "Payout request submitted. Admin will process it within about 3 working days.",
     "cardPayoutFailed": "Failed to submit payout request.",
-    "cardPayoutInsufficient": "Insufficient balance for selected currency."
+    "cardPayoutInsufficient": "Insufficient balance for selected currency.",
+    "withdrawalsTitle": "Withdrawal history",
+    "withdrawalsHint": "Your card payout requests. Pending requests are typically processed within about 3 working days.",
+    "noWithdrawals": "No withdrawal requests yet.",
+    "date": "Date",
+    "status": "Status",
+    "processedAt": "Processed",
+    "typicallyProcessedInDays": "Typically within ~3 working days.",
+    "viewWithdrawals": "View withdrawal history"
   },
   "Orders": {
     "chats": "Messages",
@@ -276,6 +284,10 @@
     "completing": "Completing…",
     "notReceivedDispute": "I didn't receive it — Open dispute",
     "orderCompleted": "Order completed. Seller has been paid.",
+    "cancelOrderTitle": "Cancel order",
+    "cancelOrderHint": "Cancel this order (e.g. out of stock or changed mind). The buyer will receive a refund to their balance and both parties will see a message.",
+    "cancelOrder": "Cancel order",
+    "cancelOrderConfirm": "Cancel this order? The amount will be refunded to the buyer's balance.",
     "paymentSuccessMessage": "Payment successful. You can continue in this chat.",
     "orderDisputed": "This order is in dispute.",
     "disputeReasonLabel": "Reason for dispute",

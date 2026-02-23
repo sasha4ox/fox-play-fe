@@ -230,12 +230,12 @@ export default function OrderCardPaymentPage() {
             mb: 3,
             p: 2,
             borderRadius: 2,
-            bgcolor: expired ? 'error.50' : remaining !== null && remaining <= 60 ? 'warning.50' : 'action.hover',
+            bgcolor: expired ? 'error.50' : remaining !== null && remaining <= 60 ? 'warning.50' : 'primary.50',
             border: '1px solid',
-            borderColor: expired ? 'error.200' : remaining !== null && remaining <= 60 ? 'warning.200' : 'divider',
+            borderColor: expired ? 'error.200' : remaining !== null && remaining <= 60 ? 'warning.200' : 'primary.200',
           }}
         >
-          <Typography variant="overline" color="text.secondary" display="block" sx={{ mb: 0.5 }}>
+          <Typography variant="overline" sx={{ color: '#1a1a1a', display: 'block', mb: 0.5 }} fontWeight={600}>
             {t('timeRemaining')}
           </Typography>
           <Typography
@@ -244,7 +244,7 @@ export default function OrderCardPaymentPage() {
             sx={{
               fontFamily: 'monospace',
               letterSpacing: 2,
-              color: expired ? 'error.main' : remaining !== null && remaining <= 60 ? 'warning.dark' : 'text.primary',
+              color: expired ? 'error.main' : remaining !== null && remaining <= 60 ? 'warning.dark' : 'primary.dark',
             }}
           >
             {remaining !== null ? formatTime(remaining) : '—'}
