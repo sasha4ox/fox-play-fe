@@ -431,6 +431,14 @@ export default function OrderChatPage() {
           {t('paymentSuccessMessage')}
         </Alert>
       )}
+      {isBuyer && order?.paymentMethod === 'CARD_MANUAL' && order?.status === 'CREATED' && order?.orderCardPayment && (
+        <Alert severity="warning" sx={{ mx: { xs: 1, md: 2 }, mt: 1 }}>
+          Pay by card: send the amount to the card and confirm.{' '}
+          <Button component={Link} href={`/${locale}/dashboard/orders/${orderId}/card-payment`} size="small" variant="outlined" sx={{ mt: 0.5 }}>
+            Open payment page
+          </Button>
+        </Alert>
+      )}
       {actionInfo && <Alert severity="info" sx={{ mx: { xs: 1, md: 2 }, mt: 1 }} onClose={() => setActionInfo(null)}>{actionInfo}</Alert>}
       {actionError && <Alert severity="error" sx={{ mx: { xs: 1, md: 2 }, mt: 1 }}>{actionError}</Alert>}
       {/* Two-panel layout: info + chat. Desktop: both panels fill height; info scrolls internally, chat fills remaining. Mobile: info collapsible on top. */}

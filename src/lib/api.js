@@ -131,9 +131,26 @@ export async function updateOffer(offerId, body, token) {
   return apiPut(`/offers/${offerId}`, body, token)
 }
 
-/** Create order / buy (auth required). body: { offerId, quantity, characterNick } */
+/** Create order / buy (auth required). body: { offerId, quantity, characterNick, paymentMethod? } (paymentMethod: 'CARD_MANUAL' for pay by card) */
 export async function createOrder(body, token) {
   return apiPost('/orders', body, token)
+}
+
+/** Public: whether card payment option is enabled for users */
+export async function getCardPaymentEnabled() {
+  const res = await apiFetch('/settings/card-payment-enabled', { method: 'GET' }, null)
+  const data = await res.json()
+  return data?.cardPaymentEnabled === true
+}
+
+/** Order card payment page data (buyer only). Returns { status, cardNumber?, paymentDeadlineAt, amount, currency, ... } */
+export async function getOrderCardPayment(orderId, token) {
+  return apiGet(`/orders/${orderId}/card-payment`, token)
+}
+
+/** Mark that buyer has sent money to the card (buyer only) */
+export async function markOrderCardPaymentSent(orderId, token) {
+  return apiPost(`/orders/${orderId}/card-payment/sent`, {}, token)
 }
 
 /** Profile: user + balances in preferred currency (auth required) */
@@ -394,6 +411,52 @@ export async function adminBanUser(userId, body, token) {
 /** Unban user. */
 export async function adminUnbanUser(userId, token) {
   return apiPost(`/admin/users/${userId}/unban`, {}, token)
+}
+
+// ——— Admin: Card payment & money flow ———
+export async function getAdminCardPaymentEnabled(token) {
+  const data = await apiGet('/admin/settings/card-payment-enabled', token)
+  return data?.cardPaymentEnabled === true
+}
+
+export async function setAdminCardPaymentEnabled(enabled, token) {
+  const data = await apiPatch('/admin/settings/card-payment-enabled', { enabled }, token)
+  return data?.cardPaymentEnabled === true
+}
+
+export async function getAdminCards(token) {
+  return apiGet('/admin/cards', token)
+}
+
+export async function createAdminCard(body, token) {
+  return apiPost('/admin/cards', body, token)
+}
+
+export async function setAdminCardActive(cardId, token) {
+  return apiPost(`/admin/cards/${cardId}/set-active`, {}, token)
+}
+
+export async function deleteAdminCard(cardId, token) {
+  const res = await apiFetch(`/admin/cards/${cardId}`, { method: 'DELETE' }, token)
+  if (res.ok || res.status === 204) return
+  const data = await res.json().catch(() => ({}))
+  throw new Error(data?.message || 'Failed to delete card')
+}
+
+export async function getAdminPendingReceipts(token) {
+  return apiGet('/admin/money-flow/receipts', token)
+}
+
+export async function getAdminPendingPayouts(token) {
+  return apiGet('/admin/money-flow/payouts', token)
+}
+
+export async function adminConfirmReceipt(orderId, token) {
+  return apiPost(`/admin/money-flow/orders/${orderId}/confirm-receipt`, {}, token)
+}
+
+export async function adminConfirmPayout(orderId, token) {
+  return apiPost(`/admin/money-flow/orders/${orderId}/confirm-payout`, {}, token)
 }
 
 /** Resolve dispute. body: { action: 'RELEASE' | 'REFUND' } */

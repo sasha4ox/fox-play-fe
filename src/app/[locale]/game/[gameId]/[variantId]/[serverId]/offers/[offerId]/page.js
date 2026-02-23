@@ -18,6 +18,8 @@ import DialogActions from '@mui/material/DialogActions';
 import TextField from '@mui/material/TextField';
 import InputAdornment from '@mui/material/InputAdornment';
 import FormControl from '@mui/material/FormControl';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import Checkbox from '@mui/material/Checkbox';
 import InputLabel from '@mui/material/InputLabel';
 import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
@@ -29,7 +31,7 @@ import CardContent from '@mui/material/CardContent';
 import { useAuthStore } from '@/store/authStore';
 import { useLoginModalStore } from '@/store/loginModalStore';
 import { useProfile } from '@/hooks/useProfile';
-import { fetchOfferById, createOrder, getOfferMessages, sendOfferMessage, getFeedbacksByUserId } from '@/lib/api';
+import { fetchOfferById, createOrder, getCardPaymentEnabled, getOfferMessages, sendOfferMessage, getFeedbacksByUserId } from '@/lib/api';
 import { formatAdena } from '@/lib/adenaFormat';
 
 export default function OfferPDPPage() {
@@ -93,6 +95,8 @@ export default function OfferPDPPage() {
   const [feedbacksLoading, setFeedbacksLoading] = useState(false);
   const [paymentDeclinedDismissed, setPaymentDeclinedDismissed] = useState(false);
   const showPaymentDeclined = searchParams.get('payment') === 'declined' && !paymentDeclinedDismissed;
+  const [cardPaymentEnabled, setCardPaymentEnabled] = useState(false);
+  const [payWithCard, setPayWithCard] = useState(false);
 
   useEffect(() => {
     if (!offerId || !token) return;
@@ -100,6 +104,10 @@ export default function OfferPDPPage() {
       .then((data) => setOfferMessages(Array.isArray(data) ? data : []))
       .catch(() => setOfferMessages([]));
   }, [offerId, token, isCreator]);
+
+  useEffect(() => {
+    getCardPaymentEnabled().then(setCardPaymentEnabled).catch(() => setCardPaymentEnabled(false));
+  }, []);
 
   useEffect(() => {
     if (!feedbacksDialogOpen || !offer?.seller?.id) return;
@@ -134,13 +142,16 @@ export default function OfferPDPPage() {
     setBuySubmitting(true);
     setBuyError(null);
     try {
-      const order = await createOrder(
-        { offerId: offer.id, quantity: qty, characterNick: nick },
-        token
-      );
+      const body = { offerId: offer.id, quantity: qty, characterNick: nick };
+      if (payWithCard) body.paymentMethod = 'CARD_MANUAL';
+      const order = await createOrder(body, token);
       setBuyDialogOpen(false);
       setBuyCharacterNick('');
-      router.push(`/${locale}/dashboard/orders/${order.id}`);
+      if (payWithCard) {
+        router.push(`/${locale}/dashboard/orders/${order.id}/card-payment`);
+      } else {
+        router.push(`/${locale}/dashboard/orders/${order.id}`);
+      }
     } catch (err) {
       setBuyError(err.message || 'Failed to create order');
     } finally {
@@ -535,10 +546,22 @@ export default function OfferPDPPage() {
               {t('youWillPay')}: <strong>{(buyQuantity * (Number(offer.displayPrice ?? offer.price) || 0)).toFixed(2)} {offer.displayCurrency ?? offer.currency ?? ''}</strong>
             </Typography>
           )}
+          {cardPaymentEnabled && (
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={payWithCard}
+                  onChange={(e) => setPayWithCard(e.target.checked)}
+                />
+              }
+              label={t('payByCard') || 'Pay by card (transfer to provided card)'}
+              sx={{ mb: 1 }}
+            />
+          )}
           {buyError && (
             <Alert severity="error" sx={{ mt: 2 }}>
               {buyError}
-              {buyError.toLowerCase().includes('insufficient') && (
+              {buyError.toLowerCase().includes('insufficient') && !payWithCard && (
                 <Box sx={{ mt: 1 }}>
                   <MuiLink component={Link} href={`/${locale}/dashboard/balance`}>
                     Add funds to your balance →
@@ -550,8 +573,8 @@ export default function OfferPDPPage() {
         </DialogContent>
         <DialogActions sx={{ flexWrap: 'wrap', gap: 1 }}>
           <Button onClick={() => setBuyDialogOpen(false)}>Cancel</Button>
-          <Button variant="contained" onClick={handleBuySubmit} disabled={buySubmitting || buyQuantityKk <= 0}>
-            {buySubmitting ? 'Creating…' : t('payWithBalance')}
+          <Button variant="contained" onClick={handleBuySubmit} disabled={buySubmitting || (isAdenaOffer ? buyQuantityKk <= 0 : buyQuantity < 1)}>
+            {buySubmitting ? 'Creating…' : payWithCard ? (t('payByCard') || 'Pay by card') : t('payWithBalance')}
           </Button>
         </DialogActions>
       </Dialog>
