@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo, useDeferredValue } from 'react';
+import { useState, useEffect, useMemo, useDeferredValue, useTransition, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import Container from '@mui/material/Container';
 import Box from '@mui/material/Box';
@@ -47,6 +47,7 @@ import {
 } from '@/lib/api';
 
 const STANDARD_OFFER_TYPES = ['ADENA', 'ITEMS', 'ACCOUNTS', 'BOOSTING', 'OTHER'];
+const GAMES_PER_PAGE = 15;
 
 function filterAdminGamesBySearch(games, searchQuery) {
   if (!searchQuery) return games;
@@ -90,12 +91,46 @@ export default function AdminGamesPage() {
   const [editGameImageOpen, setEditGameImageOpen] = useState(null); // game
   const [editGameImageUrl, setEditGameImageUrl] = useState('');
   const [search, setSearch] = useState('');
+  const [isPending, startTransition] = useTransition();
   const deferredSearch = useDeferredValue(search);
   const searchQuery = deferredSearch.trim().toLowerCase();
   const filteredGames = useMemo(
     () => filterAdminGamesBySearch(games, searchQuery),
     [games, searchQuery]
   );
+  const [visibleCount, setVisibleCount] = useState(GAMES_PER_PAGE);
+  const loadMoreRef = useRef(null);
+
+  // Reset visible count when search or filtered list changes
+  useEffect(() => {
+    setVisibleCount(GAMES_PER_PAGE);
+  }, [searchQuery, games]);
+
+  // Load more when sentinel enters viewport
+  useEffect(() => {
+    const sentinel = loadMoreRef.current;
+    if (!sentinel || filteredGames.length === 0) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const [entry] = entries;
+        if (entry?.isIntersecting) {
+          setVisibleCount((prev) =>
+            Math.min(prev + GAMES_PER_PAGE, filteredGames.length)
+          );
+        }
+      },
+      { rootMargin: '200px', threshold: 0 }
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [filteredGames.length, visibleCount]);
+
+
+  const visibleGames = useMemo(
+    () => filteredGames.slice(0, visibleCount),
+    [filteredGames, visibleCount]
+  );
+  const hasMore = visibleCount < filteredGames.length;
 
   const load = () => {
     if (!token) return;
@@ -312,7 +347,12 @@ export default function AdminGamesPage() {
         </Card>
       ) : (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          {filteredGames.map((game) => (
+          {isPending && (
+            <Typography variant="caption" color="text.secondary" sx={{ alignSelf: 'center', opacity: 0.8 }}>
+              …
+            </Typography>
+          )}
+          {visibleGames.map((game) => (
             <Card key={game.id} variant="outlined" sx={{ overflow: 'hidden', borderRadius: 2 }}>
               <Box
                 sx={{
@@ -378,7 +418,11 @@ export default function AdminGamesPage() {
                   )}
                   <IconButton
                     size="small"
-                    onClick={() => setExpandedGame(expandedGame === game.id ? null : game.id)}
+                    onClick={() =>
+                      startTransition(() =>
+                        setExpandedGame(expandedGame === game.id ? null : game.id)
+                      )
+                    }
                     aria-label={expandedGame === game.id ? 'Collapse' : 'Expand'}
                   >
                     {expandedGame === game.id ? <ExpandLessIcon /> : <ExpandMoreIcon />}
@@ -429,7 +473,9 @@ export default function AdminGamesPage() {
                           <IconButton
                             size="small"
                             onClick={() =>
-                              setExpandedVariant(expandedVariant === variant.id ? null : variant.id)
+                              startTransition(() =>
+                                setExpandedVariant(expandedVariant === variant.id ? null : variant.id)
+                              )
                             }
                           >
                             {expandedVariant === variant.id ? (
@@ -594,6 +640,22 @@ export default function AdminGamesPage() {
               </Collapse>
             </Card>
           ))}
+          {hasMore && (
+            <Box
+              ref={loadMoreRef}
+              sx={{
+                minHeight: 40,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                py: 2,
+              }}
+            >
+              <Typography variant="caption" color="text.secondary">
+                {visibleGames.length} / {filteredGames.length}
+              </Typography>
+            </Box>
+          )}
         </Box>
       )}
 
