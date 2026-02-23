@@ -26,7 +26,13 @@ function formatCardNumber(num) {
 }
 
 function useCountdown(deadlineAt) {
-  const [remaining, setRemaining] = useState(null);
+  const computeRemaining = () => {
+    if (!deadlineAt) return null;
+    const deadline = new Date(deadlineAt).getTime();
+    const left = Math.max(0, Math.floor((deadline - Date.now()) / 1000));
+    return left;
+  };
+  const [remaining, setRemaining] = useState(() => computeRemaining());
   useEffect(() => {
     if (!deadlineAt) return;
     const deadline = new Date(deadlineAt).getTime();
@@ -34,8 +40,9 @@ function useCountdown(deadlineAt) {
       const now = Date.now();
       const left = Math.max(0, Math.floor((deadline - now) / 1000));
       setRemaining(left);
+      return left;
     };
-    tick();
+    setRemaining(tick());
     const id = setInterval(tick, 1000);
     return () => clearInterval(id);
   }, [deadlineAt]);
@@ -165,6 +172,8 @@ export default function OrderCardPaymentPage() {
       {showCard && (
         <Box
           sx={{
+            maxWidth: 400,
+            aspectRatio: '1.586/1',
             background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)',
             borderRadius: 3,
             p: 3,
@@ -173,6 +182,9 @@ export default function OrderCardPaymentPage() {
             mb: 3,
             position: 'relative',
             overflow: 'hidden',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'flex-end',
             '&::before': {
               content: '""',
               position: 'absolute',
@@ -183,15 +195,26 @@ export default function OrderCardPaymentPage() {
               borderRadius: '50%',
               background: 'rgba(255,255,255,0.05)',
             },
+            '&::after': {
+              content: '""',
+              position: 'absolute',
+              top: 20,
+              left: 24,
+              width: 40,
+              height: 30,
+              borderRadius: 1,
+              background: 'linear-gradient(135deg, #d4af37 0%, #c5a028 50%, #b8960c 100%)',
+              boxShadow: 'inset 0 0 0 1px rgba(0,0,0,0.2)',
+            },
           }}
         >
-          <Typography variant="caption" sx={{ opacity: 0.8, letterSpacing: 2 }}>
+          <Typography variant="caption" sx={{ opacity: 0.8, letterSpacing: 2, position: 'relative', zIndex: 1 }}>
             {t('cardNumberLabel')}
           </Typography>
-          <Typography variant="h6" sx={{ fontFamily: 'monospace', letterSpacing: 2, my: 1 }}>
+          <Typography variant="h6" sx={{ fontFamily: 'monospace', letterSpacing: 2, my: 1, position: 'relative', zIndex: 1 }}>
             {formatCardNumber(data.cardNumber)}
           </Typography>
-          <Box sx={{ mt: 2 }}>
+          <Box sx={{ mt: 2, position: 'relative', zIndex: 1 }}>
             <Typography variant="caption" sx={{ opacity: 0.8 }}>{t('cardholderLabel')}</Typography>
             <Typography variant="body1" sx={{ textTransform: 'uppercase' }}>
               {data.cardHolderName || '—'}
@@ -200,21 +223,34 @@ export default function OrderCardPaymentPage() {
         </Box>
       )}
 
-      {status === 'awaiting_payment' && deadlineAt && (
-        <Box sx={{ textAlign: 'center', mb: 3 }}>
-          <Typography variant="overline" color="text.secondary">{t('timeRemaining')}</Typography>
+      {(status === 'awaiting_payment' || status === 'awaiting_confirmation') && deadlineAt && (
+        <Box
+          sx={{
+            textAlign: 'center',
+            mb: 3,
+            p: 2,
+            borderRadius: 2,
+            bgcolor: expired ? 'error.50' : remaining !== null && remaining <= 60 ? 'warning.50' : 'action.hover',
+            border: '1px solid',
+            borderColor: expired ? 'error.200' : remaining !== null && remaining <= 60 ? 'warning.200' : 'divider',
+          }}
+        >
+          <Typography variant="overline" color="text.secondary" display="block" sx={{ mb: 0.5 }}>
+            {t('timeRemaining')}
+          </Typography>
           <Typography
-            variant="h3"
-            fontWeight={700}
+            variant="h2"
+            fontWeight={800}
             sx={{
               fontFamily: 'monospace',
-              color: expired ? 'error.main' : remaining <= 60 ? 'warning.main' : 'text.primary',
+              letterSpacing: 2,
+              color: expired ? 'error.main' : remaining !== null && remaining <= 60 ? 'warning.dark' : 'text.primary',
             }}
           >
-            {formatTime(remaining)}
+            {remaining !== null ? formatTime(remaining) : '—'}
           </Typography>
           {expired && (
-            <Typography variant="body2" color="error.main" sx={{ mt: 1 }}>
+            <Typography variant="body2" color="error.main" sx={{ mt: 1 }} fontWeight={600}>
               {t('deadlinePassed')}
             </Typography>
           )}

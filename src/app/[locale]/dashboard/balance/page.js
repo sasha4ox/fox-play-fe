@@ -16,7 +16,7 @@ import Link from 'next/link';
 import { useAuthStore, useIsAuthenticated } from '@/store/authStore';
 import { useProfile } from '@/hooks/useProfile';
 import TextField from '@mui/material/TextField';
-import { getDepositInfo, simulateDeposit, addTestCredit, createDepositOrder, createWithdraw, createCardPayoutRequest } from '@/lib/api';
+import { getDepositInfo, simulateDeposit, addTestCredit, createDepositOrder, createWithdraw, createCardPayoutRequest, getCardPaymentEnabled } from '@/lib/api';
 import { useLoginModalStore } from '@/store/loginModalStore';
 import { useTranslations } from 'next-intl';
 
@@ -67,6 +67,11 @@ export default function BalancePage() {
   const [cardPayoutLoading, setCardPayoutLoading] = useState(false);
   const [cardPayoutError, setCardPayoutError] = useState(null);
   const [cardPayoutSuccess, setCardPayoutSuccess] = useState(null);
+  const [cardPaymentEnabled, setCardPaymentEnabled] = useState(false);
+
+  useEffect(() => {
+    getCardPaymentEnabled().then(setCardPaymentEnabled).catch(() => setCardPaymentEnabled(false));
+  }, []);
 
   const handleLoadDepositInfo = () => {
     if (!token) return;
@@ -514,88 +519,121 @@ export default function BalancePage() {
               </Box>
             )}
 
-            <Box sx={{ mt: 4 }}>
-              <Typography variant="h6" fontWeight={600} gutterBottom>
-                {t('withdrawToCardTitle')}
-              </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                {t('withdrawToCardHint')}
-              </Typography>
-              <Alert severity="info" sx={{ mb: 2 }}>
-                {t('cardPayoutFeeNotice')}
-              </Alert>
-              <Alert severity="warning" sx={{ mb: 2 }}>
-                {t('cardPayoutDaysNotice')}
-              </Alert>
-              {cardPayoutSuccess && (
-                <Alert severity="success" sx={{ mb: 2 }} onClose={() => setCardPayoutSuccess(null)}>
-                  {cardPayoutSuccess}
+            {cardPaymentEnabled && (
+              <Box sx={{ mt: 4 }}>
+                <Typography variant="h6" fontWeight={600} gutterBottom>
+                  {t('withdrawToCardTitle')}
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                  {t('withdrawToCardHint')}
+                </Typography>
+                <Alert severity="info" sx={{ mb: 2 }}>
+                  {t('cardPayoutFeeNotice')}
                 </Alert>
-              )}
-              {cardPayoutError && (
-                <Alert severity="error" sx={{ mb: 2 }} onClose={() => setCardPayoutError(null)}>
-                  {cardPayoutError}
+                <Alert severity="warning" sx={{ mb: 2 }}>
+                  {t('cardPayoutDaysNotice')}
                 </Alert>
-              )}
-              <Card variant="outlined" sx={{ maxWidth: 480 }}>
-                <CardContent>
-                  <TextField
-                    select
-                    label={t('currency')}
-                    value={cardPayoutCurr}
-                    onChange={(e) => setCardPayoutCurrency(e.target.value)}
-                    size="small"
-                    fullWidth
-                    sx={{ mb: 2 }}
-                    SelectProps={{ native: true }}
+                {cardPayoutSuccess && (
+                  <Alert severity="success" sx={{ mb: 2 }} onClose={() => setCardPayoutSuccess(null)}>
+                    {cardPayoutSuccess}
+                  </Alert>
+                )}
+                {cardPayoutError && (
+                  <Alert severity="error" sx={{ mb: 2 }} onClose={() => setCardPayoutError(null)}>
+                    {cardPayoutError}
+                  </Alert>
+                )}
+                <Box
+                  sx={{
+                    maxWidth: 480,
+                    background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)',
+                    borderRadius: 3,
+                    p: 3,
+                    color: '#fff',
+                    boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
+                    position: 'relative',
+                    overflow: 'hidden',
+                    '&::before': {
+                      content: '""',
+                      position: 'absolute',
+                      top: -50,
+                      right: -50,
+                      width: 150,
+                      height: 150,
+                      borderRadius: '50%',
+                      background: 'rgba(255,255,255,0.05)',
+                    },
+                  }}
+                >
+                  <Box
+                    sx={{
+                      position: 'relative',
+                      zIndex: 1,
+                      bgcolor: 'rgba(255,255,255,0.95)',
+                      color: 'text.primary',
+                      borderRadius: 2,
+                      p: 2,
+                      mt: 1,
+                    }}
                   >
-                    <option value="UAH">UAH</option>
-                    <option value="USD">USD</option>
-                    <option value="EUR">EUR</option>
-                    <option value="RUB">RUB</option>
-                  </TextField>
-                  <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 1 }}>
-                    {t('totalIn', { currency: cardPayoutCurr })}: {cardPayoutAvailable.toFixed(2)} {cardPayoutCurr}
-                  </Typography>
-                  <TextField
-                    type="number"
-                    label={t('withdrawAmount')}
-                    value={cardPayoutAmount}
-                    onChange={(e) => setCardPayoutAmount(e.target.value)}
-                    inputProps={{ min: 0.01, step: 0.01 }}
-                    size="small"
-                    fullWidth
-                    sx={{ mb: 2 }}
-                  />
-                  <TextField
-                    label={t('cardPayoutCardNumber')}
-                    placeholder="1234 5678 9012 3456"
-                    value={cardPayoutCardNumber}
-                    onChange={(e) => setCardPayoutCardNumber(e.target.value)}
-                    size="small"
-                    fullWidth
-                    sx={{ mb: 2 }}
-                  />
-                  <TextField
-                    label={t('cardPayoutCardHolder')}
-                    value={cardPayoutCardHolder}
-                    onChange={(e) => setCardPayoutCardHolder(e.target.value)}
-                    size="small"
-                    fullWidth
-                    sx={{ mb: 2 }}
-                  />
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    onClick={handleCardPayoutRequest}
-                    disabled={cardPayoutLoading || cardPayoutAvailable < 0.01}
-                    sx={{ textTransform: 'none' }}
-                  >
-                    {cardPayoutLoading ? t('withdrawSubmitting') : t('withdrawToCardSubmit')}
-                  </Button>
-                </CardContent>
-              </Card>
-            </Box>
+                    <TextField
+                      select
+                      label={t('currency')}
+                      value={cardPayoutCurr}
+                      onChange={(e) => setCardPayoutCurrency(e.target.value)}
+                      size="small"
+                      fullWidth
+                      sx={{ mb: 2 }}
+                      SelectProps={{ native: true }}
+                    >
+                      <option value="UAH">UAH</option>
+                      <option value="USD">USD</option>
+                      <option value="EUR">EUR</option>
+                      <option value="RUB">RUB</option>
+                    </TextField>
+                    <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 1 }}>
+                      {t('totalIn', { currency: cardPayoutCurr })}: {cardPayoutAvailable.toFixed(2)} {cardPayoutCurr}
+                    </Typography>
+                    <TextField
+                      type="number"
+                      label={t('withdrawAmount')}
+                      value={cardPayoutAmount}
+                      onChange={(e) => setCardPayoutAmount(e.target.value)}
+                      inputProps={{ min: 0.01, step: 0.01 }}
+                      size="small"
+                      fullWidth
+                      sx={{ mb: 2 }}
+                    />
+                    <TextField
+                      label={t('cardPayoutCardNumber')}
+                      placeholder="1234 5678 9012 3456"
+                      value={cardPayoutCardNumber}
+                      onChange={(e) => setCardPayoutCardNumber(e.target.value)}
+                      size="small"
+                      fullWidth
+                      sx={{ mb: 2 }}
+                    />
+                    <TextField
+                      label={t('cardPayoutCardHolder')}
+                      value={cardPayoutCardHolder}
+                      onChange={(e) => setCardPayoutCardHolder(e.target.value)}
+                      size="small"
+                      fullWidth
+                      sx={{ mb: 2 }}
+                    />
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      onClick={handleCardPayoutRequest}
+                      disabled={cardPayoutLoading || cardPayoutAvailable < 0.01}
+                      sx={{ textTransform: 'none' }}
+                    >
+                      {cardPayoutLoading ? t('withdrawSubmitting') : t('withdrawToCardSubmit')}
+                    </Button>
+                  </Box>
+                </Box>
+              </Box>
+            )}
           </>
         )}
       </Container>

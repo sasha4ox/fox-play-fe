@@ -35,6 +35,7 @@ export default function OrdersChatLayout({ children }) {
   const [search, setSearch] = useState('');
 
   const orderIdFromPath = pathname?.match(/\/orders\/([a-f0-9-]+)/i)?.[1];
+  const isCardPaymentPage = pathname?.includes('/card-payment');
   const allOrders = chatSummary.orders ?? [];
   const searchQuery = search.trim().toLowerCase();
   const filteredOrders = searchQuery
@@ -70,6 +71,23 @@ export default function OrdersChatLayout({ children }) {
 
   if (!token) {
     return <Box sx={{ minHeight: '100vh', bgcolor: '#f5f5f5', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{children}</Box>;
+  }
+
+  // Card payment page: standalone, no chat sidebar
+  if (isCardPaymentPage) {
+    return (
+      <Box
+        sx={{
+          minHeight: { xs: 'calc(100vh - 56px)', md: 'calc(100vh - 64px)' },
+          bgcolor: '#f5f5f5',
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+        }}
+      >
+        {children}
+      </Box>
+    );
   }
 
   const showList = !orderIdFromPath || !isMobile;
