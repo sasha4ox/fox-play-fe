@@ -148,9 +148,9 @@ export async function getOrderCardPayment(orderId, token) {
   return apiGet(`/orders/${orderId}/card-payment`, token)
 }
 
-/** Mark that buyer has sent money to the card (buyer only) */
-export async function markOrderCardPaymentSent(orderId, token) {
-  return apiPost(`/orders/${orderId}/card-payment/sent`, {}, token)
+/** Mark that buyer has sent money to the card (buyer only). body: { last4: string } - last 4 digits of card used */
+export async function markOrderCardPaymentSent(orderId, body, token) {
+  return apiPost(`/orders/${orderId}/card-payment/sent`, body || {}, token)
 }
 
 /** Profile: user + balances in preferred currency (auth required) */
@@ -227,6 +227,11 @@ export async function createDepositOrder({ amount, returnUrl, cancelUrl, provide
 /** Withdraw UAH to bank via WhiteBIT. body: { amount, currency: 'UAH', iban, provider: 'whitebit', firstName, lastName, tin }. Requires WhiteBIT configured. */
 export async function createWithdraw(body, token) {
   return apiPost('/me/withdraw', body, token)
+}
+
+/** Request payout to card (balance → card). body: { amount, currency, cardNumber, cardHolderName }. Admin processes manually; can take ~3 working days. */
+export async function createCardPayoutRequest(body, token) {
+  return apiPost('/me/card-payout-request', body, token)
 }
 
 /** My orders as buyer (auth required) */
@@ -432,6 +437,10 @@ export async function createAdminCard(body, token) {
   return apiPost('/admin/cards', body, token)
 }
 
+export async function updateAdminCard(cardId, body, token) {
+  return apiPatch(`/admin/cards/${cardId}`, body, token)
+}
+
 export async function setAdminCardActive(cardId, token) {
   return apiPost(`/admin/cards/${cardId}/set-active`, {}, token)
 }
@@ -457,6 +466,23 @@ export async function adminConfirmReceipt(orderId, token) {
 
 export async function adminConfirmPayout(orderId, token) {
   return apiPost(`/admin/money-flow/orders/${orderId}/confirm-payout`, {}, token)
+}
+
+export async function getAdminCardPayouts(token, params = {}) {
+  const q = new URLSearchParams()
+  if (params.status) q.set('status', params.status)
+  if (params.skip != null) q.set('skip', String(params.skip))
+  if (params.take != null) q.set('take', String(params.take))
+  const s = q.toString()
+  return apiGet(`/admin/money-flow/card-payouts${s ? `?${s}` : ''}`, token)
+}
+
+export async function adminCardPayoutComplete(id, token) {
+  return apiPost(`/admin/money-flow/card-payouts/${id}/complete`, {}, token)
+}
+
+export async function adminCardPayoutFail(id, token) {
+  return apiPost(`/admin/money-flow/card-payouts/${id}/fail`, {}, token)
 }
 
 /** Resolve dispute. body: { action: 'RELEASE' | 'REFUND' } */

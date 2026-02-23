@@ -1,15 +1,20 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { useLocale } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import Box from '@mui/material/Box';
 import Container from '@mui/material/Container';
 import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
 import CircularProgress from '@mui/material/CircularProgress';
 import Alert from '@mui/material/Alert';
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import DialogActions from '@mui/material/DialogActions';
+import TextField from '@mui/material/TextField';
 import { useAuthStore } from '@/store/authStore';
 import { getOrderCardPayment, markOrderCardPaymentSent } from '@/lib/api';
 
@@ -46,14 +51,16 @@ function formatTime(seconds) {
 
 export default function OrderCardPaymentPage() {
   const params = useParams();
-  const router = useRouter();
   const locale = useLocale();
+  const t = useTranslations('CardPayment');
   const orderId = params?.orderId;
   const token = useAuthStore((s) => s.token);
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [sending, setSending] = useState(false);
+  const [last4DialogOpen, setLast4DialogOpen] = useState(false);
+  const [last4, setLast4] = useState('');
 
   const deadlineAt = data?.paymentDeadlineAt;
   const remaining = useCountdown(deadlineAt);
@@ -72,14 +79,28 @@ export default function OrderCardPaymentPage() {
       .finally(() => setLoading(false));
   }, [orderId, token]);
 
-  const handleMarkSent = () => {
+  const handleConfirmSentClick = () => {
+    setLast4('');
+    setLast4DialogOpen(true);
+  };
+
+  const handleLast4Submit = () => {
+    const digits = last4.replace(/\D/g, '').slice(0, 4);
+    if (digits.length !== 4) {
+      setError(t('last4Required'));
+      return;
+    }
     if (!orderId || !token) return;
     setSending(true);
     setError(null);
-    markOrderCardPaymentSent(orderId, token)
-      .then(() => getOrderCardPayment(orderId, token))
+    markOrderCardPaymentSent(orderId, { last4: digits }, token)
+      .then(() => {
+        setLast4DialogOpen(false);
+        setLast4('');
+        return getOrderCardPayment(orderId, token);
+      })
       .then(setData)
-      .catch((err) => setError(err.message || 'Failed'))
+      .catch((err) => setError(err.message || t('failed')))
       .finally(() => setSending(false));
   };
 
@@ -99,10 +120,10 @@ export default function OrderCardPaymentPage() {
   return (
     <Container maxWidth="sm" sx={{ py: 4 }}>
       <Typography variant="h5" fontWeight={600} gutterBottom>
-        Pay by card
+        {t('title')}
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-        Send the exact amount to the card below within the time limit. Then press &quot;I sent money&quot;.
+        {t('instruction')}
       </Typography>
 
       {error && (
@@ -113,23 +134,32 @@ export default function OrderCardPaymentPage() {
 
       {data?.status === 'confirmed' && (
         <Alert severity="success" sx={{ mb: 2 }}>
-          Payment confirmed. You can continue to the order.
+          {t('statusConfirmed')}
         </Alert>
       )}
 
       {data?.status === 'expired' && (
         <Alert severity="warning" sx={{ mb: 2 }}>
-          The payment time has expired. Please contact support or open the order to see next steps.
+          {t('statusExpired')}
         </Alert>
       )}
 
       {data?.amount != null && (
         <Box sx={{ mb: 2 }}>
-          <Typography variant="overline" color="text.secondary">Amount</Typography>
+          <Typography variant="overline" color="text.secondary">{t('amount')}</Typography>
           <Typography variant="h4" fontWeight={700} color="primary.main">
             {data.amount} {data.currency}
           </Typography>
         </Box>
+      )}
+
+      {data?.paymentComment && (status === 'awaiting_payment' || status === 'awaiting_confirmation') && (
+        <Alert severity="info" sx={{ mb: 2 }}>
+          <Typography variant="subtitle2" gutterBottom>{t('enterInTransferComment')}</Typography>
+          <Typography component="span" sx={{ fontFamily: 'monospace', fontWeight: 600 }}>
+            {data.paymentComment}
+          </Typography>
+        </Alert>
       )}
 
       {showCard && (
@@ -156,33 +186,23 @@ export default function OrderCardPaymentPage() {
           }}
         >
           <Typography variant="caption" sx={{ opacity: 0.8, letterSpacing: 2 }}>
-            CARD NUMBER
+            {t('cardNumberLabel')}
           </Typography>
           <Typography variant="h6" sx={{ fontFamily: 'monospace', letterSpacing: 2, my: 1 }}>
             {formatCardNumber(data.cardNumber)}
           </Typography>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', mt: 2 }}>
-            <Box>
-              <Typography variant="caption" sx={{ opacity: 0.8 }}>CARDHOLDER</Typography>
-              <Typography variant="body1" sx={{ textTransform: 'uppercase' }}>
-                {data.cardHolderName || '—'}
-              </Typography>
-            </Box>
-            {(data.expiryMonth != null || data.expiryYear != null) && (
-              <Box sx={{ textAlign: 'right' }}>
-                <Typography variant="caption" sx={{ opacity: 0.8 }}>EXPIRES</Typography>
-                <Typography variant="body1">
-                  {[data.expiryMonth, data.expiryYear].filter(Boolean).join('/')}
-                </Typography>
-              </Box>
-            )}
+          <Box sx={{ mt: 2 }}>
+            <Typography variant="caption" sx={{ opacity: 0.8 }}>{t('cardholderLabel')}</Typography>
+            <Typography variant="body1" sx={{ textTransform: 'uppercase' }}>
+              {data.cardHolderName || '—'}
+            </Typography>
           </Box>
         </Box>
       )}
 
       {status === 'awaiting_payment' && deadlineAt && (
         <Box sx={{ textAlign: 'center', mb: 3 }}>
-          <Typography variant="overline" color="text.secondary">Time remaining</Typography>
+          <Typography variant="overline" color="text.secondary">{t('timeRemaining')}</Typography>
           <Typography
             variant="h3"
             fontWeight={700}
@@ -195,7 +215,7 @@ export default function OrderCardPaymentPage() {
           </Typography>
           {expired && (
             <Typography variant="body2" color="error.main" sx={{ mt: 1 }}>
-              Deadline passed. Please contact support.
+              {t('deadlinePassed')}
             </Typography>
           )}
         </Box>
@@ -203,7 +223,7 @@ export default function OrderCardPaymentPage() {
 
       {status === 'awaiting_confirmation' && (
         <Alert severity="info" sx={{ mb: 2 }}>
-          You marked that you sent the money. We will confirm when we receive it. You can check the order status in the order chat.
+          {t('statusAwaitingConfirmation')}
         </Alert>
       )}
 
@@ -212,16 +232,40 @@ export default function OrderCardPaymentPage() {
           <Button
             variant="contained"
             size="large"
-            onClick={handleMarkSent}
+            onClick={handleConfirmSentClick}
             disabled={sending || expired}
           >
-            {sending ? '…' : 'I sent money'}
+            {sending ? '…' : t('iSentMoney')}
           </Button>
         )}
         <Button component={Link} href={base} variant="outlined">
-          {status === 'confirmed' || status === 'expired' ? 'Back to order' : 'Open order chat'}
+          {status === 'confirmed' || status === 'expired' ? t('backToOrder') : t('openOrderChat')}
         </Button>
       </Box>
+
+      <Dialog open={last4DialogOpen} onClose={() => !sending && setLast4DialogOpen(false)} maxWidth="xs" fullWidth>
+        <DialogTitle>{t('last4DialogTitle')}</DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            {t('last4DialogHint')}
+          </Typography>
+          <TextField
+            fullWidth
+            label={t('last4Label')}
+            value={last4}
+            onChange={(e) => setLast4(e.target.value.replace(/\D/g, '').slice(0, 4))}
+            inputProps={{ maxLength: 4, inputMode: 'numeric', pattern: '[0-9]*' }}
+            placeholder="1234"
+            error={last4.length > 0 && last4.replace(/\D/g, '').length !== 4}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setLast4DialogOpen(false)} disabled={sending}>{t('cancel')}</Button>
+          <Button variant="contained" onClick={handleLast4Submit} disabled={sending || last4.replace(/\D/g, '').length !== 4}>
+            {sending ? '…' : t('confirm')}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Container>
   );
 }

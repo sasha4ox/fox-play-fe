@@ -28,12 +28,16 @@ import {
   setAdminCardPaymentEnabled,
   getAdminCards,
   createAdminCard,
+  updateAdminCard,
   setAdminCardActive,
   deleteAdminCard,
   getAdminPendingReceipts,
   getAdminPendingPayouts,
   adminConfirmReceipt,
   adminConfirmPayout,
+  getAdminCardPayouts,
+  adminCardPayoutComplete,
+  adminCardPayoutFail,
 } from '@/lib/api';
 import Link from 'next/link';
 import { useLocale } from 'next-intl';
@@ -61,9 +65,18 @@ export default function AdminMoneyFlowPage() {
   const [newCardHolder, setNewCardHolder] = useState('');
   const [newExpiryMonth, setNewExpiryMonth] = useState('');
   const [newExpiryYear, setNewExpiryYear] = useState('');
+  const [newPaymentComment, setNewPaymentComment] = useState('');
   const [submittingCard, setSubmittingCard] = useState(false);
+  const [editCardId, setEditCardId] = useState(null);
+  const [editPaymentComment, setEditPaymentComment] = useState('');
+  const [savingEditCard, setSavingEditCard] = useState(false);
   const [confirmingReceipt, setConfirmingReceipt] = useState(null);
   const [confirmingPayout, setConfirmingPayout] = useState(null);
+  const [cardPayouts, setCardPayouts] = useState([]);
+  const [loadingCardPayouts, setLoadingCardPayouts] = useState(true);
+  const [cardPayoutStatusFilter, setCardPayoutStatusFilter] = useState('');
+  const [confirmingCardPayoutComplete, setConfirmingCardPayoutComplete] = useState(null);
+  const [confirmingCardPayoutFail, setConfirmingCardPayoutFail] = useState(null);
   const [error, setError] = useState(null);
 
   const loadFlag = () => {
@@ -102,6 +115,18 @@ export default function AdminMoneyFlowPage() {
       .finally(() => setLoadingPayouts(false));
   };
 
+  const loadCardPayouts = () => {
+    if (!token) return;
+    setLoadingCardPayouts(true);
+    getAdminCardPayouts(token, {
+      status: cardPayoutStatusFilter || undefined,
+      take: 100,
+    })
+      .then((data) => setCardPayouts(data?.items ?? []))
+      .catch(() => setCardPayouts([]))
+      .finally(() => setLoadingCardPayouts(false));
+  };
+
   useEffect(() => {
     loadFlag();
   }, [token]);
@@ -112,6 +137,9 @@ export default function AdminMoneyFlowPage() {
     loadReceipts();
     loadPayouts();
   }, [token]);
+  useEffect(() => {
+    loadCardPayouts();
+  }, [token, cardPayoutStatusFilter]);
 
   const handleToggleCardPayment = (e) => {
     const checked = e.target.checked;
@@ -149,6 +177,7 @@ export default function AdminMoneyFlowPage() {
         cardHolderName: newCardHolder.trim(),
         expiryMonth: newExpiryMonth ? parseInt(newExpiryMonth, 10) : null,
         expiryYear: newExpiryYear ? parseInt(newExpiryYear, 10) : null,
+        paymentComment: newPaymentComment.trim() || null,
       },
       token
     )
@@ -158,10 +187,29 @@ export default function AdminMoneyFlowPage() {
         setNewCardHolder('');
         setNewExpiryMonth('');
         setNewExpiryYear('');
+        setNewPaymentComment('');
         loadCards();
       })
       .catch((err) => setError(err.message || 'Failed to add card'))
       .finally(() => setSubmittingCard(false));
+  };
+
+  const handleOpenEditCard = (card) => {
+    setEditCardId(card.id);
+    setEditPaymentComment(card.paymentComment || '');
+  };
+
+  const handleSaveEditCard = () => {
+    if (!editCardId) return;
+    setSavingEditCard(true);
+    setError(null);
+    updateAdminCard(editCardId, { paymentComment: editPaymentComment.trim() || null }, token)
+      .then(() => {
+        setEditCardId(null);
+        loadCards();
+      })
+      .catch((err) => setError(err.message || 'Failed to update'))
+      .finally(() => setSavingEditCard(false));
   };
 
   const handleConfirmReceipt = (orderId) => {
@@ -183,6 +231,24 @@ export default function AdminMoneyFlowPage() {
       .then(() => loadPayouts())
       .catch((err) => setError(err.message || 'Failed'))
       .finally(() => setConfirmingPayout(null));
+  };
+
+  const handleCardPayoutComplete = (id) => {
+    setConfirmingCardPayoutComplete(id);
+    setError(null);
+    adminCardPayoutComplete(id, token)
+      .then(() => loadCardPayouts())
+      .catch((err) => setError(err.message || 'Failed'))
+      .finally(() => setConfirmingCardPayoutComplete(null));
+  };
+
+  const handleCardPayoutFail = (id) => {
+    setConfirmingCardPayoutFail(id);
+    setError(null);
+    adminCardPayoutFail(id, token)
+      .then(() => loadCardPayouts())
+      .catch((err) => setError(err.message || 'Failed'))
+      .finally(() => setConfirmingCardPayoutFail(null));
   };
 
   return (
@@ -242,6 +308,7 @@ export default function AdminMoneyFlowPage() {
                 <TableRow>
                   <TableCell>{t('cardNumber')}</TableCell>
                   <TableCell>{t('cardHolderName')}</TableCell>
+                  <TableCell>{t('paymentCommentLabel')}</TableCell>
                   <TableCell>{t('enabled')}</TableCell>
                   <TableCell align="right">{t('actions')}</TableCell>
                 </TableRow>
@@ -251,8 +318,12 @@ export default function AdminMoneyFlowPage() {
                   <TableRow key={c.id}>
                     <TableCell>{maskCardNumber(c.cardNumber)}</TableCell>
                     <TableCell>{c.cardHolderName}</TableCell>
+                    <TableCell sx={{ maxWidth: 180 }}>{c.paymentComment ? (c.paymentComment.length > 30 ? c.paymentComment.slice(0, 30) + '…' : c.paymentComment) : '—'}</TableCell>
                     <TableCell>{c.isActive ? '✓ Active' : '—'}</TableCell>
                     <TableCell align="right">
+                      <Button size="small" onClick={() => handleOpenEditCard(c)}>
+                        {t('editCard')}
+                      </Button>
                       {!c.isActive && (
                         <Button size="small" onClick={() => handleSetActive(c.id)}>
                           {t('setActive')}
@@ -288,6 +359,7 @@ export default function AdminMoneyFlowPage() {
                 <TableRow>
                   <TableCell>Order</TableCell>
                   <TableCell>Buyer</TableCell>
+                  <TableCell>{t('buyerCardLast4')}</TableCell>
                   <TableCell>Amount</TableCell>
                   <TableCell>Marked sent</TableCell>
                   <TableCell align="right">{t('actions')}</TableCell>
@@ -302,6 +374,7 @@ export default function AdminMoneyFlowPage() {
                       </Link>
                     </TableCell>
                     <TableCell>{r.buyer?.email ?? r.buyer?.nickname ?? r.buyer?.id}</TableCell>
+                    <TableCell>{r.buyerCardLast4 ?? '—'}</TableCell>
                     <TableCell>
                       {r.buyerAmount} {r.buyerCurrency}
                     </TableCell>
@@ -377,6 +450,89 @@ export default function AdminMoneyFlowPage() {
         </CardContent>
       </Card>
 
+      <Card sx={{ mb: 3 }}>
+        <CardContent>
+          <Typography variant="subtitle1" fontWeight={600} gutterBottom>
+            {t('cardPayoutRequests')}
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            {t('cardPayoutRequestsHint')}
+          </Typography>
+          <Box sx={{ mb: 2 }}>
+            <TextField
+              select
+              size="small"
+              label={t('filterByStatus')}
+              value={cardPayoutStatusFilter}
+              onChange={(e) => setCardPayoutStatusFilter(e.target.value)}
+              sx={{ minWidth: 160 }}
+              SelectProps={{ native: true }}
+            >
+              <option value="">{t('statusAll')}</option>
+              <option value="PENDING">PENDING</option>
+              <option value="COMPLETED">COMPLETED</option>
+              <option value="FAILED">FAILED</option>
+            </TextField>
+          </Box>
+          {loadingCardPayouts ? (
+            <Skeleton height={60} />
+          ) : cardPayouts.length === 0 ? (
+            <Typography color="text.secondary">{t('noCardPayoutRequests')}</Typography>
+          ) : (
+            <Table size="small">
+              <TableHead>
+                <TableRow>
+                  <TableCell>{t('user')}</TableCell>
+                  <TableCell>{t('amount')}</TableCell>
+                  <TableCell>{t('cardNumber')}</TableCell>
+                  <TableCell>{t('cardHolderName')}</TableCell>
+                  <TableCell>{t('status')}</TableCell>
+                  <TableCell>{t('date')}</TableCell>
+                  <TableCell align="right">{t('actions')}</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {cardPayouts.map((r) => (
+                  <TableRow key={r.id}>
+                    <TableCell>{r.user?.email ?? r.user?.nickname ?? r.user?.id ?? r.userId}</TableCell>
+                    <TableCell>{r.amount} {r.currency}</TableCell>
+                    <TableCell>{maskCardNumber(r.cardNumber)}</TableCell>
+                    <TableCell>{r.cardHolderName ?? '—'}</TableCell>
+                    <TableCell>{r.status}</TableCell>
+                    <TableCell>{r.createdAt ? new Date(r.createdAt).toLocaleString() : '—'}</TableCell>
+                    <TableCell align="right">
+                      {r.status === 'PENDING' && (
+                        <>
+                          <Button
+                            size="small"
+                            variant="contained"
+                            color="primary"
+                            onClick={() => handleCardPayoutComplete(r.id)}
+                            disabled={confirmingCardPayoutComplete === r.id}
+                          >
+                            {confirmingCardPayoutComplete === r.id ? '…' : t('markCompleted')}
+                          </Button>
+                          <Button
+                            size="small"
+                            variant="outlined"
+                            color="error"
+                            onClick={() => handleCardPayoutFail(r.id)}
+                            disabled={confirmingCardPayoutFail === r.id}
+                            sx={{ ml: 1 }}
+                          >
+                            {confirmingCardPayoutFail === r.id ? '…' : t('markFailed')}
+                          </Button>
+                        </>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+
       <Dialog open={addCardOpen} onClose={() => !submittingCard && setAddCardOpen(false)}>
         <DialogTitle>{t('addCard')}</DialogTitle>
         <DialogContent>
@@ -394,6 +550,15 @@ export default function AdminMoneyFlowPage() {
             value={newCardHolder}
             onChange={(e) => setNewCardHolder(e.target.value)}
             margin="dense"
+          />
+          <TextField
+            fullWidth
+            label={t('paymentCommentLabel')}
+            value={newPaymentComment}
+            onChange={(e) => setNewPaymentComment(e.target.value)}
+            margin="dense"
+            placeholder={t('paymentCommentPlaceholder')}
+            helperText={t('paymentCommentHint')}
           />
           <Box sx={{ display: 'flex', gap: 2, mt: 1 }}>
             <TextField
@@ -422,6 +587,27 @@ export default function AdminMoneyFlowPage() {
           </Button>
           <Button variant="contained" onClick={handleAddCard} disabled={submittingCard || !newCardNumber.trim() || !newCardHolder.trim()}>
             {submittingCard ? '…' : t('addCard')}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={!!editCardId} onClose={() => !savingEditCard && setEditCardId(null)} maxWidth="sm" fullWidth>
+        <DialogTitle>{t('editCardPaymentComment')}</DialogTitle>
+        <DialogContent>
+          <TextField
+            fullWidth
+            label={t('paymentCommentLabel')}
+            value={editPaymentComment}
+            onChange={(e) => setEditPaymentComment(e.target.value)}
+            margin="dense"
+            placeholder={t('paymentCommentPlaceholder')}
+            helperText={t('paymentCommentHint')}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setEditCardId(null)} disabled={savingEditCard}>Cancel</Button>
+          <Button variant="contained" onClick={handleSaveEditCard} disabled={savingEditCard}>
+            {savingEditCard ? '…' : t('save')}
           </Button>
         </DialogActions>
       </Dialog>

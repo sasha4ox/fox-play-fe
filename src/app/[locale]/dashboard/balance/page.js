@@ -16,7 +16,7 @@ import Link from 'next/link';
 import { useAuthStore, useIsAuthenticated } from '@/store/authStore';
 import { useProfile } from '@/hooks/useProfile';
 import TextField from '@mui/material/TextField';
-import { getDepositInfo, simulateDeposit, addTestCredit, createDepositOrder, createWithdraw } from '@/lib/api';
+import { getDepositInfo, simulateDeposit, addTestCredit, createDepositOrder, createWithdraw, createCardPayoutRequest } from '@/lib/api';
 import { useLoginModalStore } from '@/store/loginModalStore';
 import { useTranslations } from 'next-intl';
 
@@ -60,6 +60,13 @@ export default function BalancePage() {
   const [withdrawWbFirstName, setWithdrawWbFirstName] = useState('');
   const [withdrawWbLastName, setWithdrawWbLastName] = useState('');
   const [withdrawWbTin, setWithdrawWbTin] = useState('');
+  const [cardPayoutAmount, setCardPayoutAmount] = useState('');
+  const [cardPayoutCardNumber, setCardPayoutCardNumber] = useState('');
+  const [cardPayoutCardHolder, setCardPayoutCardHolder] = useState('');
+  const [cardPayoutCurrency, setCardPayoutCurrency] = useState('');
+  const [cardPayoutLoading, setCardPayoutLoading] = useState(false);
+  const [cardPayoutError, setCardPayoutError] = useState(null);
+  const [cardPayoutSuccess, setCardPayoutSuccess] = useState(null);
 
   const handleLoadDepositInfo = () => {
     if (!token) return;
@@ -100,6 +107,49 @@ export default function BalancePage() {
 
   const uahBalance = balances.find((b) => b.currency === 'UAH');
   const uahAvailable = uahBalance ? Number(uahBalance.available) : 0;
+
+  useEffect(() => {
+    if (preferredCurrency && !cardPayoutCurrency) setCardPayoutCurrency(preferredCurrency);
+  }, [preferredCurrency, cardPayoutCurrency]);
+
+  const cardPayoutCurr = cardPayoutCurrency || preferredCurrency || 'UAH';
+  const cardPayoutBalance = balances.find((b) => b.currency === cardPayoutCurr);
+  const cardPayoutAvailable = cardPayoutBalance ? Number(cardPayoutBalance.available) : 0;
+
+  const handleCardPayoutRequest = () => {
+    if (!token) return;
+    const amount = parseFloat(cardPayoutAmount);
+    if (!Number.isFinite(amount) || amount < 0.01) {
+      setCardPayoutError(t('cardPayoutAmountMin'));
+      return;
+    }
+    if (cardPayoutAvailable < amount) {
+      setCardPayoutError(t('cardPayoutInsufficient'));
+      return;
+    }
+    const cardNumber = cardPayoutCardNumber.replace(/\s/g, '').trim();
+    const cardHolder = cardPayoutCardHolder.trim();
+    if (cardNumber.length < 12 || !cardHolder) {
+      setCardPayoutError(t('cardPayoutCardRequired'));
+      return;
+    }
+    setCardPayoutError(null);
+    setCardPayoutSuccess(null);
+    setCardPayoutLoading(true);
+    createCardPayoutRequest(
+      { amount, currency: cardPayoutCurr, cardNumber, cardHolderName: cardHolder },
+      token,
+    )
+      .then(() => {
+        setCardPayoutSuccess(t('cardPayoutSuccess'));
+        setCardPayoutAmount('');
+        setCardPayoutCardNumber('');
+        setCardPayoutCardHolder('');
+        refetch();
+      })
+      .catch((e) => setCardPayoutError(e.message || t('cardPayoutFailed')))
+      .finally(() => setCardPayoutLoading(false));
+  };
 
   const handleWithdrawWhitebit = () => {
     if (!token || !profile?.whitebitEnabled) return;
@@ -463,6 +513,89 @@ export default function BalancePage() {
                 </Card>
               </Box>
             )}
+
+            <Box sx={{ mt: 4 }}>
+              <Typography variant="h6" fontWeight={600} gutterBottom>
+                {t('withdrawToCardTitle')}
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                {t('withdrawToCardHint')}
+              </Typography>
+              <Alert severity="info" sx={{ mb: 2 }}>
+                {t('cardPayoutFeeNotice')}
+              </Alert>
+              <Alert severity="warning" sx={{ mb: 2 }}>
+                {t('cardPayoutDaysNotice')}
+              </Alert>
+              {cardPayoutSuccess && (
+                <Alert severity="success" sx={{ mb: 2 }} onClose={() => setCardPayoutSuccess(null)}>
+                  {cardPayoutSuccess}
+                </Alert>
+              )}
+              {cardPayoutError && (
+                <Alert severity="error" sx={{ mb: 2 }} onClose={() => setCardPayoutError(null)}>
+                  {cardPayoutError}
+                </Alert>
+              )}
+              <Card variant="outlined" sx={{ maxWidth: 480 }}>
+                <CardContent>
+                  <TextField
+                    select
+                    label={t('currency')}
+                    value={cardPayoutCurr}
+                    onChange={(e) => setCardPayoutCurrency(e.target.value)}
+                    size="small"
+                    fullWidth
+                    sx={{ mb: 2 }}
+                    SelectProps={{ native: true }}
+                  >
+                    <option value="UAH">UAH</option>
+                    <option value="USD">USD</option>
+                    <option value="EUR">EUR</option>
+                    <option value="RUB">RUB</option>
+                  </TextField>
+                  <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 1 }}>
+                    {t('totalIn', { currency: cardPayoutCurr })}: {cardPayoutAvailable.toFixed(2)} {cardPayoutCurr}
+                  </Typography>
+                  <TextField
+                    type="number"
+                    label={t('withdrawAmount')}
+                    value={cardPayoutAmount}
+                    onChange={(e) => setCardPayoutAmount(e.target.value)}
+                    inputProps={{ min: 0.01, step: 0.01 }}
+                    size="small"
+                    fullWidth
+                    sx={{ mb: 2 }}
+                  />
+                  <TextField
+                    label={t('cardPayoutCardNumber')}
+                    placeholder="1234 5678 9012 3456"
+                    value={cardPayoutCardNumber}
+                    onChange={(e) => setCardPayoutCardNumber(e.target.value)}
+                    size="small"
+                    fullWidth
+                    sx={{ mb: 2 }}
+                  />
+                  <TextField
+                    label={t('cardPayoutCardHolder')}
+                    value={cardPayoutCardHolder}
+                    onChange={(e) => setCardPayoutCardHolder(e.target.value)}
+                    size="small"
+                    fullWidth
+                    sx={{ mb: 2 }}
+                  />
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={handleCardPayoutRequest}
+                    disabled={cardPayoutLoading || cardPayoutAvailable < 0.01}
+                    sx={{ textTransform: 'none' }}
+                  >
+                    {cardPayoutLoading ? t('withdrawSubmitting') : t('withdrawToCardSubmit')}
+                  </Button>
+                </CardContent>
+              </Card>
+            </Box>
           </>
         )}
       </Container>

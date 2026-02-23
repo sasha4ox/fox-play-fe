@@ -433,9 +433,9 @@ export default function OrderChatPage() {
       )}
       {isBuyer && order?.paymentMethod === 'CARD_MANUAL' && order?.status === 'CREATED' && order?.orderCardPayment && (
         <Alert severity="warning" sx={{ mx: { xs: 1, md: 2 }, mt: 1 }}>
-          Pay by card: send the amount to the card and confirm.{' '}
+          {t('cardPaymentBanner')}{' '}
           <Button component={Link} href={`/${locale}/dashboard/orders/${orderId}/card-payment`} size="small" variant="outlined" sx={{ mt: 0.5 }}>
-            Open payment page
+            {t('openPaymentPage')}
           </Button>
         </Alert>
       )}
