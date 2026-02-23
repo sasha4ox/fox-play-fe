@@ -163,6 +163,17 @@ export async function getFeedbacksByUserId(userId) {
   return apiGet(`/users/${userId}/feedbacks`, null)
 }
 
+/** Public user profile (nickname, rating, avatar). */
+export async function getPublicProfile(userId) {
+  return apiGet(`/users/profile/${userId}`, null)
+}
+
+/** Public list of offers by seller (for user profile page). */
+export async function getOffersBySeller(userId, displayCurrency) {
+  const q = displayCurrency ? `?displayCurrency=${encodeURIComponent(displayCurrency)}` : ''
+  return apiGet(`/offers/by-seller/${userId}${q}`, null)
+}
+
 /** Last 5 servers user viewed offers on (auth required). Returns [{ serverId, gameId, variantId, gameName, variantName, serverName, lastVisited }] */
 export async function getRecentServers(token) {
   return apiGet('/me/recent-servers', token)
@@ -241,6 +252,15 @@ export async function getMyCardPayoutRequests(token, params = {}) {
   if (params.take != null) q.set('take', String(params.take))
   const s = q.toString()
   return apiGet(`/me/card-payout-requests${s ? `?${s}` : ''}`, token)
+}
+
+/** List balance history (positive transfers: sales, refunds, deposits, card payout refunds). */
+export async function getBalanceHistory(token, params = {}) {
+  const q = new URLSearchParams()
+  if (params.skip != null) q.set('skip', String(params.skip))
+  if (params.take != null) q.set('take', String(params.take))
+  const s = q.toString()
+  return apiGet(`/me/balance-history${s ? `?${s}` : ''}`, token)
 }
 
 /** My orders as buyer (auth required) */

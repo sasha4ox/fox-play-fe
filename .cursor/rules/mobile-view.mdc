@@ -1,0 +1,15 @@
+---
+description: Always verify UI changes work on mobile view
+alwaysApply: true
+---
+
+# Mobile View
+
+When changing or adding UI (pages, components, layouts, styles):
+
+1. **Consider mobile first** – Layouts and touch targets must work on small screens (e.g. 360px width).
+2. **Use responsive patterns** – Prefer MUI `sx` breakpoints (`xs`, `sm`, `md`), `useMediaQuery`, or responsive props (e.g. `display: { xs: 'block', md: 'flex' }`) where layout differs by viewport.
+3. **Check after implementation** – Visually test or describe how the change behaves on mobile (narrow viewport) and that nothing is cut off, overlapping, or unusable.
+4. **Touch targets** – Buttons and links should be at least ~44px for touch; avoid tiny clickable areas on mobile.
+
+If a change is backend-only or has no UI impact, this rule can be skipped.

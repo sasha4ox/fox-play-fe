@@ -16,7 +16,7 @@ import Link from 'next/link';
 import { useAuthStore, useIsAuthenticated } from '@/store/authStore';
 import { useProfile } from '@/hooks/useProfile';
 import TextField from '@mui/material/TextField';
-import { getDepositInfo, simulateDeposit, addTestCredit, createDepositOrder, createWithdraw, createCardPayoutRequest, getCardPaymentEnabled } from '@/lib/api';
+import { getDepositInfo, simulateDeposit, addTestCredit, createDepositOrder, createWithdraw, createCardPayoutRequest, getCardPaymentEnabled, getBalanceHistory } from '@/lib/api';
 import { useLoginModalStore } from '@/store/loginModalStore';
 import { useTranslations } from 'next-intl';
 
@@ -68,10 +68,21 @@ export default function BalancePage() {
   const [cardPayoutError, setCardPayoutError] = useState(null);
   const [cardPayoutSuccess, setCardPayoutSuccess] = useState(null);
   const [cardPaymentEnabled, setCardPaymentEnabled] = useState(false);
+  const [balanceHistory, setBalanceHistory] = useState({ items: [], total: 0 });
+  const [balanceHistoryLoading, setBalanceHistoryLoading] = useState(false);
 
   useEffect(() => {
     getCardPaymentEnabled().then(setCardPaymentEnabled).catch(() => setCardPaymentEnabled(false));
   }, []);
+
+  useEffect(() => {
+    if (!token) return;
+    setBalanceHistoryLoading(true);
+    getBalanceHistory(token, { take: 50 })
+      .then((data) => setBalanceHistory({ items: data?.items ?? [], total: data?.total ?? 0 }))
+      .catch(() => setBalanceHistory({ items: [], total: 0 }))
+      .finally(() => setBalanceHistoryLoading(false));
+  }, [token]);
 
   const handleLoadDepositInfo = () => {
     if (!token) return;
@@ -296,6 +307,58 @@ export default function BalancePage() {
                 )}
               </CardContent>
             </Card>
+
+            <Typography variant="h6" fontWeight={600} sx={{ mt: 3, mb: 1 }}>
+              {t('balanceHistoryTitle')}
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+              {t('balanceHistoryHint')}
+            </Typography>
+            {balanceHistoryLoading ? (
+              <Skeleton height={120} sx={{ mb: 2 }} />
+            ) : balanceHistory.items.length === 0 ? (
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>{t('noBalanceHistory')}</Typography>
+            ) : (
+              <Card variant="outlined" sx={{ mb: 3 }}>
+                <CardContent sx={{ py: 1, '&:last-child': { pb: 1 } }}>
+                  {balanceHistory.items.map((item, idx) => (
+                    <Box
+                      key={idx}
+                      sx={{
+                        display: 'flex',
+                        flexWrap: 'wrap',
+                        alignItems: 'center',
+                        gap: 1,
+                        py: 1.5,
+                        borderBottom: idx < balanceHistory.items.length - 1 ? '1px solid' : 'none',
+                        borderColor: 'divider',
+                      }}
+                    >
+                      <Typography variant="body2" color="text.secondary" sx={{ minWidth: { xs: '100%', sm: 100 } }}>
+                        {new Date(item.date).toLocaleString(locale)}
+                      </Typography>
+                      <Typography variant="body2" fontWeight={600} sx={{ color: item.type === 'sale' ? 'success.main' : item.type === 'refund' ? 'info.main' : 'text.primary' }}>
+                        +{item.amount} {item.currency}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        {t(`balanceHistoryType_${item.type}`)}
+                        {item.offerTitle ? ` · ${item.offerTitle}` : ''}
+                      </Typography>
+                      {item.otherParty && (
+                        <Link href={`${base}/user/${item.otherParty.id}`} style={{ fontSize: '0.875rem' }}>
+                          {item.otherParty.nickname || item.otherParty.id.slice(0, 8)}
+                        </Link>
+                      )}
+                      {item.orderId && (
+                        <Link href={`${base}/dashboard/orders/${item.orderId}`} style={{ fontSize: '0.875rem' }}>
+                          {t('order')}
+                        </Link>
+                      )}
+                    </Box>
+                  ))}
+                </CardContent>
+              </Card>
+            )}
 
             {balances.length > 1 && (
               <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>

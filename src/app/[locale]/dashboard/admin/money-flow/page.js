@@ -13,6 +13,7 @@ import TextField from '@mui/material/TextField';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
+import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import IconButton from '@mui/material/IconButton';
@@ -252,7 +253,7 @@ export default function AdminMoneyFlowPage() {
   };
 
   return (
-    <Box>
+    <Box sx={{ px: { xs: 1, sm: 0 }, overflowX: 'hidden', maxWidth: '100%' }}>
       <Typography variant="h5" sx={{ mb: 2 }}>
         {t('moneyFlow')}
       </Typography>
@@ -264,7 +265,7 @@ export default function AdminMoneyFlowPage() {
       )}
 
       <Card sx={{ mb: 3 }}>
-        <CardContent>
+        <CardContent sx={{ px: { xs: 1.5, sm: 2 } }}>
           <Typography variant="subtitle1" fontWeight={600} gutterBottom>
             {t('cardPaymentEnabled')}
           </Typography>
@@ -289,8 +290,8 @@ export default function AdminMoneyFlowPage() {
       </Card>
 
       <Card sx={{ mb: 3 }}>
-        <CardContent>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+        <CardContent sx={{ px: { xs: 1.5, sm: 2 } }}>
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: 1, mb: 2 }}>
             <Typography variant="subtitle1" fontWeight={600}>
               {t('paymentCards')}
             </Typography>
@@ -303,46 +304,48 @@ export default function AdminMoneyFlowPage() {
           ) : cards.length === 0 ? (
             <Typography color="text.secondary">{t('noCards')}</Typography>
           ) : (
-            <Table size="small">
-              <TableHead>
-                <TableRow>
-                  <TableCell>{t('cardNumber')}</TableCell>
-                  <TableCell>{t('cardHolderName')}</TableCell>
-                  <TableCell>{t('paymentCommentLabel')}</TableCell>
-                  <TableCell>{t('enabled')}</TableCell>
-                  <TableCell align="right">{t('actions')}</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {cards.map((c) => (
-                  <TableRow key={c.id}>
-                    <TableCell>{maskCardNumber(c.cardNumber)}</TableCell>
-                    <TableCell>{c.cardHolderName}</TableCell>
-                    <TableCell sx={{ maxWidth: 180 }}>{c.paymentComment ? (c.paymentComment.length > 30 ? c.paymentComment.slice(0, 30) + '…' : c.paymentComment) : '—'}</TableCell>
-                    <TableCell>{c.isActive ? '✓ Active' : '—'}</TableCell>
-                    <TableCell align="right">
-                      <Button size="small" onClick={() => handleOpenEditCard(c)}>
-                        {t('editCard')}
-                      </Button>
-                      {!c.isActive && (
-                        <Button size="small" onClick={() => handleSetActive(c.id)}>
-                          {t('setActive')}
-                        </Button>
-                      )}
-                      <IconButton size="small" onClick={() => handleDeleteCard(c.id)} aria-label="Delete">
-                        🗑
-                      </IconButton>
-                    </TableCell>
+            <TableContainer sx={{ overflowX: 'auto' }}>
+              <Table size="small" sx={{ minWidth: 520 }}>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>{t('cardNumber')}</TableCell>
+                    <TableCell>{t('cardHolderName')}</TableCell>
+                    <TableCell>{t('paymentCommentLabel')}</TableCell>
+                    <TableCell>{t('enabled')}</TableCell>
+                    <TableCell align="right">{t('actions')}</TableCell>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHead>
+                <TableBody>
+                  {cards.map((c) => (
+                    <TableRow key={c.id}>
+                      <TableCell>{maskCardNumber(c.cardNumber)}</TableCell>
+                      <TableCell>{c.cardHolderName}</TableCell>
+                      <TableCell sx={{ maxWidth: 180 }}>{c.paymentComment ? (c.paymentComment.length > 30 ? c.paymentComment.slice(0, 30) + '…' : c.paymentComment) : '—'}</TableCell>
+                      <TableCell>{c.isActive ? '✓ Active' : '—'}</TableCell>
+                      <TableCell align="right">
+                        <Button size="small" onClick={() => handleOpenEditCard(c)}>
+                          {t('editCard')}
+                        </Button>
+                        {!c.isActive && (
+                          <Button size="small" onClick={() => handleSetActive(c.id)}>
+                            {t('setActive')}
+                          </Button>
+                        )}
+                        <IconButton size="small" onClick={() => handleDeleteCard(c.id)} aria-label="Delete">
+                          🗑
+                        </IconButton>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
           )}
         </CardContent>
       </Card>
 
       <Card sx={{ mb: 3 }}>
-        <CardContent>
+        <CardContent sx={{ px: { xs: 1.5, sm: 2 } }}>
           <Typography variant="subtitle1" fontWeight={600} gutterBottom>
             {t('pendingReceipts')}
           </Typography>
@@ -354,51 +357,53 @@ export default function AdminMoneyFlowPage() {
           ) : receipts.length === 0 ? (
             <Typography color="text.secondary">{t('noPendingReceipts')}</Typography>
           ) : (
-            <Table size="small">
-              <TableHead>
-                <TableRow>
-                  <TableCell>Order</TableCell>
-                  <TableCell>Buyer</TableCell>
-                  <TableCell>{t('buyerCardLast4')}</TableCell>
-                  <TableCell>Amount</TableCell>
-                  <TableCell>Marked sent</TableCell>
-                  <TableCell align="right">{t('actions')}</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {receipts.map((r) => (
-                  <TableRow key={r.orderId}>
-                    <TableCell>
-                      <Link href={`/${locale}/dashboard/orders/${r.orderId}`} target="_blank" rel="noopener">
-                        {r.orderId.slice(0, 8)}…
-                      </Link>
-                    </TableCell>
-                    <TableCell>{r.buyer?.email ?? r.buyer?.nickname ?? r.buyer?.id}</TableCell>
-                    <TableCell>{r.buyerCardLast4 ?? '—'}</TableCell>
-                    <TableCell>
-                      {r.buyerAmount} {r.buyerCurrency}
-                    </TableCell>
-                    <TableCell>{r.buyerMarkedSentAt ? new Date(r.buyerMarkedSentAt).toLocaleString() : '—'}</TableCell>
-                    <TableCell align="right">
-                      <Button
-                        size="small"
-                        variant="contained"
-                        onClick={() => handleConfirmReceipt(r.orderId)}
-                        disabled={confirmingReceipt === r.orderId}
-                      >
-                        {confirmingReceipt === r.orderId ? '…' : t('confirmReceipt')}
-                      </Button>
-                    </TableCell>
+            <TableContainer sx={{ overflowX: 'auto' }}>
+              <Table size="small" sx={{ minWidth: 480 }}>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Order</TableCell>
+                    <TableCell>Buyer</TableCell>
+                    <TableCell>{t('buyerCardLast4')}</TableCell>
+                    <TableCell>Amount</TableCell>
+                    <TableCell>Marked sent</TableCell>
+                    <TableCell align="right">{t('actions')}</TableCell>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHead>
+                <TableBody>
+                  {receipts.map((r) => (
+                    <TableRow key={r.orderId}>
+                      <TableCell>
+                        <Link href={`/${locale}/dashboard/orders/${r.orderId}`} target="_blank" rel="noopener">
+                          {r.orderId.slice(0, 8)}…
+                        </Link>
+                      </TableCell>
+                      <TableCell>{r.buyer?.email ?? r.buyer?.nickname ?? r.buyer?.id}</TableCell>
+                      <TableCell>{r.buyerCardLast4 ?? '—'}</TableCell>
+                      <TableCell>
+                        {r.buyerAmount} {r.buyerCurrency}
+                      </TableCell>
+                      <TableCell>{r.buyerMarkedSentAt ? new Date(r.buyerMarkedSentAt).toLocaleString() : '—'}</TableCell>
+                      <TableCell align="right">
+                        <Button
+                          size="small"
+                          variant="contained"
+                          onClick={() => handleConfirmReceipt(r.orderId)}
+                          disabled={confirmingReceipt === r.orderId}
+                        >
+                          {confirmingReceipt === r.orderId ? '…' : t('confirmReceipt')}
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
           )}
         </CardContent>
       </Card>
 
-      <Card>
-        <CardContent>
+      <Card sx={{ mb: 3 }}>
+        <CardContent sx={{ px: { xs: 1.5, sm: 2 } }}>
           <Typography variant="subtitle1" fontWeight={600} gutterBottom>
             {t('pendingPayouts')}
           </Typography>
@@ -410,48 +415,50 @@ export default function AdminMoneyFlowPage() {
           ) : payouts.length === 0 ? (
             <Typography color="text.secondary">{t('noPendingPayouts')}</Typography>
           ) : (
-            <Table size="small">
-              <TableHead>
-                <TableRow>
-                  <TableCell>Order</TableCell>
-                  <TableCell>Seller</TableCell>
-                  <TableCell>Amount</TableCell>
-                  <TableCell align="right">{t('actions')}</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {payouts.map((p) => (
-                  <TableRow key={p.orderId}>
-                    <TableCell>
-                      <Link href={`/${locale}/dashboard/orders/${p.orderId}`} target="_blank" rel="noopener">
-                        {p.orderId.slice(0, 8)}…
-                      </Link>
-                    </TableCell>
-                    <TableCell>{p.seller?.email ?? p.seller?.nickname ?? p.seller?.id}</TableCell>
-                    <TableCell>
-                      {p.sellerAmount} {p.sellerCurrency}
-                    </TableCell>
-                    <TableCell align="right">
-                      <Button
-                        size="small"
-                        variant="contained"
-                        color="primary"
-                        onClick={() => handleConfirmPayout(p.orderId)}
-                        disabled={confirmingPayout === p.orderId}
-                      >
-                        {confirmingPayout === p.orderId ? '…' : t('confirmPayout')}
-                      </Button>
-                    </TableCell>
+            <TableContainer sx={{ overflowX: 'auto' }}>
+              <Table size="small" sx={{ minWidth: 360 }}>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Order</TableCell>
+                    <TableCell>Seller</TableCell>
+                    <TableCell>Amount</TableCell>
+                    <TableCell align="right">{t('actions')}</TableCell>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHead>
+                <TableBody>
+                  {payouts.map((p) => (
+                    <TableRow key={p.orderId}>
+                      <TableCell>
+                        <Link href={`/${locale}/dashboard/orders/${p.orderId}`} target="_blank" rel="noopener">
+                          {p.orderId.slice(0, 8)}…
+                        </Link>
+                      </TableCell>
+                      <TableCell>{p.seller?.email ?? p.seller?.nickname ?? p.seller?.id}</TableCell>
+                      <TableCell>
+                        {p.sellerAmount} {p.sellerCurrency}
+                      </TableCell>
+                      <TableCell align="right">
+                        <Button
+                          size="small"
+                          variant="contained"
+                          color="primary"
+                          onClick={() => handleConfirmPayout(p.orderId)}
+                          disabled={confirmingPayout === p.orderId}
+                        >
+                          {confirmingPayout === p.orderId ? '…' : t('confirmPayout')}
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
           )}
         </CardContent>
       </Card>
 
       <Card sx={{ mb: 3 }}>
-        <CardContent>
+        <CardContent sx={{ px: { xs: 1.5, sm: 2 } }}>
           <Typography variant="subtitle1" fontWeight={600} gutterBottom>
             {t('cardPayoutRequests')}
           </Typography>
@@ -465,8 +472,9 @@ export default function AdminMoneyFlowPage() {
               label={t('filterByStatus')}
               value={cardPayoutStatusFilter}
               onChange={(e) => setCardPayoutStatusFilter(e.target.value)}
-              sx={{ minWidth: 160 }}
+              sx={{ minWidth: { xs: '100%', sm: 160 } }}
               SelectProps={{ native: true }}
+              fullWidth
             >
               <option value="">{t('statusAll')}</option>
               <option value="PENDING">PENDING</option>
@@ -479,56 +487,57 @@ export default function AdminMoneyFlowPage() {
           ) : cardPayouts.length === 0 ? (
             <Typography color="text.secondary">{t('noCardPayoutRequests')}</Typography>
           ) : (
-            <Table size="small">
-              <TableHead>
-                <TableRow>
-                  <TableCell>{t('user')}</TableCell>
-                  <TableCell>{t('amount')}</TableCell>
-                  <TableCell>{t('cardNumber')}</TableCell>
-                  <TableCell>{t('cardHolderName')}</TableCell>
-                  <TableCell>{t('status')}</TableCell>
-                  <TableCell>{t('date')}</TableCell>
-                  <TableCell align="right">{t('actions')}</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {cardPayouts.map((r) => (
-                  <TableRow key={r.id}>
-                    <TableCell>{r.user?.email ?? r.user?.nickname ?? r.user?.id ?? r.userId}</TableCell>
-                    <TableCell>{r.amount} {r.currency}</TableCell>
-                    <TableCell>{maskCardNumber(r.cardNumber)}</TableCell>
-                    <TableCell>{r.cardHolderName ?? '—'}</TableCell>
-                    <TableCell>{r.status}</TableCell>
-                    <TableCell>{r.createdAt ? new Date(r.createdAt).toLocaleString() : '—'}</TableCell>
-                    <TableCell align="right">
-                      {r.status === 'PENDING' && (
-                        <>
-                          <Button
-                            size="small"
-                            variant="contained"
-                            color="primary"
-                            onClick={() => handleCardPayoutComplete(r.id)}
-                            disabled={confirmingCardPayoutComplete === r.id}
-                          >
-                            {confirmingCardPayoutComplete === r.id ? '…' : t('markCompleted')}
-                          </Button>
-                          <Button
-                            size="small"
-                            variant="outlined"
-                            color="error"
-                            onClick={() => handleCardPayoutFail(r.id)}
-                            disabled={confirmingCardPayoutFail === r.id}
-                            sx={{ ml: 1 }}
-                          >
-                            {confirmingCardPayoutFail === r.id ? '…' : t('markFailed')}
-                          </Button>
-                        </>
-                      )}
-                    </TableCell>
+            <TableContainer sx={{ overflowX: 'auto' }}>
+              <Table size="small" sx={{ minWidth: 640 }}>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>{t('user')}</TableCell>
+                    <TableCell>{t('amount')}</TableCell>
+                    <TableCell>{t('cardNumber')}</TableCell>
+                    <TableCell>{t('cardHolderName')}</TableCell>
+                    <TableCell>{t('status')}</TableCell>
+                    <TableCell>{t('date')}</TableCell>
+                    <TableCell align="right">{t('actions')}</TableCell>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHead>
+                <TableBody>
+                  {cardPayouts.map((r) => (
+                    <TableRow key={r.id}>
+                      <TableCell>{r.user?.email ?? r.user?.nickname ?? r.user?.id ?? r.userId}</TableCell>
+                      <TableCell>{r.amount} {r.currency}</TableCell>
+                      <TableCell>{maskCardNumber(r.cardNumber)}</TableCell>
+                      <TableCell>{r.cardHolderName ?? '—'}</TableCell>
+                      <TableCell>{r.status}</TableCell>
+                      <TableCell>{r.createdAt ? new Date(r.createdAt).toLocaleString() : '—'}</TableCell>
+                      <TableCell align="right">
+                        {r.status === 'PENDING' && (
+                          <Box component="span" sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, justifyContent: 'flex-end' }}>
+                            <Button
+                              size="small"
+                              variant="contained"
+                              color="primary"
+                              onClick={() => handleCardPayoutComplete(r.id)}
+                              disabled={confirmingCardPayoutComplete === r.id}
+                            >
+                              {confirmingCardPayoutComplete === r.id ? '…' : t('markCompleted')}
+                            </Button>
+                            <Button
+                              size="small"
+                              variant="outlined"
+                              color="error"
+                              onClick={() => handleCardPayoutFail(r.id)}
+                              disabled={confirmingCardPayoutFail === r.id}
+                            >
+                              {confirmingCardPayoutFail === r.id ? '…' : t('markFailed')}
+                            </Button>
+                          </Box>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
           )}
         </CardContent>
       </Card>

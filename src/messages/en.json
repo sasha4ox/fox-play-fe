@@ -168,7 +168,15 @@
     "status": "Status",
     "processedAt": "Processed",
     "typicallyProcessedInDays": "Typically within ~3 working days.",
-    "viewWithdrawals": "View withdrawal history"
+    "viewWithdrawals": "View withdrawal history",
+    "balanceHistoryTitle": "Money in",
+    "balanceHistoryHint": "Positive transfers: sales, refunds, deposits.",
+    "noBalanceHistory": "No transactions yet.",
+    "balanceHistoryType_sale": "Sale",
+    "balanceHistoryType_refund": "Refund",
+    "balanceHistoryType_deposit": "Deposit",
+    "balanceHistoryType_card_payout_refund": "Card payout refund",
+    "order": "Order"
   },
   "Orders": {
     "chats": "Messages",
@@ -284,10 +292,11 @@
     "completing": "Completing…",
     "notReceivedDispute": "I didn't receive it — Open dispute",
     "orderCompleted": "Order completed. Seller has been paid.",
-    "cancelOrderTitle": "Cancel order",
-    "cancelOrderHint": "Cancel this order (e.g. out of stock or changed mind). The buyer will receive a refund to their balance and both parties will see a message.",
-    "cancelOrder": "Cancel order",
-    "cancelOrderConfirm": "Cancel this order? The amount will be refunded to the buyer's balance.",
+    "declineOrderTitle": "Decline order",
+    "declineOrderHint": "Decline this order (e.g. out of stock). The buyer will receive a refund to their balance and both parties will see a message.",
+    "declineOrder": "Decline order",
+    "declineOrderConfirm": "Decline this order? The amount will be refunded to the buyer's balance.",
+    "askSellerToDecline": "If you need to cancel this order, ask the seller to decline it in this chat.",
     "paymentSuccessMessage": "Payment successful. You can continue in this chat.",
     "orderDisputed": "This order is in dispute.",
     "disputeReasonLabel": "Reason for dispute",
@@ -685,6 +694,16 @@
     "highRiskIntro": "Crypto assets are a high-risk financial product. You may:\n• lose the entire value of the asset;\n• experience volatile price movements;\n• face technical or regulatory risks.",
     "notInvestmentAdvice": "This page is not investment advice.",
     "disclaimer": "The Platform is not liable for loss of crypto assets."
+  },
+  "UserProfile": {
+    "offers": "Offers",
+    "offersHint": "What this user is selling now (all servers).",
+    "noOffers": "No offers.",
+    "reviews": "Reviews",
+    "reviewsHint": "Feedback from buyers (stars, date, what they bought).",
+    "noReviews": "No reviews yet.",
+    "sold": "Sold",
+    "userNotFound": "User not found."
   },
   "Contact": {
     "title": "Contact us",

@@ -189,9 +189,13 @@ export default function OrderChatPage() {
     (order.status === 'CREATED' || order.status === 'PAID');
   const canBuyerCompleteOrDispute =
     isBuyer && order && order.status === 'DELIVERED';
-  const canCancel =
+  const canSellerDecline =
+    isSeller &&
     order &&
-    (isBuyer || isSeller) &&
+    ['CREATED', 'PAID', 'DELIVERED'].includes(order.status);
+  const buyerCanAskToDecline =
+    isBuyer &&
+    order &&
     ['CREATED', 'PAID', 'DELIVERED'].includes(order.status);
 
   const handleMarkDelivered = async () => {
@@ -230,7 +234,7 @@ export default function OrderChatPage() {
   };
 
   const handleCancelOrder = async () => {
-    if (!orderId || !token || !window.confirm(t('cancelOrderConfirm'))) return;
+    if (!orderId || !token || !window.confirm(t('declineOrderConfirm'))) return;
     setCancelSubmitting(true);
     setActionError(null);
     try {
@@ -427,16 +431,24 @@ export default function OrderChatPage() {
             <ArrowBackIcon />
           </IconButton>
         )}
-        <Avatar
-          src={otherParty?.avatarUrl}
-          sx={{ width: { xs: 36, md: 44 }, height: { xs: 36, md: 44 }, bgcolor: SENDER_BUBBLE }}
-        >
-          {(otherName || '?').charAt(0).toUpperCase()}
-        </Avatar>
+        <Link href={otherParty?.id ? `/${locale}/user/${otherParty.id}` : '#'} style={{ textDecoration: 'none', color: 'inherit' }}>
+          <Avatar
+            src={otherParty?.avatarUrl}
+            sx={{ width: { xs: 36, md: 44 }, height: { xs: 36, md: 44 }, bgcolor: SENDER_BUBBLE }}
+          >
+            {(otherName || '?').charAt(0).toUpperCase()}
+          </Avatar>
+        </Link>
         <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Typography variant="subtitle1" fontWeight={600} noWrap>
-            {otherName}
-          </Typography>
+          {otherParty?.id ? (
+            <Typography variant="subtitle1" fontWeight={600} noWrap component={Link} href={`/${locale}/user/${otherParty.id}`} sx={{ color: 'inherit', textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}>
+              {otherName}
+            </Typography>
+          ) : (
+            <Typography variant="subtitle1" fontWeight={600} noWrap>
+              {otherName}
+            </Typography>
+          )}
           <Typography variant="caption" color="success.main" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
             <Box component="span" sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: 'success.main' }} />
             {connected ? t('online') : t('live')}
@@ -570,8 +582,8 @@ export default function OrderChatPage() {
         )}
 
         {canSellerDeliver && (
-          <Box sx={{ mb: 2, p: 2, border: '1px solid', borderColor: 'divider', borderRadius: 1, bgcolor: 'background.paper' }}>
-            <Typography variant="subtitle2" gutterBottom>{t('iTransferred')}</Typography>
+          <Box sx={{ mb: 2, p: 2, border: '2px solid', borderColor: 'primary.main', borderRadius: 2, bgcolor: 'primary.50', boxShadow: 1 }}>
+            <Typography variant="subtitle2" gutterBottom fontWeight={700} color="primary.dark">{t('iTransferred')}</Typography>
             <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 1 }}>
               {t('uploadProofHint')}
             </Typography>
@@ -605,8 +617,8 @@ export default function OrderChatPage() {
         )}
 
         {canBuyerCompleteOrDispute && (
-          <Box sx={{ mb: 2, p: 2, border: '1px solid', borderColor: 'divider', borderRadius: 1, bgcolor: 'background.paper' }}>
-            <Typography variant="subtitle2" gutterBottom>{t('confirmReceiptOrDispute')}</Typography>
+          <Box sx={{ mb: 2, p: 2, border: '2px solid', borderColor: 'success.main', borderRadius: 2, bgcolor: 'success.50', boxShadow: 1 }}>
+            <Typography variant="subtitle2" gutterBottom fontWeight={700} color="success.dark">{t('confirmReceiptOrDispute')}</Typography>
             <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
               <Button
                 size="small"
@@ -629,10 +641,10 @@ export default function OrderChatPage() {
           </Box>
         )}
 
-        {canCancel && (
+        {canSellerDecline && (
           <Box sx={{ mb: 2, p: 2, border: '1px solid', borderColor: 'divider', borderRadius: 1, bgcolor: 'background.paper' }}>
-            <Typography variant="subtitle2" gutterBottom>{t('cancelOrderTitle')}</Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>{t('cancelOrderHint')}</Typography>
+            <Typography variant="subtitle2" gutterBottom>{t('declineOrderTitle')}</Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>{t('declineOrderHint')}</Typography>
             <Button
               size="small"
               variant="outlined"
@@ -640,9 +652,15 @@ export default function OrderChatPage() {
               onClick={handleCancelOrder}
               disabled={cancelSubmitting}
             >
-              {cancelSubmitting ? t('submitting') : t('cancelOrder')}
+              {cancelSubmitting ? t('submitting') : t('declineOrder')}
             </Button>
           </Box>
+        )}
+
+        {buyerCanAskToDecline && (
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            {t('askSellerToDecline')}
+          </Typography>
         )}
 
         {order.status === 'COMPLETED' && (
