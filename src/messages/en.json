@@ -169,13 +169,14 @@
     "processedAt": "Processed",
     "typicallyProcessedInDays": "Typically within ~3 working days.",
     "viewWithdrawals": "View withdrawal history",
-    "balanceHistoryTitle": "Money in",
-    "balanceHistoryHint": "Positive transfers: sales, refunds, deposits.",
+    "balanceHistoryTitle": "Money in & out",
+    "balanceHistoryHint": "Sales, refunds, deposits (in); purchases (out).",
     "noBalanceHistory": "No transactions yet.",
     "balanceHistoryType_sale": "Sale",
     "balanceHistoryType_refund": "Refund",
     "balanceHistoryType_deposit": "Deposit",
     "balanceHistoryType_card_payout_refund": "Card payout refund",
+    "balanceHistoryType_purchase": "Purchase",
     "order": "Order"
   },
   "Orders": {

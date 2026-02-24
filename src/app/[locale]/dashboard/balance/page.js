@@ -337,8 +337,8 @@ export default function BalancePage() {
                       <Typography variant="body2" color="text.secondary" sx={{ minWidth: { xs: '100%', sm: 100 } }}>
                         {new Date(item.date).toLocaleString(locale)}
                       </Typography>
-                      <Typography variant="body2" fontWeight={600} sx={{ color: item.type === 'sale' ? 'success.main' : item.type === 'refund' ? 'info.main' : 'text.primary' }}>
-                        +{item.amount} {item.currency}
+                      <Typography variant="body2" fontWeight={600} sx={{ color: item.type === 'sale' ? 'success.main' : item.type === 'refund' ? 'info.main' : item.type === 'purchase' ? 'warning.main' : 'text.primary' }}>
+                        {item.type === 'purchase' ? '−' : '+'}{item.amount} {item.currency}
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
                         {t(`balanceHistoryType_${item.type}`)}
@@ -611,57 +611,130 @@ export default function BalancePage() {
                     {cardPayoutError}
                   </Alert>
                 )}
-                <Box
-                  sx={{
-                    maxWidth: 480,
-                    background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)',
-                    borderRadius: 3,
-                    p: 3,
-                    color: '#fff',
-                    boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
-                    position: 'relative',
-                    overflow: 'hidden',
-                    '&::before': {
-                      content: '""',
-                      position: 'absolute',
-                      top: -50,
-                      right: -50,
-                      width: 150,
-                      height: 150,
-                      borderRadius: '50%',
-                      background: 'rgba(255,255,255,0.05)',
-                    },
-                  }}
-                >
+                <Box sx={{ maxWidth: 420 }}>
+                  {/* Credit card */}
                   <Box
                     sx={{
+                      aspectRatio: '1.586/1',
+                      maxWidth: 420,
+                      background: 'linear-gradient(145deg, #1b2838 0%, #2a475e 40%, #1b2838 100%)',
+                      borderRadius: '16px',
+                      p: 2.5,
+                      color: '#fff',
+                      boxShadow: '0 12px 40px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,255,255,0.06) inset',
                       position: 'relative',
-                      zIndex: 1,
-                      bgcolor: 'rgba(255,255,255,0.95)',
-                      color: 'text.primary',
-                      borderRadius: 2,
-                      p: 2,
-                      mt: 1,
+                      overflow: 'hidden',
+                      '&::before': {
+                        content: '""',
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        height: '40%',
+                        background: 'linear-gradient(180deg, rgba(255,255,255,0.08) 0%, transparent 100%)',
+                        pointerEvents: 'none',
+                      },
+                      '&::after': {
+                        content: '""',
+                        position: 'absolute',
+                        bottom: 20,
+                        right: 24,
+                        width: 44,
+                        height: 32,
+                        borderRadius: 4,
+                        background: 'linear-gradient(135deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0.05) 100%)',
+                        pointerEvents: 'none',
+                      },
                     }}
                   >
-                    <TextField
-                      select
-                      label={t('currency')}
-                      value={cardPayoutCurr}
-                      onChange={(e) => setCardPayoutCurrency(e.target.value)}
-                      size="small"
-                      fullWidth
-                      sx={{ mb: 2 }}
-                      SelectProps={{ native: true }}
-                    >
-                      <option value="UAH">UAH</option>
-                      <option value="USD">USD</option>
-                      <option value="EUR">EUR</option>
-                      <option value="RUB">RUB</option>
-                    </TextField>
-                    <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 1 }}>
-                      {t('totalIn', { currency: cardPayoutCurr })}: {cardPayoutAvailable.toFixed(2)} {cardPayoutCurr}
-                    </Typography>
+                    <Box sx={{ position: 'relative', zIndex: 1, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <Box
+                          sx={{
+                            width: 40,
+                            height: 32,
+                            borderRadius: 6,
+                            background: 'linear-gradient(135deg, #c9a227 0%, #8b6914 100%)',
+                            boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+                          }}
+                        />
+                        <TextField
+                          select
+                          value={cardPayoutCurr}
+                          onChange={(e) => setCardPayoutCurrency(e.target.value)}
+                          size="small"
+                          variant="standard"
+                          SelectProps={{ native: true }}
+                          sx={{
+                            minWidth: 72,
+                            '& .MuiInput-root': { color: 'rgba(255,255,255,0.9)', fontSize: '0.875rem' },
+                            '& .MuiInput-input': { py: 0.5, textAlign: 'right' },
+                            '& .MuiInput-underline:before': { borderColor: 'rgba(255,255,255,0.2)' },
+                            '& .MuiInput-underline:after': { borderColor: 'rgba(255,255,255,0.5)' },
+                            '& .MuiSelect-select': { pr: 1.5 },
+                          }}
+                        >
+                          <option value="UAH">UAH</option>
+                          <option value="USD">USD</option>
+                          <option value="EUR">EUR</option>
+                          <option value="RUB">RUB</option>
+                        </TextField>
+                      </Box>
+                      <Box>
+                        <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.6)', letterSpacing: 1, textTransform: 'uppercase', display: 'block', mb: 0.5 }}>
+                          {t('cardPayoutCardNumber')}
+                        </Typography>
+                        <TextField
+                          placeholder="1234 5678 9012 3456"
+                          value={cardPayoutCardNumber}
+                          onChange={(e) => {
+                            const v = e.target.value.replace(/\D/g, '').slice(0, 19);
+                            const g = v.match(/.{1,4}/g) || [];
+                            setCardPayoutCardNumber(g.join(' '));
+                          }}
+                          inputProps={{ maxLength: 19 }}
+                          variant="standard"
+                          fullWidth
+                          sx={{
+                            '& .MuiInput-root': { color: '#fff', fontSize: '1.125rem', letterSpacing: 3 },
+                            '& .MuiInput-input': { py: 0.5 },
+                            '& .MuiInput-underline:before': { borderColor: 'rgba(255,255,255,0.25)' },
+                            '& .MuiInput-underline:after': { borderColor: 'rgba(255,255,255,0.6)' },
+                          }}
+                        />
+                      </Box>
+                      <Box sx={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: 1 }}>
+                        <Box sx={{ flex: '1 1 140px', minWidth: 0 }}>
+                          <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.6)', letterSpacing: 1, textTransform: 'uppercase', display: 'block', mb: 0.5 }}>
+                            {t('cardPayoutCardHolder')}
+                          </Typography>
+                          <TextField
+                            placeholder="JOHN DOE"
+                            value={cardPayoutCardHolder}
+                            onChange={(e) => setCardPayoutCardHolder(e.target.value.toUpperCase())}
+                            variant="standard"
+                            fullWidth
+                            sx={{
+                              '& .MuiInput-root': { color: '#fff', fontSize: '0.95rem', letterSpacing: 1.5 },
+                              '& .MuiInput-input': { py: 0.5, textTransform: 'uppercase' },
+                              '& .MuiInput-underline:before': { borderColor: 'rgba(255,255,255,0.25)' },
+                              '& .MuiInput-underline:after': { borderColor: 'rgba(255,255,255,0.6)' },
+                            }}
+                          />
+                        </Box>
+                        <Box sx={{ flex: '0 0 auto', textAlign: 'right' }}>
+                          <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.6)', display: 'block' }}>
+                            {t('totalIn', { currency: cardPayoutCurr })}
+                          </Typography>
+                          <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.95)', fontWeight: 600 }}>
+                            {cardPayoutAvailable.toFixed(2)} {cardPayoutCurr}
+                          </Typography>
+                        </Box>
+                      </Box>
+                    </Box>
+                  </Box>
+                  {/* Amount and submit below card */}
+                  <Box sx={{ mt: 2.5, display: 'flex', flexDirection: 'column', gap: 2 }}>
                     <TextField
                       type="number"
                       label={t('withdrawAmount')}
@@ -670,24 +743,6 @@ export default function BalancePage() {
                       inputProps={{ min: 0.01, step: 0.01 }}
                       size="small"
                       fullWidth
-                      sx={{ mb: 2 }}
-                    />
-                    <TextField
-                      label={t('cardPayoutCardNumber')}
-                      placeholder="1234 5678 9012 3456"
-                      value={cardPayoutCardNumber}
-                      onChange={(e) => setCardPayoutCardNumber(e.target.value)}
-                      size="small"
-                      fullWidth
-                      sx={{ mb: 2 }}
-                    />
-                    <TextField
-                      label={t('cardPayoutCardHolder')}
-                      value={cardPayoutCardHolder}
-                      onChange={(e) => setCardPayoutCardHolder(e.target.value)}
-                      size="small"
-                      fullWidth
-                      sx={{ mb: 2 }}
                     />
                     <Button
                       variant="contained"

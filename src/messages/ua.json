@@ -169,13 +169,14 @@
     "processedAt": "Оброблено",
     "typicallyProcessedInDays": "Зазвичай протягом ~3 робочих днів.",
     "viewWithdrawals": "Історія виведень",
-    "balanceHistoryTitle": "Надходження",
-    "balanceHistoryHint": "Позитивні перекази: продажі, повернення, поповнення.",
+    "balanceHistoryTitle": "Надходження та витрати",
+    "balanceHistoryHint": "Продажі, повернення, поповнення (надходження); покупки (витрати).",
     "noBalanceHistory": "Транзакцій ще немає.",
     "balanceHistoryType_sale": "Продаж",
     "balanceHistoryType_refund": "Повернення",
     "balanceHistoryType_deposit": "Поповнення",
     "balanceHistoryType_card_payout_refund": "Повернення виведення на картку",
+    "balanceHistoryType_purchase": "Покупка",
     "order": "Замовлення"
   },
   "Orders": {
