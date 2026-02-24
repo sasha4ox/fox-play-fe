@@ -13,17 +13,20 @@ const getSocketUrl = () => {
  * Returns { socket, connected, lastMessage, onlineUserIds }.
  * Pass onMessage(msg) to get every received message immediately.
  * Pass onOrderRead(payload) for Telegram-style read receipts: { orderId, userId, lastReadAt }.
+ * Pass onOrderActivity(orderId) when order changes (e.g. seller marked delivered) so UI can refetch order + messages.
  */
 export function useOrderSocket(orderId, token, options = {}) {
-  const { onMessage, onOrderRead } = options;
+  const { onMessage, onOrderRead, onOrderActivity } = options;
   const [connected, setConnected] = useState(false);
   const [lastMessage, setLastMessage] = useState(null);
   const [onlineUserIds, setOnlineUserIds] = useState([]);
   const socketRef = useRef(null);
   const onMessageRef = useRef(onMessage);
   const onOrderReadRef = useRef(onOrderRead);
+  const onOrderActivityRef = useRef(onOrderActivity);
   onMessageRef.current = onMessage;
   onOrderReadRef.current = onOrderRead;
+  onOrderActivityRef.current = onOrderActivity;
 
   useEffect(() => {
     if (!token || !orderId) return;
@@ -45,6 +48,11 @@ export function useOrderSocket(orderId, token, options = {}) {
     socket.on('order_read', (payload) => {
       if (payload?.orderId === orderId) {
         onOrderReadRef.current?.(payload);
+      }
+    });
+    socket.on('order_activity', (payload) => {
+      if (payload?.orderId === orderId) {
+        onOrderActivityRef.current?.(payload?.orderId);
       }
     });
     socket.on('presence', (data) => setOnlineUserIds(Array.isArray(data?.userIds) ? data.userIds : []));

@@ -125,6 +125,11 @@ export default function OrderChatPage() {
         return { ...prev, orderReads: nextReads };
       });
     },
+    onOrderActivity: () => {
+      if (!orderId || !token) return;
+      getOrderById(orderId, token).then(setOrder).catch(() => {});
+      getOrderMessages(orderId, token).then((msgs) => setMessages(Array.isArray(msgs) ? msgs : [])).catch(() => {});
+    },
   });
 
   const refetchOrder = () => {
@@ -216,6 +221,8 @@ export default function OrderChatPage() {
       setDeliverProofFiles([]);
       if (deliverProofInputRef.current) deliverProofInputRef.current.value = '';
       refetchOrder();
+      // Refetch messages so the "Order delivered" message with proof images shows immediately for both seller and buyer
+      getOrderMessages(orderId, token).then((msgs) => setMessages(Array.isArray(msgs) ? msgs : [])).catch(() => {});
     } catch (err) {
       setActionError(err.message || 'Failed to mark as delivered');
     } finally {

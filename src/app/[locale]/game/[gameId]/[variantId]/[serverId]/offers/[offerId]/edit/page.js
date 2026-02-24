@@ -9,17 +9,23 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
+import InputAdornment from '@mui/material/InputAdornment';
 import MuiLink from '@mui/material/Link';
 import CircularProgress from '@mui/material/CircularProgress';
 import Alert from '@mui/material/Alert';
 import { useAuthStore } from '@/store/authStore';
+import { useProfile } from '@/hooks/useProfile';
 import { fetchOfferById, updateOffer } from '@/lib/api';
+
+const MIN_KK = 1;
+const MIN_PRICE_PER_100KK = 0.01;
 
 export default function EditOfferPage() {
   const params = useParams();
   const router = useRouter();
   const locale = useLocale();
   const t = useTranslations('EditOffer');
+  const tNew = useTranslations('NewOffer');
   const tCommon = useTranslations('Common');
   const offerId = params?.offerId;
   const gameId = params?.gameId;
@@ -32,48 +38,76 @@ export default function EditOfferPage() {
   const [description, setDescription] = useState('');
   const [quantity, setQuantity] = useState(1);
   const [price, setPrice] = useState('');
+  const [quantityAdena, setQuantityAdena] = useState(1);
+  const [priceAdena, setPriceAdena] = useState(1);
+  const [quantityError, setQuantityError] = useState(null);
+  const [priceError, setPriceError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
   const user = useAuthStore((s) => s.user);
   const token = useAuthStore((s) => s.token);
+  const { preferredCurrency } = useProfile();
+  const currency = offer?.displayCurrency ?? offer?.currency ?? preferredCurrency ?? 'EUR';
+  const isAdena = offer?.offerType === 'ADENA';
 
   useEffect(() => {
     if (!offerId) return;
     setLoading(true);
     setError(null);
-    fetchOfferById(offerId)
+    fetchOfferById(offerId, token ?? null)
       .then((data) => {
         setOffer(data);
         setTitle(data.title ?? '');
         setDescription(data.description ?? '');
-        setQuantity(data.quantity ?? 1);
-        setPrice(String(data.price ?? ''));
+        if (data.offerType === 'ADENA') {
+          const q = Number(data.quantity ?? 0);
+          const p = Number(data.displayPrice ?? data.price ?? 0);
+          setQuantityAdena(q / 1_000_000 || 1);
+          setPriceAdena(p * 100 || 1); // backend: price per 1kk → display: price for 100kk
+        } else {
+          setQuantity(Number(data.quantity ?? 1));
+          setPrice(String(data.price ?? ''));
+        }
         setLoading(false);
       })
       .catch((err) => {
         setError(err.message);
         setLoading(false);
       });
-  }, [offerId]);
+  }, [offerId, token]);
 
   const isCreator = user?.id && offer?.seller?.id && user.id === offer.seller.id;
+
+  const validateAdenaInputs = () => {
+    if (!isAdena) return true;
+    const qOk = Number.isFinite(Number(quantityAdena)) && Number(quantityAdena) >= MIN_KK;
+    const pOk = Number.isFinite(Number(priceAdena)) && Number(priceAdena) >= MIN_PRICE_PER_100KK;
+    setQuantityError(qOk ? null : tNew('min1kk'));
+    setPriceError(pOk ? null : tNew('minPriceFor100kk'));
+    return qOk && pOk;
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!offer || !token || !isCreator) return;
+    if (isAdena && !validateAdenaInputs()) return;
     setSubmitting(true);
     setSubmitError(null);
     try {
-      await updateOffer(
-        offer.id,
-        {
-          title,
-          description,
-          quantity: Number(quantity) || 1,
-          price: Number(price) || 0,
-        },
-        token
-      );
+      const payload = isAdena
+        ? {
+            title,
+            description,
+            quantity: Math.floor(Number(quantityAdena) * 1_000_000) || 1_000_000,
+            price: (Number(priceAdena) || 0) / 100,
+          }
+        : {
+            title,
+            description,
+            quantity: Number(quantity) || 1,
+            price: Number(price) || 0,
+          };
+      await updateOffer(offer.id, payload, token);
       router.push(`/${locale}/game/${gameId}/${variantId}/${serverId}/offers/${offerId}`);
     } catch (err) {
       setSubmitError(err.message || t('failedUpdate'));
@@ -123,10 +157,78 @@ export default function EditOfferPage() {
         </Typography>
 
         <form onSubmit={handleSubmit}>
+          {isAdena ? (
+            <Box sx={{ maxWidth: 360 }}>
+              <TextField
+                label={tNew('amountOfAdena')}
+                type="text"
+                inputMode="decimal"
+                value={quantityAdena}
+                onChange={(e) => {
+                  const raw = e.target.value.replace(',', '.');
+                  const v = raw === '' ? '' : Number(raw);
+                  setQuantityAdena(v);
+                  setQuantityError(null);
+                }}
+                helperText={quantityError}
+                error={!!quantityError}
+                required
+                fullWidth
+                sx={{
+                  mb: 2,
+                  '& input': { MozAppearance: 'textfield' },
+                  '& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button': { WebkitAppearance: 'none', margin: 0 },
+                }}
+                InputProps={{
+                  endAdornment: <InputAdornment position="end">kk</InputAdornment>,
+                }}
+              />
+              <TextField
+                label={tNew('priceFor100kk', { currency })}
+                type="text"
+                inputMode="decimal"
+                value={priceAdena}
+                onChange={(e) => {
+                  const raw = e.target.value.replace(',', '.');
+                  const v = raw === '' ? '' : Number(raw);
+                  setPriceAdena(v);
+                  setPriceError(null);
+                }}
+                helperText={priceError}
+                error={!!priceError}
+                required
+                fullWidth
+                sx={{
+                  mb: 2,
+                  '& input': { MozAppearance: 'textfield' },
+                  '& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button': { WebkitAppearance: 'none', margin: 0 },
+                }}
+                InputProps={{
+                  endAdornment: <InputAdornment position="end">{currency}</InputAdornment>,
+                }}
+              />
+              <Box sx={{ mt: 1, mb: 2, p: 1.5, bgcolor: 'action.hover', borderRadius: 1 }}>
+                <Typography variant="body2" color="text.primary" sx={{ mb: 0.5 }}>
+                  <strong>1)</strong> {tNew('youWillReceive')}: <strong>{((Number(quantityAdena) || 0) / 100 * (Number(priceAdena) || 0)).toFixed(2)} {currency}</strong>
+                </Typography>
+                <Typography variant="body2" color="text.primary" sx={{ mb: 0.5 }}>
+                  <strong>2)</strong> {tNew('cost1kkk')}: <strong>{(10 * (Number(priceAdena) || 0)).toFixed(2)} {currency}</strong>
+                </Typography>
+                <Typography variant="body2" color="text.primary">
+                  <strong>3)</strong> {tNew('pricePer1kk')}: <strong>{((Number(priceAdena) || 0) / 100).toFixed(4)} {currency}</strong>
+                </Typography>
+              </Box>
+            </Box>
+          ) : (
+            <>
+              <TextField type="number" label={t('quantity')} value={quantity} onChange={(e) => setQuantity(e.target.value)} inputProps={{ min: 1 }} fullWidth sx={{ mb: 2 }} required />
+              <TextField type="number" label={`${t('price')} (${currency})`} value={price} onChange={(e) => setPrice(e.target.value)} inputProps={{ min: 0 }} fullWidth sx={{ mb: 2 }} required />
+            </>
+          )}
+
           <TextField label={t('title')} value={title} onChange={(e) => setTitle(e.target.value)} fullWidth sx={{ mb: 2 }} required />
           <TextField label={t('description')} value={description} onChange={(e) => setDescription(e.target.value)} multiline rows={4} fullWidth sx={{ mb: 2 }} required />
-          <TextField type="number" label={t('quantity')} value={quantity} onChange={(e) => setQuantity(e.target.value)} inputProps={{ min: 1 }} fullWidth sx={{ mb: 2 }} required />
-          <TextField type="number" label={t('price')} value={price} onChange={(e) => setPrice(e.target.value)} inputProps={{ min: 0 }} fullWidth sx={{ mb: 2 }} required />
+
           {submitError && <Alert severity="error" sx={{ mb: 2 }}>{submitError}</Alert>}
           <Button type="submit" variant="contained" color="secondary" disabled={submitting}>
             {submitting ? t('saving') : tCommon('save')}
