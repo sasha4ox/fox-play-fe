@@ -54,20 +54,40 @@
     }
 }
 
-/* Google Sign-In: match primary button height and radius */
+/* Google Sign-In: match primary button height/radius and theme */
 .googleBtnWrapper {
   display: flex;
   justify-content: center;
   align-items: center;
   width: 100%;
-  min-height: 48px;
+  min-height: 52px;
   overflow: hidden;
   border-radius: 10px;
+  border: 1px solid var(--second-color);
+  background: color-mix(in srgb, var(--foreground) 4%, transparent);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+@supports (border-color: color-mix(in srgb, red 50%, transparent)) {
+  .googleBtnWrapper {
+    border-color: color-mix(in srgb, var(--foreground) 18%, transparent);
+  }
+}
+
+.googleBtnWrapper:hover {
+  border-color: var(--fourth-color);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--foreground) 12%, transparent);
+}
+
+@supports (border-color: color-mix(in srgb, red 50%, transparent)) {
+  .googleBtnWrapper:hover {
+    border-color: color-mix(in srgb, var(--foreground) 28%, transparent);
+  }
 }
 
 .googleBtnContainer {
   width: 100% !important;
-  min-height: 48px !important;
+  min-height: 52px !important;
   display: flex !important;
   justify-content: center !important;
   align-items: center !important;
@@ -76,7 +96,8 @@
 .googleBtnContainer iframe {
   width: 100% !important;
   min-width: 100% !important;
-  min-height: 48px !important;
+  min-height: 52px !important;
+  border-radius: 9px !important;
 }
 
 @media (max-width: 950px) {
