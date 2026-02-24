@@ -344,7 +344,9 @@
     "feedbackSubmitted": "Thank you! Your feedback has been submitted.",
     "feedbackAlreadyLeft": "You have already left feedback for this order.",
     "cardPaymentBanner": "Pay by card: send the amount to the card and confirm.",
-    "openPaymentPage": "Open payment page"
+    "openPaymentPage": "Open payment page",
+    "buyerPendingAdminConfirmTitle": "Waiting for payment confirmation",
+    "buyerPendingAdminConfirmMessage": "You marked payment as sent. This order and chat will appear in your list only after admin confirms your payment. You cannot see messages or full order details until then."
   },
   "CardPayment": {
     "title": "Pay by card",
