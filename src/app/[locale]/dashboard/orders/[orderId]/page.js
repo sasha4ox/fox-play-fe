@@ -577,6 +577,11 @@ export default function OrderChatPage() {
                   </Typography>
                 </>
               )}
+              {order.buyerCharacterNick && (
+                <Typography variant="body2" color="text.primary" fontWeight={600} sx={{ mt: 1 }}>
+                  {t('inGameNickLabel')}: {order.buyerCharacterNick}
+                </Typography>
+              )}
             </Box>
           </>
         )}

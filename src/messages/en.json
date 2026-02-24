@@ -282,6 +282,7 @@
     "youGiveToBuyer": "You give to buyer",
     "youGetFromSeller": "You get from seller",
     "buyerInGameNick": "Buyer in-game nick",
+    "inGameNickLabel": "Nickname (in-game)",
     "iTransferred": "I transferred items / adena",
     "uploadProofHint": "Upload proof (screenshot of transaction). At least one image is required.",
     "chooseProofImages": "Choose proof image(s)",

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useLocale, useTranslations } from 'next-intl';
 import Box from '@mui/material/Box';
@@ -58,6 +58,7 @@ function formatTime(seconds) {
 
 export default function OrderCardPaymentPage() {
   const params = useParams();
+  const router = useRouter();
   const locale = useLocale();
   const t = useTranslations('CardPayment');
   const orderId = params?.orderId;
@@ -106,7 +107,10 @@ export default function OrderCardPaymentPage() {
         setLast4('');
         return getOrderCardPayment(orderId, token);
       })
-      .then(setData)
+      .then((updated) => {
+        setData(updated);
+        router.push(`/${locale}/dashboard/orders/${orderId}`);
+      })
       .catch((err) => setError(err.message || t('failed')))
       .finally(() => setSending(false));
   };
