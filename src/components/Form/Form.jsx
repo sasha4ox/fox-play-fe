@@ -50,6 +50,9 @@ export default function Form({ popupMode = false, onLoginSuccess }) {
   const [authSuccess, setAuthSuccess] = useState(null);
   const [resendStatus, setResendStatus] = useState(null);
   const [emailForResend, setEmailForResend] = useState('');
+  const [showActivationCooldown, setShowActivationCooldown] = useState(false);
+  const [resendCooldownSeconds, setResendCooldownSeconds] = useState(0);
+  const [lastRegisteredEmail, setLastRegisteredEmail] = useState('');
   const { control, handleSubmit, setError, formState: { isSubmitting } } = useForm({
     defaultValues: {
       password: "",
@@ -64,8 +67,17 @@ export default function Form({ popupMode = false, onLoginSuccess }) {
   const handleChangeForm = () => {
     setAuthError(null);
     setAuthSuccess(null);
+    setShowActivationCooldown(false);
+    setResendCooldownSeconds(0);
+    setLastRegisteredEmail('');
     setIsloginForm(!isLoginForm);
   };
+
+  useEffect(() => {
+    if (!showActivationCooldown || resendCooldownSeconds <= 0) return;
+    const t = setTimeout(() => setResendCooldownSeconds((s) => s - 1), 1000);
+    return () => clearTimeout(t);
+  }, [showActivationCooldown, resendCooldownSeconds]);
   
 
   const setAuth = useAuthStore((s) => s.setAuth);
@@ -85,6 +97,7 @@ export default function Form({ popupMode = false, onLoginSuccess }) {
     if (/invalid credentials/i.test(msg)) return t('invalidCredentials');
     if (/user already exists/i.test(msg)) return t('emailAlreadyRegistered');
     if (/nickname is required/i.test(msg)) return t('nicknameRequired');
+    if (/sent a new activation link/i.test(msg)) return t('activationEmailSentAgain');
     if (/verify your email/i.test(msg)) return t('pleaseVerifyEmail');
     if (/account is already verified/i.test(msg)) return t('alreadyVerified');
     if (/no account found with this email/i.test(msg)) return t('noAccountWithEmail');
@@ -113,7 +126,7 @@ export default function Form({ popupMode = false, onLoginSuccess }) {
     } else {
       const errMsg = getAuthErrorMessage(parsedResponse?.response ?? parsedResponse);
       setAuthError(errMsg);
-      if (errMsg === t('pleaseVerifyEmail')) setEmailForResend(data.email ?? '');
+      if (errMsg === t('pleaseVerifyEmail') || errMsg === t('activationEmailSentAgain')) setEmailForResend(data.email ?? '');
     }
   };
 
@@ -165,6 +178,9 @@ export default function Form({ popupMode = false, onLoginSuccess }) {
     }
     if (response.ok && res?.message) {
       setAuthSuccess(res.message);
+      setShowActivationCooldown(true);
+      setResendCooldownSeconds(60);
+      setLastRegisteredEmail(data.email ?? '');
       return response;
     }
     setAuthError(getAuthErrorMessage(res));
@@ -248,7 +264,7 @@ export default function Form({ popupMode = false, onLoginSuccess }) {
         {authError && (
           <Alert severity="error" sx={{ mb: 2 }} onClose={() => { setAuthError(null); setEmailForResend(''); setResendStatus(null); }}>
             {authError}
-            {authError === t('pleaseVerifyEmail') && emailForResend && (
+            {(authError === t('pleaseVerifyEmail') || authError === t('activationEmailSentAgain')) && emailForResend && (
               <Button
                 size="small"
                 variant="outlined"
@@ -278,6 +294,42 @@ export default function Form({ popupMode = false, onLoginSuccess }) {
         {authSuccess && (
           <Alert severity="success" sx={{ mb: 2 }}>
             {authSuccess}
+            {showActivationCooldown && lastRegisteredEmail && (
+              <Box sx={{ mt: 1.5 }}>
+                {resendCooldownSeconds > 0 ? (
+                  <Typography variant="body2" color="text.secondary">
+                    {t('tryAgainInSeconds', { seconds: resendCooldownSeconds })}
+                  </Typography>
+                ) : (
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    sx={{ mt: 0.5 }}
+                    disabled={resendStatus === 'sending'}
+                    onClick={async () => {
+                      setResendStatus('sending');
+                      try {
+                        const r = await fetch('/api/auth/resend-activation', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ email: lastRegisteredEmail }),
+                        });
+                        const data = await r.json();
+                        if (r.ok) {
+                          setResendStatus('sent');
+                          setResendCooldownSeconds(60);
+                          setAuthSuccess(data?.message ?? t('emailSentSuccess'));
+                        } else setResendStatus(data?.message || 'Failed');
+                      } catch {
+                        setResendStatus('Failed');
+                      }
+                    }}
+                  >
+                    {resendStatus === 'sending' ? t('sending') : resendStatus === 'sent' ? t('emailSentSuccess') : t('didntReceiveEmailTryAgain')}
+                  </Button>
+                )}
+              </Box>
+            )}
           </Alert>
         )}
         <Button type="submit" variant="contained" color="secondary" fullWidth className={styles.send} disabled={isSubmitting}>

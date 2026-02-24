@@ -99,6 +99,7 @@ export default function Header() {
   const { lastNewOrder, clearNewOrder } = useSellerNewOrder(isAuth ? token : null, {
     onOrderActivity: handleOrderActivity,
     onNewMessage: handleNewMessage,
+    onBalanceUpdated: refetch,
   });
   useEffect(() => {
     if (lastNewOrder) {
