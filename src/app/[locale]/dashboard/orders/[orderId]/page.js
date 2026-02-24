@@ -185,6 +185,8 @@ export default function OrderChatPage() {
   const isSeller = order && currentUserId && (order.sellerId === currentUserId || order.seller?.id === currentUserId);
   const isBuyer = order && currentUserId && (order.buyerId === currentUserId || order.buyer?.id === currentUserId);
   const buyerPendingAdminConfirm = isBuyer && order?.paymentMethod === 'CARD_MANUAL' && order?.status === 'CREATED';
+  const sellerPendingAdminConfirm = isSeller && order?.paymentMethod === 'CARD_MANUAL' && order?.status === 'CREATED';
+  const pendingAdminConfirm = buyerPendingAdminConfirm || sellerPendingAdminConfirm;
   const canSellerDeliver =
     isSeller &&
     order &&
@@ -471,7 +473,7 @@ export default function OrderChatPage() {
           {t('paymentSuccessMessage')}
         </Alert>
       )}
-      {!buyerPendingAdminConfirm && isBuyer && order?.paymentMethod === 'CARD_MANUAL' && order?.status === 'CREATED' && order?.orderCardPayment && (
+      {!pendingAdminConfirm && isBuyer && order?.paymentMethod === 'CARD_MANUAL' && order?.status === 'CREATED' && order?.orderCardPayment && (
         <Alert severity="warning" sx={{ mx: { xs: 1, md: 2 }, mt: 1 }}>
           {t('cardPaymentBanner')}{' '}
           <Button component={Link} href={`/${locale}/dashboard/orders/${orderId}/card-payment`} size="small" variant="outlined" sx={{ mt: 0.5 }}>
@@ -481,14 +483,16 @@ export default function OrderChatPage() {
       )}
       {actionInfo && <Alert severity="info" sx={{ mx: { xs: 1, md: 2 }, mt: 1 }} onClose={() => setActionInfo(null)}>{actionInfo}</Alert>}
       {actionError && <Alert severity="error" sx={{ mx: { xs: 1, md: 2 }, mt: 1 }}>{actionError}</Alert>}
-      {buyerPendingAdminConfirm ? (
+      {pendingAdminConfirm ? (
         <Box sx={{ flex: 1, minHeight: 0, overflow: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'center', p: 3 }}>
           <Box sx={{ maxWidth: 480, p: 3, bgcolor: 'background.paper', borderRadius: 2, border: '1px solid', borderColor: 'divider', textAlign: 'center' }}>
-            <Typography variant="h6" fontWeight={600} gutterBottom>{t('buyerPendingAdminConfirmTitle')}</Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>{t('buyerPendingAdminConfirmMessage')}</Typography>
-            <Button component={Link} href={`/${locale}/dashboard/orders/${orderId}/card-payment`} variant="outlined" size="small">
-              {t('openPaymentPage')}
-            </Button>
+            <Typography variant="h6" fontWeight={600} gutterBottom>{t(buyerPendingAdminConfirm ? 'buyerPendingAdminConfirmTitle' : 'sellerPendingAdminConfirmTitle')}</Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>{t(buyerPendingAdminConfirm ? 'buyerPendingAdminConfirmMessage' : 'sellerPendingAdminConfirmMessage')}</Typography>
+            {buyerPendingAdminConfirm && (
+              <Button component={Link} href={`/${locale}/dashboard/orders/${orderId}/card-payment`} variant="outlined" size="small">
+                {t('openPaymentPage')}
+              </Button>
+            )}
           </Box>
         </Box>
       ) : (

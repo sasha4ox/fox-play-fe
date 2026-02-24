@@ -346,7 +346,9 @@
     "cardPaymentBanner": "Pay by card: send the amount to the card and confirm.",
     "openPaymentPage": "Open payment page",
     "buyerPendingAdminConfirmTitle": "Waiting for payment confirmation",
-    "buyerPendingAdminConfirmMessage": "You marked payment as sent. This order and chat will appear in your list only after admin confirms your payment. You cannot see messages or full order details until then."
+    "buyerPendingAdminConfirmMessage": "You marked payment as sent. This order and chat will appear in your list only after admin confirms your payment. You cannot see messages or full order details until then.",
+    "sellerPendingAdminConfirmTitle": "Waiting for payment confirmation",
+    "sellerPendingAdminConfirmMessage": "A buyer has started this order (pay by card). This order and chat will appear in your list only after admin confirms the buyer's payment. You cannot see messages or full order details until then."
   },
   "CardPayment": {
     "title": "Pay by card",
