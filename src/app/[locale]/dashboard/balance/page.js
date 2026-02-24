@@ -447,7 +447,7 @@ export default function BalancePage() {
                           label={t('amount')}
                           value={depositAmount}
                           onChange={(e) => setDepositAmount(e.target.value)}
-                          inputProps={{ min: 1, step: 1 }}
+                          inputProps={{ min: 1 }}
                           size="small"
                           sx={{ mr: 1, width: 100 }}
                         />
@@ -528,7 +528,7 @@ export default function BalancePage() {
                       label={t('withdrawAmount')}
                       value={withdrawWbAmount}
                       onChange={(e) => setWithdrawWbAmount(e.target.value)}
-                      inputProps={{ min: 1, step: 1 }}
+                      inputProps={{ min: 1 }}
                       size="small"
                       fullWidth
                       sx={{ mb: 2 }}
@@ -740,7 +740,7 @@ export default function BalancePage() {
                       label={t('withdrawAmount')}
                       value={cardPayoutAmount}
                       onChange={(e) => setCardPayoutAmount(e.target.value)}
-                      inputProps={{ min: 0.01, step: 0.01 }}
+                      inputProps={{ min: 0.01 }}
                       size="small"
                       fullWidth
                     />

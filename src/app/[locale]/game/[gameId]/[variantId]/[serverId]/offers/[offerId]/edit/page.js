@@ -126,7 +126,7 @@ export default function EditOfferPage() {
           <TextField label={t('title')} value={title} onChange={(e) => setTitle(e.target.value)} fullWidth sx={{ mb: 2 }} required />
           <TextField label={t('description')} value={description} onChange={(e) => setDescription(e.target.value)} multiline rows={4} fullWidth sx={{ mb: 2 }} required />
           <TextField type="number" label={t('quantity')} value={quantity} onChange={(e) => setQuantity(e.target.value)} inputProps={{ min: 1 }} fullWidth sx={{ mb: 2 }} required />
-          <TextField type="number" label={t('price')} value={price} onChange={(e) => setPrice(e.target.value)} inputProps={{ min: 0, step: 0.01 }} fullWidth sx={{ mb: 2 }} required />
+          <TextField type="number" label={t('price')} value={price} onChange={(e) => setPrice(e.target.value)} inputProps={{ min: 0 }} fullWidth sx={{ mb: 2 }} required />
           {submitError && <Alert severity="error" sx={{ mb: 2 }}>{submitError}</Alert>}
           <Button type="submit" variant="contained" color="secondary" disabled={submitting}>
             {submitting ? t('saving') : tCommon('save')}

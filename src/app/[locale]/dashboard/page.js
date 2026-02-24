@@ -55,10 +55,15 @@ export default function DashboardPage() {
 
   const searchQuery = deferredSearch.trim().toLowerCase();
   const filteredBySearch = useMemo(() => filterGamesBySearch(games, searchQuery), [games, searchQuery]);
+  // When user is searching, always show results from all games (ignore letter filter)
   const filteredGames = useMemo(
     () =>
-      selectedLetter ? filteredBySearch.filter((g) => getLetterKey(g.name) === selectedLetter) : filteredBySearch,
-    [filteredBySearch, selectedLetter]
+      searchQuery
+        ? filteredBySearch
+        : selectedLetter
+          ? filteredBySearch.filter((g) => getLetterKey(g.name) === selectedLetter)
+          : filteredBySearch,
+    [filteredBySearch, selectedLetter, searchQuery]
   );
   const gamesToShow = filteredGames.slice(0, visibleCount);
   const hasMore = visibleCount < filteredGames.length;
@@ -90,7 +95,11 @@ export default function DashboardPage() {
   }, [searchQuery, selectedLetter]);
 
   const handleSearchChange = (e) => {
-    startTransition(() => setSearch(e.target.value));
+    const value = e.target.value;
+    startTransition(() => {
+      setSearch(value);
+      if (value.trim()) setSelectedLetter(null);
+    });
   };
 
   const handleLetterClick = (letterOrNull) => {

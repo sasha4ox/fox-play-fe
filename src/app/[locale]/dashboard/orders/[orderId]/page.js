@@ -93,6 +93,7 @@ export default function OrderChatPage() {
   const [feedbackComment, setFeedbackComment] = useState('');
   const [feedbackSubmitting, setFeedbackSubmitting] = useState(false);
   const [cancelSubmitting, setCancelSubmitting] = useState(false);
+  const [declineDialogOpen, setDeclineDialogOpen] = useState(false);
   const [paymentSuccessShown, setPaymentSuccessShown] = useState(false);
   const [infoExpandedOnMobile, setInfoExpandedOnMobile] = useState(false);
   const tAdmin = useTranslations('Admin');
@@ -234,11 +235,12 @@ export default function OrderChatPage() {
   };
 
   const handleCancelOrder = async () => {
-    if (!orderId || !token || !window.confirm(t('declineOrderConfirm'))) return;
+    if (!orderId || !token) return;
     setCancelSubmitting(true);
     setActionError(null);
     try {
       await apiCancelOrder(orderId, token);
+      setDeclineDialogOpen(false);
       const [updatedOrder, updatedMessages] = await Promise.all([
         getOrderById(orderId, token),
         getOrderMessages(orderId, token),
@@ -654,13 +656,27 @@ export default function OrderChatPage() {
               size="small"
               variant="outlined"
               color="error"
-              onClick={handleCancelOrder}
+              onClick={() => setDeclineDialogOpen(true)}
               disabled={cancelSubmitting}
             >
-              {cancelSubmitting ? t('submitting') : t('declineOrder')}
+              {t('declineOrder')}
             </Button>
           </Box>
         )}
+        <Dialog open={declineDialogOpen} onClose={() => !cancelSubmitting && setDeclineDialogOpen(false)}>
+          <DialogTitle>{t('declineOrderTitle')}</DialogTitle>
+          <DialogContent>
+            <Typography>{t('declineOrderConfirm')}</Typography>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setDeclineDialogOpen(false)} disabled={cancelSubmitting}>
+              {tCommon('cancel')}
+            </Button>
+            <Button variant="contained" color="error" onClick={handleCancelOrder} disabled={cancelSubmitting}>
+              {cancelSubmitting ? t('submitting') : t('declineOrder')}
+            </Button>
+          </DialogActions>
+        </Dialog>
 
         {buyerCanAskToDecline && (
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>

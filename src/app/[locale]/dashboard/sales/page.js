@@ -29,6 +29,21 @@ import { formatAdena } from '@/lib/adenaFormat';
 
 const SOLD_STATUS_OPTIONS = ['', 'CREATED', 'PAID', 'DELIVERED', 'COMPLETED', 'CANCELED', 'DISPUTED'];
 
+const orderCardBgByStatus = {
+  COMPLETED: { bgcolor: 'rgba(25, 118, 210, 0.12)', borderLeft: '4px solid', borderLeftColor: '#1976d2' },
+  CREATED: { bgcolor: 'rgba(139, 195, 74, 0.2)', borderLeft: '4px solid', borderLeftColor: '#8bc34a' },
+  PAID: { bgcolor: 'rgba(76, 175, 80, 0.15)', borderLeft: '4px solid', borderLeftColor: '#4caf50' },
+  DELIVERED: { bgcolor: 'rgba(255, 235, 59, 0.25)', borderLeft: '4px solid', borderLeftColor: '#ffeb3b' },
+  DISPUTED: { bgcolor: 'rgba(244, 67, 54, 0.12)', borderLeft: '4px solid', borderLeftColor: '#f44336' },
+  CANCELED: { bgcolor: 'rgba(158, 158, 158, 0.15)', borderLeft: '4px solid', borderLeftColor: '#9e9e9e' },
+};
+
+function getOrderCardSx(order, unread) {
+  const byStatus = order?.status ? orderCardBgByStatus[order.status] : {};
+  const unreadSx = unread > 0 ? { borderLeft: '4px solid', borderLeftColor: 'primary.main' } : {};
+  return { ...byStatus, ...unreadSx };
+}
+
 export default function MyOrdersPage() {
   const locale = useLocale();
   const t = useTranslations('Sales');
@@ -161,15 +176,7 @@ export default function MyOrdersPage() {
                     const statusLabel = order.status ? t(`status_${order.status}`) : '—';
                     const unread = unreadByOrderId[order.id] ?? 0;
                     return (
-                      <Card
-                        key={order.id}
-                        variant="outlined"
-                        sx={
-                          unread > 0
-                            ? { borderLeft: '4px solid', borderLeftColor: 'primary.main', bgcolor: (theme) => `${theme.palette.primary.main}08` }
-                            : {}
-                        }
-                      >
+                      <Card key={order.id} variant="outlined" sx={getOrderCardSx(order, unread)}>
                         <CardActionArea component={Link} href={`/${locale}/dashboard/orders/${order.id}`}>
                           <CardContent sx={{ py: 2, px: 2 }}>
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
@@ -272,15 +279,7 @@ export default function MyOrdersPage() {
                     const statusLabel = order.status ? t(`status_${order.status}`) : '—';
                     const unread = unreadByOrderId[order.id] ?? 0;
                     return (
-                      <Card
-                        key={order.id}
-                        variant="outlined"
-                        sx={
-                          unread > 0
-                            ? { borderLeft: '4px solid', borderLeftColor: 'primary.main', bgcolor: (theme) => `${theme.palette.primary.main}08` }
-                            : {}
-                        }
-                      >
+                      <Card key={order.id} variant="outlined" sx={getOrderCardSx(order, unread)}>
                         <CardActionArea component={Link} href={`/${locale}/dashboard/orders/${order.id}`}>
                           <CardContent sx={{ py: 2, px: 2 }}>
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>

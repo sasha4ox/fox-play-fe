@@ -259,7 +259,7 @@ export default function NewOfferPage() {
                 label={`${t('price')} (${currency})`}
                 value={price}
                 onChange={(e) => setPrice(e.target.value)}
-                inputProps={{ min: 0, step: 0.01 }}
+                inputProps={{ min: 0 }}
                 fullWidth
                 sx={{ mb: 2 }}
                 required

@@ -509,7 +509,6 @@ export default function OfferPDPPage() {
                 }}
                 inputProps={{ 
                   min: 0.001, 
-                  step: 0.001,
                   max: (offer?.quantity ?? 0) / 1_000_000
                 }}
                 placeholder="10"
