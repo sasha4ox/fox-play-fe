@@ -48,6 +48,8 @@ export default function Form({ popupMode = false, onLoginSuccess }) {
   const [isLoginForm, setIsloginForm] = useState(true);
   const [authError, setAuthError] = useState(null);
   const [authSuccess, setAuthSuccess] = useState(null);
+  const [resendStatus, setResendStatus] = useState(null);
+  const [emailForResend, setEmailForResend] = useState('');
   const { control, handleSubmit, setError, formState: { isSubmitting } } = useForm({
     defaultValues: {
       password: "",
@@ -83,6 +85,9 @@ export default function Form({ popupMode = false, onLoginSuccess }) {
     if (/invalid credentials/i.test(msg)) return t('invalidCredentials');
     if (/user already exists/i.test(msg)) return t('emailAlreadyRegistered');
     if (/nickname is required/i.test(msg)) return t('nicknameRequired');
+    if (/verify your email/i.test(msg)) return t('pleaseVerifyEmail');
+    if (/account is already verified/i.test(msg)) return t('alreadyVerified');
+    if (/no account found with this email/i.test(msg)) return t('noAccountWithEmail');
     return msg || t('errorSubmit');
   };
 
@@ -106,7 +111,9 @@ export default function Form({ popupMode = false, onLoginSuccess }) {
       }
       redirect(`/${locale}/dashboard`);
     } else {
-      setAuthError(getAuthErrorMessage(parsedResponse?.response ?? parsedResponse));
+      const errMsg = getAuthErrorMessage(parsedResponse?.response ?? parsedResponse);
+      setAuthError(errMsg);
+      if (errMsg === t('pleaseVerifyEmail')) setEmailForResend(data.email ?? '');
     }
   };
 
@@ -155,13 +162,14 @@ export default function Form({ popupMode = false, onLoginSuccess }) {
         return;
       }
       redirect(`/${locale}/dashboard`);
-    } else {
-      setAuthError(getAuthErrorMessage(res));
     }
+    if (response.ok && res?.message) {
+      setAuthSuccess(res.message);
+      return response;
+    }
+    setAuthError(getAuthErrorMessage(res));
     return response;
   };
-
-  const [isEmailSent, setIsEmailSent] = useState(false);
 
   const onSubmit = async (data) => {
     setAuthError(null);
@@ -170,8 +178,7 @@ export default function Form({ popupMode = false, onLoginSuccess }) {
       if (isLoginForm) {
         await handleLogin(data);
       } else {
-        const response = await handleRegister(data);
-        if (response?.ok) setIsEmailSent(true);
+        await handleRegister(data);
       }
     } catch (err) {
       setAuthError(t('errorSubmit'));
@@ -238,14 +245,34 @@ export default function Form({ popupMode = false, onLoginSuccess }) {
             )}
           />
         )}
-        {isEmailSent && (
-          <Alert severity="success" sx={{ mb: 2 }}>
-            {t('emailSentSuccess')}
-          </Alert>
-        )}
         {authError && (
-          <Alert severity="error" sx={{ mb: 2 }} onClose={() => setAuthError(null)}>
+          <Alert severity="error" sx={{ mb: 2 }} onClose={() => { setAuthError(null); setEmailForResend(''); setResendStatus(null); }}>
             {authError}
+            {authError === t('pleaseVerifyEmail') && emailForResend && (
+              <Button
+                size="small"
+                variant="outlined"
+                sx={{ mt: 1, display: 'block' }}
+                disabled={resendStatus === 'sending'}
+                onClick={async () => {
+                  setResendStatus('sending');
+                  try {
+                    const r = await fetch('/api/auth/resend-activation', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ email: emailForResend }),
+                    });
+                    const data = await r.json();
+                    if (r.ok) setResendStatus('sent');
+                    else setResendStatus(data?.message || 'Failed');
+                  } catch {
+                    setResendStatus('Failed');
+                  }
+                }}
+              >
+                {resendStatus === 'sending' ? t('sending') : resendStatus === 'sent' ? t('emailSentSuccess') : t('resendActivation')}
+              </Button>
+            )}
           </Alert>
         )}
         {authSuccess && (
