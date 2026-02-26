@@ -17,7 +17,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { useGames } from '@/hooks/useGames';
 import SelectCard from '@/components/SelectCard/SelectCard';
-import { getDirectOfferTarget, getGameImageUrl } from '@/lib/games';
+import { getDirectOfferTarget, getGameImageCandidateUrls } from '@/lib/games';
 
 const LETTERS = ['#', ...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')];
 const INITIAL_VISIBLE = 24;
@@ -289,7 +289,7 @@ export default function DashboardPage() {
               }}
             >
               {gamesToShow.map((game) => {
-                const imageUrl = getGameImageUrl(game);
+                const imageUrl = getGameImageCandidateUrls(game);
                 return (
                   <SelectCard
                     key={game.id}

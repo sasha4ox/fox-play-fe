@@ -11,7 +11,7 @@ import MuiLink from '@mui/material/Link';
 import CircularProgress from '@mui/material/CircularProgress';
 import Alert from '@mui/material/Alert';
 import { useGames } from '@/hooks/useGames';
-import { getGameFromTree, getDirectOfferTarget, getGameImageUrl } from '@/lib/games';
+import { getGameFromTree, getDirectOfferTarget, getGameImageCandidateUrls } from '@/lib/games';
 import SelectCard from '@/components/SelectCard/SelectCard';
 
 export default function GameVariantsPage() {
@@ -77,7 +77,7 @@ export default function GameVariantsPage() {
             <SelectCard
               key={variant.id}
               name={variant.name}
-              imageUrl={getGameImageUrl(game)}
+              imageUrl={getGameImageCandidateUrls(game)}
               onClick={() => handleVariantClick(variant.id)}
             />
           ))}

@@ -11,7 +11,7 @@ import MuiLink from '@mui/material/Link';
 import CircularProgress from '@mui/material/CircularProgress';
 import Alert from '@mui/material/Alert';
 import { useGames } from '@/hooks/useGames';
-import { getGameFromTree, getVariantFromTree, getGameImageUrl } from '@/lib/games';
+import { getGameFromTree, getVariantFromTree, getGameImageCandidateUrls } from '@/lib/games';
 import SelectCard from '@/components/SelectCard/SelectCard';
 
 export default function GameServersPage() {
@@ -77,7 +77,7 @@ export default function GameServersPage() {
             <SelectCard
               key={server.id}
               name={server.name}
-              imageUrl={getGameImageUrl(game)}
+              imageUrl={getGameImageCandidateUrls(game)}
               onClick={() => handleServerClick(server.id)}
             />
           ))}

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import CardActionArea from '@mui/material/CardActionArea';
@@ -8,9 +8,22 @@ import CardContent from '@mui/material/CardContent';
 import Typography from '@mui/material/Typography';
 import { DEFAULT_GAME_IMAGE } from '@/lib/games';
 
+/** Normalize imageUrl to an array of candidate URLs (string → [string]). */
+function candidateUrls(imageUrl) {
+  if (!imageUrl) return [];
+  return Array.isArray(imageUrl) ? imageUrl : [imageUrl];
+}
+
 export default function SelectCard({ name, imageUrl, onClick }) {
-  const [imgError, setImgError] = useState(false);
-  const src = (imageUrl && !imgError) ? imageUrl : DEFAULT_GAME_IMAGE;
+  const urls = useMemo(() => candidateUrls(imageUrl), [imageUrl]);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const nextUrl = urls[currentIndex];
+  const src = (nextUrl && currentIndex < urls.length) ? nextUrl : DEFAULT_GAME_IMAGE;
+
+  const handleImgError = () => {
+    if (currentIndex + 1 < urls.length) setCurrentIndex((i) => i + 1);
+    else setCurrentIndex(urls.length); // fallback to default
+  };
 
   return (
     <Card
@@ -50,7 +63,7 @@ export default function SelectCard({ name, imageUrl, onClick }) {
             component="img"
             src={src}
             alt={name}
-            onError={() => setImgError(true)}
+            onError={handleImgError}
             sx={{
               width: '100%',
               height: '100%',

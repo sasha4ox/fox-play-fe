@@ -609,7 +609,7 @@
     "customCategoryName": "Category name",
     "editGameImage": "Edit game image",
     "gameImageUrl": "Image URL",
-    "gameImageUrlHint": "URL or path (e.g. /images/games/lineage-2.png). Leave empty to use local file by game name.",
+    "gameImageUrlHint": "URL or path (e.g. /images/games/lineage-2.webp). Leave empty to use local file by game name (WebP, PNG, JPG).",
     "save": "Save"
   },
   "Footer": {

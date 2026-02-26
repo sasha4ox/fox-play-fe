@@ -46,15 +46,31 @@ export function getFlatGameOfferTarget(game) {
 
 const DEFAULT_GAME_IMAGE = '/images/games/default.png'
 
-/** Resolve game image URL: use imageUrl from DB if set, else /images/games/{slug}.png, else default.png. */
-export function getGameImageUrl(game) {
-  if (game?.imageUrl?.trim()) return game.imageUrl
-  const slug = (game?.name ?? '')
+/** Supported game image extensions (priority order). */
+const GAME_IMAGE_EXTENSIONS = ['webp', 'png', 'jpg', 'jpeg']
+
+function slugFromGameName(game) {
+  return (game?.name ?? '')
     .toLowerCase()
     .replace(/\s+/g, '-')
     .replace(/[^a-z0-9-]/g, '')
-  if (slug) return `/images/games/${slug}.png`
-  return DEFAULT_GAME_IMAGE
+}
+
+/**
+ * Returns candidate image URLs to try in order: use imageUrl from DB if set (single candidate),
+ * else one URL per supported extension for /images/games/{slug}.{ext}, else default.
+ * Enables fallback so e.g. .webp is tried first, then .png, then .jpg.
+ */
+export function getGameImageCandidateUrls(game) {
+  if (game?.imageUrl?.trim()) return [game.imageUrl]
+  const slug = slugFromGameName(game)
+  if (slug) return GAME_IMAGE_EXTENSIONS.map((ext) => `/images/games/${slug}.${ext}`)
+  return [DEFAULT_GAME_IMAGE]
+}
+
+/** Resolve game image URL: first candidate from getGameImageCandidateUrls (prefers WebP, then PNG, JPG). */
+export function getGameImageUrl(game) {
+  return getGameImageCandidateUrls(game)[0]
 }
 
 export { DEFAULT_GAME_IMAGE }
