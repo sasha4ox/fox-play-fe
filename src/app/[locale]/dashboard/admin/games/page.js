@@ -155,6 +155,15 @@ export default function AdminGamesPage() {
       .finally(() => setSubmitting(false));
   };
 
+  const handleGameTop = (gameId, isTop) => {
+    if (!token) return;
+    setSubmitting(true);
+    adminUpdateGame(gameId, { isTop }, token)
+      .then(load)
+      .catch((e) => setError(e.message || 'Failed to update'))
+      .finally(() => setSubmitting(false));
+  };
+
   const handleGameStructureType = (gameId, structureType) => {
     if (!token) return;
     setSubmitting(true);
@@ -182,10 +191,28 @@ export default function AdminGamesPage() {
       .finally(() => setSubmitting(false));
   };
 
+  const handleVariantTop = (variantId, isTop) => {
+    if (!token) return;
+    setSubmitting(true);
+    adminUpdateVariant(variantId, { isTop }, token)
+      .then(load)
+      .catch((e) => setError(e.message || 'Failed to update'))
+      .finally(() => setSubmitting(false));
+  };
+
   const handleServerEnabled = (serverId, enabled) => {
     if (!token) return;
     setSubmitting(true);
     adminUpdateServer(serverId, { enabled }, token)
+      .then(load)
+      .catch((e) => setError(e.message || 'Failed to update'))
+      .finally(() => setSubmitting(false));
+  };
+
+  const handleServerTop = (serverId, isTop) => {
+    if (!token) return;
+    setSubmitting(true);
+    adminUpdateServer(serverId, { isTop }, token)
       .then(load)
       .catch((e) => setError(e.message || 'Failed to update'))
       .finally(() => setSubmitting(false));
@@ -405,6 +432,18 @@ export default function AdminGamesPage() {
                     }
                     label={t('enabled')}
                   />
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={game.isTop ?? false}
+                        onChange={(e) => handleGameTop(game.id, e.target.checked)}
+                        disabled={submitting}
+                        color="primary"
+                      />
+                    }
+                    label={t('top')}
+                    title={t('topHint')}
+                  />
                   {!isSimple(game) && (
                     <IconButton
                       size="small"
@@ -458,6 +497,19 @@ export default function AdminGamesPage() {
                               />
                             }
                             label={t('enabled')}
+                            sx={{ '& .MuiFormControlLabel-label': { fontSize: '0.8rem' } }}
+                          />
+                          <FormControlLabel
+                            control={
+                              <Switch
+                                size="small"
+                                checked={variant.isTop ?? false}
+                                onChange={(e) => handleVariantTop(variant.id, e.target.checked)}
+                                disabled={submitting}
+                              />
+                            }
+                            label={t('top')}
+                            title={t('topHint')}
                             sx={{ '& .MuiFormControlLabel-label': { fontSize: '0.8rem' } }}
                           />
                           {!isVariantOnly(game) && (
@@ -626,6 +678,19 @@ export default function AdminGamesPage() {
                                       />
                                     }
                                     label={t('enabled')}
+                                    sx={{ '& .MuiFormControlLabel-label': { fontSize: '0.75rem' } }}
+                                  />
+                                  <FormControlLabel
+                                    control={
+                                      <Switch
+                                        size="small"
+                                        checked={server.isTop ?? false}
+                                        onChange={(e) => handleServerTop(server.id, e.target.checked)}
+                                        disabled={submitting}
+                                      />
+                                    }
+                                    label={t('top')}
+                                    title={t('topHint')}
                                     sx={{ '& .MuiFormControlLabel-label': { fontSize: '0.75rem' } }}
                                   />
                                 </Box>

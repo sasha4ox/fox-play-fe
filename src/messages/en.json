@@ -96,7 +96,7 @@
     "myOrdersChat": "My orders & chat",
     "mySales": "My sales",
     "chooseGame": "Choose a game",
-    "searchGames": "Search by game or variant",
+    "searchGames": "Search by game, variant, or server",
     "filterByLetter": "Filter by letter",
     "noGames": "No games available.",
     "noSearchResults": "No games match your search.",
@@ -397,11 +397,14 @@
   "Game": {
     "chooseVariant": "Choose variant",
     "variantsHint": "{game} → variants",
+    "searchVariants": "Search variants",
     "chooseServer": "Choose server",
     "serversHint": "{game} → {variant} ({count} server)",
     "serversHintPlural": "{game} → {variant} ({count} servers)",
+    "searchServers": "Search servers",
     "gameNotFound": "Game not found.",
-    "notFound": "Not found."
+    "notFound": "Not found.",
+    "noSearchResults": "No matches."
   },
   "OffersList": {
     "offersFor": "Offers for {server}",
@@ -622,7 +625,9 @@
     "editGameImage": "Edit game image",
     "gameImageUrl": "Image URL",
     "gameImageUrlHint": "URL or path (e.g. /images/games/lineage-2.webp). Leave empty to use local file by game name (WebP, PNG, JPG).",
-    "save": "Save"
+    "save": "Save",
+    "top": "Top",
+    "topHint": "Show at the very top of the list and prioritize in filters"
   },
   "Footer": {
     "brand": "FoxyPlay",

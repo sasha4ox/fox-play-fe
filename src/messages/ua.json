@@ -96,7 +96,7 @@
     "myOrdersChat": "Мої замовлення та чати",
     "mySales": "Мої продажі",
     "chooseGame": "Оберіть гру",
-    "searchGames": "Пошук за грою або варіантом",
+    "searchGames": "Пошук за грою, варіантом або сервером",
     "filterByLetter": "Фільтр за буквою",
     "noGames": "Немає доступних ігор.",
     "noSearchResults": "Немає ігор за вашим запитом.",
@@ -397,11 +397,14 @@
   "Game": {
     "chooseVariant": "Оберіть варіант",
     "variantsHint": "{game} → варіанти",
+    "searchVariants": "Пошук варіантів",
     "chooseServer": "Оберіть сервер",
     "serversHint": "{game} → {variant} ({count} сервер)",
     "serversHintPlural": "{game} → {variant} ({count} серверів)",
+    "searchServers": "Пошук серверів",
     "gameNotFound": "Гру не знайдено.",
-    "notFound": "Не знайдено."
+    "notFound": "Не знайдено.",
+    "noSearchResults": "Нічого не знайдено."
   },
   "OffersList": {
     "offersFor": "Оголошення для {server}",
@@ -622,7 +625,9 @@
     "editGameImage": "Змінити зображення гри",
     "gameImageUrl": "URL зображення",
     "gameImageUrlHint": "URL або шлях (наприклад /images/games/lineage-2.webp). Залиште пустим, щоб використовувати локальний файл за назвою гри (WebP, PNG, JPG).",
-    "save": "Зберегти"
+    "save": "Зберегти",
+    "top": "Топ",
+    "topHint": "Показувати на самому верху списку та пріоритизувати у фільтрах"
   },
   "Footer": {
     "brand": "FoxyPlay",

@@ -27,8 +27,16 @@ function filterGamesBySearch(games, searchQuery) {
   if (!searchQuery) return games;
   return games.filter((game) => {
     const gameName = String(game?.name ?? '').toLowerCase();
-    const variantNames = (game?.variants ?? []).map((v) => String(v?.name ?? '').toLowerCase());
-    return gameName.includes(searchQuery) || variantNames.some((n) => n.includes(searchQuery));
+    if (gameName.includes(searchQuery)) return true;
+    for (const v of game?.variants ?? []) {
+      const variantName = String(v?.name ?? '').toLowerCase();
+      if (variantName.includes(searchQuery)) return true;
+      for (const s of v?.servers ?? []) {
+        const serverName = String(s?.name ?? '').toLowerCase();
+        if (serverName.includes(searchQuery)) return true;
+      }
+    }
+    return false;
   });
 }
 

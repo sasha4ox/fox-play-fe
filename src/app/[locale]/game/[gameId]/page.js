@@ -3,13 +3,15 @@
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { useLocale, useTranslations } from 'next-intl';
-import { useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Container from '@mui/material/Container';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import MuiLink from '@mui/material/Link';
 import CircularProgress from '@mui/material/CircularProgress';
 import Alert from '@mui/material/Alert';
+import InputBase from '@mui/material/InputBase';
+import SearchIcon from '@mui/icons-material/Search';
 import { useGames } from '@/hooks/useGames';
 import { getGameFromTree, getDirectOfferTarget, getGameImageCandidateUrls } from '@/lib/games';
 import SelectCard from '@/components/SelectCard/SelectCard';
@@ -37,6 +39,14 @@ export default function GameVariantsPage() {
     router.push(`/${locale}/game/${gameId}/${variantId}`);
   };
 
+  const [search, setSearch] = useState('');
+  const searchQuery = search.trim().toLowerCase();
+  const filteredVariants = useMemo(() => {
+    const list = game?.variants ?? [];
+    if (!searchQuery) return list;
+    return list.filter((v) => String(v?.name ?? '').toLowerCase().includes(searchQuery));
+  }, [game?.variants, searchQuery]);
+
   if (loading) {
     return (
       <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', display: 'flex', alignItems: 'center', justifyContent: 'center', py: 4 }}>
@@ -58,8 +68,6 @@ export default function GameVariantsPage() {
     );
   }
 
-  const variants = game.variants || [];
-
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', py: 4, px: 2 }}>
       <Container>
@@ -72,8 +80,30 @@ export default function GameVariantsPage() {
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
           {t('variantsHint', { game: game.name })}
         </Typography>
+        <Box sx={{ mb: 2 }}>
+          <InputBase
+            placeholder={t('searchVariants')}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            startAdornment={<SearchIcon sx={{ color: 'text.secondary', mr: 1.5, fontSize: 22 }} />}
+            sx={{
+              width: '100%',
+              maxWidth: 400,
+              py: 1.25,
+              px: 2,
+              borderRadius: 2,
+              bgcolor: 'action.hover',
+              fontSize: '1rem',
+              border: '1px solid',
+              borderColor: 'divider',
+            }}
+          />
+        </Box>
+        {filteredVariants.length === 0 ? (
+          <Typography color="text.secondary">{t('noSearchResults')}</Typography>
+        ) : (
         <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' }, gap: 2 }}>
-          {variants.map((variant) => (
+          {filteredVariants.map((variant) => (
             <SelectCard
               key={variant.id}
               name={variant.name}
@@ -82,6 +112,7 @@ export default function GameVariantsPage() {
             />
           ))}
         </Box>
+        )}
       </Container>
     </Box>
   );

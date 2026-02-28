@@ -3,13 +3,15 @@
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { useLocale, useTranslations } from 'next-intl';
-import { useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Container from '@mui/material/Container';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import MuiLink from '@mui/material/Link';
 import CircularProgress from '@mui/material/CircularProgress';
 import Alert from '@mui/material/Alert';
+import InputBase from '@mui/material/InputBase';
+import SearchIcon from '@mui/icons-material/Search';
 import { useGames } from '@/hooks/useGames';
 import { getGameFromTree, getVariantFromTree, getGameImageCandidateUrls } from '@/lib/games';
 import SelectCard from '@/components/SelectCard/SelectCard';
@@ -38,6 +40,14 @@ export default function GameServersPage() {
   const handleServerClick = (serverId) => {
     router.push(`/${locale}/game/${gameId}/${variantId}/${serverId}/offers`);
   };
+
+  const [search, setSearch] = useState('');
+  const searchQuery = search.trim().toLowerCase();
+  const filteredServers = useMemo(() => {
+    const list = variant?.servers ?? [];
+    if (!searchQuery) return list;
+    return list.filter((s) => String(s?.name ?? '').toLowerCase().includes(searchQuery));
+  }, [variant?.servers, searchQuery]);
 
   if (loading) {
     return (
@@ -72,8 +82,30 @@ export default function GameServersPage() {
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
           {servers.length !== 1 ? t('serversHintPlural', { game: game.name, variant: variant.name, count: servers.length }) : t('serversHint', { game: game.name, variant: variant.name, count: servers.length })}
         </Typography>
+        <Box sx={{ mb: 2 }}>
+          <InputBase
+            placeholder={t('searchServers')}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            startAdornment={<SearchIcon sx={{ color: 'text.secondary', mr: 1.5, fontSize: 22 }} />}
+            sx={{
+              width: '100%',
+              maxWidth: 400,
+              py: 1.25,
+              px: 2,
+              borderRadius: 2,
+              bgcolor: 'action.hover',
+              fontSize: '1rem',
+              border: '1px solid',
+              borderColor: 'divider',
+            }}
+          />
+        </Box>
+        {filteredServers.length === 0 ? (
+          <Typography color="text.secondary">{t('noSearchResults')}</Typography>
+        ) : (
         <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' }, gap: 2 }}>
-          {servers.map((server) => (
+          {filteredServers.map((server) => (
             <SelectCard
               key={server.id}
               name={server.name}
@@ -82,6 +114,7 @@ export default function GameServersPage() {
             />
           ))}
         </Box>
+        )}
       </Container>
     </Box>
   );
