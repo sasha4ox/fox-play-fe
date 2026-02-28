@@ -143,6 +143,22 @@ export async function getCardPaymentEnabled() {
   return data?.cardPaymentEnabled === true
 }
 
+/** Public: platform fee percent (e.g. 20 for 20%). Used on sell page to show "buyer will pay X + fee". */
+export async function getPlatformFeePercent() {
+  const res = await apiFetch('/settings/platform-fee-percent', { method: 'GET' }, null)
+  const data = await res.json()
+  return typeof data?.platformFeePercent === 'number' ? data.platformFeePercent : 20
+}
+
+/** Last 3 low-price offers for same server + type. params: { serverId, offerType?, customCategoryId?, displayCurrency? }. Returns { sellerNickname, quantityKk, pricePer100kk, currency, ... } */
+export async function fetchOfferRecentPrices(params, token = null) {
+  const q = new URLSearchParams({ serverId: params.serverId })
+  if (params.offerType) q.set('offerType', params.offerType)
+  if (params.customCategoryId) q.set('customCategoryId', params.customCategoryId)
+  if (params.displayCurrency) q.set('displayCurrency', params.displayCurrency)
+  return apiGet(`/offers/recent-prices?${q.toString()}`, token)
+}
+
 /** Order card payment page data (buyer only). Returns { status, cardNumber?, paymentDeadlineAt, amount, currency, ... } */
 export async function getOrderCardPayment(orderId, token) {
   return apiGet(`/orders/${orderId}/card-payment`, token)
@@ -461,6 +477,20 @@ export async function getAdminCardPaymentEnabled(token) {
 export async function setAdminCardPaymentEnabled(enabled, token) {
   const data = await apiPatch('/admin/settings/card-payment-enabled', { enabled }, token)
   return data?.cardPaymentEnabled === true
+}
+
+export async function getAdminPlatformFeePercent(token) {
+  const data = await apiGet('/admin/settings/platform-fee-percent', token)
+  return typeof data?.platformFeePercent === 'number' ? data.platformFeePercent : 20
+}
+
+export async function setAdminPlatformFeePercent(platformFeePercent, token) {
+  const data = await apiPatch('/admin/settings/platform-fee-percent', { platformFeePercent }, token)
+  return data?.platformFeePercent
+}
+
+export async function getAdminPlatformProfit(token) {
+  return apiGet('/admin/money-flow/platform-profit', token)
 }
 
 export async function getAdminCards(token) {

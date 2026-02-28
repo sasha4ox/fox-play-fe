@@ -3,7 +3,7 @@
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useLocale, useTranslations } from 'next-intl';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Container from '@mui/material/Container';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
@@ -19,7 +19,7 @@ import { useGames } from '@/hooks/useGames';
 import { getGameFromTree, getVariantFromTree, getServerFromTree } from '@/lib/games';
 import { useAuthStore } from '@/store/authStore';
 import { useProfile } from '@/hooks/useProfile';
-import { createOffer } from '@/lib/api';
+import { createOffer, getPlatformFeePercent, fetchOfferRecentPrices } from '@/lib/api';
 import { formatAdena } from '@/lib/adenaFormat';
 
 export default function NewOfferPage() {
@@ -67,6 +67,26 @@ export default function NewOfferPage() {
   const [price, setPrice] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
+  const [platformFeePercent, setPlatformFeePercent] = useState(20);
+  const [recentPrices, setRecentPrices] = useState([]);
+
+  useEffect(() => {
+    getPlatformFeePercent().then(setPlatformFeePercent).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (!serverId) return;
+    const offerType = OFFER_TYPES[tab]?.value;
+    const customCategoryId = OFFER_TYPES[tab]?.custom ? OFFER_TYPES[tab].value : null;
+    fetchOfferRecentPrices({
+      serverId,
+      offerType: offerType && !OFFER_TYPES[tab]?.custom ? offerType : undefined,
+      customCategoryId: customCategoryId || undefined,
+      displayCurrency: currency,
+    })
+      .then((data) => setRecentPrices(data?.prices ?? []))
+      .catch(() => setRecentPrices([]));
+  }, [serverId, tab, currency]);
 
   const selectedTab = OFFER_TYPES[tab];
   const offerType = selectedTab?.custom ? 'OTHER' : (selectedTab?.value ?? 'OTHER');
@@ -221,17 +241,48 @@ export default function NewOfferPage() {
                   endAdornment: <InputAdornment position="end">{currency}</InputAdornment>,
                 }}
               />
-              <Box sx={{ mt: 2, p: 1.5, bgcolor: 'action.hover', borderRadius: 1 }}>
-                <Typography variant="body2" color="text.primary" sx={{ mb: 0.5 }}>
-                  <strong>1)</strong> {t('youWillReceive')}: <strong>{((Number(quantityAdena) || 0) / 100 * (Number(priceAdena) || 0)).toFixed(2)} {currency}</strong>
-                </Typography>
-                <Typography variant="body2" color="text.primary" sx={{ mb: 0.5 }}>
-                  <strong>2)</strong> {t('cost1kkk')}: <strong>{(10 * (Number(priceAdena) || 0)).toFixed(2)} {currency}</strong>
-                </Typography>
-                <Typography variant="body2" color="text.primary">
-                  <strong>3)</strong> {t('pricePer1kk')}: <strong>{((Number(priceAdena) || 0) / 100).toFixed(4)} {currency}</strong>
-                </Typography>
-              </Box>
+              {(() => {
+                const currentPricePer100kk = Number(priceAdena) || 0;
+                const recentPricesPer100kk = recentPrices.map((p) => p.pricePer100kk).filter((n) => n != null);
+                const allPricesPer100kk = [...recentPricesPer100kk, currentPricePer100kk];
+                const isLowestPrice = allPricesPer100kk.length > 0 && currentPricePer100kk <= Math.min(...allPricesPer100kk);
+                const buyerWillPaySum = ((Number(quantityAdena) || 0) / 100 * (Number(priceAdena) || 0) * (1 + platformFeePercent / 100)).toFixed(2);
+                return (
+                  <Box sx={{ mt: 2, p: 1.5, bgcolor: 'action.hover', borderRadius: 1 }}>
+                    <Typography variant="body2" color="text.primary" sx={{ mb: 0.5 }}>
+                      <strong>1)</strong> {t('youWillReceive')}: <strong>{((Number(quantityAdena) || 0) / 100 * (Number(priceAdena) || 0)).toFixed(2)} {currency}</strong>
+                    </Typography>
+                    <Typography variant="body2" color="text.primary" sx={{ mb: 0.5 }}>
+                      <strong>2)</strong> {t('buyerWillPay')}:{' '}
+                      <Box component="span" sx={{ fontWeight: 700, color: isLowestPrice ? 'success.main' : 'inherit' }}>{buyerWillPaySum} {currency}</Box>
+                      {' '}({t('includesPlatformFee', { percent: platformFeePercent })})
+                    </Typography>
+                    <Typography variant="body2" color="text.primary" sx={{ mb: 0.5 }}>
+                      <strong>3)</strong> {t('cost1kkk')}: <strong>{(10 * (Number(priceAdena) || 0)).toFixed(2)} {currency}</strong>
+                    </Typography>
+                    <Typography variant="body2" color="text.primary">
+                      <strong>4)</strong> {t('pricePer1kk')}: <strong>{((Number(priceAdena) || 0) / 100).toFixed(4)} {currency}</strong>
+                    </Typography>
+                    {recentPrices.length > 0 && (
+                      <Box sx={{ mt: 1 }}>
+                        <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+                          {t('last3LowPrices')}
+                        </Typography>
+                        {recentPrices.map((p, i) => (
+                          <Typography key={i} variant="body2" color="text.secondary" sx={{ ml: 1 }}>
+                            {i + 1}) {t('userSellingPriceFor100kk', {
+                              nickname: p.sellerNickname || '—',
+                              quantityKk: p.quantityKk,
+                              price: p.pricePer100kk != null ? Number(p.pricePer100kk).toFixed(2) : String(p.pricePerUnit ?? '—'),
+                              currency: p.currency,
+                            })}
+                          </Typography>
+                        ))}
+                      </Box>
+                    )}
+                  </Box>
+                );
+              })()}
             </Box>
           )}
           {!isAdena && (

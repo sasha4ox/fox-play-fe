@@ -27,6 +27,9 @@ import { useAuthStore } from '@/store/authStore';
 import {
   getAdminCardPaymentEnabled,
   setAdminCardPaymentEnabled,
+  getAdminPlatformFeePercent,
+  setAdminPlatformFeePercent,
+  getAdminPlatformProfit,
   getAdminCards,
   createAdminCard,
   updateAdminCard,
@@ -55,6 +58,12 @@ export default function AdminMoneyFlowPage() {
   const [cardPaymentEnabled, setCardPaymentEnabled] = useState(false);
   const [loadingFlag, setLoadingFlag] = useState(true);
   const [savingFlag, setSavingFlag] = useState(false);
+  const [platformFeePercent, setPlatformFeePercent] = useState(20);
+  const [platformFeePercentInput, setPlatformFeePercentInput] = useState('20');
+  const [loadingFee, setLoadingFee] = useState(true);
+  const [savingFee, setSavingFee] = useState(false);
+  const [platformProfit, setPlatformProfit] = useState({ total: [], byCard: [] });
+  const [loadingProfit, setLoadingProfit] = useState(true);
   const [cards, setCards] = useState([]);
   const [loadingCards, setLoadingCards] = useState(true);
   const [receipts, setReceipts] = useState([]);
@@ -87,6 +96,27 @@ export default function AdminMoneyFlowPage() {
       .then(setCardPaymentEnabled)
       .catch(() => setCardPaymentEnabled(false))
       .finally(() => setLoadingFlag(false));
+  };
+
+  const loadPlatformFee = () => {
+    if (!token) return;
+    setLoadingFee(true);
+    getAdminPlatformFeePercent(token)
+      .then((p) => {
+        setPlatformFeePercent(p);
+        setPlatformFeePercentInput(String(p));
+      })
+      .catch(() => {})
+      .finally(() => setLoadingFee(false));
+  };
+
+  const loadPlatformProfit = () => {
+    if (!token) return;
+    setLoadingProfit(true);
+    getAdminPlatformProfit(token)
+      .then((data) => setPlatformProfit({ total: data?.total ?? [], byCard: data?.byCard ?? [] }))
+      .catch(() => setPlatformProfit({ total: [], byCard: [] }))
+      .finally(() => setLoadingProfit(false));
   };
 
   const loadCards = () => {
@@ -132,6 +162,10 @@ export default function AdminMoneyFlowPage() {
     loadFlag();
   }, [token]);
   useEffect(() => {
+    loadPlatformFee();
+    loadPlatformProfit();
+  }, [token]);
+  useEffect(() => {
     loadCards();
   }, [token]);
   useEffect(() => {
@@ -152,6 +186,23 @@ export default function AdminMoneyFlowPage() {
         setError(err.message || 'Failed to update');
       })
       .finally(() => setSavingFlag(false));
+  };
+
+  const handleSavePlatformFee = () => {
+    const num = Number(platformFeePercentInput);
+    if (!Number.isFinite(num) || num < 0 || num > 100) {
+      setError(t('platformFeePercent') + ': 0–100');
+      return;
+    }
+    setSavingFee(true);
+    setError(null);
+    setAdminPlatformFeePercent(num, token)
+      .then((p) => {
+        setPlatformFeePercent(p);
+        setPlatformFeePercentInput(String(p));
+      })
+      .catch((err) => setError(err.message || 'Failed'))
+      .finally(() => setSavingFee(false));
   };
 
   const handleSetActive = (cardId) => {
@@ -263,6 +314,73 @@ export default function AdminMoneyFlowPage() {
           {error}
         </Alert>
       )}
+
+      <Card sx={{ mb: 3 }}>
+        <CardContent sx={{ px: { xs: 1.5, sm: 2 } }}>
+          <Typography variant="subtitle1" fontWeight={600} gutterBottom>
+            {t('platformFeePercent')}
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+            {t('platformFeePercentHint')}
+          </Typography>
+          {loadingFee ? (
+            <Skeleton width={120} height={40} />
+          ) : (
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+              <TextField
+                type="number"
+                size="small"
+                value={platformFeePercentInput}
+                onChange={(e) => setPlatformFeePercentInput(e.target.value)}
+                inputProps={{ min: 0, max: 100, step: 0.5 }}
+                sx={{ width: 100 }}
+              />
+              <Typography variant="body2">%</Typography>
+              <Button variant="contained" size="small" onClick={handleSavePlatformFee} disabled={savingFee}>
+                {savingFee ? '…' : t('save')}
+              </Button>
+            </Box>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card sx={{ mb: 3 }}>
+        <CardContent sx={{ px: { xs: 1.5, sm: 2 } }}>
+          <Typography variant="subtitle1" fontWeight={600} gutterBottom>
+            {t('platformProfit')}
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            {t('platformProfitHint')}
+          </Typography>
+          {loadingProfit ? (
+            <Skeleton height={60} />
+          ) : (
+            <>
+              <Typography variant="body2" sx={{ mb: 1 }}>
+                <strong>{t('platformProfitTotal')}:</strong>{' '}
+                {platformProfit.total.length === 0
+                  ? t('noPlatformProfit')
+                  : platformProfit.total.map(({ currency, amount }) => `${amount} ${currency}`).join(', ')}
+              </Typography>
+              {platformProfit.byCard.length > 0 && (
+                <Box sx={{ mt: 2 }}>
+                  <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1 }}>
+                    {t('platformProfitByCard')}
+                  </Typography>
+                  {platformProfit.byCard.map((card) => (
+                    <Box key={card.cardId} sx={{ mb: 1, pl: 1 }}>
+                      <Typography variant="body2">
+                        **** {card.cardLast4} — {card.cardHolderName}:{' '}
+                        {card.totals.length === 0 ? '—' : card.totals.map((x) => `${x.amount} ${x.currency}`).join(', ')}
+                      </Typography>
+                    </Box>
+                  ))}
+                </Box>
+              )}
+            </>
+          )}
+        </CardContent>
+      </Card>
 
       <Card sx={{ mb: 3 }}>
         <CardContent sx={{ px: { xs: 1.5, sm: 2 } }}>
