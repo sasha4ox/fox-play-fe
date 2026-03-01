@@ -22,6 +22,9 @@ export default function Footer() {
     { href: `${base}/privacy`, label: t('privacy') },
     { href: `${base}/aml-compliance`, label: t('amlCompliance') },
     { href: `${base}/disclaimer`, label: t('disclaimer') },
+    { href: `${base}/payment-model`, label: t('paymentModel') },
+    { href: `${base}/how-it-works`, label: t('howItWorks') },
+    { href: `${base}/operator-legal`, label: t('operatorLegal') },
   ];
 
   const policyLinks = [
