@@ -18,6 +18,23 @@ export default async function AmlCompliancePage({ params }) {
   const t = await getTranslations('AmlCompliance');
   const base = `/${locale}`;
 
+  const sections = [
+    { titleKey: 's1Title', contentKey: 's1Content' },
+    { titleKey: 's2Title', contentKey: 's2Content' },
+    { titleKey: 's3Title', contentKey: 's3Content' },
+    { titleKey: 's4Title', contentKey: 's4Content' },
+    { titleKey: 's5Title', contentKey: 's5Content' },
+    { titleKey: 's6Title', contentKey: 's6Content' },
+    { titleKey: 's7Title', contentKey: 's7Content' },
+    { titleKey: 's8Title', contentKey: 's8Content' },
+    { titleKey: 's9Title', contentKey: 's9Content' },
+    { titleKey: 's10Title', contentKey: 's10Content' },
+    { titleKey: 's11Title', contentKey: 's11Content' },
+    { titleKey: 's12Title', contentKey: 's12Content' },
+    { titleKey: 's13Title', contentKey: 's13Content' },
+    { titleKey: 's14Title', contentKey: 's14Content', isContact: true },
+  ];
+
   return (
     <Container sx={{ py: 4 }}>
       <Box sx={{ mb: 3 }}>
@@ -34,19 +51,34 @@ export default async function AmlCompliancePage({ params }) {
       <Typography variant="h6" color="text.secondary" gutterBottom>
         {t('subtitle')}
       </Typography>
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 4 }}>
+        {t('effectiveDate')}: 11.02.2026
+      </Typography>
 
-      <Typography variant="body1" component="div" sx={{ whiteSpace: 'pre-line', mb: 2 }}>
-        {t('intro')}
-      </Typography>
-      <Typography variant="body1" component="div" sx={{ whiteSpace: 'pre-line', mb: 2 }}>
-        {t('approach')}
-      </Typography>
-      <Typography variant="body1" component="div" sx={{ whiteSpace: 'pre-line', mb: 2 }}>
-        {t('platformMay')}
-      </Typography>
-      <Typography variant="body1" component="div" sx={{ whiteSpace: 'pre-line' }}>
-        {t('userAgreement')}
-      </Typography>
+      {sections.map(({ titleKey, contentKey, isContact }, idx) => (
+        <Box key={idx} sx={{ mb: 3 }}>
+          <Typography variant="h6" component="h2" fontWeight={600} gutterBottom>
+            {idx + 1}. {t(titleKey)}
+          </Typography>
+          {isContact ? (
+            <>
+              <Typography variant="body1" component="span" sx={{ whiteSpace: 'pre-line' }}>
+                {t('s14ContactLabel')}{' '}
+              </Typography>
+              <Link href={`${base}/contact`} style={{ fontWeight: 600 }}>
+                {t('contactLinkText')}
+              </Link>
+              <Typography variant="body1" component="div" sx={{ whiteSpace: 'pre-line', mt: 1 }}>
+                {t(contentKey)}
+              </Typography>
+            </>
+          ) : (
+            <Typography variant="body1" component="div" sx={{ whiteSpace: 'pre-line' }}>
+              {t(contentKey)}
+            </Typography>
+          )}
+        </Box>
+      ))}
     </Container>
   );
 }

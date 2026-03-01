@@ -30,6 +30,10 @@ export default async function TermsPage({ params }) {
     { titleKey: 's10Title', contentKey: 's10Content' },
     { titleKey: 's11Title', contentKey: 's11Content' },
     { titleKey: 's12Title', contentKey: 's12Content' },
+    { titleKey: 's13Title', contentKey: 's13Content' },
+    { titleKey: 's14Title', contentKey: 's14Content' },
+    { titleKey: 's15Title', contentKey: 's15Content' },
+    { titleKey: 's16Title', contentKey: 's16Content', isContact: true },
   ];
 
   const base = `/${locale}`;
@@ -54,14 +58,28 @@ export default async function TermsPage({ params }) {
         {t('effectiveDate')}: 11.02.2026
       </Typography>
 
-      {sections.map(({ titleKey, contentKey }, idx) => (
+      {sections.map(({ titleKey, contentKey, isContact }, idx) => (
         <Box key={idx} sx={{ mb: 3 }}>
           <Typography variant="h6" component="h2" fontWeight={600} gutterBottom>
             {idx + 1}. {t(titleKey)}
           </Typography>
-          <Typography variant="body1" component="div" sx={{ whiteSpace: 'pre-line' }}>
-            {t(contentKey)}
-          </Typography>
+          {isContact ? (
+            <>
+              <Typography variant="body1" component="span" sx={{ whiteSpace: 'pre-line' }}>
+                {t('s16ContactLabel')}{' '}
+              </Typography>
+              <Link href={`${base}/contact`} style={{ fontWeight: 600 }}>
+                {t('contactLinkText')}
+              </Link>
+              <Typography variant="body1" component="div" sx={{ whiteSpace: 'pre-line', mt: 1 }}>
+                {t(contentKey)}
+              </Typography>
+            </>
+          ) : (
+            <Typography variant="body1" component="div" sx={{ whiteSpace: 'pre-line' }}>
+              {t(contentKey)}
+            </Typography>
+          )}
         </Box>
       ))}
     </Container>
