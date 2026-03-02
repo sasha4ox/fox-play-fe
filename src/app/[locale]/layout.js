@@ -13,6 +13,7 @@ import Providers from '@/components/Providers/Providers';
 import GoogleAuthReturnHandler from '@/components/GoogleAuthReturnHandler';
 import CompleteProfileGate from '@/components/CompleteProfileGate/CompleteProfileGate';
 import RecentServersBar from '@/components/RecentServersBar/RecentServersBar';
+import GlobalErrorHandler from '@/components/GlobalErrorHandler/GlobalErrorHandler';
 import "./globals.css";
 
 const geistSans = Geist({
@@ -34,8 +35,6 @@ export default async function RootLayout({ children, params }) {
   const { locale } = await params;
 
 
-  console.log('locale:', locale)
-
   if (!['en', 'ua'].includes(locale)) {
     notFound();
   }
@@ -45,6 +44,7 @@ export default async function RootLayout({ children, params }) {
   return (
     <html lang={locale}>
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
+        <GlobalErrorHandler />
         <Providers>
           <NextIntlClientProvider>
             <Suspense fallback={null}>

@@ -18,7 +18,12 @@ export default function middleware(request) {
     url.pathname = newPath;
     return NextResponse.redirect(url);
   }
-  return intlMiddleware(request);
+
+  // Assign correlation ID: reuse from incoming request or generate a new one
+  const reqId = request.headers.get('x-request-id') || crypto.randomUUID();
+  const response = intlMiddleware(request);
+  response.headers.set('x-request-id', reqId);
+  return response;
 }
 
 export const config = {

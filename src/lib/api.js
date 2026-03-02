@@ -21,7 +21,12 @@ export function getAuthHeaders(token = null) {
 export async function apiFetch(path, options = {}, token = null) {
   const base = getApiBase()
   const url = path.startsWith('http') ? path : `${base}${path}`
-  const headers = { ...getAuthHeaders(token), ...options.headers }
+  const reqId =
+    (options.headers && options.headers['x-request-id']) ||
+    (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+      ? crypto.randomUUID()
+      : Math.random().toString(36).slice(2))
+  const headers = { ...getAuthHeaders(token), 'x-request-id': reqId, ...options.headers }
   const res = await fetch(url, { ...options, headers })
   if (res.status === 401 && typeof window !== 'undefined') {
     useAuthStore.getState().logout()

@@ -1,0 +1,35 @@
+---
+description: Always implement tasks with appropriate logging; use structured logger, no console.log
+alwaysApply: true
+---
+
+# Logging Requirement
+
+When implementing or changing features, **always add or update logging** so behavior is observable.
+
+## Rules
+
+- **Server-side** (API routes, server components, Node): use the pino logger from `@/lib/logger` — never `console.log` / `console.error` / `console.warn`.
+- **Client-side errors**: report via `logClientError(error)` from `@/lib/clientLogger` (e.g. in catch blocks or error boundaries); this sends to `/api/log` and into backend logs.
+- Use the correct level: **error** (failures), **warn** (retries, validation), **info** (important events), **debug** (troubleshooting).
+- Log structured context: `logger.info({ userId }, "Order created");`
+- Do not log sensitive data — the logger redacts known fields.
+
+## Examples
+
+```typescript
+// Server (API route, server component)
+import { logger } from "@/lib/logger";
+logger.info({ userId }, "User login");
+logger.error(err, "Checkout failed");
+
+// Client (catch / error boundary)
+import { logClientError } from "@/lib/clientLogger";
+logClientError(error);
+```
+
+```typescript
+// ❌ BAD
+console.log("User logged in");
+console.error(err);
+```
