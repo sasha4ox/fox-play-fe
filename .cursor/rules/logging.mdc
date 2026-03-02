@@ -10,7 +10,7 @@ When implementing or changing features, **always add or update logging** so beha
 ## Rules
 
 - **Server-side** (API routes, server components, Node): use the pino logger from `@/lib/logger` — never `console.log` / `console.error` / `console.warn`.
-- **Client-side errors**: report via `logClientError(error)` from `@/lib/clientLogger` (e.g. in catch blocks or error boundaries); this sends to `/api/log` and into backend logs.
+- **Client-side errors**: report via `logClientError(error)` from `@/lib/clientLogger` (e.g. in catch blocks or error boundaries); this sends to `/api/log` and into backend logs. When the user is logged in, **user id, email, and role** are included automatically from the auth store.
 - Use the correct level: **error** (failures), **warn** (retries, validation), **info** (important events), **debug** (troubleshooting).
 - Log structured context: `logger.info({ userId }, "Order created");`
 - Do not log sensitive data — the logger redacts known fields.

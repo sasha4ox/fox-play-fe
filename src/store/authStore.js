@@ -12,7 +12,7 @@ const AUTH_STORAGE_KEY = 'foxplay-auth';
 export const useAuthStore = create(
   persist(
     (set) => ({
-      user: null,   // { id, email } or null
+      user: null,   // { id, email, role?, nickname?, preferredCurrency? } or null
       token: null,
 
       setAuth: (user, token) => set({ user, token }),
