@@ -110,13 +110,13 @@ export default function OrdersChatLayout({ children }) {
         boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
       }}
     >
-      {/* Left panel – conversation list (hidden on mobile when chat is open) */}
+      {/* Left panel – conversation list (hidden on mobile when chat is open); background aligned with chat area */}
       <Box
         sx={{
           width: isMobile ? '100%' : 360,
           minWidth: isMobile ? undefined : 280,
           maxWidth: isMobile ? '100%' : '35%',
-          bgcolor: 'background.paper',
+          bgcolor: '#f5f5f5',
           borderRight: isMobile ? 'none' : '1px solid',
           borderColor: 'divider',
           display: showList ? 'flex' : 'none',
@@ -125,7 +125,7 @@ export default function OrdersChatLayout({ children }) {
           flex: isMobile && showList ? 1 : undefined,
         }}
       >
-        <Box sx={{ p: { xs: 1.5, md: 2 }, borderBottom: '1px solid', borderColor: 'divider' }}>
+        <Box sx={{ p: { xs: 1.5, md: 2 }, borderBottom: '1px solid', borderColor: 'divider', bgcolor: '#f5f5f5' }}>
           <InputBase
             placeholder={t('searchChatsPlaceholder') || t('searchChats') || 'Search'}
             value={search}
@@ -136,7 +136,7 @@ export default function OrdersChatLayout({ children }) {
               py: 1,
               px: 1.5,
               borderRadius: 2,
-              bgcolor: 'action.hover',
+              bgcolor: 'background.paper',
               fontSize: '0.9rem',
             }}
           />

@@ -204,7 +204,7 @@ export default function Form({ popupMode = false, onLoginSuccess }) {
   }; 
 
   return (
-    <section className={`${styles.formWrapper} ${componentClass('Form')}`}>
+    <section className={`${styles.formWrapper} ${popupMode ? styles.formWrapperPopup : ''} ${componentClass('Form')}`}>
       <h2>{isLoginForm ? t('login') : t('register')}</h2>
       <form onSubmit={handleSubmit(onSubmit)} className={styles.form}>
         <Controller

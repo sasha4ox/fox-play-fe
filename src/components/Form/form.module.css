@@ -87,3 +87,14 @@
     max-width: none;
   }
 }
+
+/* In popup (e.g. login modal): less padding so it fits on mobile */
+.formWrapperPopup {
+  padding: 24px 16px;
+}
+
+@media (min-width: 600px) {
+  .formWrapperPopup {
+    padding: 40px 20px;
+  }
+}
