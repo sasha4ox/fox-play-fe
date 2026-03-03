@@ -489,17 +489,30 @@ export default function OrderChatPage() {
         </Alert>
       )}
       {pendingAdminConfirm && (
-        <Alert severity="info" sx={{ mx: { xs: 1, md: 2 }, mt: 1 }}>
-          {buyerPendingAdminConfirm ? (
-            <>
-              <Typography variant="subtitle2" fontWeight={600}>{t('buyerPendingAdminConfirmTitle')}</Typography>
-              <Typography variant="body2" color="text.secondary">{t('buyerPendingAdminConfirmMessage')}</Typography>
-            </>
-          ) : (
-            <>
-              <Typography variant="subtitle2" fontWeight={600}>{t('sellerPendingAdminConfirmTitle')}</Typography>
-              <Typography variant="body2" color="text.secondary">{t('sellerPendingPaymentCanChat')}</Typography>
-            </>
+        <Alert
+          severity="error"
+          sx={{
+            mx: { xs: 1, md: 2 },
+            mt: 1,
+            '& .MuiAlert-message': { width: '100%' },
+          }}
+        >
+          <Typography variant="subtitle2" fontWeight={700} sx={{ color: 'inherit' }}>
+            {t('paymentUnderReviewBannerTitle')}
+          </Typography>
+          <Typography variant="body2" sx={{ mt: 0.5, opacity: 0.95 }}>
+            {buyerPendingAdminConfirm ? t('paymentUnderReviewBannerBuyer') : t('paymentUnderReviewBannerSeller')}
+          </Typography>
+          {buyerPendingAdminConfirm && (
+            <Button
+              component={Link}
+              href={`/${locale}/dashboard/orders/${orderId}/card-payment`}
+              size="small"
+              variant="outlined"
+              sx={{ mt: 1.5, borderColor: 'inherit', color: 'inherit', '&:hover': { borderColor: 'inherit', bgcolor: 'rgba(255,255,255,0.1)' } }}
+            >
+              {t('openPaymentPage')}
+            </Button>
           )}
         </Alert>
       )}

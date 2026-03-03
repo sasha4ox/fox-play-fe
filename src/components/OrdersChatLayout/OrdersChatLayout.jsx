@@ -18,7 +18,6 @@ import { useAuthStore } from '@/store/authStore';
 import { useProfile } from '@/hooks/useProfile';
 import { getMyOrderChats } from '@/lib/api';
 import Button from '@mui/material/Button';
-import InputBase from '@mui/material/InputBase';
 
 /** Dark green used for sender bubbles (matches reference) */
 const SENDER_BUBBLE = '#1B4332';
