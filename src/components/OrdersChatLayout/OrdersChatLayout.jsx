@@ -203,29 +203,31 @@ export default function OrdersChatLayout({ children }) {
             <Divider />
           </>
         )}
-        <Typography variant="h6" fontWeight={700} sx={{ px: 2, py: 1.5 }}>
-          {t('chats')}
-        </Typography>
-        <Divider />
-        <Box sx={{ flex: 1, overflow: 'auto' }}>
-          {loading && (
-            <>
-              {[1, 2, 3, 4, 5].map((i) => (
-                <Box key={i} sx={{ display: 'flex', alignItems: 'center', gap: 2, p: 2 }}>
-                  <Skeleton variant="circular" width={48} height={48} />
-                  <Box sx={{ flex: 1 }}>
-                    <Skeleton variant="text" width="60%" height={24} />
-                    <Skeleton variant="text" width="80%" height={18} sx={{ mt: 0.5 }} />
+        {/* Messages section: same theme background as search/admin area */}
+        <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', bgcolor: '#37474f' }}>
+          <Typography variant="h6" fontWeight={700} sx={{ px: 2, py: 1.5, color: '#fff' }}>
+            {t('chats')}
+          </Typography>
+          <Divider sx={{ borderColor: 'rgba(255,255,255,0.12)' }} />
+          <Box sx={{ flex: 1, overflow: 'auto' }}>
+            {loading && (
+              <>
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <Box key={i} sx={{ display: 'flex', alignItems: 'center', gap: 2, p: 2 }}>
+                    <Skeleton variant="circular" width={48} height={48} sx={{ bgcolor: 'rgba(255,255,255,0.12)' }} />
+                    <Box sx={{ flex: 1 }}>
+                      <Skeleton variant="text" width="60%" height={24} sx={{ bgcolor: 'rgba(255,255,255,0.12)' }} />
+                      <Skeleton variant="text" width="80%" height={18} sx={{ mt: 0.5, bgcolor: 'rgba(255,255,255,0.12)' }} />
+                    </Box>
                   </Box>
-                </Box>
-              ))}
-            </>
-          )}
-          {!loading && filteredOrders.length === 0 && (
-            <Typography variant="body2" color="text.secondary" sx={{ p: 3, textAlign: 'center' }}>
-              {t('noOrderChats')}
-            </Typography>
-          )}
+                ))}
+              </>
+            )}
+            {!loading && filteredOrders.length === 0 && (
+              <Typography variant="body2" sx={{ p: 3, textAlign: 'center', color: 'rgba(255,255,255,0.7)' }}>
+                {t('noOrderChats')}
+              </Typography>
+            )}
           {!loading &&
             filteredOrders.map((order) => {
               const other = order.otherParty;
@@ -309,6 +311,7 @@ export default function OrdersChatLayout({ children }) {
                 </Link>
               );
             })}
+          </Box>
         </Box>
       </Box>
 
