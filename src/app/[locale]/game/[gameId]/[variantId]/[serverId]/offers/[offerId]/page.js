@@ -31,7 +31,7 @@ import CardContent from '@mui/material/CardContent';
 import { useAuthStore } from '@/store/authStore';
 import { useLoginModalStore } from '@/store/loginModalStore';
 import { useProfile } from '@/hooks/useProfile';
-import { fetchOfferById, createOrder, getCardPaymentEnabled, getOfferMessages, sendOfferMessage, getFeedbacksByUserId } from '@/lib/api';
+import { fetchOfferById, createOrder, getCardPaymentEnabled, getOfferMessages, sendOfferMessage, startOfferChat, getOfferInquiryOrderId, getFeedbacksByUserId } from '@/lib/api';
 import { formatAdena } from '@/lib/adenaFormat';
 
 export default function OfferPDPPage() {
@@ -97,12 +97,20 @@ export default function OfferPDPPage() {
   const showPaymentDeclined = searchParams.get('payment') === 'declined' && !paymentDeclinedDismissed;
   const [cardPaymentEnabled, setCardPaymentEnabled] = useState(false);
   const [payWithCard, setPayWithCard] = useState(false);
+  const [inquiryOrderId, setInquiryOrderId] = useState(null);
 
   useEffect(() => {
     if (!offerId || !token) return;
     getOfferMessages(offerId, token, isCreator ? undefined : null)
       .then((data) => setOfferMessages(Array.isArray(data) ? data : []))
       .catch(() => setOfferMessages([]));
+  }, [offerId, token, isCreator]);
+
+  useEffect(() => {
+    if (!offerId || !token || isCreator) return;
+    getOfferInquiryOrderId(offerId, token)
+      .then((data) => setInquiryOrderId(data?.orderId ?? null))
+      .catch(() => setInquiryOrderId(null));
   }, [offerId, token, isCreator]);
 
   useEffect(() => {
@@ -168,11 +176,17 @@ export default function OfferPDPPage() {
     setMessageSending(true);
     setMessageError(null);
     try {
-      const body = { text: messageText.trim() };
-      if (isCreator && selectedThreadBuyerId) body.buyerId = selectedThreadBuyerId;
-      const msg = await sendOfferMessage(offerId, body, token);
-      setOfferMessages((prev) => [...prev, msg]);
-      setMessageText('');
+      if (isCreator) {
+        const body = { text: messageText.trim(), buyerId: selectedThreadBuyerId };
+        const msg = await sendOfferMessage(offerId, body, token);
+        setOfferMessages((prev) => [...prev, msg]);
+        setMessageText('');
+      } else {
+        const { orderId } = await startOfferChat(offerId, { text: messageText.trim() }, token);
+        setMessageText('');
+        router.push(`/${locale}/dashboard/orders/${orderId}`);
+        return;
+      }
     } catch (err) {
       setMessageError(err.message || 'Failed to send');
     } finally {
@@ -396,8 +410,13 @@ export default function OfferPDPPage() {
               {isCreator ? 'Messages about this offer' : 'Message seller'}
             </Typography>
             <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 1 }}>
-              {isCreator ? 'Conversations with buyers. Only you and that buyer see each thread.' : 'Ask a question before buying. Only you and the seller see this. Messages appear in the order chat after you buy.'}
+              {isCreator ? 'Conversations with buyers. Only you and that buyer see each thread.' : t('messageSellerHint')}
             </Typography>
+            {!isCreator && inquiryOrderId && (
+              <Button component={Link} href={`/${locale}/dashboard/orders/${inquiryOrderId}`} variant="outlined" size="small" sx={{ mb: 1.5 }}>
+                {t('continueConversation')}
+              </Button>
+            )}
             {isCreator && threadBuyerIds.length > 1 && (
               <FormControl size="small" fullWidth sx={{ mb: 1 }}>
                 <InputLabel>Conversation with</InputLabel>
@@ -414,7 +433,7 @@ export default function OfferPDPPage() {
                 </Select>
               </FormControl>
             )}
-            {displayedMessages.length > 0 && (
+            {isCreator && displayedMessages.length > 0 && (
               <Box sx={{ maxHeight: 200, overflow: 'auto', mb: 2, py: 1 }}>
                 {displayedMessages.map((msg) => (
                   <Box

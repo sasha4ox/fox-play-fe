@@ -488,34 +488,6 @@ export default function OrderChatPage() {
           </Button>
         </Alert>
       )}
-      {pendingAdminConfirm && (
-        <Alert
-          severity="error"
-          sx={{
-            mx: { xs: 1, md: 2 },
-            mt: 1,
-            '& .MuiAlert-message': { width: '100%' },
-          }}
-        >
-          <Typography variant="subtitle2" fontWeight={700} sx={{ color: 'inherit' }}>
-            {t('paymentUnderReviewBannerTitle')}
-          </Typography>
-          <Typography variant="body2" sx={{ mt: 0.5, opacity: 0.95 }}>
-            {buyerPendingAdminConfirm ? t('paymentUnderReviewBannerBuyer') : t('paymentUnderReviewBannerSeller')}
-          </Typography>
-          {buyerPendingAdminConfirm && (
-            <Button
-              component={Link}
-              href={`/${locale}/dashboard/orders/${orderId}/card-payment`}
-              size="small"
-              variant="outlined"
-              sx={{ mt: 1.5, borderColor: 'inherit', color: 'inherit', '&:hover': { borderColor: 'inherit', bgcolor: 'rgba(255,255,255,0.1)' } }}
-            >
-              {t('openPaymentPage')}
-            </Button>
-          )}
-        </Alert>
-      )}
       {actionInfo && <Alert severity="info" sx={{ mx: { xs: 1, md: 2 }, mt: 1 }} onClose={() => setActionInfo(null)}>{actionInfo}</Alert>}
       {actionError && <Alert severity="error" sx={{ mx: { xs: 1, md: 2 }, mt: 1 }}>{actionError}</Alert>}
       <>
@@ -840,6 +812,51 @@ export default function OrderChatPage() {
 
         {/* Right panel – Chat (fills remaining height, messages scroll internally) */}
         <Box sx={{ flex: 1, minWidth: 0, minHeight: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden', bgcolor: '#f5f5f5' }}>
+        {pendingAdminConfirm && (
+          <Box
+            sx={{
+              flexShrink: 0,
+              px: { xs: 1.5, md: 2 },
+              py: 1.25,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 1.5,
+              flexWrap: 'wrap',
+              background: 'linear-gradient(135deg, #b45309 0%, #92400e 100%)',
+              color: '#fff',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.12)',
+            }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flex: 1, minWidth: 0 }}>
+              <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: 'rgba(255,255,255,0.9)', flexShrink: 0 }} />
+              <Box>
+                <Typography variant="subtitle2" fontWeight={600} sx={{ color: 'inherit', lineHeight: 1.3 }}>
+                  {t('paymentUnderReviewBannerTitle')}
+                </Typography>
+                <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.9)', display: 'block', mt: 0.25 }}>
+                  {buyerPendingAdminConfirm ? t('paymentUnderReviewBannerBuyer') : t('paymentUnderReviewBannerSeller')}
+                </Typography>
+              </Box>
+            </Box>
+            {buyerPendingAdminConfirm && (
+              <Button
+                component={Link}
+                href={`/${locale}/dashboard/orders/${orderId}/card-payment`}
+                size="small"
+                variant="outlined"
+                sx={{
+                  flexShrink: 0,
+                  borderColor: 'rgba(255,255,255,0.8)',
+                  color: '#fff',
+                  '&:hover': { borderColor: '#fff', bgcolor: 'rgba(255,255,255,0.15)' },
+                }}
+              >
+                {t('openPaymentPage')}
+              </Button>
+            )}
+          </Box>
+        )}
         <Dialog open={resolveVerdictDialog.open} onClose={closeResolveVerdictDialog} maxWidth="sm" fullWidth>
           <DialogTitle>
             {resolveVerdictDialog.action === 'RELEASE' ? t('releaseToSeller') : t('refundBuyer')} — {tAdmin('verdictRequired')}

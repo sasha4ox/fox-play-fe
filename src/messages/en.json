@@ -466,6 +466,8 @@
     "priceIfBuyFull": "Price if you buy full",
     "youWillPay": "You will pay",
     "messageSeller": "Message seller",
+    "messageSellerHint": "Send a message to open a chat with the seller. You will be taken to the chat page.",
+    "continueConversation": "Continue conversation",
     "chatWithBuyer": "Chat with buyer",
     "inGameNickRequired": "In-game character nickname is required",
     "yourInGameNick": "Your in-game character nickname",

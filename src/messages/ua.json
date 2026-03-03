@@ -466,6 +466,8 @@
     "priceIfBuyFull": "Ціна при покупці всього",
     "youWillPay": "Ви сплатите",
     "messageSeller": "Написати продавцю",
+    "messageSellerHint": "Надішліть повідомлення, щоб відкрити чат із продавцем. Вас переведе на сторінку чату.",
+    "continueConversation": "Продовжити розмову",
     "chatWithBuyer": "Чат з покупцем",
     "inGameNickRequired": "Потрібен нік персонажа в грі",
     "yourInGameNick": "Нік вашого персонажа в грі",

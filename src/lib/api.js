@@ -121,6 +121,16 @@ export async function sendOfferMessage(offerId, body, token) {
   return apiPost(`/offers/${offerId}/messages`, body, token)
 }
 
+/** Buyer: send first message and open chat – creates inquiry order, adds message, returns { orderId, message }. Redirect to /dashboard/orders/orderId. */
+export async function startOfferChat(offerId, body, token) {
+  return apiPost(`/offers/${offerId}/start-chat`, body, token)
+}
+
+/** Buyer: get inquiry order id for this offer (null if none). */
+export async function getOfferInquiryOrderId(offerId, token) {
+  return apiGet(`/offers/${offerId}/inquiry-order`, token)
+}
+
 /** My offer threads (pre-order conversations) for Chats page (auth required). */
 export async function getMyOfferThreads(token) {
   return apiGet('/offers/me/threads', token)
