@@ -283,7 +283,7 @@ export default function OrdersChatLayout({ children }) {
                     </Badge>
                     <Box sx={{ flex: 1, minWidth: 0 }}>
                       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1, mb: 0.25 }}>
-                        <Typography variant="subtitle1" fontWeight={600} noWrap sx={{ color: 'var(--third-color)' }}>
+                        <Typography variant="subtitle1" fontWeight={600} noWrap sx={{ color: 'var(--chat-color)' }}>
                           {displayName}
                         </Typography>
                         <Typography variant="caption" sx={{ flexShrink: 0, fontSize: '0.7rem', color: 'var(--text-second-color)' }}>
