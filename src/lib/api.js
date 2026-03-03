@@ -155,6 +155,13 @@ export async function getPlatformFeePercent() {
   return typeof data?.platformFeePercent === 'number' ? data.platformFeePercent : 20
 }
 
+/** Public: order number message config for card-payment page. Returns { visible: boolean, text: string } (text may contain {{orderId}}). */
+export async function getCardPaymentOrderNumberMessage() {
+  const res = await apiFetch('/settings/card-payment-order-number-message', { method: 'GET' }, null)
+  const data = await res.json()
+  return { visible: !!data?.visible, text: typeof data?.text === 'string' ? data.text : '' }
+}
+
 /** Last 3 low-price offers for same server + type. params: { serverId, offerType?, customCategoryId?, displayCurrency? }. Returns { sellerNickname, quantityKk, pricePer100kk, currency, ... } */
 export async function fetchOfferRecentPrices(params, token = null) {
   const q = new URLSearchParams({ serverId: params.serverId })
@@ -494,6 +501,16 @@ export async function setAdminPlatformFeePercent(platformFeePercent, token) {
   return data?.platformFeePercent
 }
 
+/** Admin: get order number message config for card-payment page. */
+export async function getAdminCardPaymentOrderNumberMessage(token) {
+  return apiGet('/admin/settings/card-payment-order-number-message', token)
+}
+
+/** Admin: set order number message (visible: boolean, text: string with {{orderId}} placeholder). */
+export async function setAdminCardPaymentOrderNumberMessage({ visible, text }, token) {
+  return apiPatch('/admin/settings/card-payment-order-number-message', { visible, text }, token)
+}
+
 export async function getAdminPlatformProfit(token) {
   return apiGet('/admin/money-flow/platform-profit', token)
 }
@@ -523,6 +540,12 @@ export async function deleteAdminCard(cardId, token) {
 
 export async function getAdminPendingReceipts(token) {
   return apiGet('/admin/money-flow/receipts', token)
+}
+
+/** Admin: count of orders awaiting receipt confirmation (for header badge). */
+export async function getAdminPendingReceiptsCount(token) {
+  const data = await apiGet('/admin/money-flow/receipts-count', token)
+  return typeof data?.count === 'number' ? data.count : 0
 }
 
 export async function getAdminPendingPayouts(token) {

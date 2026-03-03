@@ -27,7 +27,7 @@ import { useThemeStore } from '@/store/themeStore';
 import { useLoginModalStore } from '@/store/loginModalStore';
 import { useProfile } from '@/hooks/useProfile';
 import { useSellerNewOrder } from '@/hooks/useSellerNewOrder';
-import { updatePreferredCurrency, getUnreadCount } from '@/lib/api';
+import { updatePreferredCurrency, getUnreadCount, getAdminPendingReceiptsCount } from '@/lib/api';
 import {
   playNewOrderSound,
   playNewMessageSound,
@@ -42,6 +42,7 @@ import Badge from '@mui/material/Badge';
 import Alert from '@mui/material/Alert';
 import Switch from '@mui/material/Switch';
 import Image from 'next/image';
+import { componentClass } from '@/lib/componentPath';
 import MenuIcon from '@mui/icons-material/Menu';
 import PersonIcon from '@mui/icons-material/Person';
 import LogoutIcon from '@mui/icons-material/Logout';
@@ -78,6 +79,7 @@ export default function Header() {
   const [messageSoundOn, setMessageSoundOn] = useState(true);
   const [soldSoundOn, setSoldSoundOn] = useState(true);
   const [logoError, setLogoError] = useState(false);
+  const [pendingReceiptsCount, setPendingReceiptsCount] = useState(0);
   useEffect(() => {
     setMessageSoundOn(getMessageSoundEnabled());
     setSoldSoundOn(getSoldSoundEnabled());
@@ -140,6 +142,21 @@ export default function Header() {
     setLogoError(false);
   }, [effectiveMode]);
 
+  const isAdminOrMod = profile?.role === 'ADMIN' || profile?.role === 'MODERATOR' || user?.role === 'ADMIN' || user?.role === 'MODERATOR';
+
+  useEffect(() => {
+    if (isAdminOrMod && token) {
+      getAdminPendingReceiptsCount(token)
+        .then(setPendingReceiptsCount)
+        .catch(() => setPendingReceiptsCount(0));
+      const interval = setInterval(() => {
+        getAdminPendingReceiptsCount(token).then(setPendingReceiptsCount).catch(() => {});
+      }, 60000);
+      return () => clearInterval(interval);
+    }
+    setPendingReceiptsCount(0);
+  }, [isAdminOrMod, token]);
+
   useEffect(() => {
     if (!isAuth || !token) {
       setUnreadCount(0);
@@ -197,8 +214,8 @@ export default function Header() {
           { href: `${base}/dashboard/offers`, label: t('myOffers'), active: pathname?.includes('/dashboard/offers') },
           { href: `${base}/dashboard/balance`, label: t('balance'), active: pathname?.includes('/dashboard/balance') },
           { href: `${base}/dashboard/sales`, label: t('mySales'), active: pathname?.includes('/dashboard/sales'), badge: sellerOrderCount },
-          ...(profile?.role === 'ADMIN' || profile?.role === 'MODERATOR' || user?.role === 'ADMIN' || user?.role === 'MODERATOR'
-            ? [{ href: `${base}/dashboard/admin/overview`, label: t('admin'), active: pathname?.includes('/dashboard/admin') }]
+          ...(isAdminOrMod
+            ? [{ href: `${base}/dashboard/admin/overview`, label: t('admin'), active: pathname?.includes('/dashboard/admin'), badge: pendingReceiptsCount }]
             : []),
         ]
       : []),
@@ -314,6 +331,7 @@ export default function Header() {
     return (
       <>
         <IconButton
+          className={componentClass('Header', 'UserMenuBtn')}
           onClick={(e) => {
             unlockAudio();
             const el = e.currentTarget;
@@ -545,6 +563,7 @@ export default function Header() {
 
   return (
     <AppBar
+      className={componentClass('Header')}
       position="static"
       elevation={0}
       sx={{
@@ -559,7 +578,7 @@ export default function Header() {
     >
       <Toolbar sx={{ gap: 1, flexWrap: 'wrap', py: 1, minHeight: { xs: 56, sm: 64 } }}>
         {isMobile && (
-          <IconButton edge="start" color="inherit" aria-label="menu" onClick={() => setMobileOpen(true)} sx={{ mr: 0.5 }}>
+          <IconButton className={componentClass('Header', 'MenuBtn')} edge="start" color="inherit" aria-label="menu" onClick={() => setMobileOpen(true)} sx={{ mr: 0.5 }}>
             <MenuIcon />
           </IconButton>
         )}
@@ -630,7 +649,7 @@ export default function Header() {
                   </Box>
                 </>
               )}
-              <Button size="small" variant="outlined" color="secondary" sx={{ textTransform: 'none' }} onClick={() => openLoginModal()}>
+              <Button className={componentClass('Header', 'LoginBtn')} size="small" variant="outlined" color="secondary" sx={{ textTransform: 'none' }} onClick={() => openLoginModal()}>
                 {t('login')}
               </Button>
             </>
@@ -656,6 +675,7 @@ export default function Header() {
               {t('newOrderNotification', { title: lastNewOrder.offerTitle, qty: lastNewOrder.quantity })}
             </Typography>
             <Button
+              className={componentClass('Header', 'NewOrderOpenChatBtn')}
               component={Link}
               href={lastNewOrder?.orderId ? `${base}/dashboard/orders/${lastNewOrder.orderId}` : base}
               size="small"

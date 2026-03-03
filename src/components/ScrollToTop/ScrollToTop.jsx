@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import IconButton from '@mui/material/IconButton';
 import Box from '@mui/material/Box';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
+import { componentClass } from '@/lib/componentPath';
 
 const SCROLL_THRESHOLD = 400;
 const THROTTLE_MS = 150;
@@ -60,6 +61,7 @@ export default function ScrollToTop() {
 
   return (
     <Box
+      className={componentClass('ScrollToTop')}
       sx={{
         position: 'fixed',
         bottom: 24,
@@ -68,6 +70,7 @@ export default function ScrollToTop() {
       }}
     >
       <IconButton
+        className={componentClass('ScrollToTop', 'Btn')}
         onClick={scrollToTop}
         aria-label={t('scrollToTop')}
         sx={{

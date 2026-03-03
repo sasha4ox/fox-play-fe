@@ -16,7 +16,9 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
 import TextField from '@mui/material/TextField';
 import { useAuthStore } from '@/store/authStore';
-import { getOrderCardPayment, markOrderCardPaymentSent } from '@/lib/api';
+import { getOrderCardPayment, markOrderCardPaymentSent, getCardPaymentOrderNumberMessage } from '@/lib/api';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import Checkbox from '@mui/material/Checkbox';
 
 function formatCardNumber(num) {
   if (!num) return '';
@@ -69,6 +71,8 @@ export default function OrderCardPaymentPage() {
   const [sending, setSending] = useState(false);
   const [last4DialogOpen, setLast4DialogOpen] = useState(false);
   const [last4, setLast4] = useState('');
+  const [orderNumberConfig, setOrderNumberConfig] = useState({ visible: false, text: '' });
+  const [orderNumberConfirmed, setOrderNumberConfirmed] = useState(false);
 
   const deadlineAt = data?.paymentDeadlineAt;
   const remaining = useCountdown(deadlineAt);
@@ -86,6 +90,12 @@ export default function OrderCardPaymentPage() {
       })
       .finally(() => setLoading(false));
   }, [orderId, token]);
+
+  useEffect(() => {
+    getCardPaymentOrderNumberMessage()
+      .then(setOrderNumberConfig)
+      .catch(() => setOrderNumberConfig({ visible: false, text: '' }));
+  }, []);
 
   const handleConfirmSentClick = () => {
     setLast4('');
@@ -126,7 +136,13 @@ export default function OrderCardPaymentPage() {
   const base = `/${locale}/dashboard/orders/${orderId}`;
   const status = data?.status;
   const showCard = data?.cardNumber && (status === 'awaiting_payment' || status === 'awaiting_confirmation');
-  const canMarkSent = status === 'awaiting_payment' && !expired && data?.cardNumber;
+  const requireOrderNumberConfirm = orderNumberConfig.visible;
+  const canMarkSent =
+    status === 'awaiting_payment' &&
+    !expired &&
+    data?.cardNumber &&
+    (!requireOrderNumberConfirm || orderNumberConfirmed);
+  const orderNumberMessage = orderNumberConfig.text.replace(/\{\{\s*orderId\s*\}\}/gi, orderId || '');
 
   return (
     <Container maxWidth="sm" sx={{ py: 4 }}>
@@ -161,6 +177,11 @@ export default function OrderCardPaymentPage() {
           <Typography variant="h4" fontWeight={700} color="primary.main">
             {data.amount} {data.currency}
           </Typography>
+          {(status === 'awaiting_payment' || status === 'awaiting_confirmation') && (
+            <Alert severity="info" sx={{ mt: 1.5 }}>
+              {t('amountFeeNotice')}
+            </Alert>
+          )}
         </Box>
       )}
 
@@ -170,6 +191,39 @@ export default function OrderCardPaymentPage() {
           <Typography component="span" sx={{ fontFamily: 'monospace', fontWeight: 600 }}>
             {data.paymentComment}
           </Typography>
+        </Alert>
+      )}
+
+      {orderNumberConfig.visible && orderNumberMessage && (status === 'awaiting_payment' || status === 'awaiting_confirmation') && (
+        <Alert severity="warning" sx={{ mb: 2 }} icon={false}>
+          <Typography variant="subtitle2" fontWeight={600} gutterBottom>
+            {t('orderNumberTitle')}
+          </Typography>
+          <Box
+            sx={{
+              py: 1.5,
+              px: 2,
+              borderRadius: 2,
+              bgcolor: 'warning.50',
+              border: '1px solid',
+              borderColor: 'warning.200',
+              mb: 2,
+            }}
+          >
+            <Typography variant="body2" color="text.primary" sx={{ fontFamily: 'monospace', fontWeight: 700, fontSize: '1.1rem', letterSpacing: 1 }}>
+              {orderNumberMessage}
+            </Typography>
+          </Box>
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={orderNumberConfirmed}
+                onChange={(e) => setOrderNumberConfirmed(e.target.checked)}
+                color="primary"
+              />
+            }
+            label={t('orderNumberConfirmLabel')}
+          />
         </Alert>
       )}
 

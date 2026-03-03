@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { useLocale } from 'next-intl';
+import { componentClass } from '@/lib/componentPath';
 
 const LOCALES = ['en', 'ua'];
 
@@ -23,7 +24,7 @@ export default function LocaleSwitcher() {
   };
 
   return (
-    <nav>
+    <nav className={componentClass('LocaleSwitcher')}>
       {LOCALES.map((lng) => (
         <Link
           key={lng}

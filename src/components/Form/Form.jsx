@@ -13,6 +13,7 @@ import { useLocale } from 'next-intl';
 import { redirect, useRouter } from 'next/navigation';
 import { GoogleLogin } from '@react-oauth/google';
 import { useAuthStore } from '@/store/authStore';
+import { componentClass } from '@/lib/componentPath';
 import styles from './form.module.css';
 
 const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '';
@@ -203,7 +204,7 @@ export default function Form({ popupMode = false, onLoginSuccess }) {
   }; 
 
   return (
-    <section className={styles.formWrapper}>
+    <section className={`${styles.formWrapper} ${componentClass('Form')}`}>
       <h2>{isLoginForm ? t('login') : t('register')}</h2>
       <form onSubmit={handleSubmit(onSubmit)} className={styles.form}>
         <Controller
@@ -332,7 +333,7 @@ export default function Form({ popupMode = false, onLoginSuccess }) {
             )}
           </Alert>
         )}
-        <Button type="submit" variant="contained" color="secondary" fullWidth className={styles.send} disabled={isSubmitting}>
+        <Button type="submit" variant="contained" color="secondary" fullWidth className={`${styles.send} ${componentClass('Form', 'SubmitBtn')}`} disabled={isSubmitting}>
           {isSubmitting ? t('sending') : t('submit')}
         </Button>
         {googleClientId && (

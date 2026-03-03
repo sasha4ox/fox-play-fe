@@ -42,6 +42,8 @@ import {
   getAdminCardPayouts,
   adminCardPayoutComplete,
   adminCardPayoutFail,
+  getAdminCardPaymentOrderNumberMessage,
+  setAdminCardPaymentOrderNumberMessage,
 } from '@/lib/api';
 import Link from 'next/link';
 import { useLocale } from 'next-intl';
@@ -88,6 +90,11 @@ export default function AdminMoneyFlowPage() {
   const [confirmingCardPayoutComplete, setConfirmingCardPayoutComplete] = useState(null);
   const [confirmingCardPayoutFail, setConfirmingCardPayoutFail] = useState(null);
   const [error, setError] = useState(null);
+  const [orderNumberVisible, setOrderNumberVisible] = useState(false);
+  const [orderNumberText, setOrderNumberText] = useState('');
+  const [orderNumberTextInput, setOrderNumberTextInput] = useState('');
+  const [loadingOrderNumberConfig, setLoadingOrderNumberConfig] = useState(true);
+  const [savingOrderNumberConfig, setSavingOrderNumberConfig] = useState(false);
 
   const loadFlag = () => {
     if (!token) return;
@@ -126,6 +133,36 @@ export default function AdminMoneyFlowPage() {
       .then((data) => setCards(data?.cards ?? []))
       .catch(() => setCards([]))
       .finally(() => setLoadingCards(false));
+  };
+
+  const loadOrderNumberConfig = () => {
+    if (!token) return;
+    setLoadingOrderNumberConfig(true);
+    getAdminCardPaymentOrderNumberMessage(token)
+      .then((c) => {
+        setOrderNumberVisible(!!c?.visible);
+        setOrderNumberText(c?.text ?? '');
+        setOrderNumberTextInput(c?.text ?? '');
+      })
+      .catch(() => {})
+      .finally(() => setLoadingOrderNumberConfig(false));
+  };
+
+  const handleSaveOrderNumberConfig = () => {
+    if (!token) return;
+    setSavingOrderNumberConfig(true);
+    setError(null);
+    setAdminCardPaymentOrderNumberMessage(
+      { visible: orderNumberVisible, text: orderNumberTextInput.trim() || undefined },
+      token
+    )
+      .then((c) => {
+        setOrderNumberVisible(!!c?.visible);
+        setOrderNumberText(c?.text ?? '');
+        setOrderNumberTextInput(c?.text ?? '');
+      })
+      .catch((err) => setError(err?.message || 'Failed to save'))
+      .finally(() => setSavingOrderNumberConfig(false));
   };
 
   const loadReceipts = () => {
@@ -167,6 +204,9 @@ export default function AdminMoneyFlowPage() {
   }, [token]);
   useEffect(() => {
     loadCards();
+  }, [token]);
+  useEffect(() => {
+    loadOrderNumberConfig();
   }, [token]);
   useEffect(() => {
     loadReceipts();
@@ -409,6 +449,47 @@ export default function AdminMoneyFlowPage() {
 
       <Card sx={{ mb: 3 }}>
         <CardContent sx={{ px: { xs: 1.5, sm: 2 } }}>
+          <Typography variant="subtitle1" fontWeight={600} gutterBottom>
+            {t('orderNumberMessageTitle')}
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            {t('orderNumberMessageHint')}
+          </Typography>
+          {loadingOrderNumberConfig ? (
+            <Skeleton height={80} />
+          ) : (
+            <>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={orderNumberVisible}
+                    onChange={(e) => setOrderNumberVisible(e.target.checked)}
+                  />
+                }
+                label={t('orderNumberMessageVisible')}
+                sx={{ display: 'block', mb: 2 }}
+              />
+              <TextField
+                fullWidth
+                multiline
+                minRows={2}
+                label={t('orderNumberMessageText')}
+                placeholder={t('orderNumberMessagePlaceholder')}
+                value={orderNumberTextInput}
+                onChange={(e) => setOrderNumberTextInput(e.target.value)}
+                helperText={t('orderNumberMessagePlaceholder')}
+                sx={{ mb: 2 }}
+              />
+              <Button variant="contained" onClick={handleSaveOrderNumberConfig} disabled={savingOrderNumberConfig}>
+                {savingOrderNumberConfig ? '…' : t('save')}
+              </Button>
+            </>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card sx={{ mb: 3 }}>
+        <CardContent sx={{ px: { xs: 1.5, sm: 2 } }}>
           <Box sx={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: 1, mb: 2 }}>
             <Typography variant="subtitle1" fontWeight={600}>
               {t('paymentCards')}
@@ -502,6 +583,17 @@ export default function AdminMoneyFlowPage() {
                       </TableCell>
                       <TableCell>{r.buyerMarkedSentAt ? new Date(r.buyerMarkedSentAt).toLocaleString() : '—'}</TableCell>
                       <TableCell align="right">
+                        <Button
+                          component={Link}
+                          href={`/${locale}/dashboard/orders/${r.orderId}`}
+                          target="_blank"
+                          rel="noopener"
+                          size="small"
+                          variant="outlined"
+                          sx={{ mr: 1 }}
+                        >
+                          {t('messageUser')}
+                        </Button>
                         <Button
                           size="small"
                           variant="contained"

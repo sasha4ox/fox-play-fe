@@ -14,6 +14,7 @@ import CookieIcon from '@mui/icons-material/Cookie';
 import SettingsIcon from '@mui/icons-material/Settings';
 import ChevronDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import ChevronUpIcon from '@mui/icons-material/KeyboardArrowUp';
+import { componentClass } from '@/lib/componentPath';
 import styles from './CookieConsent.module.css';
 
 const CATEGORY_IDS: CookieCategoryId[] = ['essential', 'analytics', 'marketing', 'functional'];
@@ -62,7 +63,7 @@ export default function CookieConsent() {
       aria-labelledby="cookie-consent-title"
       aria-describedby="cookie-consent-desc"
       aria-modal="true"
-      className={styles.banner}
+      className={`${styles.banner} ${componentClass('CookieConsent')}`}
       sx={{
         position: 'fixed',
         bottom: 0,

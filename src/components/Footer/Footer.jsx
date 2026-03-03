@@ -9,6 +9,7 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import MuiLink from '@mui/material/Link';
 import { useCookieConsentContext } from '@/contexts/CookieConsentContext';
+import { componentClass } from '@/lib/componentPath';
 
 export default function Footer() {
   const [logoError, setLogoError] = useState(false);
@@ -35,6 +36,7 @@ export default function Footer() {
   return (
     <Box
       component="footer"
+      className={componentClass('Footer')}
       sx={{
         width: '100%',
         minWidth: '100%',

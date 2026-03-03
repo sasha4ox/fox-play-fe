@@ -8,6 +8,7 @@ import Typography from '@mui/material/Typography';
 import Skeleton from '@mui/material/Skeleton';
 import { useAuthStore } from '@/store/authStore';
 import { getRecentServers } from '@/lib/api';
+import { componentClass } from '@/lib/componentPath';
 
 const MAX_DISPLAY = 3;
 
@@ -49,6 +50,7 @@ export default function RecentServersBar() {
 
   return (
     <Box
+      className={componentClass('RecentServersBar')}
       sx={{
         px: 2,
         py: 1.5,

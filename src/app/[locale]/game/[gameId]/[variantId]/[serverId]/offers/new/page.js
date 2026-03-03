@@ -256,6 +256,11 @@ export default function NewOfferPage() {
                       <strong>2)</strong> {t('buyerWillPay')}:{' '}
                       <Box component="span" sx={{ fontWeight: 700, color: isLowestPrice ? 'success.main' : 'inherit' }}>{buyerWillPaySum} {currency}</Box>
                       {' '}({t('includesPlatformFee', { percent: platformFeePercent })})
+                      {isLowestPrice && (
+                        <Box component="span" sx={{ display: 'block', mt: 0.5, fontStyle: 'italic', color: 'success.main', fontSize: '0.875rem' }}>
+                          {t('lowerPriceGoodJob')}
+                        </Box>
+                      )}
                     </Typography>
                     <Typography variant="body2" color="text.primary" sx={{ mb: 0.5 }}>
                       <strong>3)</strong> {t('cost1kkk')}: <strong>{(10 * (Number(priceAdena) || 0)).toFixed(2)} {currency}</strong>
@@ -318,7 +323,7 @@ export default function NewOfferPage() {
             </>
           )}
           {submitError && <Alert severity="error" sx={{ mb: 2 }}>{submitError}</Alert>}
-          <Button type="submit" variant="contained" color="secondary" disabled={submitting}>
+          <Button type="submit" variant="contained" color="secondary" disabled={submitting} sx={{ mt: 2, mb: 3 }}>
             {submitting ? t('creating') : t('createOfferButton')}
           </Button>
         </form>

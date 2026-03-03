@@ -9,6 +9,7 @@ import Typography from '@mui/material/Typography';
 import { useTranslations } from 'next-intl';
 import Form from '@/components/Form/Form';
 import { useLoginModalStore } from '@/store/loginModalStore';
+import { componentClass } from '@/lib/componentPath';
 
 export default function LoginModal() {
   const t = useTranslations('LoginModal');
@@ -18,6 +19,7 @@ export default function LoginModal() {
 
   return (
     <Dialog
+      className={componentClass('LoginModal')}
       open={open}
       onClose={closeModal}
       maxWidth="sm"
@@ -50,7 +52,7 @@ export default function LoginModal() {
         <Typography variant="h6" component="span" fontWeight={600} color="text.primary">
           {t('title')}
         </Typography>
-        <IconButton aria-label="close" onClick={closeModal} size="small" sx={{ color: 'text.secondary' }}>
+        <IconButton className={componentClass('LoginModal', 'CloseBtn')} aria-label="close" onClick={closeModal} size="small" sx={{ color: 'text.secondary' }}>
           <CloseIcon />
         </IconButton>
       </DialogTitle>

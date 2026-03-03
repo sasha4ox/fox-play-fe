@@ -1,0 +1,41 @@
+---
+description: Add component path class for easy DevTools Inspect; each component and buttons get a stable class
+globs: "src/components/**/*.{jsx,tsx}"
+alwaysApply: false
+---
+
+# Component path for Inspect
+
+So components and buttons are easy to find in the browser inspector, add a **path class** to every component root and to important buttons/controls.
+
+## Usage
+
+Import from `@/lib/componentPath`:
+
+- **componentClass(...segments)** – returns a single class name, e.g. `fp-c-Header`, `fp-c-LoginModal-CloseBtn`.
+- **componentPathProps(...segments)** – returns `{ className, 'data-fp-path' }` for spreading (optional; use when you want the path visible as a data attribute too).
+
+## Rules
+
+1. **Component root**: Add `className={componentClass('ComponentName')}` to the outermost element (e.g. first `Box`, `div`, `nav`, or MUI root). Use the component name matching the file/folder (e.g. `Header`, `LoginModal`, `Form`).
+
+2. **Buttons and key controls**: Add a second segment for the control, e.g. `componentClass('Header', 'LoginBtn')`, `componentClass('Form', 'SubmitBtn')`, `componentClass('LoginModal', 'CloseBtn')`.
+
+3. **Merge with existing className**: If the element already has a class, merge:  
+   `className={\`${styles.wrapper} ${componentClass('Form')}\`}` or  
+   `className={[styles.wrapper, componentClass('Form')].filter(Boolean).join(' ')}`.
+
+## Examples
+
+```jsx
+// Component root
+<Box className={componentClass('RecentServersBar')} sx={{ ... }}>
+
+// Button inside Header
+<Button className={componentClass('Header', 'LoginBtn')} onClick={openLoginModal}>
+
+// With existing class
+<section className={`${styles.formWrapper} ${componentClass('Form')}`}>
+```
+
+In DevTools you can search by class (e.g. `fp-c-Header-LoginBtn`) or by selector `.fp-c-Form` to find the component quickly.
