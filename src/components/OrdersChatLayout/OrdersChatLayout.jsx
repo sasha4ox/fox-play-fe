@@ -143,31 +143,45 @@ export default function OrdersChatLayout({ children }) {
           flex: isMobile && showList ? 1 : undefined,
         }}
       >
-        <Box sx={{ p: { xs: 1.5, md: 2 }, borderBottom: '1px solid', borderColor: 'divider', bgcolor: '#f5f5f5' }}>
+        {/* Search + admin inputs: same dark background as app theme (header) */}
+        <Box sx={{ p: { xs: 1.5, md: 2 }, borderBottom: '1px solid', borderColor: 'divider', bgcolor: '#37474f' }}>
           <InputBase
             placeholder={t('searchChatsPlaceholder') || t('searchChats') || 'Search'}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            startAdornment={<SearchIcon sx={{ color: 'text.secondary', mr: 1.5, fontSize: 20 }} />}
+            startAdornment={<SearchIcon sx={{ color: 'rgba(255,255,255,0.7)', mr: 1.5, fontSize: 20 }} />}
             sx={{
               width: '100%',
               py: 1,
               px: 1.5,
               borderRadius: 2,
-              bgcolor: 'background.paper',
+              bgcolor: 'rgba(255,255,255,0.08)',
+              color: '#fff',
               fontSize: '0.9rem',
+              '& .MuiInputBase-input': { color: '#fff' },
+              '& .MuiInputBase-input::placeholder': { color: 'rgba(255,255,255,0.5)', opacity: 1 },
             }}
           />
         </Box>
         {isAdminOrMod && (
           <>
-            <Box sx={{ px: 2, py: 1, display: 'flex', gap: 0.5, alignItems: 'center' }}>
+            <Box sx={{ px: 2, py: 1, display: 'flex', gap: 0.5, alignItems: 'center', bgcolor: '#37474f' }}>
               <InputBase
                 placeholder={t('openOrderById')}
                 value={adminOrderId}
                 onChange={(e) => setAdminOrderId((e.target.value || '').trim())}
                 size="small"
-                sx={{ flex: 1, bgcolor: 'background.paper', borderRadius: 1, px: 1, py: 0.5, fontSize: '0.8rem' }}
+                sx={{
+                  flex: 1,
+                  bgcolor: 'rgba(255,255,255,0.08)',
+                  color: '#fff',
+                  borderRadius: 1,
+                  px: 1,
+                  py: 0.5,
+                  fontSize: '0.8rem',
+                  '& .MuiInputBase-input': { color: '#fff' },
+                  '& .MuiInputBase-input::placeholder': { color: 'rgba(255,255,255,0.5)', opacity: 1 },
+                }}
               />
               <Button
                 size="small"
@@ -177,6 +191,11 @@ export default function OrdersChatLayout({ children }) {
                   if (id) router.push(`/${locale}/dashboard/orders/${id}`);
                 }}
                 disabled={!adminOrderId.trim()}
+                sx={{
+                  borderColor: 'rgba(255,255,255,0.5)',
+                  color: '#fff',
+                  '&:hover': { borderColor: '#fff', bgcolor: 'rgba(255,255,255,0.1)' },
+                }}
               >
                 {t('open')}
               </Button>
@@ -241,6 +260,7 @@ export default function OrdersChatLayout({ children }) {
                       py: { xs: 1.5, md: 1.75 },
                       cursor: 'pointer',
                       bgcolor: itemBg,
+                      color: '#1a1a1a',
                       '&:hover': { filter: 'brightness(0.97)' },
                       borderLeft: isSelected ? '4px solid' : '4px solid transparent',
                       borderColor: SENDER_BUBBLE,
@@ -261,25 +281,25 @@ export default function OrdersChatLayout({ children }) {
                     </Badge>
                     <Box sx={{ flex: 1, minWidth: 0 }}>
                       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1, mb: 0.25 }}>
-                        <Typography variant="subtitle1" fontWeight={600} noWrap>
+                        <Typography variant="subtitle1" fontWeight={600} noWrap sx={{ color: '#1a1a1a' }}>
                           {displayName}
                         </Typography>
-                        <Typography variant="caption" color="text.secondary" sx={{ flexShrink: 0, fontSize: '0.7rem' }}>
+                        <Typography variant="caption" sx={{ flexShrink: 0, fontSize: '0.7rem', color: '#5f5f5f' }}>
                           {formatDate(lastDate)}
                         </Typography>
                       </Box>
-                      <Typography variant="body2" color="text.secondary" noWrap sx={{ fontSize: '0.8rem' }}>
+                      <Typography variant="body2" noWrap sx={{ fontSize: '0.8rem', color: '#424242' }}>
                         {order.offer?.title || t('offer')}
                       </Typography>
-                      <Divider sx={{ my: 0.75 }} />
+                      <Divider sx={{ my: 0.75, borderColor: 'rgba(0,0,0,0.12)' }} />
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, flexWrap: 'wrap' }}>
                         {order.status && (
-                          <Typography variant="caption" sx={{ fontSize: '0.7rem', color: 'primary.main', fontWeight: 600 }}>
+                          <Typography variant="caption" sx={{ fontSize: '0.7rem', color: '#0d47a1', fontWeight: 600 }}>
                             {tSales(`status_${order.status}`)}
                           </Typography>
                         )}
                         {lastText && (
-                          <Typography variant="caption" color="text.secondary" noWrap sx={{ fontSize: '0.7rem', maxWidth: 140 }}>
+                          <Typography variant="caption" noWrap sx={{ fontSize: '0.7rem', maxWidth: 140, color: '#5f5f5f' }}>
                             {lastText}
                           </Typography>
                         )}
