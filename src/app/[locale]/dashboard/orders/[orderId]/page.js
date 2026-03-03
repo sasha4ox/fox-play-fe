@@ -192,6 +192,8 @@ export default function OrderChatPage() {
   const buyerPendingAdminConfirm = isBuyer && order?.paymentMethod === 'CARD_MANUAL' && order?.status === 'CREATED';
   const sellerPendingAdminConfirm = isSeller && order?.paymentMethod === 'CARD_MANUAL' && order?.status === 'CREATED';
   const pendingAdminConfirm = buyerPendingAdminConfirm || sellerPendingAdminConfirm;
+  /** Green when payment confirmed (PAID+); red tint when waiting for confirmation */
+  const chatBgColor = pendingAdminConfirm ? '#ffebee' : (order && ['PAID', 'DELIVERED', 'COMPLETED'].includes(order.status)) ? '#e8f5e9' : '#f5f5f5';
   const canSellerDeliver =
     isSeller &&
     order &&
@@ -480,7 +482,7 @@ export default function OrderChatPage() {
           {t('paymentSuccessMessage')}
         </Alert>
       )}
-      {isBuyer && order?.paymentMethod === 'CARD_MANUAL' && order?.status === 'CREATED' && order?.orderCardPayment && (
+      {isBuyer && order?.paymentMethod === 'CARD_MANUAL' && order?.status === 'CREATED' && order?.orderCardPayment && !order?.orderCardPayment?.buyerMarkedSentAt && (
         <Alert severity="warning" sx={{ mx: { xs: 1, md: 2 }, mt: 1 }}>
           {t('cardPaymentBanner')}{' '}
           <Button component={Link} href={`/${locale}/dashboard/orders/${orderId}/card-payment`} size="small" variant="outlined" sx={{ mt: 0.5 }}>
@@ -501,13 +503,13 @@ export default function OrderChatPage() {
           overflow: 'hidden',
         }}
       >
-        {/* Left panel – Order info (scrolls internally on desktop; collapsible on mobile) */}
+        {/* Left panel – Order info (scrolls internally on desktop; collapsible on mobile; on mobile cap height so chat gets more space) */}
         <Box
           sx={{
             width: isMobile ? '100%' : 340,
             minWidth: isMobile ? undefined : 280,
             maxWidth: isMobile ? '100%' : '40%',
-            maxHeight: isMobile && infoExpandedOnMobile ? '70%' : (isMobile ? 'auto' : '100%'),
+            maxHeight: isMobile && infoExpandedOnMobile ? '42%' : (isMobile ? 'auto' : '100%'),
             bgcolor: 'background.paper',
             borderRight: isMobile ? 'none' : '1px solid',
             borderBottom: isMobile ? '1px solid' : 'none',
@@ -810,8 +812,19 @@ export default function OrderChatPage() {
           </Box>
         </Box>
 
-        {/* Right panel – Chat (fills remaining height, messages scroll internally) */}
-        <Box sx={{ flex: 1, minWidth: 0, minHeight: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden', bgcolor: '#f5f5f5' }}>
+        {/* Right panel – Chat (fills remaining height; on mobile ensure minimum space for chat; green when payment confirmed, red tint when waiting confirmation) */}
+        <Box
+          sx={{
+            flex: 1,
+            minWidth: 0,
+            minHeight: 0,
+            ...(isMobile && { minHeight: '55vh' }),
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'hidden',
+            bgcolor: chatBgColor,
+          }}
+        >
         {pendingAdminConfirm && (
           <Box
             sx={{
@@ -882,15 +895,15 @@ export default function OrderChatPage() {
           </DialogActions>
         </Dialog>
 
-        {/* Messages area – reference style: dark green for sender, light grey for me */}
+        {/* Messages area – reference style: dark green for sender, light grey for me; background matches chat panel (green/red/grey) */}
         <Box
           ref={messagesContainerRef}
           sx={{
             flex: 1,
-            minHeight: 200,
+            minHeight: { xs: 260, md: 200 },
             overflow: 'auto',
             p: { xs: 1.5, md: 2 },
-            bgcolor: '#f5f5f5',
+            bgcolor: chatBgColor,
             display: 'flex',
             flexDirection: 'column',
           }}

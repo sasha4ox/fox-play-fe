@@ -613,6 +613,8 @@
     "pendingPayouts": "Pending payout to seller",
     "pendingPayoutsHint": "Order completed by buyer. Send money to seller, then confirm here.",
     "confirmReceipt": "Confirm received",
+    "declineReceipt": "Decline",
+    "declineReceiptConfirm": "Reset \"I sent money\" for this order so the buyer can send again (e.g. accidental click)?",
     "messageUser": "Message user",
     "confirmPayout": "Confirm paid to seller",
     "noPendingReceipts": "No pending receipts.",

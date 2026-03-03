@@ -566,6 +566,10 @@ export async function adminConfirmReceipt(orderId, token) {
   return apiPost(`/admin/money-flow/orders/${orderId}/confirm-receipt`, {}, token)
 }
 
+export async function adminDeclineReceipt(orderId, token) {
+  return apiPost(`/admin/money-flow/orders/${orderId}/decline-receipt`, {}, token)
+}
+
 /** Admin: get or create support conversation with buyer for order (payment info). Returns { id, orderId, orderLink, messages, ... }. */
 export async function adminGetOrCreateContactBuyer(orderId, body, token) {
   return apiPost(`/admin/orders/${orderId}/contact-buyer`, body || {}, token)

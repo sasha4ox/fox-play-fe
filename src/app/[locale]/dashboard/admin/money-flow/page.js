@@ -38,6 +38,7 @@ import {
   getAdminPendingReceipts,
   getAdminPendingPayouts,
   adminConfirmReceipt,
+  adminDeclineReceipt,
   adminConfirmPayout,
   getAdminCardPayouts,
   adminCardPayoutComplete,
@@ -85,6 +86,7 @@ export default function AdminMoneyFlowPage() {
   const [editPaymentComment, setEditPaymentComment] = useState('');
   const [savingEditCard, setSavingEditCard] = useState(false);
   const [confirmingReceipt, setConfirmingReceipt] = useState(null);
+  const [decliningReceipt, setDecliningReceipt] = useState(null);
   const [confirmingPayout, setConfirmingPayout] = useState(null);
   const [cardPayouts, setCardPayouts] = useState([]);
   const [loadingCardPayouts, setLoadingCardPayouts] = useState(true);
@@ -321,6 +323,16 @@ export default function AdminMoneyFlowPage() {
       })
       .catch((err) => setError(err.message || 'Failed'))
       .finally(() => setConfirmingReceipt(null));
+  };
+
+  const handleDeclineReceipt = (orderId) => {
+    if (!confirm(t('declineReceiptConfirm'))) return;
+    setDecliningReceipt(orderId);
+    setError(null);
+    adminDeclineReceipt(orderId, token)
+      .then(() => loadReceipts())
+      .catch((err) => setError(err.message || 'Failed'))
+      .finally(() => setDecliningReceipt(null));
   };
 
   const handleOpenContactBuyer = (orderId) => {
@@ -631,6 +643,16 @@ export default function AdminMoneyFlowPage() {
                           onClick={() => handleOpenContactBuyer(r.orderId)}
                         >
                           {t('messageUser')}
+                        </Button>
+                        <Button
+                          size="small"
+                          variant="outlined"
+                          color="error"
+                          onClick={() => handleDeclineReceipt(r.orderId)}
+                          disabled={decliningReceipt === r.orderId || confirmingReceipt === r.orderId}
+                          sx={{ mr: 1 }}
+                        >
+                          {decliningReceipt === r.orderId ? '…' : t('declineReceipt')}
                         </Button>
                         <Button
                           size="small"
