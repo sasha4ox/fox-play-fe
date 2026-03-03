@@ -13,6 +13,7 @@ import { useAuthStore } from '@/store/authStore';
 
 const adminNav = [
   { href: 'overview', labelKey: 'overview' },
+  { href: 'orders', labelKey: 'orders' },
   { href: 'disputes', labelKey: 'disputes' },
   { href: 'money-flow', labelKey: 'moneyFlow' },
   { href: 'users', labelKey: 'users' },

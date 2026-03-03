@@ -93,7 +93,7 @@ export default function OrdersChatLayout({ children }) {
   }, [isMobile, loading, allOrders, isOrdersRoot, locale, router]);
 
   if (!token) {
-    return <Box sx={{ minHeight: '100vh', bgcolor: '#f5f5f5', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{children}</Box>;
+    return <Box sx={{ minHeight: '100vh', bgcolor: 'var(--background)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{children}</Box>;
   }
 
   // Card payment page: standalone, no chat sidebar
@@ -102,7 +102,7 @@ export default function OrdersChatLayout({ children }) {
       <Box
         sx={{
           minHeight: { xs: 'calc(100vh - 56px)', md: 'calc(100vh - 64px)' },
-          bgcolor: '#f5f5f5',
+          bgcolor: 'var(--background)',
           flex: 1,
           display: 'flex',
           flexDirection: 'column',
@@ -122,50 +122,50 @@ export default function OrdersChatLayout({ children }) {
         display: 'flex',
         height: { xs: 'calc(100vh - 56px)', md: 'calc(100vh - 64px)' },
         minHeight: { xs: 400, md: 500 },
-        bgcolor: '#fafafa',
+        bgcolor: 'var(--background)',
         borderRadius: 0,
         overflow: 'hidden',
         boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
       }}
     >
-      {/* Left panel – conversation list (hidden on mobile when chat is open); background aligned with chat area */}
+      {/* Left panel – conversation list (hidden on mobile when chat is open); uses app theme */}
       <Box
         sx={{
           width: isMobile ? '100%' : 360,
           minWidth: isMobile ? undefined : 280,
           maxWidth: isMobile ? '100%' : '35%',
-          bgcolor: '#f5f5f5',
+          bgcolor: 'var(--background)',
           borderRight: isMobile ? 'none' : '1px solid',
-          borderColor: 'divider',
+          borderColor: 'var(--second-color)',
           display: showList ? 'flex' : 'none',
           flexDirection: 'column',
           overflow: 'hidden',
           flex: isMobile && showList ? 1 : undefined,
         }}
       >
-        {/* Search + admin inputs: same dark background as app theme (header) */}
-        <Box sx={{ p: { xs: 1.5, md: 2 }, borderBottom: '1px solid', borderColor: 'divider', bgcolor: '#37474f' }}>
+        {/* Search + admin inputs: theme background and text */}
+        <Box sx={{ p: { xs: 1.5, md: 2 }, borderBottom: '1px solid', borderColor: 'var(--second-color)', bgcolor: 'var(--background)' }}>
           <InputBase
             placeholder={t('searchChatsPlaceholder') || t('searchChats') || 'Search'}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            startAdornment={<SearchIcon sx={{ color: 'rgba(255,255,255,0.7)', mr: 1.5, fontSize: 20 }} />}
+            startAdornment={<SearchIcon sx={{ color: 'var(--text-second-color)', mr: 1.5, fontSize: 20 }} />}
             sx={{
               width: '100%',
               py: 1,
               px: 1.5,
               borderRadius: 2,
-              bgcolor: 'rgba(255,255,255,0.08)',
-              color: '#fff',
+              bgcolor: 'var(--second-color)',
+              color: 'var(--third-color)',
               fontSize: '0.9rem',
-              '& .MuiInputBase-input': { color: '#fff' },
-              '& .MuiInputBase-input::placeholder': { color: 'rgba(255,255,255,0.5)', opacity: 1 },
+              '& .MuiInputBase-input': { color: 'var(--third-color)' },
+              '& .MuiInputBase-input::placeholder': { color: 'var(--text-second-color)', opacity: 1 },
             }}
           />
         </Box>
         {isAdminOrMod && (
           <>
-            <Box sx={{ px: 2, py: 1, display: 'flex', gap: 0.5, alignItems: 'center', bgcolor: '#37474f' }}>
+            <Box sx={{ px: 2, py: 1, display: 'flex', gap: 0.5, alignItems: 'center', bgcolor: 'var(--background)' }}>
               <InputBase
                 placeholder={t('openOrderById')}
                 value={adminOrderId}
@@ -173,14 +173,14 @@ export default function OrdersChatLayout({ children }) {
                 size="small"
                 sx={{
                   flex: 1,
-                  bgcolor: 'rgba(255,255,255,0.08)',
-                  color: '#fff',
+                  bgcolor: 'var(--second-color)',
+                  color: 'var(--third-color)',
                   borderRadius: 1,
                   px: 1,
                   py: 0.5,
                   fontSize: '0.8rem',
-                  '& .MuiInputBase-input': { color: '#fff' },
-                  '& .MuiInputBase-input::placeholder': { color: 'rgba(255,255,255,0.5)', opacity: 1 },
+                  '& .MuiInputBase-input': { color: 'var(--third-color)' },
+                  '& .MuiInputBase-input::placeholder': { color: 'var(--text-second-color)', opacity: 1 },
                 }}
               />
               <Button
@@ -192,39 +192,39 @@ export default function OrdersChatLayout({ children }) {
                 }}
                 disabled={!adminOrderId.trim()}
                 sx={{
-                  borderColor: 'rgba(255,255,255,0.5)',
-                  color: '#fff',
-                  '&:hover': { borderColor: '#fff', bgcolor: 'rgba(255,255,255,0.1)' },
+                  borderColor: 'var(--fourth-color)',
+                  color: 'var(--third-color)',
+                  '&:hover': { borderColor: 'var(--third-color)', bgcolor: 'var(--second-color)' },
                 }}
               >
                 {t('open')}
               </Button>
             </Box>
-            <Divider />
+            <Divider sx={{ borderColor: 'var(--second-color)' }} />
           </>
         )}
-        {/* Messages section: same theme background as search/admin area */}
-        <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', bgcolor: '#37474f' }}>
-          <Typography variant="h6" fontWeight={700} sx={{ px: 2, py: 1.5, color: '#fff' }}>
+        {/* Messages section: theme background and text */}
+        <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', bgcolor: 'var(--background)' }}>
+          <Typography variant="h6" fontWeight={700} sx={{ px: 2, py: 1.5, color: 'var(--third-color)' }}>
             {t('chats')}
           </Typography>
-          <Divider sx={{ borderColor: 'rgba(255,255,255,0.12)' }} />
+          <Divider sx={{ borderColor: 'var(--second-color)' }} />
           <Box sx={{ flex: 1, overflow: 'auto' }}>
             {loading && (
               <>
                 {[1, 2, 3, 4, 5].map((i) => (
                   <Box key={i} sx={{ display: 'flex', alignItems: 'center', gap: 2, p: 2 }}>
-                    <Skeleton variant="circular" width={48} height={48} sx={{ bgcolor: 'rgba(255,255,255,0.12)' }} />
+                    <Skeleton variant="circular" width={48} height={48} sx={{ bgcolor: 'var(--second-color)' }} />
                     <Box sx={{ flex: 1 }}>
-                      <Skeleton variant="text" width="60%" height={24} sx={{ bgcolor: 'rgba(255,255,255,0.12)' }} />
-                      <Skeleton variant="text" width="80%" height={18} sx={{ mt: 0.5, bgcolor: 'rgba(255,255,255,0.12)' }} />
+                      <Skeleton variant="text" width="60%" height={24} sx={{ bgcolor: 'var(--second-color)' }} />
+                      <Skeleton variant="text" width="80%" height={18} sx={{ mt: 0.5, bgcolor: 'var(--second-color)' }} />
                     </Box>
                   </Box>
                 ))}
               </>
             )}
             {!loading && filteredOrders.length === 0 && (
-              <Typography variant="body2" sx={{ p: 3, textAlign: 'center', color: 'rgba(255,255,255,0.7)' }}>
+              <Typography variant="body2" sx={{ p: 3, textAlign: 'center', color: 'var(--text-second-color)' }}>
                 {t('noOrderChats')}
               </Typography>
             )}
@@ -262,7 +262,7 @@ export default function OrdersChatLayout({ children }) {
                       py: { xs: 1.5, md: 1.75 },
                       cursor: 'pointer',
                       bgcolor: itemBg,
-                      color: '#1a1a1a',
+                      color: 'var(--third-color)',
                       '&:hover': { filter: 'brightness(0.97)' },
                       borderLeft: isSelected ? '4px solid' : '4px solid transparent',
                       borderColor: SENDER_BUBBLE,
@@ -283,17 +283,17 @@ export default function OrdersChatLayout({ children }) {
                     </Badge>
                     <Box sx={{ flex: 1, minWidth: 0 }}>
                       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1, mb: 0.25 }}>
-                        <Typography variant="subtitle1" fontWeight={600} noWrap sx={{ color: '#1a1a1a' }}>
+                        <Typography variant="subtitle1" fontWeight={600} noWrap sx={{ color: 'var(--third-color)' }}>
                           {displayName}
                         </Typography>
-                        <Typography variant="caption" sx={{ flexShrink: 0, fontSize: '0.7rem', color: '#5f5f5f' }}>
+                        <Typography variant="caption" sx={{ flexShrink: 0, fontSize: '0.7rem', color: 'var(--text-second-color)' }}>
                           {formatDate(lastDate)}
                         </Typography>
                       </Box>
-                      <Typography variant="body2" noWrap sx={{ fontSize: '0.8rem', color: '#424242' }}>
+                      <Typography variant="body2" noWrap sx={{ fontSize: '0.8rem', color: 'var(--text-second-color)' }}>
                         {order.offer?.title || t('offer')}
                       </Typography>
-                      <Divider sx={{ my: 0.75, borderColor: 'rgba(0,0,0,0.12)' }} />
+                      <Divider sx={{ my: 0.75, borderColor: 'var(--second-color)' }} />
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, flexWrap: 'wrap' }}>
                         {order.status && (
                           <Typography variant="caption" sx={{ fontSize: '0.7rem', color: '#0d47a1', fontWeight: 600 }}>
@@ -301,7 +301,7 @@ export default function OrdersChatLayout({ children }) {
                           </Typography>
                         )}
                         {lastText && (
-                          <Typography variant="caption" noWrap sx={{ fontSize: '0.7rem', maxWidth: 140, color: '#5f5f5f' }}>
+                          <Typography variant="caption" noWrap sx={{ fontSize: '0.7rem', maxWidth: 140, color: 'var(--text-second-color)' }}>
                             {lastText}
                           </Typography>
                         )}
@@ -322,7 +322,7 @@ export default function OrdersChatLayout({ children }) {
           display: showChat ? 'flex' : 'none',
           flexDirection: 'column',
           overflow: 'hidden',
-          bgcolor: '#f5f5f5',
+          bgcolor: 'var(--background)',
           minWidth: 0,
         }}
       >

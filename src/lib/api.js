@@ -414,6 +414,15 @@ export async function getAdminStats(token) {
   return apiGet('/admin/stats', token)
 }
 
+/** List all orders (order ID, buyer/seller nicknames) for admin. */
+export async function getAdminOrders(token, { skip, take } = {}) {
+  const params = new URLSearchParams()
+  if (skip != null) params.set('skip', String(skip))
+  if (take != null) params.set('take', String(take))
+  const q = params.toString()
+  return apiGet(`/admin/orders${q ? `?${q}` : ''}`, token)
+}
+
 /** List disputes with optional status filter (OPEN, RESOLVED, REJECTED). */
 export async function getAdminDisputes(token, { status, skip, take } = {}) {
   const params = new URLSearchParams()
