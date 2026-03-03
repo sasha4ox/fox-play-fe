@@ -44,6 +44,8 @@ import {
   adminCardPayoutFail,
   getAdminCardPaymentOrderNumberMessage,
   setAdminCardPaymentOrderNumberMessage,
+  adminGetOrCreateContactBuyer,
+  adminSendContactBuyerMessage,
 } from '@/lib/api';
 import Link from 'next/link';
 import { useLocale } from 'next-intl';
@@ -95,6 +97,11 @@ export default function AdminMoneyFlowPage() {
   const [orderNumberTextInput, setOrderNumberTextInput] = useState('');
   const [loadingOrderNumberConfig, setLoadingOrderNumberConfig] = useState(true);
   const [savingOrderNumberConfig, setSavingOrderNumberConfig] = useState(false);
+  const [contactBuyerOrderId, setContactBuyerOrderId] = useState(null);
+  const [contactBuyerConvo, setContactBuyerConvo] = useState(null);
+  const [contactBuyerMessage, setContactBuyerMessage] = useState('');
+  const [contactBuyerLoading, setContactBuyerLoading] = useState(false);
+  const [contactBuyerSending, setContactBuyerSending] = useState(false);
 
   const loadFlag = () => {
     if (!token) return;
@@ -314,6 +321,40 @@ export default function AdminMoneyFlowPage() {
       })
       .catch((err) => setError(err.message || 'Failed'))
       .finally(() => setConfirmingReceipt(null));
+  };
+
+  const handleOpenContactBuyer = (orderId) => {
+    setContactBuyerOrderId(orderId);
+    setContactBuyerConvo(null);
+    setContactBuyerMessage('');
+    setContactBuyerLoading(true);
+    setError(null);
+    adminGetOrCreateContactBuyer(orderId, {}, token)
+      .then((convo) => setContactBuyerConvo(convo))
+      .catch((err) => setError(err.message || 'Failed'))
+      .finally(() => setContactBuyerLoading(false));
+  };
+
+  const handleSendContactBuyerMessage = () => {
+    const text = (contactBuyerMessage || '').trim();
+    if (!text || !contactBuyerOrderId || !token) return;
+    setContactBuyerSending(true);
+    setError(null);
+    adminSendContactBuyerMessage(contactBuyerOrderId, { text }, token)
+      .then((msg) => {
+        setContactBuyerConvo((prev) =>
+          prev ? { ...prev, messages: [...(prev.messages || []), { ...msg, sender: { role: 'ADMIN' } }] } : prev
+        );
+        setContactBuyerMessage('');
+      })
+      .catch((err) => setError(err.message || 'Failed'))
+      .finally(() => setContactBuyerSending(false));
+  };
+
+  const handleCloseContactBuyerModal = () => {
+    setContactBuyerOrderId(null);
+    setContactBuyerConvo(null);
+    setContactBuyerMessage('');
   };
 
   const handleConfirmPayout = (orderId) => {
@@ -584,13 +625,10 @@ export default function AdminMoneyFlowPage() {
                       <TableCell>{r.buyerMarkedSentAt ? new Date(r.buyerMarkedSentAt).toLocaleString() : '—'}</TableCell>
                       <TableCell align="right">
                         <Button
-                          component={Link}
-                          href={`/${locale}/dashboard/orders/${r.orderId}`}
-                          target="_blank"
-                          rel="noopener"
                           size="small"
                           variant="outlined"
                           sx={{ mr: 1 }}
+                          onClick={() => handleOpenContactBuyer(r.orderId)}
                         >
                           {t('messageUser')}
                         </Button>
@@ -828,6 +866,52 @@ export default function AdminMoneyFlowPage() {
           <Button variant="contained" onClick={handleSaveEditCard} disabled={savingEditCard}>
             {savingEditCard ? '…' : t('save')}
           </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={!!contactBuyerOrderId} onClose={handleCloseContactBuyerModal} maxWidth="sm" fullWidth>
+        <DialogTitle>{t('messageUser')} — Order {contactBuyerOrderId?.slice(0, 8)}…</DialogTitle>
+        <DialogContent>
+          {contactBuyerLoading ? (
+            <Box sx={{ py: 3, textAlign: 'center' }}><Typography color="text.secondary">Loading…</Typography></Box>
+          ) : contactBuyerConvo ? (
+            <>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                {t('contactBuyerIntro')} <Link href={contactBuyerConvo.orderLink} target="_blank" rel="noopener">{contactBuyerConvo.orderLink}</Link>
+              </Typography>
+              <Box sx={{ maxHeight: 320, overflow: 'auto', mb: 2, border: '1px solid', borderColor: 'divider', borderRadius: 1, p: 1.5 }}>
+                {(contactBuyerConvo.messages || []).map((m) => (
+                  <Box key={m.id} sx={{ mb: 1.5 }}>
+                    <Typography variant="caption" color="text.secondary">
+                      {m.sender?.role === 'ADMIN' || m.sender?.role === 'MODERATOR' ? 'Support' : (m.sender?.nickname || m.sender?.email || 'User')} · {new Date(m.createdAt).toLocaleString()}
+                    </Typography>
+                    <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>{m.text}</Typography>
+                  </Box>
+                ))}
+              </Box>
+              <TextField
+                fullWidth
+                multiline
+                minRows={2}
+                placeholder={t('contactBuyerPlaceholder')}
+                value={contactBuyerMessage}
+                onChange={(e) => setContactBuyerMessage(e.target.value)}
+                disabled={contactBuyerSending}
+              />
+            </>
+          ) : null}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseContactBuyerModal}>{t('close')}</Button>
+          {contactBuyerConvo && (
+            <Button
+              variant="contained"
+              onClick={handleSendContactBuyerMessage}
+              disabled={contactBuyerSending || !(contactBuyerMessage || '').trim()}
+            >
+              {contactBuyerSending ? '…' : t('send')}
+            </Button>
+          )}
         </DialogActions>
       </Dialog>
     </Box>

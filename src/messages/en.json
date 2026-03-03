@@ -52,6 +52,7 @@
     "chats": "Chats",
     "myOffers": "My offers",
     "balance": "Balance",
+    "support": "Support",
     "profile": "Profile",
     "logout": "Logout",
     "login": "Login",
@@ -204,6 +205,8 @@
     "offer": "Offer",
     "orderChats": "Order chats",
     "noOrderChats": "No order chats yet.",
+    "openOrderById": "Order ID (admin)",
+    "open": "Open",
     "orderIdShort": "Order {id}…",
     "status": "Status",
     "chat": "Chat",
@@ -219,6 +222,20 @@
     "paymentDeclinedCode1113": "Invalid signature",
     "paymentDeclinedCode1109": "Format error (check merchant settings)",
     "paymentDeclinedCode1115": "Required parameter missing"
+  },
+  "Support": {
+    "title": "Support",
+    "intro": "Messages from our team about your orders (e.g. payment details). Reply here if we asked for more information.",
+    "loginRequired": "Please log in to view support messages.",
+    "noConversations": "No support conversations yet.",
+    "orderLabel": "Order",
+    "notFound": "Conversation not found.",
+    "backToList": "Back to Support",
+    "conversationTitle": "Support",
+    "support": "Support",
+    "you": "You",
+    "replyPlaceholder": "Type your reply…",
+    "send": "Send"
   },
   "Sales": {
     "title": "My orders",
@@ -356,7 +373,8 @@
     "buyerPendingAdminConfirmTitle": "Waiting for payment confirmation",
     "buyerPendingAdminConfirmMessage": "You marked payment as sent. This order and chat will appear in your list only after admin confirms your payment. You cannot see messages or full order details until then.",
     "sellerPendingAdminConfirmTitle": "Waiting for payment confirmation",
-    "sellerPendingAdminConfirmMessage": "A buyer has started this order (pay by card). This order and chat will appear in your list only after admin confirms the buyer's payment. You cannot see messages or full order details until then."
+    "sellerPendingAdminConfirmMessage": "A buyer has started this order (pay by card). This order and chat will appear in your list only after admin confirms the buyer's payment. You cannot see messages or full order details until then.",
+    "sellerPendingPaymentCanChat": "A buyer has started this order (pay by card). Payment is pending admin confirmation. You can chat with the buyer below."
   },
   "CardPayment": {
     "title": "Pay by card",
@@ -610,7 +628,11 @@
     "editCard": "Edit comment",
     "editCardPaymentComment": "Edit payment comment for this card",
     "buyerCardLast4": "Buyer card (last 4)",
+    "contactBuyerIntro": "Support conversation with buyer. Order:",
+    "contactBuyerPlaceholder": "Type your message to the buyer…",
     "save": "Save",
+    "close": "Close",
+    "send": "Send",
     "searchGames": "Search by game, variant, or server",
     "noSearchResults": "No games match your search.",
     "gameName": "Game name",

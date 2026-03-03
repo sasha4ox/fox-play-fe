@@ -556,6 +556,21 @@ export async function adminConfirmReceipt(orderId, token) {
   return apiPost(`/admin/money-flow/orders/${orderId}/confirm-receipt`, {}, token)
 }
 
+/** Admin: get or create support conversation with buyer for order (payment info). Returns { id, orderId, orderLink, messages, ... }. */
+export async function adminGetOrCreateContactBuyer(orderId, body, token) {
+  return apiPost(`/admin/orders/${orderId}/contact-buyer`, body || {}, token)
+}
+
+/** Admin: get existing contact-buyer conversation (404 if none). */
+export async function adminGetContactBuyer(orderId, token) {
+  return apiGet(`/admin/orders/${orderId}/contact-buyer`, token)
+}
+
+/** Admin: send message in contact-buyer conversation. body: { text } */
+export async function adminSendContactBuyerMessage(orderId, body, token) {
+  return apiPost(`/admin/orders/${orderId}/contact-buyer/messages`, body, token)
+}
+
 export async function adminConfirmPayout(orderId, token) {
   return apiPost(`/admin/money-flow/orders/${orderId}/confirm-payout`, {}, token)
 }
@@ -580,4 +595,18 @@ export async function adminCardPayoutFail(id, token) {
 /** Resolve dispute. body: { action: 'RELEASE' | 'REFUND' } */
 export async function resolveDispute(disputeId, body, token) {
   return apiPost(`/disputes/${disputeId}/resolve`, body, token)
+}
+
+// ——— User: support conversations (admin contacted about payment) ———
+export async function getMySupportConversations(token) {
+  return apiGet('/me/support-conversations', token)
+}
+
+export async function getSupportConversation(conversationId, token) {
+  return apiGet(`/me/support-conversations/${conversationId}`, token)
+}
+
+/** body: { text } */
+export async function sendSupportConversationMessage(conversationId, body, token) {
+  return apiPost(`/me/support-conversations/${conversationId}/messages`, body, token)
 }

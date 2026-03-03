@@ -213,6 +213,7 @@ export default function Header() {
           { href: `${base}/dashboard/orders`, label: t('chats'), active: pathname?.includes('/dashboard/orders'), badge: unreadCount },
           { href: `${base}/dashboard/offers`, label: t('myOffers'), active: pathname?.includes('/dashboard/offers') },
           { href: `${base}/dashboard/balance`, label: t('balance'), active: pathname?.includes('/dashboard/balance') },
+          { href: `${base}/dashboard/support`, label: t('support'), active: pathname?.includes('/dashboard/support') },
           { href: `${base}/dashboard/sales`, label: t('mySales'), active: pathname?.includes('/dashboard/sales'), badge: sellerOrderCount },
           ...(isAdminOrMod
             ? [{ href: `${base}/dashboard/admin/overview`, label: t('admin'), active: pathname?.includes('/dashboard/admin'), badge: pendingReceiptsCount }]

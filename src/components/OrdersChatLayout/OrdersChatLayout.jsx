@@ -15,7 +15,10 @@ import useMediaQuery from '@mui/material/useMediaQuery';
 import { useTheme } from '@mui/material/styles';
 import SearchIcon from '@mui/icons-material/Search';
 import { useAuthStore } from '@/store/authStore';
+import { useProfile } from '@/hooks/useProfile';
 import { getMyOrderChats } from '@/lib/api';
+import Button from '@mui/material/Button';
+import InputBase from '@mui/material/InputBase';
 
 /** Dark green used for sender bubbles (matches reference) */
 const SENDER_BUBBLE = '#1B4332';
@@ -30,9 +33,12 @@ export default function OrdersChatLayout({ children }) {
   const t = useTranslations('Orders');
   const tSales = useTranslations('Sales');
   const token = useAuthStore((s) => s.token);
+  const { profile } = useProfile();
+  const isAdminOrMod = profile?.role === 'ADMIN' || profile?.role === 'MODERATOR';
   const [chatSummary, setChatSummary] = useState({ orders: [], unreadTotal: 0 });
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [adminOrderId, setAdminOrderId] = useState('');
 
   const orderIdFromPath = pathname?.match(/\/orders\/([a-f0-9-]+)/i)?.[1];
   const isCardPaymentPage = pathname?.includes('/card-payment');
@@ -136,6 +142,31 @@ export default function OrdersChatLayout({ children }) {
             }}
           />
         </Box>
+        {isAdminOrMod && (
+          <>
+            <Box sx={{ px: 2, py: 1, display: 'flex', gap: 0.5, alignItems: 'center' }}>
+              <InputBase
+                placeholder={t('openOrderById')}
+                value={adminOrderId}
+                onChange={(e) => setAdminOrderId((e.target.value || '').trim())}
+                size="small"
+                sx={{ flex: 1, bgcolor: 'background.paper', borderRadius: 1, px: 1, py: 0.5, fontSize: '0.8rem' }}
+              />
+              <Button
+                size="small"
+                variant="outlined"
+                onClick={() => {
+                  const id = adminOrderId.trim();
+                  if (id) router.push(`/${locale}/dashboard/orders/${id}`);
+                }}
+                disabled={!adminOrderId.trim()}
+              >
+                {t('open')}
+              </Button>
+            </Box>
+            <Divider />
+          </>
+        )}
         <Typography variant="h6" fontWeight={700} sx={{ px: 2, py: 1.5 }}>
           {t('chats')}
         </Typography>
