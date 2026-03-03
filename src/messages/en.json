@@ -377,7 +377,13 @@
     "sellerPendingPaymentCanChat": "A buyer has started this order (pay by card). Payment is pending admin confirmation. You can chat with the buyer below.",
     "paymentUnderReviewBannerTitle": "Payment under review",
     "paymentUnderReviewBannerBuyer": "Your payment is being reviewed by our team. You can continue chatting below. Once confirmed, the order will proceed.",
-    "paymentUnderReviewBannerSeller": "This order's payment is being reviewed by our team. You can chat with the buyer below. The order will update once payment is confirmed."
+    "paymentUnderReviewBannerSeller": "This order's payment is being reviewed by our team. You can chat with the buyer below. The order will update once payment is confirmed.",
+    "flowBannerSellerDeliverTitle": "Your turn: send adena & upload proof",
+    "flowBannerSellerDeliverDescription": "Trade the adena to the buyer in-game and take a screenshot. Upload your proof in the order details on the left, then confirm delivery. You can chat with the buyer below.",
+    "flowBannerBuyerConfirmTitle": "Your turn: confirm receipt",
+    "flowBannerBuyerConfirmDescription": "Have you received the adena from the seller? Confirm receipt in the order details on the left to complete the order. You can chat below if you have questions.",
+    "flowBannerFeedbackTitle": "Leave a review",
+    "flowBannerFeedbackDescription": "This order is complete. Please leave a comment and rating in the order details on the left. Your feedback helps other users."
   },
   "CardPayment": {
     "title": "Pay by card",

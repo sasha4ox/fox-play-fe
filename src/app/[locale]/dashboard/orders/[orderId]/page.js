@@ -870,6 +870,81 @@ export default function OrderChatPage() {
             )}
           </Box>
         )}
+        {!pendingAdminConfirm && isSeller && order?.status === 'PAID' && (
+          <Box
+            sx={{
+              flexShrink: 0,
+              px: { xs: 1.5, md: 2 },
+              py: 1.25,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1.5,
+              background: 'linear-gradient(135deg, #b45309 0%, #92400e 100%)',
+              color: '#fff',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.12)',
+            }}
+          >
+            <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: 'rgba(255,255,255,0.9)', flexShrink: 0 }} />
+            <Box>
+              <Typography variant="subtitle2" fontWeight={600} sx={{ color: 'inherit', lineHeight: 1.3 }}>
+                {t('flowBannerSellerDeliverTitle')}
+              </Typography>
+              <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.9)', display: 'block', mt: 0.25 }}>
+                {t('flowBannerSellerDeliverDescription')}
+              </Typography>
+            </Box>
+          </Box>
+        )}
+        {!pendingAdminConfirm && isBuyer && order?.status === 'DELIVERED' && (
+          <Box
+            sx={{
+              flexShrink: 0,
+              px: { xs: 1.5, md: 2 },
+              py: 1.25,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1.5,
+              background: 'linear-gradient(135deg, #b45309 0%, #92400e 100%)',
+              color: '#fff',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.12)',
+            }}
+          >
+            <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: 'rgba(255,255,255,0.9)', flexShrink: 0 }} />
+            <Box>
+              <Typography variant="subtitle2" fontWeight={600} sx={{ color: 'inherit', lineHeight: 1.3 }}>
+                {t('flowBannerBuyerConfirmTitle')}
+              </Typography>
+              <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.9)', display: 'block', mt: 0.25 }}>
+                {t('flowBannerBuyerConfirmDescription')}
+              </Typography>
+            </Box>
+          </Box>
+        )}
+        {!pendingAdminConfirm && order?.status === 'COMPLETED' && !currentUserLeftFeedback && (
+          <Box
+            sx={{
+              flexShrink: 0,
+              px: { xs: 1.5, md: 2 },
+              py: 1.25,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1.5,
+              background: 'linear-gradient(135deg, #b45309 0%, #92400e 100%)',
+              color: '#fff',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.12)',
+            }}
+          >
+            <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: 'rgba(255,255,255,0.9)', flexShrink: 0 }} />
+            <Box>
+              <Typography variant="subtitle2" fontWeight={600} sx={{ color: 'inherit', lineHeight: 1.3 }}>
+                {t('flowBannerFeedbackTitle')}
+              </Typography>
+              <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.9)', display: 'block', mt: 0.25 }}>
+                {t('flowBannerFeedbackDescription')}
+              </Typography>
+            </Box>
+          </Box>
+        )}
         <Dialog open={resolveVerdictDialog.open} onClose={closeResolveVerdictDialog} maxWidth="sm" fullWidth>
           <DialogTitle>
             {resolveVerdictDialog.action === 'RELEASE' ? t('releaseToSeller') : t('refundBuyer')} — {tAdmin('verdictRequired')}

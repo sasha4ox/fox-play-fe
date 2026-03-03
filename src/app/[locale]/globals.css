@@ -7,6 +7,7 @@
   --second-color: #e7e5e4;
   --third-color: #1c1917;
   --fourth-color: #64748b;
+  --chat-color:  #1e293b;
 }
 
 /* Dark mode: true dark surfaces, readable text */
@@ -18,6 +19,7 @@
   --second-color: #1e293b;
   --third-color: #f1f5f9;
   --fourth-color: #94a3b8;
+  --chat-color:  #1e293b;
 }
 
 html {
