@@ -597,6 +597,8 @@
     "addServer": "Add server",
     "enabled": "Enabled",
     "noGames": "No games.",
+    "whitebitEnabled": "WhiteBIT (deposit + withdraw)",
+    "whitebitEnabledHint": "When on, users can deposit via WhiteBIT (upload balance) and withdraw UAH to IBAN via WhiteBIT. One toggle for all WhiteBIT features.",
     "cardPaymentEnabled": "Card payment (for users)",
     "cardPaymentEnabledHint": "When on, buyers can choose to pay by card. You assign a card below; they see it and send money, then you confirm receipt and later payout to seller.",
     "orderNumberMessageTitle": "Order number message (buyer card-payment page)",

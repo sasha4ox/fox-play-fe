@@ -27,6 +27,8 @@ import { useAuthStore } from '@/store/authStore';
 import {
   getAdminCardPaymentEnabled,
   setAdminCardPaymentEnabled,
+  getAdminWhitebitEnabled,
+  setAdminWhitebitEnabled,
   getAdminPlatformFeePercent,
   setAdminPlatformFeePercent,
   getAdminPlatformProfit,
@@ -63,6 +65,9 @@ export default function AdminMoneyFlowPage() {
   const [cardPaymentEnabled, setCardPaymentEnabled] = useState(false);
   const [loadingFlag, setLoadingFlag] = useState(true);
   const [savingFlag, setSavingFlag] = useState(false);
+  const [whitebitEnabled, setWhitebitEnabled] = useState(false);
+  const [loadingWhitebitFlag, setLoadingWhitebitFlag] = useState(true);
+  const [savingWhitebitFlag, setSavingWhitebitFlag] = useState(false);
   const [platformFeePercent, setPlatformFeePercent] = useState(20);
   const [platformFeePercentInput, setPlatformFeePercentInput] = useState('20');
   const [loadingFee, setLoadingFee] = useState(true);
@@ -112,6 +117,15 @@ export default function AdminMoneyFlowPage() {
       .then(setCardPaymentEnabled)
       .catch(() => setCardPaymentEnabled(false))
       .finally(() => setLoadingFlag(false));
+  };
+
+  const loadWhitebitFlag = () => {
+    if (!token) return;
+    setLoadingWhitebitFlag(true);
+    getAdminWhitebitEnabled(token)
+      .then(setWhitebitEnabled)
+      .catch(() => setWhitebitEnabled(false))
+      .finally(() => setLoadingWhitebitFlag(false));
   };
 
   const loadPlatformFee = () => {
@@ -206,6 +220,7 @@ export default function AdminMoneyFlowPage() {
 
   useEffect(() => {
     loadFlag();
+    loadWhitebitFlag();
   }, [token]);
   useEffect(() => {
     loadPlatformFee();
@@ -235,6 +250,18 @@ export default function AdminMoneyFlowPage() {
         setError(err.message || 'Failed to update');
       })
       .finally(() => setSavingFlag(false));
+  };
+
+  const handleToggleWhitebit = (e) => {
+    const checked = e.target.checked;
+    setSavingWhitebitFlag(true);
+    setError(null);
+    setAdminWhitebitEnabled(checked, token)
+      .then(() => setWhitebitEnabled(checked))
+      .catch((err) => {
+        setError(err.message || 'Failed to update');
+      })
+      .finally(() => setSavingWhitebitFlag(false));
   };
 
   const handleSavePlatformFee = () => {
@@ -471,6 +498,31 @@ export default function AdminMoneyFlowPage() {
                 </Box>
               )}
             </>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card sx={{ mb: 3 }}>
+        <CardContent sx={{ px: { xs: 1.5, sm: 2 } }}>
+          <Typography variant="subtitle1" fontWeight={600} gutterBottom>
+            {t('whitebitEnabled')}
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+            {t('whitebitEnabledHint')}
+          </Typography>
+          {loadingWhitebitFlag ? (
+            <Skeleton width={120} height={32} />
+          ) : (
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={whitebitEnabled}
+                  onChange={handleToggleWhitebit}
+                  disabled={savingWhitebitFlag}
+                />
+              }
+              label={whitebitEnabled ? 'On' : 'Off'}
+            />
           )}
         </CardContent>
       </Card>

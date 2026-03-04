@@ -510,6 +510,18 @@ export async function setAdminCardPaymentEnabled(enabled, token) {
   return data?.cardPaymentEnabled === true
 }
 
+/** Admin: get WhiteBIT enabled (deposit + withdraw). One toggle for all WhiteBIT. */
+export async function getAdminWhitebitEnabled(token) {
+  const data = await apiGet('/admin/settings/whitebit-enabled', token)
+  return data?.whitebitEnabled === true
+}
+
+/** Admin: set WhiteBIT enabled (deposit + withdraw). */
+export async function setAdminWhitebitEnabled(enabled, token) {
+  const data = await apiPatch('/admin/settings/whitebit-enabled', { enabled }, token)
+  return data?.whitebitEnabled === true
+}
+
 export async function getAdminPlatformFeePercent(token) {
   const data = await apiGet('/admin/settings/platform-fee-percent', token)
   return typeof data?.platformFeePercent === 'number' ? data.platformFeePercent : 20
