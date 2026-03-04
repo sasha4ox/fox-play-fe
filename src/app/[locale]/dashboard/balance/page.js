@@ -715,33 +715,23 @@ export default function BalancePage() {
                           }}
                         />
                       </Box>
-                      <Box sx={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: 1 }}>
-                        <Box sx={{ flex: '1 1 140px', minWidth: 0 }}>
-                          <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.6)', letterSpacing: 1, textTransform: 'uppercase', display: 'block', mb: 0.5 }}>
-                            {t('cardPayoutCardHolder')}
-                          </Typography>
-                          <TextField
-                            placeholder="JOHN DOE"
-                            value={cardPayoutCardHolder}
-                            onChange={(e) => setCardPayoutCardHolder(e.target.value.toUpperCase())}
-                            variant="standard"
-                            fullWidth
-                            sx={{
-                              '& .MuiInput-root': { color: '#fff', fontSize: '0.95rem', letterSpacing: 1.5 },
-                              '& .MuiInput-input': { py: 0.5, textTransform: 'uppercase' },
-                              '& .MuiInput-underline:before': { borderColor: 'rgba(255,255,255,0.25)' },
-                              '& .MuiInput-underline:after': { borderColor: 'rgba(255,255,255,0.6)' },
-                            }}
-                          />
-                        </Box>
-                        <Box sx={{ flex: '0 0 auto', textAlign: 'right' }}>
-                          <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.6)', display: 'block' }}>
-                            {t('totalIn', { currency: cardPayoutCurr })}
-                          </Typography>
-                          <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.95)', fontWeight: 600 }}>
-                            {cardPayoutAvailable.toFixed(2)} {cardPayoutCurr}
-                          </Typography>
-                        </Box>
+                      <Box>
+                        <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.6)', letterSpacing: 1, textTransform: 'uppercase', display: 'block', mb: 0.5 }}>
+                          {t('cardPayoutCardHolder')}
+                        </Typography>
+                        <TextField
+                          placeholder="JOHN DOE"
+                          value={cardPayoutCardHolder}
+                          onChange={(e) => setCardPayoutCardHolder(e.target.value.toUpperCase())}
+                          variant="standard"
+                          fullWidth
+                          sx={{
+                            '& .MuiInput-root': { color: '#fff', fontSize: '0.95rem', letterSpacing: 1.5 },
+                            '& .MuiInput-input': { py: 0.5, textTransform: 'uppercase' },
+                            '& .MuiInput-underline:before': { borderColor: 'rgba(255,255,255,0.25)' },
+                            '& .MuiInput-underline:after': { borderColor: 'rgba(255,255,255,0.6)' },
+                          }}
+                        />
                       </Box>
                     </Box>
                   </Box>
@@ -756,6 +746,9 @@ export default function BalancePage() {
                       size="small"
                       fullWidth
                     />
+                    <Typography variant="body2" color="text.secondary">
+                      {t('youHaveInCurrency', { amount: cardPayoutAvailable.toFixed(2), currency: cardPayoutCurr })}
+                    </Typography>
                     <Button
                       variant="contained"
                       color="primary"

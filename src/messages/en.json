@@ -170,6 +170,7 @@
     "cardPayoutSuccess": "Payout request submitted. Admin will process it within about 3 working days.",
     "cardPayoutFailed": "Failed to submit payout request.",
     "cardPayoutInsufficient": "Insufficient balance for selected currency.",
+    "youHaveInCurrency": "You have {amount} {currency} available",
     "withdrawalsTitle": "Withdrawal history",
     "withdrawalsHint": "Your card payout requests. Pending requests are typically processed within about 3 working days.",
     "noWithdrawals": "No withdrawal requests yet.",
