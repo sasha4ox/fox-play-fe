@@ -419,97 +419,100 @@ export default function BalancePage() {
               </Card>
             )}
 
-            <Typography variant="h6" fontWeight={600} sx={{ mt: 4, mb: 2 }}>
-              {t('uploadBalance')}
-            </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-              {t('depositHint')}
-            </Typography>
-            {!depositInfo ? (
-              <Button
-                variant="contained"
-                color="secondary"
-                onClick={handleLoadDepositInfo}
-                disabled={depositLoading}
-                sx={{ textTransform: 'none' }}
-              >
-                {depositLoading ? t('loading') : t('depositOptions')}
-              </Button>
-            ) : (
-              <Card variant="outlined" sx={{ mt: 1 }}>
-                <CardContent>
-                  <Typography variant="body2" color="text.secondary" gutterBottom>
-                    {depositInfo.instructions}
-                  </Typography>
-                  {depositInfo.mock && (
-                    <Button
-                      variant="contained"
-                      color="secondary"
-                      onClick={handleSimulateDeposit}
-                      disabled={simulateLoading}
-                      sx={{ textTransform: 'none', mt: 1, mb: depositInfo.whitebitEnabled ? 2 : 0 }}
-                    >
-                      {simulateLoading ? t('adding') : t('simulateDeposit', { amount: depositInfo.mockAmount ?? 100 })}
-                    </Button>
-                  )}
-                  {depositInfo.whitebitEnabled && (
-                    <>
-                      <Box sx={{ mt: 1 }}>
-                        <Typography variant="subtitle2" color="text.secondary" gutterBottom>{t('whitebit')}</Typography>
-                        <TextField
-                          type="number"
-                          label={t('amount')}
-                          value={depositAmount}
-                          onChange={(e) => setDepositAmount(e.target.value)}
-                          inputProps={{ min: 1 }}
-                          size="small"
-                          sx={{ mr: 1, width: 100 }}
-                        />
-                        <TextField
-                          select
-                          label={t('currency')}
-                          value={depositCurrency}
-                          onChange={(e) => setDepositCurrency(e.target.value)}
-                          size="small"
-                          sx={{ mr: 1, minWidth: 90 }}
-                          SelectProps={{ native: true }}
-                        >
-                          <option value="UAH">UAH</option>
-                          <option value="USD">USD</option>
-                          <option value="EUR">EUR</option>
-                        </TextField>
+            {profile?.whitebitEnabled && (
+              <>
+                <Typography variant="h6" fontWeight={600} sx={{ mt: 4, mb: 2 }}>
+                  {t('uploadBalance')}
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                  {t('depositHint')}
+                </Typography>
+                {!depositInfo ? (
+                  <Button
+                    variant="contained"
+                    color="secondary"
+                    onClick={handleLoadDepositInfo}
+                    disabled={depositLoading}
+                    sx={{ textTransform: 'none' }}
+                  >
+                    {depositLoading ? t('loading') : t('depositOptions')}
+                  </Button>
+                ) : (
+                  <Card variant="outlined" sx={{ mt: 1 }}>
+                    <CardContent>
+                      <Typography variant="body2" color="text.secondary" gutterBottom>
+                        {depositInfo.instructions}
+                      </Typography>
+                      {depositInfo.mock && (
                         <Button
                           variant="contained"
                           color="secondary"
-                          onClick={handleCreateDeposit}
-                          disabled={createDepositLoading}
-                          sx={{ textTransform: 'none' }}
+                          onClick={handleSimulateDeposit}
+                          disabled={simulateLoading}
+                          sx={{ textTransform: 'none', mt: 1, mb: depositInfo.whitebitEnabled ? 2 : 0 }}
                         >
-                          {createDepositLoading ? t('creating') : t('depositViaWhitebit')}
+                          {simulateLoading ? t('adding') : t('simulateDeposit', { amount: depositInfo.mockAmount ?? 100 })}
                         </Button>
-                      </Box>
-                      {createDepositError && (
-                        <Typography variant="caption" color="error" display="block" sx={{ mt: 1 }}>
-                          {createDepositError}
-                        </Typography>
                       )}
-                    </>
-                  )}
-                  {!depositInfo.whitebitEnabled && !depositInfo.mock && (
-                    <Button
-                      component="a"
-                      href={depositInfo.whitebitPayUrl || 'https://whitebit.com'}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      variant="contained"
-                      color="secondary"
-                      sx={{ textTransform: 'none', mt: 1 }}
-                    >
-                      {t('openWhitebit')}
-                    </Button>
-                  )}
-                </CardContent>
-              </Card>
+                      {depositInfo.whitebitEnabled ? (
+                        <>
+                          <Box sx={{ mt: 1 }}>
+                            <Typography variant="subtitle2" color="text.secondary" gutterBottom>{t('whitebit')}</Typography>
+                            <TextField
+                              type="number"
+                              label={t('amount')}
+                              value={depositAmount}
+                              onChange={(e) => setDepositAmount(e.target.value)}
+                              inputProps={{ min: 1 }}
+                              size="small"
+                              sx={{ mr: 1, width: 100 }}
+                            />
+                            <TextField
+                              select
+                              label={t('currency')}
+                              value={depositCurrency}
+                              onChange={(e) => setDepositCurrency(e.target.value)}
+                              size="small"
+                              sx={{ mr: 1, minWidth: 90 }}
+                              SelectProps={{ native: true }}
+                            >
+                              <option value="UAH">UAH</option>
+                              <option value="USD">USD</option>
+                              <option value="EUR">EUR</option>
+                            </TextField>
+                            <Button
+                              variant="contained"
+                              color="secondary"
+                              onClick={handleCreateDeposit}
+                              disabled={createDepositLoading}
+                              sx={{ textTransform: 'none' }}
+                            >
+                              {createDepositLoading ? t('creating') : t('depositViaWhitebit')}
+                            </Button>
+                          </Box>
+                          {createDepositError && (
+                            <Typography variant="caption" color="error" display="block" sx={{ mt: 1 }}>
+                              {createDepositError}
+                            </Typography>
+                          )}
+                        </>
+                      ) : (
+                        <Button
+                          component="a"
+                          href={depositInfo.whitebitPayUrl || 'https://whitebit.com'}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          variant="contained"
+                          color="secondary"
+                          sx={{ textTransform: 'none', mt: 1 }}
+                        >
+                          {t('openWhitebit')}
+                        </Button>
+                      )}
+                    </CardContent>
+                  </Card>
+                )}
+              </>
             )}
 
             {profile?.whitebitEnabled && (
