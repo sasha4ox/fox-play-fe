@@ -129,8 +129,9 @@ export default function BalancePage() {
   }, [preferredCurrency, cardPayoutCurrency]);
 
   const cardPayoutCurr = cardPayoutCurrency || preferredCurrency || 'UAH';
-  const cardPayoutBalance = balances.find((b) => b.currency === cardPayoutCurr);
-  const cardPayoutAvailable = cardPayoutBalance ? Number(cardPayoutBalance.available) : 0;
+  /** Total available in selected currency (all wallets converted to this currency). User can withdraw up to this in one request. */
+  const totalAvailableInSelectedCurrency =
+    Number(profile?.totalAvailableByCurrency?.[cardPayoutCurr]) ?? 0;
 
   const handleCardPayoutRequest = () => {
     if (!token) return;
@@ -139,7 +140,7 @@ export default function BalancePage() {
       setCardPayoutError(t('cardPayoutAmountMin'));
       return;
     }
-    if (cardPayoutAvailable < amount) {
+    if (totalAvailableInSelectedCurrency < amount) {
       setCardPayoutError(t('cardPayoutInsufficient'));
       return;
     }
@@ -737,23 +738,34 @@ export default function BalancePage() {
                   </Box>
                   {/* Amount and submit below card */}
                   <Box sx={{ mt: 2.5, display: 'flex', flexDirection: 'column', gap: 2 }}>
-                    <TextField
-                      type="number"
-                      label={t('withdrawAmount')}
-                      value={cardPayoutAmount}
-                      onChange={(e) => setCardPayoutAmount(e.target.value)}
-                      inputProps={{ min: 0.01 }}
-                      size="small"
-                      fullWidth
-                    />
+                    <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start' }}>
+                      <TextField
+                        type="number"
+                        label={t('withdrawAmount')}
+                        value={cardPayoutAmount}
+                        onChange={(e) => setCardPayoutAmount(e.target.value)}
+                        inputProps={{ min: 0.01 }}
+                        size="small"
+                        fullWidth
+                      />
+                      <Button
+                        variant="outlined"
+                        color="primary"
+                        onClick={() => setCardPayoutAmount(totalAvailableInSelectedCurrency.toFixed(2))}
+                        disabled={cardPayoutLoading || totalAvailableInSelectedCurrency < 0.01}
+                        sx={{ textTransform: 'none', flexShrink: 0, mt: 0.25 }}
+                      >
+                        {t('withdrawAll')}
+                      </Button>
+                    </Box>
                     <Typography variant="body2" color="text.secondary">
-                      {t('youHaveInCurrency', { amount: cardPayoutAvailable.toFixed(2), currency: cardPayoutCurr })}
+                      {t('youHaveInCurrency', { amount: totalAvailableInSelectedCurrency.toFixed(2), currency: cardPayoutCurr })}
                     </Typography>
                     <Button
                       variant="contained"
                       color="primary"
                       onClick={handleCardPayoutRequest}
-                      disabled={cardPayoutLoading || cardPayoutAvailable < 0.01}
+                      disabled={cardPayoutLoading || totalAvailableInSelectedCurrency < 0.01}
                       sx={{ textTransform: 'none' }}
                     >
                       {cardPayoutLoading ? t('withdrawSubmitting') : t('withdrawToCardSubmit')}
