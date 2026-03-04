@@ -18,8 +18,6 @@ import DialogActions from '@mui/material/DialogActions';
 import TextField from '@mui/material/TextField';
 import InputAdornment from '@mui/material/InputAdornment';
 import FormControl from '@mui/material/FormControl';
-import FormControlLabel from '@mui/material/FormControlLabel';
-import Checkbox from '@mui/material/Checkbox';
 import InputLabel from '@mui/material/InputLabel';
 import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
@@ -554,27 +552,35 @@ export default function OfferPDPPage() {
             const totalToPay = buyQuantityKk * pricePer1kk;
             const currency = offer.displayCurrency ?? offer.currency ?? '';
             return (
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                {t('youWillPay')}: <strong>{totalToPay.toFixed(2)} {currency}</strong>
-              </Typography>
+              <Box sx={{ mb: 2 }}>
+                <Typography variant="body2" color="text.secondary">
+                  {t('youWillPay')}: <strong>{totalToPay.toFixed(2)} {currency}</strong>
+                </Typography>
+                <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5 }}>
+                  {t('bankFeeHint')}
+                </Typography>
+              </Box>
             );
           })()}
           {!isAdenaOffer && offer && (
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-              {t('youWillPay')}: <strong>{(buyQuantity * (Number(offer.displayPrice ?? offer.price) || 0)).toFixed(2)} {offer.displayCurrency ?? offer.currency ?? ''}</strong>
-            </Typography>
+            <Box sx={{ mb: 2 }}>
+              <Typography variant="body2" color="text.secondary">
+                {t('youWillPay')}: <strong>{(buyQuantity * (Number(offer.displayPrice ?? offer.price) || 0)).toFixed(2)} {offer.displayCurrency ?? offer.currency ?? ''}</strong>
+              </Typography>
+              <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5 }}>
+                {t('bankFeeHint')}
+              </Typography>
+            </Box>
           )}
           {cardPaymentEnabled && (
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={payWithCard}
-                  onChange={(e) => setPayWithCard(e.target.checked)}
-                />
-              }
-              label={t('payByCard') || 'Pay by card (transfer to provided card)'}
+            <Button
+              variant={payWithCard ? 'contained' : 'outlined'}
+              size="small"
+              onClick={() => setPayWithCard(!payWithCard)}
               sx={{ mb: 1 }}
-            />
+            >
+              {t('payByCard') || 'Pay by card'}
+            </Button>
           )}
           {buyError && (
             <Alert severity="error" sx={{ mt: 2 }}>

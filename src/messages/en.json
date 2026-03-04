@@ -471,6 +471,7 @@
     "priceFor100kk": "Price for 100kk",
     "priceIfBuyFull": "Price if you buy full",
     "youWillPay": "You will pay",
+    "bankFeeHint": "Your bank may charge an additional fee.",
     "messageSeller": "Message seller",
     "messageSellerHint": "Send a message to open a chat with the seller. You will be taken to the chat page.",
     "continueConversation": "Continue conversation",
