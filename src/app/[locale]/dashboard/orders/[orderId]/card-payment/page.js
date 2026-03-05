@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useLocale, useTranslations } from 'next-intl';
 import Box from '@mui/material/Box';
 import Container from '@mui/material/Container';
+import Paper from '@mui/material/Paper';
 import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
 import CircularProgress from '@mui/material/CircularProgress';
@@ -196,41 +197,60 @@ export default function OrderCardPaymentPage() {
       )}
 
       {orderNumberConfig.visible && orderNumberMessage && (status === 'awaiting_payment' || status === 'awaiting_confirmation') && (
-        <Alert severity="warning" sx={{ mb: 2 }} icon={false}>
-          <Typography variant="subtitle2" fontWeight={600} gutterBottom>
+        <Box sx={{ mb: 3 }}>
+          <Typography variant="subtitle2" fontWeight={600} color="text.secondary" sx={{ mb: 1.5, display: 'block' }}>
             {t('orderNumberTitle')}
           </Typography>
-          <Box
+          <Paper
+            elevation={0}
             sx={{
-              py: 1.5,
-              px: 2,
+              p: 2.5,
               borderRadius: 2,
-              bgcolor: 'warning.50',
               border: '1px solid',
-              borderColor: 'warning.200',
-              mb: 2,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: 2,
-              flexWrap: 'wrap',
+              borderColor: 'divider',
+              bgcolor: 'background.paper',
+              boxShadow: (theme) => theme.shadows[1],
             }}
           >
-            <Typography variant="body2" color="text.primary" sx={{ fontFamily: 'monospace', fontWeight: 700, fontSize: '1.1rem', letterSpacing: 1 }}>
-              {orderNumberMessage}
-            </Typography>
-            <Button
-              size="small"
-              variant="outlined"
-              onClick={() => {
-                if (displayOrderNumber && typeof navigator?.clipboard?.writeText === 'function') {
-                  navigator.clipboard.writeText(displayOrderNumber);
-                }
+            <Box
+              sx={{
+                display: 'flex',
+                flexDirection: { xs: 'column', sm: 'row' },
+                alignItems: { xs: 'stretch', sm: 'center' },
+                justifyContent: 'space-between',
+                gap: 2,
               }}
             >
-              {t('copy')}
-            </Button>
-          </Box>
+              <Typography
+                variant="body1"
+                sx={{
+                  fontFamily: 'monospace',
+                  fontWeight: 600,
+                  fontSize: '1rem',
+                  letterSpacing: 0.5,
+                  lineHeight: 1.5,
+                  color: 'text.primary',
+                  flex: 1,
+                  minWidth: 0,
+                }}
+              >
+                {orderNumberMessage}
+              </Typography>
+              <Button
+                size="medium"
+                variant="outlined"
+                color="primary"
+                sx={{ flexShrink: 0, minHeight: 44 }}
+                onClick={() => {
+                  if (orderNumberMessage && typeof navigator?.clipboard?.writeText === 'function') {
+                    navigator.clipboard.writeText(orderNumberMessage);
+                  }
+                }}
+              >
+                {t('copy')}
+              </Button>
+            </Box>
+          </Paper>
           <FormControlLabel
             control={
               <Checkbox
@@ -240,8 +260,9 @@ export default function OrderCardPaymentPage() {
               />
             }
             label={t('orderNumberConfirmLabel')}
+            sx={{ mt: 2, display: 'block' }}
           />
-        </Alert>
+        </Box>
       )}
 
       {showCard && (
