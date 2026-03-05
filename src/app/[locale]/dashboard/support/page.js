@@ -70,7 +70,7 @@ export default function SupportPage() {
               <CardActionArea component={Link} href={`/${locale}/dashboard/support/${c.id}`}>
                 <CardContent>
                   <Typography variant="subtitle2" fontWeight={600}>
-                    {t('orderLabel')} {c.orderId.slice(0, 8)}…
+                    {t('orderLabel')} {c.orderNumber ?? `${c.orderId.slice(0, 8)}…`}
                   </Typography>
                   {c.lastMessagePreview && (
                     <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }} noWrap>

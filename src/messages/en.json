@@ -408,6 +408,7 @@
     "last4Required": "Please enter exactly 4 digits.",
     "cancel": "Cancel",
     "confirm": "Confirm",
+    "copy": "Copy",
     "failed": "Something went wrong. Please try again.",
     "orderNumberTitle": "Include this 'Add a note' in your transfer",
     "orderNumberConfirmLabel": "I have included this note in my transfer",

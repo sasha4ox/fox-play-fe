@@ -678,7 +678,7 @@ export default function AdminMoneyFlowPage() {
                     <TableRow key={r.orderId}>
                       <TableCell>
                         <Link href={`/${locale}/dashboard/orders/${r.orderId}`} target="_blank" rel="noopener">
-                          {r.orderId.slice(0, 8)}…
+                          {r.orderNumber ?? `${r.orderId.slice(0, 8)}…`}
                         </Link>
                       </TableCell>
                       <TableCell>{r.buyer?.email ?? r.buyer?.nickname ?? r.buyer?.id}</TableCell>
@@ -752,7 +752,7 @@ export default function AdminMoneyFlowPage() {
                     <TableRow key={p.orderId}>
                       <TableCell>
                         <Link href={`/${locale}/dashboard/orders/${p.orderId}`} target="_blank" rel="noopener">
-                          {p.orderId.slice(0, 8)}…
+                          {p.orderNumber ?? `${p.orderId.slice(0, 8)}…`}
                         </Link>
                       </TableCell>
                       <TableCell>{p.seller?.email ?? p.seller?.nickname ?? p.seller?.id}</TableCell>

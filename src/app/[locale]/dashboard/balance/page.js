@@ -366,7 +366,7 @@ export default function BalancePage() {
                       )}
                       {item.orderId && (
                         <Link href={`${base}/dashboard/orders/${item.orderId}`} style={{ fontSize: '0.875rem' }}>
-                          {t('order')}
+                          {item.orderNumber ? `${t('order')} ${item.orderNumber}` : t('order')}
                         </Link>
                       )}
                     </Box>

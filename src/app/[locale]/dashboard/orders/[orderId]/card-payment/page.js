@@ -142,7 +142,8 @@ export default function OrderCardPaymentPage() {
     !expired &&
     data?.cardNumber &&
     (!requireOrderNumberConfirm || orderNumberConfirmed);
-  const orderNumberMessage = orderNumberConfig.text.replace(/\{\{\s*orderId\s*\}\}/gi, orderId || '');
+  const displayOrderNumber = data?.orderNumber ?? orderId ?? '';
+  const orderNumberMessage = orderNumberConfig.text.replace(/\{\{\s*orderId\s*\}\}/gi, displayOrderNumber);
 
   return (
     <Container maxWidth="sm" sx={{ py: 4 }}>
@@ -208,11 +209,27 @@ export default function OrderCardPaymentPage() {
               border: '1px solid',
               borderColor: 'warning.200',
               mb: 2,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 2,
+              flexWrap: 'wrap',
             }}
           >
             <Typography variant="body2" color="text.primary" sx={{ fontFamily: 'monospace', fontWeight: 700, fontSize: '1.1rem', letterSpacing: 1 }}>
               {orderNumberMessage}
             </Typography>
+            <Button
+              size="small"
+              variant="outlined"
+              onClick={() => {
+                if (displayOrderNumber && typeof navigator?.clipboard?.writeText === 'function') {
+                  navigator.clipboard.writeText(displayOrderNumber);
+                }
+              }}
+            >
+              {t('copy')}
+            </Button>
           </Box>
           <FormControlLabel
             control={

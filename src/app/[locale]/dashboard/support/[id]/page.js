@@ -101,7 +101,7 @@ export default function SupportConversationPage() {
         </Button>
       </Box>
       <Typography variant="h6" fontWeight={600} gutterBottom>
-        {t('conversationTitle')} — Order {convo.orderId?.slice(0, 8)}…
+        {t('conversationTitle')} — Order {convo.orderNumber ?? (convo.orderId ? `${convo.orderId.slice(0, 8)}…` : '—')}
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
         <Link href={convo.orderLink} target="_blank" rel="noopener">
