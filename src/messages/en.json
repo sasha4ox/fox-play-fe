@@ -409,8 +409,8 @@
     "cancel": "Cancel",
     "confirm": "Confirm",
     "failed": "Something went wrong. Please try again.",
-    "orderNumberTitle": "Include order number in your transfer",
-    "orderNumberConfirmLabel": "I have included the order number in my transfer",
+    "orderNumberTitle": "Include this 'Add a note' in your transfer",
+    "orderNumberConfirmLabel": "I have included this note in my transfer",
     "amountFeeNotice": "This is the exact amount we need to receive. Your bank or payment provider may charge transfer fees that we cannot see — please ensure the full amount arrives on our side."
   },
   "Offers": {
