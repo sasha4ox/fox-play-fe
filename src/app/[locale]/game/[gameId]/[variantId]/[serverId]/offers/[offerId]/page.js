@@ -61,7 +61,7 @@ export default function OfferPDPPage() {
   const [messageError, setMessageError] = useState(null);
   const user = useAuthStore((s) => s.user);
   const token = useAuthStore((s) => s.token);
-  const { profile } = useProfile();
+  const { profile, balances } = useProfile();
   const isAuthenticated = !!token;
   const openLoginModal = useLoginModalStore((s) => s.openModal);
   const currentUserId = user?.id ?? user?.userId;
@@ -94,7 +94,6 @@ export default function OfferPDPPage() {
   const [paymentDeclinedDismissed, setPaymentDeclinedDismissed] = useState(false);
   const showPaymentDeclined = searchParams.get('payment') === 'declined' && !paymentDeclinedDismissed;
   const [cardPaymentEnabled, setCardPaymentEnabled] = useState(false);
-  const [payWithCard, setPayWithCard] = useState(false);
   const [inquiryOrderId, setInquiryOrderId] = useState(null);
 
   useEffect(() => {
@@ -149,21 +148,44 @@ export default function OfferPDPPage() {
     setBuyError(null);
     try {
       const body = { offerId: offer.id, quantity: qty, characterNick: nick };
-      if (payWithCard) body.paymentMethod = 'CARD_MANUAL';
       const order = await createOrder(body, token);
       setBuyDialogOpen(false);
       setBuyCharacterNick('');
-      if (payWithCard) {
-        router.push(`/${locale}/dashboard/orders/${order.id}/card-payment`);
-      } else {
-        router.push(`/${locale}/dashboard/orders/${order.id}`);
-      }
+      router.push(`/${locale}/dashboard/orders/${order.id}`);
     } catch (err) {
       setBuyError(err.message || 'Failed to create order');
     } finally {
       setBuySubmitting(false);
     }
   };
+
+  const handleManuauCardBuySubmit = async () => {
+    if (!offer || !token) return;
+    const nick = (buyCharacterNick || '').trim();
+    if (!nick) {
+      setBuyError(t('inGameNickRequired'));
+      return;
+    }
+    const isAdena = offer.offerType === 'ADENA';
+    const qty = isAdena
+      ? Math.min(offer.quantity, Math.max(1, Math.floor(buyQuantityKk * 1_000_000)))
+      : Math.min(Math.max(1, Math.floor(buyQuantity)), offer.quantity);
+    setBuySubmitting(true);
+    setBuyError(null);
+    try {
+      const body = { offerId: offer.id, quantity: qty, characterNick: nick };
+      body.paymentMethod = 'CARD_MANUAL';
+      const order = await createOrder(body, token);
+      setBuyDialogOpen(false);
+      setBuyCharacterNick('');
+      router.push(`/${locale}/dashboard/orders/${order.id}/card-payment`);
+    } catch (err) {
+      setBuyError(err.message || 'Failed to create order');
+    } finally {
+      setBuySubmitting(false);
+    }
+  };
+  
 
   const handleSendMessage = async () => {
     if (!offerId || !token || !messageText.trim()) return;
@@ -572,16 +594,6 @@ export default function OfferPDPPage() {
               </Typography>
             </Box>
           )}
-          {cardPaymentEnabled && (
-            <Button
-              variant={payWithCard ? 'contained' : 'outlined'}
-              size="small"
-              onClick={() => setPayWithCard(!payWithCard)}
-              sx={{ mb: 1 }}
-            >
-              {t('payByCard') || 'Pay by card'}
-            </Button>
-          )}
           {buyError && (
             <Alert severity="error" sx={{ mt: 2 }}>
               {buyError}
@@ -597,8 +609,22 @@ export default function OfferPDPPage() {
         </DialogContent>
         <DialogActions sx={{ flexWrap: 'wrap', gap: 1 }}>
           <Button onClick={() => setBuyDialogOpen(false)}>Cancel</Button>
-          <Button variant="contained" onClick={handleBuySubmit} disabled={buySubmitting || (isAdenaOffer ? buyQuantityKk <= 0 : buyQuantity < 1)}>
-            {buySubmitting ? 'Creating…' : payWithCard ? (t('payByCard') || 'Pay by card') : t('payWithBalance')}
+          {(() => {
+            const offerCurrency = offer?.displayCurrency ?? offer?.currency ?? '';
+            const pricePer1kk = Number(offer?.displayPrice ?? offer?.price) || 0;
+            const unitPrice = Number(offer?.displayPrice ?? offer?.price) || 0;
+            const totalToPay = isAdenaOffer ? buyQuantityKk * pricePer1kk : buyQuantity * unitPrice;
+            const balanceForCurrency = (balances ?? []).find((b) => b.currency === offerCurrency);
+            const availableBalance = balanceForCurrency ? Number(balanceForCurrency.available) : 0;
+            const hasEnoughBalance = offerCurrency && totalToPay > 0 && availableBalance >= totalToPay;
+            return hasEnoughBalance ? (
+              <Button variant="contained" onClick={handleBuySubmit} disabled={buySubmitting || (isAdenaOffer ? buyQuantityKk <= 0 : buyQuantity < 1)}>
+                {buySubmitting ? 'Creating…' : t('payWithBalance')}
+              </Button>
+            ) : null;
+          })()}
+          <Button variant="contained" onClick={handleManuauCardBuySubmit} disabled={buySubmitting || (isAdenaOffer ? buyQuantityKk <= 0 : buyQuantity < 1)}>
+            {buySubmitting ? 'Creating…' : (t('payByCard') || 'Pay by card')}
           </Button>
         </DialogActions>
       </Dialog>
