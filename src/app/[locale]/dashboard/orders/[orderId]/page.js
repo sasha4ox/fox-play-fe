@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
 import Link from 'next/link';
+import MuiLink from '@mui/material/Link';
 import Box from '@mui/material/Box';
 import Container from '@mui/material/Container';
 import Typography from '@mui/material/Typography';
@@ -29,6 +30,7 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+import Tooltip from '@mui/material/Tooltip';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useTheme } from '@mui/material/styles';
 import { useAuthStore } from '@/store/authStore';
@@ -152,7 +154,7 @@ export default function OrderChatPage() {
   useEffect(() => {
     const el = messagesContainerRef.current;
     if (el) {
-      el.scrollTop = el.scrollHeight;
+      el.scrollTop = 0;
     }
   }, [messages]);
 
@@ -538,10 +540,18 @@ export default function OrderChatPage() {
               <Typography variant="overline" color="text.secondary" fontWeight={600} display="block" sx={{ mb: 1 }}>
                 {t('block1OfferAndDeal')}
               </Typography>
-              {order.offer?.server?.gameVariant?.game?.name && order.offer?.server?.gameVariant?.name && order.offer?.server?.name && (
-                <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1, fontWeight: 600 }}>
-                  {t('game')}: {order.offer.server.gameVariant.game.name} → {order.offer.server.gameVariant.name} → {order.offer.server.name}
-                </Typography>
+              {order.offer?.server?.gameVariant?.game?.name && order.offer?.server?.gameVariant?.name && order.offer?.server?.name && order.offer?.server?.gameVariant?.game?.id && order.offer?.server?.gameVariant?.id && order.offer?.server?.id && (
+                <MuiLink
+                  component={Link}
+                  href={`/${locale}/game/${order.offer.server.gameVariant.game.id}/${order.offer.server.gameVariant.id}/${order.offer.server.id}/offers`}
+                  underline="none"
+                  color="primary.main"
+                  sx={{ display: 'inline-block', mb: 1, '&:hover': { textDecoration: 'underline' } }}
+                >
+                  <Typography component="span" variant="subtitle1" fontWeight={700}>
+                    {t('game')}: {order.offer.server.gameVariant.game.name} → {order.offer.server.gameVariant.name} → {order.offer.server.name}
+                  </Typography>
+                </MuiLink>
               )}
               <Typography variant="body2" color="text.secondary" gutterBottom>
                 {isBuyer ? t('youAreBuying') : t('youAreSelling')}
@@ -975,6 +985,50 @@ export default function OrderChatPage() {
           </DialogActions>
         </Dialog>
 
+        {/* Messages header + chat background color legend */}
+        <Box sx={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 1, px: { xs: 1.5, md: 2 }, pt: 1.5, pb: 0.5 }}>
+          <Typography variant="h6" fontWeight={600}>
+            {t('messages')}
+          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+            <Tooltip title={t('chatLegendPendingConfirm')}>
+              <Box
+                sx={{
+                  width: 10,
+                  height: 10,
+                  borderRadius: '50%',
+                  bgcolor: '#ffebee',
+                  border: '1px solid',
+                  borderColor: 'divider',
+                }}
+              />
+            </Tooltip>
+            <Tooltip title={t('chatLegendPaidOrDone')}>
+              <Box
+                sx={{
+                  width: 10,
+                  height: 10,
+                  borderRadius: '50%',
+                  bgcolor: '#e8f5e9',
+                  border: '1px solid',
+                  borderColor: 'divider',
+                }}
+              />
+            </Tooltip>
+            <Tooltip title={t('chatLegendCreatedOrOther')}>
+              <Box
+                sx={{
+                  width: 10,
+                  height: 10,
+                  borderRadius: '50%',
+                  bgcolor: '#f5f5f5',
+                  border: '1px solid',
+                  borderColor: 'divider',
+                }}
+              />
+            </Tooltip>
+          </Box>
+        </Box>
         {/* Messages area – reference style: dark green for sender, light grey for me; background matches chat panel (green/red/grey) */}
         <Box
           ref={messagesContainerRef}
@@ -993,7 +1047,9 @@ export default function OrderChatPage() {
               {t('noMessages')}
             </Typography>
           )}
-          {messages.map((msg) => {
+          {[...messages]
+            .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+            .map((msg) => {
             const myMessage = isMe(msg.senderId ?? msg.sender?.id);
             const otherUserId = order?.buyerId === currentUserId ? order?.sellerId : order?.buyerId;
             const otherRead = order?.orderReads?.find((r) => r.userId === otherUserId);

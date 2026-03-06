@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
+import MuiLink from '@mui/material/Link';
 import Box from '@mui/material/Box';
 import Container from '@mui/material/Container';
 import Typography from '@mui/material/Typography';
@@ -128,14 +129,23 @@ export default function UserProfilePage() {
                     · {new Date(f.createdAt).toLocaleDateString(locale)}
                   </Typography>
                 </Box>
-                {f.gameFullName && (
+                {f.gameFullName && (f.gameId && f.variantId && f.serverId ? (
+                  <MuiLink
+                    component={Link}
+                    href={`/${locale}/game/${f.gameId}/${f.variantId}/${f.serverId}/offers`}
+                    underline="hover"
+                    sx={{ display: 'inline-block', mb: 1, fontWeight: 600, fontSize: '0.75rem' }}
+                  >
+                    {f.gameFullName}
+                  </MuiLink>
+                ) : (
                   <Chip
                     label={f.gameFullName}
                     size="small"
                     variant="outlined"
                     sx={{ mb: 1, fontWeight: 500, fontSize: '0.75rem' }}
                   />
-                )}
+                ))}
                 {f.offerTitle && (
                   <Typography variant="caption" display="block" color="text.secondary" sx={{ mb: f.comment ? 1 : 0 }}>
                     {t('sold')}: {f.offerTitle}
