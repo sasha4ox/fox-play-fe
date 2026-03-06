@@ -209,7 +209,7 @@ export default function OfferPDPPage() {
       const order = await createOrder(body, token);
       setBuyDialogOpen(false);
       setBuyCharacterNick('');
-      router.push(`/${locale}/dashboard/orders/${order.id}/crypto-payment`);
+      router.push(`/${locale}/pay-crypto/${order.id}`);
     } catch (err) {
       setBuyError(err.message || 'Failed to create order');
     } finally {

@@ -25,7 +25,7 @@ const HIGHLIGHT_BG = 'rgba(27, 67, 50, 0.18)';
 
 /** Chat list item background by order state (left sidebar) */
 const CHAT_BG = {
-  waitingMoney: '#ffebee',   // Red – waiting for approval of money (CARD_MANUAL + CREATED)
+  waitingMoney: '#fff8e6',   // Light amber – waiting for approval of money (CARD_MANUAL + CREATED)
   proceed: '#e8f5e9',       // Green – PAID or DELIVERED (send adena / confirm received)
   messagesOnly: '#e3f2fd',  // Blue – just messages, no buying (inquiry / CREATED non-card)
   completed: '#f3e5f5',     // Purple – COMPLETED
@@ -241,11 +241,11 @@ export default function OrdersChatLayout({ children }) {
                 const date = new Date(d);
                 const now = new Date();
                 const isToday = date.toDateString() === now.toDateString();
-                if (isToday) return date.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+                if (isToday) return date.toLocaleTimeString(locale, { hour: 'numeric', minute: '2-digit' });
                 const isThisYear = date.getFullYear() === now.getFullYear();
                 return isThisYear
-                  ? date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
-                  : date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+                  ? date.toLocaleDateString(locale, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
+                  : date.toLocaleDateString(locale, { month: 'short', day: 'numeric', year: 'numeric' });
               };
               return (
                 <Link

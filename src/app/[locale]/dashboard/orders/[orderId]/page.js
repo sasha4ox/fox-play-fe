@@ -154,7 +154,7 @@ export default function OrderChatPage() {
   useEffect(() => {
     const el = messagesContainerRef.current;
     if (el) {
-      el.scrollTop = 0;
+      el.scrollTop = el.scrollHeight;
     }
   }, [messages]);
 
@@ -194,8 +194,8 @@ export default function OrderChatPage() {
   const buyerPendingAdminConfirm = isBuyer && (order?.paymentMethod === 'CARD_MANUAL' || order?.paymentMethod === 'CRYPTO_MANUAL') && order?.status === 'CREATED';
   const sellerPendingAdminConfirm = isSeller && (order?.paymentMethod === 'CARD_MANUAL' || order?.paymentMethod === 'CRYPTO_MANUAL') && order?.status === 'CREATED';
   const pendingAdminConfirm = buyerPendingAdminConfirm || sellerPendingAdminConfirm;
-  /** Green when payment confirmed (PAID+); red tint when waiting for confirmation */
-  const chatBgColor = pendingAdminConfirm ? '#ffebee' : (order && ['PAID', 'DELIVERED', 'COMPLETED'].includes(order.status)) ? '#e8f5e9' : '#f5f5f5';
+  /** Green when payment confirmed (PAID+); light amber when waiting for confirmation */
+  const chatBgColor = pendingAdminConfirm ? '#fff8e6' : (order && ['PAID', 'DELIVERED', 'COMPLETED'].includes(order.status)) ? '#e8f5e9' : '#f5f5f5';
   const canSellerDeliver =
     isSeller &&
     order &&
@@ -495,7 +495,7 @@ export default function OrderChatPage() {
       {isBuyer && order?.paymentMethod === 'CRYPTO_MANUAL' && order?.status === 'CREATED' && order?.orderCryptoPayment && !order?.orderCryptoPayment?.buyerMarkedSentAt && (
         <Alert severity="warning" sx={{ mx: { xs: 1, md: 2 }, mt: 1 }}>
           {t('cryptoPaymentBanner')}{' '}
-          <Button component={Link} href={`/${locale}/dashboard/orders/${orderId}/crypto-payment`} size="small" variant="outlined" sx={{ mt: 0.5 }}>
+          <Button component={Link} href={`/${locale}/pay-crypto/${orderId}`} size="small" variant="outlined" sx={{ mt: 0.5 }}>
             {t('openPaymentPage')}
           </Button>
         </Alert>
@@ -1005,7 +1005,7 @@ export default function OrderChatPage() {
                   width: 10,
                   height: 10,
                   borderRadius: '50%',
-                  bgcolor: '#ffebee',
+                  bgcolor: '#fff8e6',
                   border: '1px solid',
                   borderColor: 'divider',
                 }}
@@ -1056,7 +1056,7 @@ export default function OrderChatPage() {
             </Typography>
           )}
           {[...messages]
-            .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+            .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
             .map((msg) => {
             const myMessage = isMe(msg.senderId ?? msg.sender?.id);
             const otherUserId = order?.buyerId === currentUserId ? order?.sellerId : order?.buyerId;
@@ -1104,7 +1104,7 @@ export default function OrderChatPage() {
                   <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 0.5, mt: 0.5, color: myMessage ? '#5a5a5a' : 'rgba(255,255,255,0.9)' }}>
                     {msg.createdAt && (
                       <Typography variant="caption" sx={{ fontSize: '0.7rem' }}>
-                        {new Date(msg.createdAt).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}
+                        {new Date(msg.createdAt).toLocaleTimeString(locale, { hour: 'numeric', minute: '2-digit' })}
                       </Typography>
                     )}
                     {myMessage && (

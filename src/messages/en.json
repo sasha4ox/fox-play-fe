@@ -433,7 +433,7 @@
   },
   "CryptoPayment": {
     "title": "Pay with Crypto",
-    "instruction": "Send the exact amount in USDT (TRC20) to the wallet below within the time limit. Include the order number in the transfer memo if requested. Then press \"I sent money\".",
+    "instruction": "Send the exact amount in USDT (TRC20) to the wallet below within the time limit. Then press \"I sent money\".",
     "amount": "Amount",
     "walletLabel": "USDT TRC20 wallet",
     "networkHint": "Use TRC20 network only. Sending via another network may result in loss of funds.",
@@ -445,7 +445,8 @@
     "iSentMoney": "I sent money",
     "backToOrder": "Back to order",
     "openOrderChat": "Open order chat",
-    "copy": "Copy",
+    "copy": "Copy address",
+    "copied": "Copied!",
     "failed": "Something went wrong. Please try again.",
     "orderNumberTitle": "Include this in your transfer memo",
     "orderNumberConfirmLabel": "I have included this in my transfer memo",
