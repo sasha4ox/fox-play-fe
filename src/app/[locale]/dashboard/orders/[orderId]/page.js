@@ -191,8 +191,8 @@ export default function OrderChatPage() {
   const isModerator = role === 'ADMIN' || role === 'MODERATOR';
   const isSeller = order && currentUserId && (order.sellerId === currentUserId || order.seller?.id === currentUserId);
   const isBuyer = order && currentUserId && (order.buyerId === currentUserId || order.buyer?.id === currentUserId);
-  const buyerPendingAdminConfirm = isBuyer && order?.paymentMethod === 'CARD_MANUAL' && order?.status === 'CREATED';
-  const sellerPendingAdminConfirm = isSeller && order?.paymentMethod === 'CARD_MANUAL' && order?.status === 'CREATED';
+  const buyerPendingAdminConfirm = isBuyer && (order?.paymentMethod === 'CARD_MANUAL' || order?.paymentMethod === 'CRYPTO_MANUAL') && order?.status === 'CREATED';
+  const sellerPendingAdminConfirm = isSeller && (order?.paymentMethod === 'CARD_MANUAL' || order?.paymentMethod === 'CRYPTO_MANUAL') && order?.status === 'CREATED';
   const pendingAdminConfirm = buyerPendingAdminConfirm || sellerPendingAdminConfirm;
   /** Green when payment confirmed (PAID+); red tint when waiting for confirmation */
   const chatBgColor = pendingAdminConfirm ? '#ffebee' : (order && ['PAID', 'DELIVERED', 'COMPLETED'].includes(order.status)) ? '#e8f5e9' : '#f5f5f5';
@@ -488,6 +488,14 @@ export default function OrderChatPage() {
         <Alert severity="warning" sx={{ mx: { xs: 1, md: 2 }, mt: 1 }}>
           {t('cardPaymentBanner')}{' '}
           <Button component={Link} href={`/${locale}/dashboard/orders/${orderId}/card-payment`} size="small" variant="outlined" sx={{ mt: 0.5 }}>
+            {t('openPaymentPage')}
+          </Button>
+        </Alert>
+      )}
+      {isBuyer && order?.paymentMethod === 'CRYPTO_MANUAL' && order?.status === 'CREATED' && order?.orderCryptoPayment && !order?.orderCryptoPayment?.buyerMarkedSentAt && (
+        <Alert severity="warning" sx={{ mx: { xs: 1, md: 2 }, mt: 1 }}>
+          {t('cryptoPaymentBanner')}{' '}
+          <Button component={Link} href={`/${locale}/dashboard/orders/${orderId}/crypto-payment`} size="small" variant="outlined" sx={{ mt: 0.5 }}>
             {t('openPaymentPage')}
           </Button>
         </Alert>

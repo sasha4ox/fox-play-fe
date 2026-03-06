@@ -15,7 +15,7 @@ import TableRow from '@mui/material/TableRow';
 import Skeleton from '@mui/material/Skeleton';
 import Chip from '@mui/material/Chip';
 import { useAuthStore, useIsAuthenticated } from '@/store/authStore';
-import { getMyCardPayoutRequests } from '@/lib/api';
+import { getMyCardPayoutRequests, getMyCryptoPayoutRequests } from '@/lib/api';
 import { useLoginModalStore } from '@/store/loginModalStore';
 import { useTranslations } from 'next-intl';
 
@@ -27,7 +27,6 @@ export default function BalanceWithdrawalsPage() {
   const token = useAuthStore((s) => s.token);
   const openLoginModal = useLoginModalStore((s) => s.openModal);
   const [items, setItems] = useState([]);
-  const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -36,10 +35,17 @@ export default function BalanceWithdrawalsPage() {
       return;
     }
     setLoading(true);
-    getMyCardPayoutRequests(token, { take: 100 })
-      .then((data) => {
-        setItems(data?.items ?? []);
-        setTotal(data?.total ?? 0);
+    Promise.all([
+      getMyCardPayoutRequests(token, { take: 100 }),
+      getMyCryptoPayoutRequests(token, { take: 100 }),
+    ])
+      .then(([cardData, cryptoData]) => {
+        const cardItems = (cardData?.items ?? []).map((r) => ({ ...r, type: 'card' }));
+        const cryptoItems = (cryptoData?.items ?? []).map((r) => ({ ...r, type: 'crypto' }));
+        const merged = [...cardItems, ...cryptoItems].sort(
+          (a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)
+        );
+        setItems(merged);
       })
       .catch(() => setItems([]))
       .finally(() => setLoading(false));
@@ -73,6 +79,7 @@ export default function BalanceWithdrawalsPage() {
             <TableHead>
               <TableRow>
                 <TableCell>{t('date')}</TableCell>
+                <TableCell>{t('withdrawalsType')}</TableCell>
                 <TableCell align="right">{t('amount')}</TableCell>
                 <TableCell>{t('status')}</TableCell>
                 <TableCell>{t('processedAt')}</TableCell>
@@ -80,8 +87,9 @@ export default function BalanceWithdrawalsPage() {
             </TableHead>
             <TableBody>
               {items.map((r) => (
-                <TableRow key={r.id}>
+                <TableRow key={`${r.type}-${r.id}`}>
                   <TableCell>{formatDate(r.createdAt)}</TableCell>
+                  <TableCell>{r.type === 'crypto' ? t('withdrawWithCrypto') : t('withdrawOnCard')}</TableCell>
                   <TableCell align="right">
                     {r.amount} {r.currency}
                   </TableCell>

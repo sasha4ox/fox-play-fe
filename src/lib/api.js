@@ -158,6 +158,13 @@ export async function getCardPaymentEnabled() {
   return data?.cardPaymentEnabled === true
 }
 
+/** Public: whether crypto payment (Pay with Crypto) is enabled for users */
+export async function getCryptoPaymentEnabled() {
+  const res = await apiFetch('/settings/crypto-payment-enabled', { method: 'GET' }, null)
+  const data = await res.json()
+  return data?.cryptoPaymentEnabled === true
+}
+
 /** Public: platform fee percent (e.g. 20 for 20%). Used on sell page to show "buyer will pay X + fee". */
 export async function getPlatformFeePercent() {
   const res = await apiFetch('/settings/platform-fee-percent', { method: 'GET' }, null)
@@ -189,6 +196,16 @@ export async function getOrderCardPayment(orderId, token) {
 /** Mark that buyer has sent money to the card (buyer only). body: { last4: string } - last 4 digits of card used */
 export async function markOrderCardPaymentSent(orderId, body, token) {
   return apiPost(`/orders/${orderId}/card-payment/sent`, body || {}, token)
+}
+
+/** Order crypto payment page data (buyer only). Returns { status, cryptoWalletAddress?, paymentDeadlineAt, amount, currency, ... } */
+export async function getOrderCryptoPayment(orderId, token) {
+  return apiGet(`/orders/${orderId}/crypto-payment`, token)
+}
+
+/** Mark that buyer has sent crypto (buyer only). No body required. */
+export async function markOrderCryptoPaymentSent(orderId, token) {
+  return apiPost(`/orders/${orderId}/crypto-payment/sent`, {}, token)
 }
 
 /** Profile: user + balances in preferred currency (auth required) */
@@ -283,7 +300,20 @@ export async function createCardPayoutRequest(body, token) {
   return apiPost('/me/card-payout-request', body, token)
 }
 
-/** List current user's card payout requests (withdrawals to card). */
+/** Request payout in crypto (USDT TRC20). body: { amount, currency, walletAddress }. Admin processes manually. */
+export async function createCryptoPayoutRequest(body, token) {
+  return apiPost('/me/crypto-payout-request', body, token)
+}
+
+/** List current user's crypto payout requests. */
+export async function getMyCryptoPayoutRequests(token, params = {}) {
+  const q = new URLSearchParams()
+  if (params.skip != null) q.set('skip', String(params.skip))
+  if (params.take != null) q.set('take', String(params.take))
+  const s = q.toString()
+  return apiGet(`/me/crypto-payout-requests${s ? `?${s}` : ''}`, token)
+}
+
 export async function getMyCardPayoutRequests(token, params = {}) {
   const q = new URLSearchParams()
   if (params.skip != null) q.set('skip', String(params.skip))
@@ -542,6 +572,18 @@ export async function setAdminCardPaymentOrderNumberMessage({ visible, text }, t
   return apiPatch('/admin/settings/card-payment-order-number-message', { visible, text }, token)
 }
 
+/** Admin: get crypto payment wallet (USDT TRC20). Empty = Pay with Crypto hidden. */
+export async function getAdminCryptoPaymentWallet(token) {
+  const data = await apiGet('/admin/settings/crypto-payment-wallet', token)
+  return data?.wallet ?? ''
+}
+
+/** Admin: set crypto payment wallet. body: { wallet: string } */
+export async function setAdminCryptoPaymentWallet({ wallet }, token) {
+  const data = await apiPatch('/admin/settings/crypto-payment-wallet', { wallet: wallet || '' }, token)
+  return data?.wallet ?? ''
+}
+
 export async function getAdminPlatformProfit(token) {
   return apiGet('/admin/money-flow/platform-profit', token)
 }
@@ -589,6 +631,48 @@ export async function adminConfirmReceipt(orderId, token) {
 
 export async function adminDeclineReceipt(orderId, token) {
   return apiPost(`/admin/money-flow/orders/${orderId}/decline-receipt`, {}, token)
+}
+
+export async function getAdminPendingCryptoReceipts(token) {
+  return apiGet('/admin/money-flow/crypto-receipts', token)
+}
+
+export async function getAdminPendingCryptoReceiptsCount(token) {
+  const data = await apiGet('/admin/money-flow/crypto-receipts-count', token)
+  return typeof data?.count === 'number' ? data.count : 0
+}
+
+export async function getAdminPendingCryptoPayouts(token) {
+  return apiGet('/admin/money-flow/crypto-payouts', token)
+}
+
+export async function adminConfirmCryptoReceipt(orderId, token) {
+  return apiPost(`/admin/money-flow/orders/${orderId}/confirm-crypto-receipt`, {}, token)
+}
+
+export async function adminDeclineCryptoReceipt(orderId, token) {
+  return apiPost(`/admin/money-flow/orders/${orderId}/decline-crypto-receipt`, {}, token)
+}
+
+export async function adminConfirmCryptoPayout(orderId, token) {
+  return apiPost(`/admin/money-flow/orders/${orderId}/confirm-crypto-payout`, {}, token)
+}
+
+export async function getAdminCryptoPayoutRequests(token, params = {}) {
+  const q = new URLSearchParams()
+  if (params.status) q.set('status', params.status)
+  if (params.skip != null) q.set('skip', params.skip)
+  if (params.take != null) q.set('take', params.take)
+  const s = q.toString()
+  return apiGet(`/admin/money-flow/crypto-payout-requests${s ? `?${s}` : ''}`, token)
+}
+
+export async function adminCryptoPayoutComplete(id, token) {
+  return apiPost(`/admin/money-flow/crypto-payout-requests/${id}/complete`, {}, token)
+}
+
+export async function adminCryptoPayoutFail(id, token) {
+  return apiPost(`/admin/money-flow/crypto-payout-requests/${id}/fail`, {}, token)
 }
 
 /** Admin: get or create support conversation with buyer for order (payment info). Returns { id, orderId, orderLink, messages, ... }. */

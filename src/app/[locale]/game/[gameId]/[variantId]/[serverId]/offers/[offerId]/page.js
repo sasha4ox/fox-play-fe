@@ -29,7 +29,7 @@ import CardContent from '@mui/material/CardContent';
 import { useAuthStore } from '@/store/authStore';
 import { useLoginModalStore } from '@/store/loginModalStore';
 import { useProfile } from '@/hooks/useProfile';
-import { fetchOfferById, createOrder, getCardPaymentEnabled, getOfferMessages, sendOfferMessage, startOfferChat, getOfferInquiryOrderId, getFeedbacksByUserId } from '@/lib/api';
+import { fetchOfferById, createOrder, getCardPaymentEnabled, getCryptoPaymentEnabled, getOfferMessages, sendOfferMessage, startOfferChat, getOfferInquiryOrderId, getFeedbacksByUserId } from '@/lib/api';
 import { formatAdena } from '@/lib/adenaFormat';
 
 export default function OfferPDPPage() {
@@ -94,6 +94,7 @@ export default function OfferPDPPage() {
   const [paymentDeclinedDismissed, setPaymentDeclinedDismissed] = useState(false);
   const showPaymentDeclined = searchParams.get('payment') === 'declined' && !paymentDeclinedDismissed;
   const [cardPaymentEnabled, setCardPaymentEnabled] = useState(false);
+  const [cryptoPaymentEnabled, setCryptoPaymentEnabled] = useState(false);
   const [inquiryOrderId, setInquiryOrderId] = useState(null);
 
   useEffect(() => {
@@ -112,6 +113,9 @@ export default function OfferPDPPage() {
 
   useEffect(() => {
     getCardPaymentEnabled().then(setCardPaymentEnabled).catch(() => setCardPaymentEnabled(false));
+  }, []);
+  useEffect(() => {
+    getCryptoPaymentEnabled().then(setCryptoPaymentEnabled).catch(() => setCryptoPaymentEnabled(false));
   }, []);
 
   useEffect(() => {
@@ -185,7 +189,34 @@ export default function OfferPDPPage() {
       setBuySubmitting(false);
     }
   };
-  
+
+  const handleCryptoBuySubmit = async () => {
+    if (!offer || !token) return;
+    const nick = (buyCharacterNick || '').trim();
+    if (!nick) {
+      setBuyError(t('inGameNickRequired'));
+      return;
+    }
+    const isAdena = offer.offerType === 'ADENA';
+    const qty = isAdena
+      ? Math.min(offer.quantity, Math.max(1, Math.floor(buyQuantityKk * 1_000_000)))
+      : Math.min(Math.max(1, Math.floor(buyQuantity)), offer.quantity);
+    setBuySubmitting(true);
+    setBuyError(null);
+    try {
+      const body = { offerId: offer.id, quantity: qty, characterNick: nick };
+      body.paymentMethod = 'CRYPTO_MANUAL';
+      const order = await createOrder(body, token);
+      setBuyDialogOpen(false);
+      setBuyCharacterNick('');
+      router.push(`/${locale}/dashboard/orders/${order.id}/crypto-payment`);
+    } catch (err) {
+      setBuyError(err.message || 'Failed to create order');
+    } finally {
+      setBuySubmitting(false);
+    }
+  };
+
 
   const handleSendMessage = async () => {
     if (!offerId || !token || !messageText.trim()) return;
@@ -669,6 +700,11 @@ export default function OfferPDPPage() {
           <Button variant="contained" onClick={handleManuauCardBuySubmit} disabled={buySubmitting || (isAdenaOffer ? buyQuantityKk <= 0 : buyQuantity < 1)}>
             {buySubmitting ? 'Creating…' : (t('payByCard') || 'Pay by card')}
           </Button>
+          {cryptoPaymentEnabled && (
+            <Button variant="contained" color="secondary" onClick={handleCryptoBuySubmit} disabled={buySubmitting || (isAdenaOffer ? buyQuantityKk <= 0 : buyQuantity < 1)}>
+              {buySubmitting ? 'Creating…' : (t('payWithCrypto') || 'Pay with Crypto')}
+            </Button>
+          )}
         </DialogActions>
       </Dialog>
     </Box>

@@ -37,7 +37,7 @@ function getChatItemBg(order) {
   const quantity = order?.quantity ?? 0;
   if (status === 'COMPLETED') return CHAT_BG.completed;
   if (status === 'PAID' || status === 'DELIVERED') return CHAT_BG.proceed;
-  if (status === 'CREATED' && paymentMethod === 'CARD_MANUAL') return CHAT_BG.waitingMoney;
+  if (status === 'CREATED' && (paymentMethod === 'CARD_MANUAL' || paymentMethod === 'CRYPTO_MANUAL')) return CHAT_BG.waitingMoney;
   return CHAT_BG.messagesOnly; // CREATED + BALANCE, inquiry (quantity 0), CANCELED, DISPUTED, etc.
 }
 

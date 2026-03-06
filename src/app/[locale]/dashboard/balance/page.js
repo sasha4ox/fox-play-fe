@@ -16,7 +16,7 @@ import Link from 'next/link';
 import { useAuthStore, useIsAuthenticated } from '@/store/authStore';
 import { useProfile } from '@/hooks/useProfile';
 import TextField from '@mui/material/TextField';
-import { getDepositInfo, simulateDeposit, addTestCredit, createDepositOrder, createWithdraw, createCardPayoutRequest, getCardPaymentEnabled, getBalanceHistory } from '@/lib/api';
+import { getDepositInfo, simulateDeposit, addTestCredit, createDepositOrder, createWithdraw, createCardPayoutRequest, createCryptoPayoutRequest, getCardPaymentEnabled, getBalanceHistory } from '@/lib/api';
 import { useLoginModalStore } from '@/store/loginModalStore';
 import { useTranslations } from 'next-intl';
 
@@ -68,6 +68,13 @@ export default function BalancePage() {
   const [cardPayoutError, setCardPayoutError] = useState(null);
   const [cardPayoutSuccess, setCardPayoutSuccess] = useState(null);
   const [cardPaymentEnabled, setCardPaymentEnabled] = useState(false);
+  const [withdrawSection, setWithdrawSection] = useState(null);
+  const [cryptoPayoutAmount, setCryptoPayoutAmount] = useState('');
+  const [cryptoPayoutCurrency, setCryptoPayoutCurrency] = useState('');
+  const [cryptoPayoutWallet, setCryptoPayoutWallet] = useState('');
+  const [cryptoPayoutLoading, setCryptoPayoutLoading] = useState(false);
+  const [cryptoPayoutError, setCryptoPayoutError] = useState(null);
+  const [cryptoPayoutSuccess, setCryptoPayoutSuccess] = useState(null);
   const [balanceHistory, setBalanceHistory] = useState({ items: [], total: 0 });
   const [balanceHistoryLoading, setBalanceHistoryLoading] = useState(false);
 
@@ -133,9 +140,43 @@ export default function BalancePage() {
   }, [preferredCurrency]);
 
   const cardPayoutCurr = cardPayoutCurrency || preferredCurrency || 'UAH';
+  const cryptoPayoutCurr = cryptoPayoutCurrency || preferredCurrency || 'USD';
   /** Total available in selected currency (all wallets converted to this currency). User can withdraw up to this in one request. */
   const totalAvailableInSelectedCurrency =
     Number(profile?.totalAvailableByCurrency?.[cardPayoutCurr]) ?? 0;
+  const totalAvailableForCrypto = Number(profile?.totalAvailableByCurrency?.[cryptoPayoutCurr]) ?? 0;
+
+  const handleCryptoPayoutRequest = () => {
+    const amount = parseFloat(cryptoPayoutAmount);
+    if (!Number.isFinite(amount) || amount < 0.01) {
+      setCryptoPayoutError(t('cardPayoutAmountMin'));
+      return;
+    }
+    const wallet = (cryptoPayoutWallet || '').trim();
+    if (!wallet || wallet.length < 20) {
+      setCryptoPayoutError(t('withdrawCryptoWalletLabel') + ' is required (min 20 characters).');
+      return;
+    }
+    if (totalAvailableForCrypto < amount) {
+      setCryptoPayoutError(t('cardPayoutInsufficient'));
+      return;
+    }
+    setCryptoPayoutLoading(true);
+    setCryptoPayoutError(null);
+    setCryptoPayoutSuccess(null);
+    createCryptoPayoutRequest(
+      { amount, currency: cryptoPayoutCurr, walletAddress: wallet },
+      token,
+    )
+      .then(() => {
+        setCryptoPayoutSuccess(t('withdrawCryptoSuccess'));
+        setCryptoPayoutAmount('');
+        setCryptoPayoutWallet('');
+        refetch();
+      })
+      .catch((err) => setCryptoPayoutError(err?.message || t('withdrawCryptoFailed')))
+      .finally(() => setCryptoPayoutLoading(false));
+  };
 
   const handleCardPayoutRequest = () => {
     if (!token) return;
@@ -604,20 +645,49 @@ export default function BalancePage() {
               </Box>
             )}
 
-            {cardPaymentEnabled && (
+            {(cardPaymentEnabled || true) && (
               <Box sx={{ mt: 4 }}>
                 <Typography variant="h6" fontWeight={600} gutterBottom>
-                  {t('withdrawToCardTitle')}
+                  {t('withdrawTitle')}
                 </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                  {t('withdrawToCardHint')}
-                </Typography>
-                <Alert severity="info" sx={{ mb: 2 }}>
-                  {t('cardPayoutFeeNotice')}
-                </Alert>
-                <Alert severity="warning" sx={{ mb: 2 }}>
-                  {t('cardPayoutDaysNotice')}
-                </Alert>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
+                  {cardPaymentEnabled && (
+                    <Button
+                      variant={withdrawSection === 'card' ? 'contained' : 'outlined'}
+                      color="primary"
+                      onClick={() => setWithdrawSection(withdrawSection === 'card' ? null : 'card')}
+                      sx={{ textTransform: 'none', minHeight: 44 }}
+                    >
+                      {t('withdrawOnCard')}
+                    </Button>
+                  )}
+                  <Button
+                    variant={withdrawSection === 'crypto' ? 'contained' : 'outlined'}
+                    color="secondary"
+                    onClick={() => setWithdrawSection(withdrawSection === 'crypto' ? null : 'crypto')}
+                    sx={{ textTransform: 'none', minHeight: 44 }}
+                  >
+                    {t('withdrawWithCrypto')}
+                  </Button>
+                </Box>
+
+                {withdrawSection === 'card' && cardPaymentEnabled && (
+                  <Box sx={{ mb: 3 }}>
+                    <Typography variant="subtitle1" fontWeight={600} gutterBottom>
+                      {t('withdrawToCardTitle')}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                      {t('withdrawToCardHint')}
+                    </Typography>
+                    <Alert severity="info" sx={{ mb: 1 }}>
+                      {t('withdrawCardFeeExplanation')}
+                    </Alert>
+                    <Alert severity="info" sx={{ mb: 1 }}>
+                      {t('cardPayoutFeeNotice')}
+                    </Alert>
+                    <Alert severity="warning" sx={{ mb: 2 }}>
+                      {t('cardPayoutDaysNotice')}
+                    </Alert>
                 {cardPayoutSuccess && (
                   <Alert severity="success" sx={{ mb: 2 }} onClose={() => setCardPayoutSuccess(null)}>
                     {cardPayoutSuccess}
@@ -758,6 +828,86 @@ export default function BalancePage() {
                     </Button>
                   </Box>
                 </Box>
+              </Box>
+                )}
+
+                {withdrawSection === 'crypto' && (
+                  <Box sx={{ mb: 3, maxWidth: 420 }}>
+                    <Typography variant="subtitle1" fontWeight={600} gutterBottom>
+                      {t('withdrawWithCrypto')}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                      {t('withdrawCryptoHint')}
+                    </Typography>
+                    {cryptoPayoutSuccess && (
+                      <Alert severity="success" sx={{ mb: 2 }} onClose={() => setCryptoPayoutSuccess(null)}>
+                        {cryptoPayoutSuccess}
+                      </Alert>
+                    )}
+                    {cryptoPayoutError && (
+                      <Alert severity="error" sx={{ mb: 2 }} onClose={() => setCryptoPayoutError(null)}>
+                        {cryptoPayoutError}
+                      </Alert>
+                    )}
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                      <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start' }}>
+                        <TextField
+                          type="number"
+                          label={t('amountInCurrency', { currency: cryptoPayoutCurr })}
+                          value={cryptoPayoutAmount}
+                          onChange={(e) => setCryptoPayoutAmount(e.target.value)}
+                          inputProps={{ min: 0.01 }}
+                          size="small"
+                          fullWidth
+                        />
+                        <TextField
+                          select
+                          label={t('currency')}
+                          value={cryptoPayoutCurr}
+                          onChange={(e) => setCryptoPayoutCurrency(e.target.value)}
+                          size="small"
+                          sx={{ minWidth: 90 }}
+                          SelectProps={{ native: true }}
+                        >
+                          <option value="USD">USD</option>
+                          <option value="EUR">EUR</option>
+                          <option value="UAH">UAH</option>
+                        </TextField>
+                        <Button
+                          variant="outlined"
+                          color="primary"
+                          size="small"
+                          onClick={() => setCryptoPayoutAmount(totalAvailableForCrypto.toFixed(2))}
+                          disabled={cryptoPayoutLoading || totalAvailableForCrypto < 0.01}
+                          sx={{ textTransform: 'none', flexShrink: 0, mt: 0.25 }}
+                        >
+                          {t('withdrawAll')}
+                        </Button>
+                      </Box>
+                      <Typography variant="body2" color="text.secondary">
+                        {t('youHaveInCurrency', { amount: totalAvailableForCrypto.toFixed(2), currency: cryptoPayoutCurr })}
+                      </Typography>
+                      <TextField
+                        label={t('withdrawCryptoWalletLabel')}
+                        value={cryptoPayoutWallet}
+                        onChange={(e) => setCryptoPayoutWallet(e.target.value)}
+                        placeholder="T..."
+                        size="small"
+                        fullWidth
+                        inputProps={{ maxLength: 64 }}
+                      />
+                      <Button
+                        variant="contained"
+                        color="secondary"
+                        onClick={handleCryptoPayoutRequest}
+                        disabled={cryptoPayoutLoading || totalAvailableForCrypto < 0.01}
+                        sx={{ textTransform: 'none' }}
+                      >
+                        {cryptoPayoutLoading ? t('withdrawSubmitting') : t('withdrawCryptoSubmit')}
+                      </Button>
+                    </Box>
+                  </Box>
+                )}
               </Box>
             )}
           </>

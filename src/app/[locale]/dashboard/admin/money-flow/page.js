@@ -47,6 +47,16 @@ import {
   adminCardPayoutFail,
   getAdminCardPaymentOrderNumberMessage,
   setAdminCardPaymentOrderNumberMessage,
+  getAdminCryptoPaymentWallet,
+  setAdminCryptoPaymentWallet,
+  getAdminPendingCryptoReceipts,
+  getAdminPendingCryptoPayouts,
+  adminConfirmCryptoReceipt,
+  adminDeclineCryptoReceipt,
+  adminConfirmCryptoPayout,
+  getAdminCryptoPayoutRequests,
+  adminCryptoPayoutComplete,
+  adminCryptoPayoutFail,
   adminGetOrCreateContactBuyer,
   adminSendContactBuyerMessage,
 } from '@/lib/api';
@@ -109,6 +119,22 @@ export default function AdminMoneyFlowPage() {
   const [contactBuyerMessage, setContactBuyerMessage] = useState('');
   const [contactBuyerLoading, setContactBuyerLoading] = useState(false);
   const [contactBuyerSending, setContactBuyerSending] = useState(false);
+  const [cryptoWallet, setCryptoWallet] = useState('');
+  const [cryptoWalletInput, setCryptoWalletInput] = useState('');
+  const [loadingCryptoWallet, setLoadingCryptoWallet] = useState(true);
+  const [savingCryptoWallet, setSavingCryptoWallet] = useState(false);
+  const [cryptoReceipts, setCryptoReceipts] = useState([]);
+  const [loadingCryptoReceipts, setLoadingCryptoReceipts] = useState(true);
+  const [cryptoPayouts, setCryptoPayouts] = useState([]);
+  const [loadingCryptoPayouts, setLoadingCryptoPayouts] = useState(true);
+  const [cryptoPayoutRequests, setCryptoPayoutRequests] = useState([]);
+  const [loadingCryptoPayoutRequests, setLoadingCryptoPayoutRequests] = useState(true);
+  const [cryptoPayoutStatusFilter, setCryptoPayoutStatusFilter] = useState('');
+  const [confirmingCryptoReceipt, setConfirmingCryptoReceipt] = useState(null);
+  const [decliningCryptoReceipt, setDecliningCryptoReceipt] = useState(null);
+  const [confirmingCryptoPayout, setConfirmingCryptoPayout] = useState(null);
+  const [confirmingCryptoPayoutComplete, setConfirmingCryptoPayoutComplete] = useState(null);
+  const [confirmingCryptoPayoutFail, setConfirmingCryptoPayoutFail] = useState(null);
 
   const loadFlag = () => {
     if (!token) return;
@@ -239,6 +265,105 @@ export default function AdminMoneyFlowPage() {
   useEffect(() => {
     loadCardPayouts();
   }, [token, cardPayoutStatusFilter]);
+
+  const loadCryptoWallet = () => {
+    if (!token) return;
+    setLoadingCryptoWallet(true);
+    getAdminCryptoPaymentWallet(token)
+      .then((w) => {
+        setCryptoWallet(w || '');
+        setCryptoWalletInput(w || '');
+      })
+      .catch(() => setCryptoWallet(''))
+      .finally(() => setLoadingCryptoWallet(false));
+  };
+  const loadCryptoReceipts = () => {
+    if (!token) return;
+    setLoadingCryptoReceipts(true);
+    getAdminPendingCryptoReceipts(token)
+      .then((data) => setCryptoReceipts(data?.items ?? []))
+      .catch(() => setCryptoReceipts([]))
+      .finally(() => setLoadingCryptoReceipts(false));
+  };
+  const loadCryptoPayouts = () => {
+    if (!token) return;
+    setLoadingCryptoPayouts(true);
+    getAdminPendingCryptoPayouts(token)
+      .then((data) => setCryptoPayouts(data?.items ?? []))
+      .catch(() => setCryptoPayouts([]))
+      .finally(() => setLoadingCryptoPayouts(false));
+  };
+  const loadCryptoPayoutRequests = () => {
+    if (!token) return;
+    setLoadingCryptoPayoutRequests(true);
+    getAdminCryptoPayoutRequests(token, { status: cryptoPayoutStatusFilter || undefined, take: 100 })
+      .then((data) => setCryptoPayoutRequests(data?.items ?? []))
+      .catch(() => setCryptoPayoutRequests([]))
+      .finally(() => setLoadingCryptoPayoutRequests(false));
+  };
+
+  useEffect(() => {
+    loadCryptoWallet();
+  }, [token]);
+  useEffect(() => {
+    loadCryptoReceipts();
+    loadCryptoPayouts();
+  }, [token]);
+  useEffect(() => {
+    loadCryptoPayoutRequests();
+  }, [token, cryptoPayoutStatusFilter]);
+
+  const handleSaveCryptoWallet = () => {
+    setSavingCryptoWallet(true);
+    setError(null);
+    setAdminCryptoPaymentWallet({ wallet: cryptoWalletInput.trim() }, token)
+      .then((w) => {
+        setCryptoWallet(w || '');
+        setCryptoWalletInput(w || '');
+      })
+      .catch((err) => setError(err?.message || 'Failed to save'))
+      .finally(() => setSavingCryptoWallet(false));
+  };
+  const handleConfirmCryptoReceipt = (orderId) => {
+    setConfirmingCryptoReceipt(orderId);
+    setError(null);
+    adminConfirmCryptoReceipt(orderId, token)
+      .then(() => { loadCryptoReceipts(); loadReceipts(); })
+      .catch((err) => setError(err?.message || 'Failed'))
+      .finally(() => setConfirmingCryptoReceipt(null));
+  };
+  const handleDeclineCryptoReceipt = (orderId) => {
+    setDecliningCryptoReceipt(orderId);
+    setError(null);
+    adminDeclineCryptoReceipt(orderId, token)
+      .then(() => { loadCryptoReceipts(); loadReceipts(); })
+      .catch((err) => setError(err?.message || 'Failed'))
+      .finally(() => setDecliningCryptoReceipt(null));
+  };
+  const handleConfirmCryptoPayout = (orderId) => {
+    setConfirmingCryptoPayout(orderId);
+    setError(null);
+    adminConfirmCryptoPayout(orderId, token)
+      .then(() => { loadCryptoPayouts(); loadPayouts(); })
+      .catch((err) => setError(err?.message || 'Failed'))
+      .finally(() => setConfirmingCryptoPayout(null));
+  };
+  const handleCryptoPayoutComplete = (id) => {
+    setConfirmingCryptoPayoutComplete(id);
+    setError(null);
+    adminCryptoPayoutComplete(id, token)
+      .then(() => loadCryptoPayoutRequests())
+      .catch((err) => setError(err?.message || 'Failed'))
+      .finally(() => setConfirmingCryptoPayoutComplete(null));
+  };
+  const handleCryptoPayoutFail = (id) => {
+    setConfirmingCryptoPayoutFail(id);
+    setError(null);
+    adminCryptoPayoutFail(id, token)
+      .then(() => loadCryptoPayoutRequests())
+      .catch((err) => setError(err?.message || 'Failed'))
+      .finally(() => setConfirmingCryptoPayoutFail(null));
+  };
 
   const handleToggleCardPayment = (e) => {
     const checked = e.target.checked;
@@ -595,6 +720,34 @@ export default function AdminMoneyFlowPage() {
 
       <Card sx={{ mb: 3 }}>
         <CardContent sx={{ px: { xs: 1.5, sm: 2 } }}>
+          <Typography variant="subtitle1" fontWeight={600} gutterBottom>
+            {t('cryptoPaymentWalletTitle')}
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            {t('cryptoPaymentWalletHint')}
+          </Typography>
+          {loadingCryptoWallet ? (
+            <Skeleton width={320} height={40} />
+          ) : (
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, alignItems: 'center' }}>
+              <TextField
+                size="small"
+                label={t('cryptoWalletLabel')}
+                placeholder="TRC20 address"
+                value={cryptoWalletInput}
+                onChange={(e) => setCryptoWalletInput(e.target.value)}
+                sx={{ minWidth: 280, flex: 1 }}
+              />
+              <Button variant="contained" onClick={handleSaveCryptoWallet} disabled={savingCryptoWallet}>
+                {savingCryptoWallet ? '…' : t('save')}
+              </Button>
+            </Box>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card sx={{ mb: 3 }}>
+        <CardContent sx={{ px: { xs: 1.5, sm: 2 } }}>
           <Box sx={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: 1, mb: 2 }}>
             <Typography variant="subtitle1" fontWeight={600}>
               {t('paymentCards')}
@@ -782,6 +935,107 @@ export default function AdminMoneyFlowPage() {
       <Card sx={{ mb: 3 }}>
         <CardContent sx={{ px: { xs: 1.5, sm: 2 } }}>
           <Typography variant="subtitle1" fontWeight={600} gutterBottom>
+            {t('pendingCryptoReceipts')}
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            {t('pendingCryptoReceiptsHint')}
+          </Typography>
+          {loadingCryptoReceipts ? (
+            <Skeleton height={60} />
+          ) : cryptoReceipts.length === 0 ? (
+            <Typography color="text.secondary">{t('noPendingCryptoReceipts')}</Typography>
+          ) : (
+            <TableContainer sx={{ overflowX: 'auto' }}>
+              <Table size="small" sx={{ minWidth: 480 }}>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Order</TableCell>
+                    <TableCell>Buyer</TableCell>
+                    <TableCell>Amount</TableCell>
+                    <TableCell>Wallet</TableCell>
+                    <TableCell>Marked sent</TableCell>
+                    <TableCell align="right">{t('actions')}</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {cryptoReceipts.map((r) => (
+                    <TableRow key={r.orderId}>
+                      <TableCell>
+                        <Link href={`/${locale}/dashboard/orders/${r.orderId}`} target="_blank" rel="noopener">
+                          {r.orderNumber ?? `${r.orderId.slice(0, 8)}…`}
+                        </Link>
+                      </TableCell>
+                      <TableCell>{r.buyer?.email ?? r.buyer?.nickname ?? r.buyer?.id}</TableCell>
+                      <TableCell>{r.buyerAmount} {r.buyerCurrency}</TableCell>
+                      <TableCell sx={{ fontFamily: 'monospace', fontSize: '0.75rem', maxWidth: 140 }}>{r.cryptoWalletAddress ? `${r.cryptoWalletAddress.slice(0, 8)}…${r.cryptoWalletAddress.slice(-6)}` : '—'}</TableCell>
+                      <TableCell>{r.buyerMarkedSentAt ? new Date(r.buyerMarkedSentAt).toLocaleString() : '—'}</TableCell>
+                      <TableCell align="right">
+                        <Button size="small" variant="outlined" color="error" onClick={() => handleDeclineCryptoReceipt(r.orderId)} disabled={decliningCryptoReceipt === r.orderId || confirmingCryptoReceipt === r.orderId} sx={{ mr: 1 }}>
+                          {decliningCryptoReceipt === r.orderId ? '…' : t('declineReceipt')}
+                        </Button>
+                        <Button size="small" variant="contained" onClick={() => handleConfirmCryptoReceipt(r.orderId)} disabled={confirmingCryptoReceipt === r.orderId}>
+                          {confirmingCryptoReceipt === r.orderId ? '…' : t('confirmReceipt')}
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card sx={{ mb: 3 }}>
+        <CardContent sx={{ px: { xs: 1.5, sm: 2 } }}>
+          <Typography variant="subtitle1" fontWeight={600} gutterBottom>
+            {t('pendingCryptoPayouts')}
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            {t('pendingCryptoPayoutsHint')}
+          </Typography>
+          {loadingCryptoPayouts ? (
+            <Skeleton height={60} />
+          ) : cryptoPayouts.length === 0 ? (
+            <Typography color="text.secondary">{t('noPendingCryptoPayouts')}</Typography>
+          ) : (
+            <TableContainer sx={{ overflowX: 'auto' }}>
+              <Table size="small" sx={{ minWidth: 360 }}>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Order</TableCell>
+                    <TableCell>Seller</TableCell>
+                    <TableCell>Amount</TableCell>
+                    <TableCell align="right">{t('actions')}</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {cryptoPayouts.map((p) => (
+                    <TableRow key={p.orderId}>
+                      <TableCell>
+                        <Link href={`/${locale}/dashboard/orders/${p.orderId}`} target="_blank" rel="noopener">
+                          {p.orderNumber ?? `${p.orderId.slice(0, 8)}…`}
+                        </Link>
+                      </TableCell>
+                      <TableCell>{p.seller?.email ?? p.seller?.nickname ?? p.seller?.id}</TableCell>
+                      <TableCell>{p.sellerAmount} {p.sellerCurrency}</TableCell>
+                      <TableCell align="right">
+                        <Button size="small" variant="contained" color="primary" onClick={() => handleConfirmCryptoPayout(p.orderId)} disabled={confirmingCryptoPayout === p.orderId}>
+                          {confirmingCryptoPayout === p.orderId ? '…' : t('confirmPayout')}
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card sx={{ mb: 3 }}>
+        <CardContent sx={{ px: { xs: 1.5, sm: 2 } }}>
+          <Typography variant="subtitle1" fontWeight={600} gutterBottom>
             {t('cardPayoutRequests')}
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
@@ -851,6 +1105,68 @@ export default function AdminMoneyFlowPage() {
                               disabled={confirmingCardPayoutFail === r.id}
                             >
                               {confirmingCardPayoutFail === r.id ? '…' : t('markFailed')}
+                            </Button>
+                          </Box>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card sx={{ mb: 3 }}>
+        <CardContent sx={{ px: { xs: 1.5, sm: 2 } }}>
+          <Typography variant="subtitle1" fontWeight={600} gutterBottom>
+            {t('cryptoPayoutRequests')}
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            {t('cryptoPayoutRequestsHint')}
+          </Typography>
+          <Box sx={{ mb: 2 }}>
+            <TextField select size="small" label={t('filterByStatus')} value={cryptoPayoutStatusFilter} onChange={(e) => setCryptoPayoutStatusFilter(e.target.value)} sx={{ minWidth: { xs: '100%', sm: 160 } }} SelectProps={{ native: true }} fullWidth>
+              <option value="">{t('statusAll')}</option>
+              <option value="PENDING">PENDING</option>
+              <option value="COMPLETED">COMPLETED</option>
+              <option value="FAILED">FAILED</option>
+            </TextField>
+          </Box>
+          {loadingCryptoPayoutRequests ? (
+            <Skeleton height={60} />
+          ) : cryptoPayoutRequests.length === 0 ? (
+            <Typography color="text.secondary">{t('noCryptoPayoutRequests')}</Typography>
+          ) : (
+            <TableContainer sx={{ overflowX: 'auto' }}>
+              <Table size="small" sx={{ minWidth: 560 }}>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>{t('user')}</TableCell>
+                    <TableCell>{t('amount')}</TableCell>
+                    <TableCell>{t('cryptoWalletLabel')}</TableCell>
+                    <TableCell>{t('status')}</TableCell>
+                    <TableCell>{t('date')}</TableCell>
+                    <TableCell align="right">{t('actions')}</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {cryptoPayoutRequests.map((r) => (
+                    <TableRow key={r.id}>
+                      <TableCell>{r.user?.email ?? r.user?.nickname ?? r.user?.id ?? r.userId}</TableCell>
+                      <TableCell>{r.amount} {r.currency}</TableCell>
+                      <TableCell sx={{ fontFamily: 'monospace', fontSize: '0.75rem', maxWidth: 160 }}>{r.walletAddress ? `${r.walletAddress.slice(0, 10)}…${r.walletAddress.slice(-8)}` : '—'}</TableCell>
+                      <TableCell>{r.status}</TableCell>
+                      <TableCell>{r.createdAt ? new Date(r.createdAt).toLocaleString() : '—'}</TableCell>
+                      <TableCell align="right">
+                        {r.status === 'PENDING' && (
+                          <Box component="span" sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, justifyContent: 'flex-end' }}>
+                            <Button size="small" variant="contained" color="primary" onClick={() => handleCryptoPayoutComplete(r.id)} disabled={confirmingCryptoPayoutComplete === r.id}>
+                              {confirmingCryptoPayoutComplete === r.id ? '…' : t('markCompleted')}
+                            </Button>
+                            <Button size="small" variant="outlined" color="error" onClick={() => handleCryptoPayoutFail(r.id)} disabled={confirmingCryptoPayoutFail === r.id}>
+                              {confirmingCryptoPayoutFail === r.id ? '…' : t('markFailed')}
                             </Button>
                           </Box>
                         )}
