@@ -125,8 +125,12 @@ export default function BalancePage() {
   const uahAvailable = uahBalance ? Number(uahBalance.available) : 0;
 
   useEffect(() => {
-    if (preferredCurrency && !cardPayoutCurrency) setCardPayoutCurrency(preferredCurrency);
-  }, [preferredCurrency, cardPayoutCurrency]);
+    if (preferredCurrency) setCardPayoutCurrency(preferredCurrency);
+  }, [preferredCurrency]);
+
+  useEffect(() => {
+    if (preferredCurrency) setDepositCurrency(preferredCurrency);
+  }, [preferredCurrency]);
 
   const cardPayoutCurr = cardPayoutCurrency || preferredCurrency || 'UAH';
   /** Total available in selected currency (all wallets converted to this currency). User can withdraw up to this in one request. */
@@ -461,7 +465,7 @@ export default function BalancePage() {
                             <Typography variant="subtitle2" color="text.secondary" gutterBottom>{t('whitebit')}</Typography>
                             <TextField
                               type="number"
-                              label={t('amount')}
+                              label={t('amountInCurrency', { currency: depositCurrency || preferredCurrency || 'UAH' })}
                               value={depositAmount}
                               onChange={(e) => setDepositAmount(e.target.value)}
                               inputProps={{ min: 1 }}
@@ -671,27 +675,9 @@ export default function BalancePage() {
                             boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
                           }}
                         />
-                        <TextField
-                          select
-                          value={cardPayoutCurr}
-                          onChange={(e) => setCardPayoutCurrency(e.target.value)}
-                          size="small"
-                          variant="standard"
-                          SelectProps={{ native: true }}
-                          sx={{
-                            minWidth: 72,
-                            '& .MuiInput-root': { color: 'rgba(255,255,255,0.9)', fontSize: '0.875rem' },
-                            '& .MuiInput-input': { py: 0.5, textAlign: 'right' },
-                            '& .MuiInput-underline:before': { borderColor: 'rgba(255,255,255,0.2)' },
-                            '& .MuiInput-underline:after': { borderColor: 'rgba(255,255,255,0.5)' },
-                            '& .MuiSelect-select': { pr: 1.5 },
-                          }}
-                        >
-                          <option value="UAH">UAH</option>
-                          <option value="USD">USD</option>
-                          <option value="EUR">EUR</option>
-                          <option value="RUB">RUB</option>
-                        </TextField>
+                        <Typography component="span" sx={{ color: 'rgba(255,255,255,0.9)', fontSize: '0.875rem', fontWeight: 600 }}>
+                          {cardPayoutCurr}
+                        </Typography>
                       </Box>
                       <Box>
                         <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.6)', letterSpacing: 1, textTransform: 'uppercase', display: 'block', mb: 0.5 }}>
@@ -741,7 +727,7 @@ export default function BalancePage() {
                     <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start' }}>
                       <TextField
                         type="number"
-                        label={t('withdrawAmount')}
+                        label={t('amountInCurrency', { currency: cardPayoutCurr })}
                         value={cardPayoutAmount}
                         onChange={(e) => setCardPayoutAmount(e.target.value)}
                         inputProps={{ min: 0.01 }}

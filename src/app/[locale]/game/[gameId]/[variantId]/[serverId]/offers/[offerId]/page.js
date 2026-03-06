@@ -283,44 +283,87 @@ export default function OfferPDPPage() {
                 {t('seller')}
               </Typography>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
-                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.25 }}>
-                  <Badge
-                    overlap="circular"
-                    anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
-                    variant="dot"
-                    sx={{
-                      '& .MuiBadge-badge': {
-                        bgcolor: offer.seller.isOnline ? 'success.main' : 'grey.400',
-                        border: '2px solid',
-                        borderColor: 'background.paper',
-                      },
-                    }}
+                {offer.seller.id ? (
+                  <Link
+                    href={`/${locale}/user/${offer.seller.id}`}
+                    style={{ textDecoration: 'none', color: 'inherit', display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}
                   >
-                    <Avatar
-                      src={offer.seller.avatarUrl || undefined}
-                      alt={offer.seller.nickname ?? offer.seller.email}
-                      sx={{ width: 48, height: 48 }}
-                    >
-                      {(offer.seller.nickname || offer.seller.email || '?').charAt(0).toUpperCase()}
-                    </Avatar>
-                  </Badge>
-                  {offer.seller.rating != null && Number(offer.seller.rating) > 0 && (
-                    <Rating value={Number(offer.seller.rating)} precision={0.5} readOnly size="small" sx={{ fontSize: '0.8rem' }} />
-                  )}
-                </Box>
-                <Box>
-                  <Typography variant="subtitle1" fontWeight={600}>
-                    {offer.seller.nickname ?? offer.seller.email}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary" display="block">
-                    {offer.seller.isOnline ? t('sellerOnline') : t('sellerOffline')}
-                  </Typography>
-                  {offer.seller.id && (
-                    <Button size="small" variant="text" color="secondary" sx={{ mt: 0.5, p: 0, minWidth: 0, textTransform: 'none' }} onClick={() => setFeedbacksDialogOpen(true)}>
-                      {t('seeReviews')}
-                    </Button>
-                  )}
-                </Box>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.25 }}>
+                      <Badge
+                        overlap="circular"
+                        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+                        variant="dot"
+                        sx={{
+                          '& .MuiBadge-badge': {
+                            bgcolor: offer.seller.isOnline ? 'success.main' : 'grey.400',
+                            border: '2px solid',
+                            borderColor: 'background.paper',
+                          },
+                        }}
+                      >
+                        <Avatar
+                          src={offer.seller.avatarUrl || undefined}
+                          alt={offer.seller.nickname ?? offer.seller.email}
+                          sx={{ width: 48, height: 48 }}
+                        >
+                          {(offer.seller.nickname || offer.seller.email || '?').charAt(0).toUpperCase()}
+                        </Avatar>
+                      </Badge>
+                      {offer.seller.rating != null && Number(offer.seller.rating) > 0 && (
+                        <Rating value={Number(offer.seller.rating)} precision={0.5} readOnly size="small" sx={{ fontSize: '0.8rem' }} />
+                      )}
+                    </Box>
+                    <Box>
+                      <Typography variant="subtitle1" fontWeight={600}>
+                        {offer.seller.nickname ?? offer.seller.email}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary" display="block">
+                        {offer.seller.isOnline ? t('sellerOnline') : t('sellerOffline')}
+                      </Typography>
+                    </Box>
+                  </Link>
+                ) : (
+                  <>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.25 }}>
+                      <Badge
+                        overlap="circular"
+                        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+                        variant="dot"
+                        sx={{
+                          '& .MuiBadge-badge': {
+                            bgcolor: offer.seller.isOnline ? 'success.main' : 'grey.400',
+                            border: '2px solid',
+                            borderColor: 'background.paper',
+                          },
+                        }}
+                      >
+                        <Avatar
+                          src={offer.seller.avatarUrl || undefined}
+                          alt={offer.seller.nickname ?? offer.seller.email}
+                          sx={{ width: 48, height: 48 }}
+                        >
+                          {(offer.seller.nickname || offer.seller.email || '?').charAt(0).toUpperCase()}
+                        </Avatar>
+                      </Badge>
+                      {offer.seller.rating != null && Number(offer.seller.rating) > 0 && (
+                        <Rating value={Number(offer.seller.rating)} precision={0.5} readOnly size="small" sx={{ fontSize: '0.8rem' }} />
+                      )}
+                    </Box>
+                    <Box>
+                      <Typography variant="subtitle1" fontWeight={600}>
+                        {offer.seller.nickname ?? offer.seller.email}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary" display="block">
+                        {offer.seller.isOnline ? t('sellerOnline') : t('sellerOffline')}
+                      </Typography>
+                    </Box>
+                  </>
+                )}
+                {offer.seller.id && (
+                  <Button size="small" variant="text" color="secondary" sx={{ mt: 0.5, p: 0, minWidth: 0, textTransform: 'none' }} onClick={() => setFeedbacksDialogOpen(true)}>
+                    {t('seeReviews')}
+                  </Button>
+                )}
               </Box>
             </CardContent>
           </Card>

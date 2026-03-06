@@ -538,6 +538,11 @@ export default function OrderChatPage() {
               <Typography variant="overline" color="text.secondary" fontWeight={600} display="block" sx={{ mb: 1 }}>
                 {t('block1OfferAndDeal')}
               </Typography>
+              {order.offer?.server?.gameVariant?.game?.name && order.offer?.server?.gameVariant?.name && order.offer?.server?.name && (
+                <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1, fontWeight: 600 }}>
+                  {t('game')}: {order.offer.server.gameVariant.game.name} → {order.offer.server.gameVariant.name} → {order.offer.server.name}
+                </Typography>
+              )}
               <Typography variant="body2" color="text.secondary" gutterBottom>
                 {isBuyer ? t('youAreBuying') : t('youAreSelling')}
               </Typography>
@@ -545,11 +550,11 @@ export default function OrderChatPage() {
                 {order.offer.title}
               </Typography>
               {order.offer.offerType === 'ADENA' ? (
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant="body1" color="text.primary" fontWeight={600}>
                   {t('qty')}: {formatAdena(Number(order.quantity ?? 0))} · {t('priceFor100kk')}: {Number(order.offer?.price ?? 0) * 100} {order.sellerCurrency ?? order.buyerCurrency}
                 </Typography>
               ) : (
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant="body1" color="text.primary" fontWeight={600}>
                   {t('qty')}: {order.quantity} · {Number(order.sellerAmount ?? 0).toFixed(2)} {order.sellerCurrency} {t('total')}
                 </Typography>
               )}
@@ -557,7 +562,7 @@ export default function OrderChatPage() {
                 {t('amountsFixedAtPurchase')}
               </Typography>
               {order.buyerCharacterNick && (
-                <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5 }}>
+                <Typography variant="body1" color="text.primary" fontWeight={600} display="block" sx={{ mt: 0.5 }}>
                   {t('buyerInGameNick')}: {order.buyerCharacterNick}
                 </Typography>
               )}

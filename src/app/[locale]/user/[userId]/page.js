@@ -117,20 +117,33 @@ export default function UserProfilePage() {
       ) : (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           {feedbacks.map((f) => (
-            <Card key={f.id} variant="outlined">
-              <CardContent>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap', mb: 0.5 }}>
+            <Card key={f.id} variant="outlined" sx={{ borderRadius: 2, overflow: 'hidden' }}>
+              <CardContent sx={{ py: 1.5, px: 2, '&:last-child': { pb: 1.5 } }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap', mb: 1 }}>
                   <Rating value={f.rating} readOnly size="small" />
-                  <Typography variant="caption" color="text.secondary">
-                    {f.fromUser?.nickname || f.fromUser?.id?.slice(0, 8)} · {new Date(f.createdAt).toLocaleDateString(locale)}
+                  <Typography component="span" variant="subtitle2" fontWeight={700} sx={{ color: 'text.primary' }}>
+                    {f.fromUser?.nickname || f.fromUser?.id?.slice(0, 8)}
+                  </Typography>
+                  <Typography component="span" variant="caption" color="text.secondary">
+                    · {new Date(f.createdAt).toLocaleDateString(locale)}
                   </Typography>
                 </Box>
+                {f.gameFullName && (
+                  <Chip
+                    label={f.gameFullName}
+                    size="small"
+                    variant="outlined"
+                    sx={{ mb: 1, fontWeight: 500, fontSize: '0.75rem' }}
+                  />
+                )}
                 {f.offerTitle && (
-                  <Typography variant="caption" display="block" color="text.secondary" sx={{ mb: 0.5 }}>
+                  <Typography variant="caption" display="block" color="text.secondary" sx={{ mb: f.comment ? 1 : 0 }}>
                     {t('sold')}: {f.offerTitle}
                   </Typography>
                 )}
-                {f.comment && <Typography variant="body2">{f.comment}</Typography>}
+                {f.comment && (
+                  <Typography variant="body2" sx={{ mt: 0.5, lineHeight: 1.5 }}>{f.comment}</Typography>
+                )}
               </CardContent>
             </Card>
           ))}
