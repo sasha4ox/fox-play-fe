@@ -668,6 +668,11 @@ export default function OfferPDPPage() {
               </Typography>
             </Box>
           )}
+          {cryptoPaymentEnabled && (
+            <Alert severity="info" sx={{ mt: 2 }} variant="outlined">
+              {t('payWithCryptoUsdNotice')}
+            </Alert>
+          )}
           {buyError && (
             <Alert severity="error" sx={{ mt: 2 }}>
               {buyError}

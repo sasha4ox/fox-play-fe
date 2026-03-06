@@ -178,6 +178,7 @@
     "youHaveInCurrency": "У вас є {amount} {currency} доступно (разом у цій валюті, включно з конвертацією інших балансів)",
     "withdrawAll": "Вивести все",
     "withdrawCryptoHint": "Заявка на виведення в USDT (TRC20) на ваш гаманець. Адмін обробить її вручну.",
+    "withdrawCryptoUsdOnly": "Виведення крипто лише в USD. Сума буде надіслана в USDT (TRC20).",
     "withdrawCryptoWalletLabel": "Адреса гаманця USDT TRC20",
     "withdrawCryptoSubmit": "Запросити виведення крипто",
     "withdrawCryptoSuccess": "Заявку на виведення крипто надіслано. Адмін обробить її.",
@@ -450,7 +451,8 @@
     "failed": "Щось пішло не так. Спробуйте ще раз.",
     "orderNumberTitle": "Вкажіть це в memo переказу",
     "orderNumberConfirmLabel": "Я вказав(ла) це в memo переказу",
-    "amountFeeNotice": "Це точна сума, яку ми маємо отримати в USDT (TRC20)."
+    "amountFeeNotice": "Це точна сума, яку ми маємо отримати в USDT (TRC20).",
+    "amountInUsdNotice": "Оплата в USD (долари, еквівалент USDT)."
   },
   "Offers": {
     "myOffers": "Мої оголошення",
@@ -523,6 +525,7 @@
     "payWithBalance": "Оплатити з балансу",
     "payByCard": "Оплатити карткою",
     "payWithCrypto": "Оплатити крипто",
+    "payWithCryptoUsdNotice": "Оплата буде в USD (еквівалент USDT).",
     "orPayByCard": "Або натисніть «Оплатити карткою» нижче.",
     "quantity": "Кількість",
     "buyNow": "Купити",

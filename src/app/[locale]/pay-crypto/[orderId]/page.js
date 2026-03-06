@@ -148,6 +148,9 @@ export default function PayCryptoPage() {
           <Typography variant="h4" fontWeight={700} color="primary.main">
             {data.amount} {data.currency}
           </Typography>
+          <Alert severity="info" sx={{ mt: 1.5 }} variant="outlined">
+            {t('amountInUsdNotice')}
+          </Alert>
           {(status === 'awaiting_payment' || status === 'awaiting_confirmation') && (
             <Alert severity="info" sx={{ mt: 1.5 }}>
               {t('amountFeeNotice')}

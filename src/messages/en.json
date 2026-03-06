@@ -178,6 +178,7 @@
     "youHaveInCurrency": "You have {amount} {currency} available (total in this currency, including other balances converted)",
     "withdrawAll": "Withdraw all",
     "withdrawCryptoHint": "Request a payout in USDT (TRC20) to your wallet. Admin will process it manually.",
+    "withdrawCryptoUsdOnly": "Crypto withdrawal is in USD only. The amount will be sent in USDT (TRC20).",
     "withdrawCryptoWalletLabel": "USDT TRC20 wallet address",
     "withdrawCryptoSubmit": "Request crypto payout",
     "withdrawCryptoSuccess": "Crypto payout request submitted. Admin will process it.",
@@ -450,7 +451,8 @@
     "failed": "Something went wrong. Please try again.",
     "orderNumberTitle": "Include this in your transfer memo",
     "orderNumberConfirmLabel": "I have included this in my transfer memo",
-    "amountFeeNotice": "This is the exact amount we need to receive in USDT (TRC20)."
+    "amountFeeNotice": "This is the exact amount we need to receive in USDT (TRC20).",
+    "amountInUsdNotice": "Payment is in USD (dollars equivalent to USDT)."
   },
   "Offers": {
     "myOffers": "My offers",
@@ -523,6 +525,7 @@
     "payWithBalance": "Pay with balance",
     "payByCard": "Pay by card",
     "payWithCrypto": "Pay with Crypto",
+    "payWithCryptoUsdNotice": "Payment will be in USD (equivalent to USDT).",
     "orPayByCard": "Or use «Pay by card» below to pay with a card.",
     "quantity": "Quantity",
     "buyNow": "Buy now",

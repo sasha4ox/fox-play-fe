@@ -469,6 +469,14 @@ export default function OrderChatPage() {
             <Box component="span" sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: 'success.main' }} />
             {connected ? t('online') : t('live')}
           </Typography>
+          {order.buyerCharacterNick && (
+            <Typography variant="caption" color="text.secondary" sx={{ mt: 0.25 }} noWrap>
+              {t('buyerInGameNick')}:{' '}
+              <Typography component="span" sx={{ color: 'primary.main', fontWeight: 600 }}>
+                {order.buyerCharacterNick}
+              </Typography>
+            </Typography>
+          )}
         </Box>
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', minWidth: 0 }}>
           <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }} noWrap>

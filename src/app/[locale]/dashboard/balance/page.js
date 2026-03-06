@@ -165,7 +165,7 @@ export default function BalancePage() {
     setCryptoPayoutError(null);
     setCryptoPayoutSuccess(null);
     createCryptoPayoutRequest(
-      { amount, currency: cryptoPayoutCurr, walletAddress: wallet },
+      { amount, currency: 'USD', walletAddress: wallet },
       token,
     )
       .then(() => {
@@ -664,7 +664,14 @@ export default function BalancePage() {
                   <Button
                     variant={withdrawSection === 'crypto' ? 'contained' : 'outlined'}
                     color="secondary"
-                    onClick={() => setWithdrawSection(withdrawSection === 'crypto' ? null : 'crypto')}
+                    onClick={() => {
+                      if (withdrawSection === 'crypto') {
+                        setWithdrawSection(null);
+                      } else {
+                        setWithdrawSection('crypto');
+                        setCryptoPayoutCurrency('USD');
+                      }
+                    }}
                     sx={{ textTransform: 'none', minHeight: 44 }}
                   >
                     {t('withdrawWithCrypto')}
@@ -836,6 +843,9 @@ export default function BalancePage() {
                     <Typography variant="subtitle1" fontWeight={600} gutterBottom>
                       {t('withdrawWithCrypto')}
                     </Typography>
+                    <Alert severity="info" sx={{ mb: 2 }} variant="outlined">
+                      {t('withdrawCryptoUsdOnly')}
+                    </Alert>
                     <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
                       {t('withdrawCryptoHint')}
                     </Typography>
@@ -853,26 +863,13 @@ export default function BalancePage() {
                       <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start' }}>
                         <TextField
                           type="number"
-                          label={t('amountInCurrency', { currency: cryptoPayoutCurr })}
+                          label={t('amountInCurrency', { currency: 'USD' })}
                           value={cryptoPayoutAmount}
                           onChange={(e) => setCryptoPayoutAmount(e.target.value)}
                           inputProps={{ min: 0.01 }}
                           size="small"
                           fullWidth
                         />
-                        <TextField
-                          select
-                          label={t('currency')}
-                          value={cryptoPayoutCurr}
-                          onChange={(e) => setCryptoPayoutCurrency(e.target.value)}
-                          size="small"
-                          sx={{ minWidth: 90 }}
-                          SelectProps={{ native: true }}
-                        >
-                          <option value="USD">USD</option>
-                          <option value="EUR">EUR</option>
-                          <option value="UAH">UAH</option>
-                        </TextField>
                         <Button
                           variant="outlined"
                           color="primary"
@@ -885,7 +882,7 @@ export default function BalancePage() {
                         </Button>
                       </Box>
                       <Typography variant="body2" color="text.secondary">
-                        {t('youHaveInCurrency', { amount: totalAvailableForCrypto.toFixed(2), currency: cryptoPayoutCurr })}
+                        {t('youHaveInCurrency', { amount: totalAvailableForCrypto.toFixed(2), currency: 'USD' })}
                       </Typography>
                       <TextField
                         label={t('withdrawCryptoWalletLabel')}
