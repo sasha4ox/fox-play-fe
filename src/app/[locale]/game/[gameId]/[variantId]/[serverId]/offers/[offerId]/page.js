@@ -24,6 +24,7 @@ import MenuItem from '@mui/material/MenuItem';
 import Avatar from '@mui/material/Avatar';
 import Badge from '@mui/material/Badge';
 import Rating from '@mui/material/Rating';
+import Tooltip from '@mui/material/Tooltip';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import { useAuthStore } from '@/store/authStore';
@@ -668,11 +669,6 @@ export default function OfferPDPPage() {
               </Typography>
             </Box>
           )}
-          {cryptoPaymentEnabled && (
-            <Alert severity="info" sx={{ mt: 2 }} variant="outlined">
-              {t('payWithCryptoUsdNotice')}
-            </Alert>
-          )}
           {buyError && (
             <Alert severity="error" sx={{ mt: 2 }}>
               {buyError}
@@ -706,9 +702,11 @@ export default function OfferPDPPage() {
             {buySubmitting ? 'Creating…' : (t('payByCard') || 'Pay by card')}
           </Button>
           {cryptoPaymentEnabled && (
-            <Button variant="contained" color="secondary" onClick={handleCryptoBuySubmit} disabled={buySubmitting || (isAdenaOffer ? buyQuantityKk <= 0 : buyQuantity < 1)}>
-              {buySubmitting ? 'Creating…' : (t('payWithCrypto') || 'Pay with Crypto')}
-            </Button>
+            <Tooltip title={t('payWithCryptoUsdNotice')}>
+              <Button variant="contained" color="secondary" onClick={handleCryptoBuySubmit} disabled={buySubmitting || (isAdenaOffer ? buyQuantityKk <= 0 : buyQuantity < 1)}>
+                {buySubmitting ? 'Creating…' : (t('payWithCrypto') || 'Pay with Crypto')}
+              </Button>
+            </Tooltip>
           )}
         </DialogActions>
       </Dialog>

@@ -562,6 +562,16 @@ export async function setAdminPlatformFeePercent(platformFeePercent, token) {
   return data?.platformFeePercent
 }
 
+/** Admin: get currency rates and source (Frankfurter, ExchangeRate-API, OpenExchangeRates, fallback, manual). */
+export async function getAdminCurrencyRates(token) {
+  return apiGet('/admin/settings/currency-rates', token)
+}
+
+/** Admin: set manual currency rates (only when source is fallback or manual). ratesPerUsd: { EUR, UAH, RUB } = 1 USD. */
+export async function setAdminCurrencyRates(ratesPerUsd, token) {
+  return apiPatch('/admin/settings/currency-rates', { ratesPerUsd }, token)
+}
+
 /** Admin: get order number message config for card-payment page. */
 export async function getAdminCardPaymentOrderNumberMessage(token) {
   return apiGet('/admin/settings/card-payment-order-number-message', token)

@@ -16,6 +16,7 @@ const adminNav = [
   { href: 'orders', labelKey: 'orders' },
   { href: 'disputes', labelKey: 'disputes' },
   { href: 'money-flow', labelKey: 'moneyFlow' },
+  { href: 'currency-rates', labelKey: 'currencyRates' },
   { href: 'users', labelKey: 'users' },
   { href: 'games', labelKey: 'games' },
 ];
