@@ -49,6 +49,7 @@ import {
 } from '@/lib/api';
 import { useOrderSocket } from '@/hooks/useOrderSocket';
 import { formatAdena } from '@/lib/adenaFormat';
+import { getOrderStatusTextColor } from '@/lib/orderStatusColors';
 
 export default function OrderChatPage() {
   const params = useParams();
@@ -194,8 +195,7 @@ export default function OrderChatPage() {
   const buyerPendingAdminConfirm = isBuyer && (order?.paymentMethod === 'CARD_MANUAL' || order?.paymentMethod === 'CRYPTO_MANUAL') && order?.status === 'CREATED';
   const sellerPendingAdminConfirm = isSeller && (order?.paymentMethod === 'CARD_MANUAL' || order?.paymentMethod === 'CRYPTO_MANUAL') && order?.status === 'CREATED';
   const pendingAdminConfirm = buyerPendingAdminConfirm || sellerPendingAdminConfirm;
-  /** Green when payment confirmed (PAID+); light amber when waiting for confirmation */
-  const chatBgColor = pendingAdminConfirm ? '#fff8e6' : (order && ['PAID', 'DELIVERED', 'COMPLETED'].includes(order.status)) ? '#e8f5e9' : '#f5f5f5';
+  const chatBgColor = 'var(--background)';
   const canSellerDeliver =
     isSeller &&
     order &&
@@ -482,8 +482,15 @@ export default function OrderChatPage() {
           <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }} noWrap>
             {order.offer?.title || tOrders('offer')}
           </Typography>
-          <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
-            {tOrders('status')}: {order.status ? tSales(`status_${order.status}`) : '—'}
+          <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.8rem' }}>
+            {tOrders('status')}:{' '}
+            {order.status ? (
+              <Box component="span" sx={{ fontSize: '0.875rem', fontWeight: 700, color: getOrderStatusTextColor(order.status, order.paymentMethod) }}>
+                {tSales(`status_${order.status}`)}
+              </Box>
+            ) : (
+              '—'
+            )}
           </Typography>
         </Box>
       </Box>

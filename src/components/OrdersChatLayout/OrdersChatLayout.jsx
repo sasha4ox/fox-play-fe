@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -17,29 +17,14 @@ import SearchIcon from '@mui/icons-material/Search';
 import { useAuthStore } from '@/store/authStore';
 import { useProfile } from '@/hooks/useProfile';
 import { getMyOrderChats } from '@/lib/api';
+import { getOrderStatusTextColor } from '@/lib/orderStatusColors';
 import Button from '@mui/material/Button';
 
 /** Dark green used for sender bubbles (matches reference) */
 const SENDER_BUBBLE = '#1B4332';
 const HIGHLIGHT_BG = 'rgba(27, 67, 50, 0.18)';
 
-/** Chat list item background by order state (left sidebar) */
-const CHAT_BG = {
-  waitingMoney: '#fff8e6',   // Light amber – waiting for approval of money (CARD_MANUAL + CREATED)
-  proceed: '#e8f5e9',       // Green – PAID or DELIVERED (send adena / confirm received)
-  messagesOnly: '#e3f2fd',  // Blue – just messages, no buying (inquiry / CREATED non-card)
-  completed: '#f3e5f5',     // Purple – COMPLETED
-};
-
-function getChatItemBg(order) {
-  const status = order?.status;
-  const paymentMethod = order?.paymentMethod;
-  const quantity = order?.quantity ?? 0;
-  if (status === 'COMPLETED') return CHAT_BG.completed;
-  if (status === 'PAID' || status === 'DELIVERED') return CHAT_BG.proceed;
-  if (status === 'CREATED' && (paymentMethod === 'CARD_MANUAL' || paymentMethod === 'CRYPTO_MANUAL')) return CHAT_BG.waitingMoney;
-  return CHAT_BG.messagesOnly; // CREATED + BALANCE, inquiry (quantity 0), CANCELED, DISPUTED, etc.
-}
+const CHAT_ITEM_BG = 'var(--background)';
 
 export default function OrdersChatLayout({ children }) {
   const locale = useLocale();
@@ -70,11 +55,23 @@ export default function OrdersChatLayout({ children }) {
       })
     : allOrders;
 
+  const refetchChatList = useCallback(() => {
+    if (!token) return;
+    getMyOrderChats(token)
+      .then((data) => {
+        const orders = Array.isArray(data) ? data : (data?.orders ?? []);
+        const unreadTotal = typeof data?.unreadTotal === 'number' ? data.unreadTotal : 0;
+        setChatSummary({ orders, unreadTotal });
+      })
+      .catch(() => setChatSummary({ orders: [], unreadTotal: 0 }));
+  }, [token]);
+
   useEffect(() => {
     if (!token) {
       setLoading(false);
       return;
     }
+    setLoading(true);
     getMyOrderChats(token)
       .then((data) => {
         const orders = Array.isArray(data) ? data : (data?.orders ?? []);
@@ -84,6 +81,14 @@ export default function OrdersChatLayout({ children }) {
       .catch(() => setChatSummary({ orders: [], unreadTotal: 0 }))
       .finally(() => setLoading(false));
   }, [token]);
+
+  // Refetch chat list after user opens a chat so sidebar badge clears (GET messages marks as read on backend)
+  useEffect(() => {
+    if (!orderIdFromPath) return;
+    const delayMs = 800;
+    const timeoutId = setTimeout(refetchChatList, delayMs);
+    return () => clearTimeout(timeoutId);
+  }, [orderIdFromPath, refetchChatList]);
 
   const isOrdersRoot = pathname?.endsWith('/orders') || pathname?.match(/\/orders\/?$/);
   useEffect(() => {
@@ -235,7 +240,6 @@ export default function OrdersChatLayout({ children }) {
               const lastText = order.lastMessage?.text ?? '';
               const lastDate = order.lastMessage?.createdAt ?? order.createdAt;
               const isSelected = order.id === orderIdFromPath;
-              const itemBg = getChatItemBg(order);
               const formatDate = (d) => {
                 if (!d) return '';
                 const date = new Date(d);
@@ -261,7 +265,7 @@ export default function OrdersChatLayout({ children }) {
                       px: { xs: 1.5, md: 2 },
                       py: { xs: 1.5, md: 1.75 },
                       cursor: 'pointer',
-                      bgcolor: itemBg,
+                      bgcolor: CHAT_ITEM_BG,
                       color: 'var(--third-color)',
                       '&:hover': { filter: 'brightness(0.97)' },
                       borderLeft: isSelected ? '4px solid' : '4px solid transparent',
@@ -296,7 +300,7 @@ export default function OrdersChatLayout({ children }) {
                       <Divider sx={{ my: 0.75, borderColor: 'var(--second-color)' }} />
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, flexWrap: 'wrap' }}>
                         {order.status && (
-                          <Typography variant="caption" sx={{ fontSize: '0.7rem', color: '#0d47a1', fontWeight: 600 }}>
+                          <Typography variant="body2" sx={{ fontSize: '0.875rem', fontWeight: 700, color: getOrderStatusTextColor(order.status, order.paymentMethod) }}>
                             {tSales(`status_${order.status}`)}
                           </Typography>
                         )}
