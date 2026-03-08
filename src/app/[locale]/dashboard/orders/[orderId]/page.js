@@ -48,6 +48,7 @@ import {
   resolveDispute,
 } from '@/lib/api';
 import { useOrderSocket } from '@/hooks/useOrderSocket';
+import { playNewMessageSound } from '@/lib/notificationSound';
 import { formatAdena } from '@/lib/adenaFormat';
 import { getOrderStatusTextColor } from '@/lib/orderStatusColors';
 
@@ -108,10 +109,14 @@ export default function OrderChatPage() {
   setMessagesRef.current = setMessages;
   const setOrderRef = useRef(setOrder);
   setOrderRef.current = setOrder;
+  const currentUserIdRef = useRef(null);
   const { connected, onlineUserIds } = useOrderSocket(orderId, token, {
     onMessage: (msg) => {
+      const senderId = msg.senderId ?? msg.sender?.id;
+      const isFromOther = senderId !== currentUserIdRef.current;
       setMessagesRef.current((prev) => {
         if (prev.some((m) => m.id === msg.id)) return prev;
+        if (isFromOther) playNewMessageSound();
         return [...prev, msg];
       });
     },
@@ -188,6 +193,7 @@ export default function OrderChatPage() {
   };
 
   const currentUserId = user?.id ?? user?.userId;
+  currentUserIdRef.current = currentUserId;
   const role = profile?.role ?? user?.role;
   const isModerator = role === 'ADMIN' || role === 'MODERATOR';
   const isSeller = order && currentUserId && (order.sellerId === currentUserId || order.seller?.id === currentUserId);
@@ -575,6 +581,19 @@ export default function OrderChatPage() {
                     {t('game')}: {order.offer.server.gameVariant.game.name} → {order.offer.server.gameVariant.name} → {order.offer.server.name}
                   </Typography>
                 </MuiLink>
+              )}
+              {order.offer?.id && order.offer?.server?.gameVariant?.game?.id && order.offer?.server?.gameVariant?.id && order.offer?.server?.id && (
+                <Typography variant="body2" color="text.secondary" display="block" sx={{ mb: 1 }}>
+                  {t('orderForThisOffer')}{' '}
+                  <MuiLink
+                    component={Link}
+                    href={`/${locale}/game/${order.offer.server.gameVariant.game.id}/${order.offer.server.gameVariant.id}/${order.offer.server.id}/offers/${order.offer.id}`}
+                    underline="hover"
+                    color="primary.main"
+                  >
+                    {t('viewOffer')}
+                  </MuiLink>
+                </Typography>
               )}
               <Typography variant="body2" color="text.secondary" gutterBottom>
                 {isBuyer ? t('youAreBuying') : t('youAreSelling')}

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -44,16 +44,25 @@ export default function OrdersChatLayout({ children }) {
 
   const orderIdFromPath = pathname?.match(/\/orders\/([a-f0-9-]+)/i)?.[1];
   const isCardPaymentPage = pathname?.includes('/card-payment');
-  const allOrders = chatSummary.orders ?? [];
+  const rawOrders = chatSummary.orders ?? [];
+  const sortedOrders = useMemo(
+    () =>
+      [...rawOrders].sort(
+        (a, b) =>
+          new Date(b.lastMessage?.createdAt || b.createdAt || 0).getTime() -
+          new Date(a.lastMessage?.createdAt || a.createdAt || 0).getTime()
+      ),
+    [rawOrders]
+  );
   const searchQuery = search.trim().toLowerCase();
   const filteredOrders = searchQuery
-    ? allOrders.filter((o) => {
+    ? sortedOrders.filter((o) => {
         const nick = String(o.otherParty?.nickname ?? (o.isSeller ? t('buyer') : t('seller'))).toLowerCase();
         const offerName = String(o.offer?.title ?? '').toLowerCase();
         const chatText = String(o.allMessagesText ?? o.lastMessage?.text ?? '').toLowerCase();
         return nick.includes(searchQuery) || offerName.includes(searchQuery) || chatText.includes(searchQuery);
       })
-    : allOrders;
+    : sortedOrders;
 
   const refetchChatList = useCallback(() => {
     if (!token) return;
@@ -92,10 +101,10 @@ export default function OrdersChatLayout({ children }) {
 
   const isOrdersRoot = pathname?.endsWith('/orders') || pathname?.match(/\/orders\/?$/);
   useEffect(() => {
-    if (!isMobile && !loading && allOrders.length > 0 && isOrdersRoot) {
-      router.replace(`/${locale}/dashboard/orders/${allOrders[0].id}`);
+    if (!isMobile && !loading && sortedOrders.length > 0 && isOrdersRoot) {
+      router.replace(`/${locale}/dashboard/orders/${sortedOrders[0].id}`);
     }
-  }, [isMobile, loading, allOrders, isOrdersRoot, locale, router]);
+  }, [isMobile, loading, sortedOrders, isOrdersRoot, locale, router]);
 
   if (!token) {
     return <Box sx={{ minHeight: '100vh', bgcolor: 'var(--background)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{children}</Box>;

@@ -311,6 +311,8 @@
     "block1TitleBuyer": "Offer & what you're buying",
     "block1TitleSeller": "Offer & what you're selling",
     "game": "Game",
+    "orderForThisOffer": "Order for this offer:",
+    "viewOffer": "View offer",
     "block2Payment": "Amount you receive or pay",
     "block2TitleBuyer": "Amount you pay",
     "block2TitleSeller": "Amount you receive",
