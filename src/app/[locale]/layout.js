@@ -29,6 +29,7 @@ const geistMono = Geist_Mono({
 export const metadata = {
   title: "FoxyPlay",
   description: "FoxyPlay – marketplace for in-game items and services",
+  icons: { icon: "/images/favicon.png", apple: "/images/favicon.png" },
 };
 
 export default async function RootLayout({ children, params }) {

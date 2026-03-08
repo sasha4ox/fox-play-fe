@@ -558,10 +558,10 @@ export default function OrderChatPage() {
           <Box sx={{ p: { xs: isMobile ? 2 : 1.5, md: 2 }, pt: isMobile ? 0 : undefined, display: isMobile && !infoExpandedOnMobile ? 'none' : 'block' }}>
           {order.offer && (
           <>
-            {/* Block 1: Offer & what you're selling / buying */}
+            {/* Block 1: Offer & what you're buying (buyer) / selling (seller) */}
             <Box sx={{ mb: 2, p: 2, border: '1px solid', borderColor: 'divider', borderRadius: 1, bgcolor: 'action.hover' }}>
               <Typography variant="overline" color="text.secondary" fontWeight={600} display="block" sx={{ mb: 1 }}>
-                {t('block1OfferAndDeal')}
+                {isBuyer ? t('block1TitleBuyer') : t('block1TitleSeller')}
               </Typography>
               {order.offer?.server?.gameVariant?.game?.name && order.offer?.server?.gameVariant?.name && order.offer?.server?.name && order.offer?.server?.gameVariant?.game?.id && order.offer?.server?.gameVariant?.id && order.offer?.server?.id && (
                 <MuiLink
@@ -601,10 +601,10 @@ export default function OrderChatPage() {
               )}
             </Box>
 
-            {/* Block 2: Amount you receive or pay + adena/items give or get */}
+            {/* Block 2: Amount you pay (buyer) / receive (seller) + adena/items give or get */}
             <Box sx={{ mb: 2, p: 2, border: '1px solid', borderColor: 'primary.main', borderRadius: 1, bgcolor: (theme) => `${theme.palette.primary.main}08` }}>
               <Typography variant="overline" color="primary.main" fontWeight={600} display="block" sx={{ mb: 1 }}>
-                {t('block2Payment')}
+                {isBuyer ? t('block2TitleBuyer') : t('block2TitleSeller')}
               </Typography>
               {isSeller && order.sellerAmount != null && (
                 <>
