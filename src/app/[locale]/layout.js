@@ -28,17 +28,18 @@ const geistMono = Geist_Mono({
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://foxyplay.app';
 
-/** Build hreflang alternates. Use BCP 47 "uk" for Ukrainian (URL stays /ua/). */
+/** Build hreflang alternates. Use BCP 47 "uk" for Ukrainian (URL stays /ua/). Canonical is self-referencing per page. */
 export async function generateMetadata({ params, request }) {
   const { locale } = await params;
   const pathname = request?.url ? new URL(request.url).pathname : '';
-  const pathWithoutLocale = pathname.replace(/^\/(en|ua)/, '') || '/';
+  const pathWithoutLocale = pathname ? pathname.replace(/^\/(en|ua)/, '') || '/' : '/';
+  const canonical = `${BASE_URL}/${locale}${pathWithoutLocale}`;
   return {
     title: 'FoxyPlay',
     description: 'FoxyPlay – marketplace for in-game items and services',
     icons: { icon: '/images/favicon.png', apple: '/images/favicon.png' },
     alternates: {
-      canonical: `${BASE_URL}/${locale}${pathWithoutLocale}`,
+      canonical,
       languages: {
         en: `${BASE_URL}/en${pathWithoutLocale}`,
         uk: `${BASE_URL}/ua${pathWithoutLocale}`,
@@ -59,7 +60,7 @@ export default async function RootLayout({ children, params }) {
   setRequestLocale(locale);
 
   return (
-    <html lang={locale}>
+    <html lang={locale === 'ua' ? 'uk' : locale}>
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
         <GlobalErrorHandler />
         <Providers>

@@ -3,7 +3,8 @@ import { NextResponse } from 'next/server';
 
 const intlMiddleware = createMiddleware({
   locales: ['en', 'ua'],
-  defaultLocale: 'en'
+  defaultLocale: 'en',
+  alternateLinks: false, // hreflang set in [locale]/layout.js with BCP 47 "uk" for Ukrainian
 });
 
 /** Fix bad redirects like /ua/en/dashboard/... -> /ua/dashboard/... */
