@@ -38,7 +38,7 @@ export async function apiFetch(path, options = {}, token = null) {
       body = await res.json()
       message = body?.message ?? body?.error?.message ?? message
     } catch (_) {}
-    if (res.status === 403 && body?.code === 'ACCOUNT_RESTRICTED' && typeof window !== 'undefined') {
+    if (res.status === 403 && body?.error?.code === 'ACCOUNT_RESTRICTED' && typeof window !== 'undefined') {
       useAuthStore.getState().logout()
       try {
         sessionStorage.setItem('accountRestrictedMessage', message)
@@ -46,6 +46,7 @@ export async function apiFetch(path, options = {}, token = null) {
     }
     const err = new Error(message)
     err.status = res.status
+    err.code = body?.error?.code
     err.response = res
     throw err
   }
@@ -290,19 +291,32 @@ export async function createDepositOrder({ amount, returnUrl, cancelUrl, provide
   return apiPost('/me/deposit/create', body, token)
 }
 
-/** Withdraw UAH to bank via WhiteBIT. body: { amount, currency: 'UAH', iban, provider: 'whitebit', firstName, lastName, tin }. Requires WhiteBIT configured. */
-export async function createWithdraw(body, token) {
-  return apiPost('/me/withdraw', body, token)
+/** Get 2FA setup (QR + otpauth URI). Returns { qrCodeDataUrl, otpauthUri }. Auth required. */
+export async function get2FASetup(token) {
+  return apiGet('/me/2fa/setup', token)
 }
 
-/** Request payout to card (balance → card). body: { amount, currency, cardNumber, cardHolderName }. Admin processes manually; can take ~3 working days. */
-export async function createCardPayoutRequest(body, token) {
-  return apiPost('/me/card-payout-request', body, token)
+/** Verify 2FA setup with 6-digit code. Body: { code }. Enables 2FA on success. */
+export async function verify2FASetup(code, token) {
+  return apiPost('/me/2fa/verify-setup', { code }, token)
 }
 
-/** Request payout in crypto (USDT TRC20). body: { amount, currency, walletAddress }. Admin processes manually. */
-export async function createCryptoPayoutRequest(body, token) {
-  return apiPost('/me/crypto-payout-request', body, token)
+/** Withdraw UAH to bank via WhiteBIT. body: { amount, currency: 'UAH', iban, provider: 'whitebit', firstName, lastName, tin }. Optional totpCode for 2FA. */
+export async function createWithdraw(body, token, totpCode = null) {
+  const payload = totpCode != null ? { ...body, totpCode } : body
+  return apiPost('/me/withdraw', payload, token)
+}
+
+/** Request payout to card (balance → card). body: { amount, currency, cardNumber, cardHolderName }. Optional totpCode for 2FA. */
+export async function createCardPayoutRequest(body, token, totpCode = null) {
+  const payload = totpCode != null ? { ...body, totpCode } : body
+  return apiPost('/me/card-payout-request', payload, token)
+}
+
+/** Request payout in crypto (USDT TRC20). body: { amount, currency, walletAddress }. Optional totpCode for 2FA. */
+export async function createCryptoPayoutRequest(body, token, totpCode = null) {
+  const payload = totpCode != null ? { ...body, totpCode } : body
+  return apiPost('/me/crypto-payout-request', payload, token)
 }
 
 /** List current user's crypto payout requests. */

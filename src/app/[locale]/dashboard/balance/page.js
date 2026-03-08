@@ -19,6 +19,8 @@ import TextField from '@mui/material/TextField';
 import { getDepositInfo, simulateDeposit, addTestCredit, createDepositOrder, createWithdraw, createCardPayoutRequest, createCryptoPayoutRequest, getCardPaymentEnabled, getBalanceHistory } from '@/lib/api';
 import { useLoginModalStore } from '@/store/loginModalStore';
 import { useTranslations } from 'next-intl';
+import Enable2FAModal from '@/components/Enable2FAModal/Enable2FAModal';
+import VerifyTOTPModal from '@/components/VerifyTOTPModal/VerifyTOTPModal';
 
 export default function BalancePage() {
   const router = useRouter();
@@ -77,6 +79,11 @@ export default function BalancePage() {
   const [cryptoPayoutSuccess, setCryptoPayoutSuccess] = useState(null);
   const [balanceHistory, setBalanceHistory] = useState({ items: [], total: 0 });
   const [balanceHistoryLoading, setBalanceHistoryLoading] = useState(false);
+  const [enable2FAModalOpen, setEnable2FAModalOpen] = useState(false);
+  const [verifyTOTPModalOpen, setVerifyTOTPModalOpen] = useState(false);
+  const [pendingWithdrawAction, setPendingWithdrawAction] = useState(null);
+  const [verifyTOTPError, setVerifyTOTPError] = useState(null);
+  const [verifyTOTPSubmitting, setVerifyTOTPSubmitting] = useState(false);
 
   useEffect(() => {
     getCardPaymentEnabled().then(setCardPaymentEnabled).catch(() => setCardPaymentEnabled(false));
@@ -146,6 +153,62 @@ export default function BalancePage() {
     Number(profile?.totalAvailableByCurrency?.[cardPayoutCurr]) ?? 0;
   const totalAvailableForCrypto = Number(profile?.totalAvailableByCurrency?.[cryptoPayoutCurr]) ?? 0;
 
+  /** Opens Enable 2FA or Verify TOTP modal and sets pending withdraw action. */
+  const requestWithdraw2FA = (action) => {
+    setPendingWithdrawAction(action);
+    setVerifyTOTPError(null);
+    if (profile?.twoFactorEnabled) {
+      setVerifyTOTPModalOpen(true);
+    } else {
+      setEnable2FAModalOpen(true);
+    }
+  };
+
+  const handleEnable2FASuccess = () => {
+    setEnable2FAModalOpen(false);
+    refetch().then(() => setVerifyTOTPModalOpen(true));
+  };
+
+  const handleVerifyTOTPSubmit = (totpCode) => {
+    if (!token || !pendingWithdrawAction) return;
+    setVerifyTOTPError(null);
+    setVerifyTOTPSubmitting(true);
+    const { type, body } = pendingWithdrawAction;
+    const run = () => {
+      if (type === 'whitebit') return createWithdraw(body, token, totpCode);
+      if (type === 'card') return createCardPayoutRequest(body, token, totpCode);
+      if (type === 'crypto') return createCryptoPayoutRequest(body, token, totpCode);
+      return Promise.reject(new Error('Unknown withdraw type'));
+    };
+    run()
+      .then(() => {
+        setVerifyTOTPModalOpen(false);
+        setPendingWithdrawAction(null);
+        if (type === 'whitebit') {
+          setWithdrawSuccess(t('withdrawSuccess'));
+          setWithdrawWbAmount('');
+          setWithdrawWbIban('');
+          setWithdrawWbFirstName('');
+          setWithdrawWbLastName('');
+          setWithdrawWbTin('');
+        } else if (type === 'card') {
+          setCardPayoutSuccess(t('cardPayoutSuccess'));
+          setCardPayoutAmount('');
+          setCardPayoutCardNumber('');
+          setCardPayoutCardHolder('');
+        } else if (type === 'crypto') {
+          setCryptoPayoutSuccess(t('withdrawCryptoSuccess'));
+          setCryptoPayoutAmount('');
+          setCryptoPayoutWallet('');
+        }
+        refetch();
+      })
+      .catch((e) => {
+        setVerifyTOTPError(e?.code === 'TOTP_INVALID' ? t('verifyTOTPInvalidCode') : (e?.message || t('withdrawFailed')));
+      })
+      .finally(() => setVerifyTOTPSubmitting(false));
+  };
+
   const handleCryptoPayoutRequest = () => {
     const amount = parseFloat(cryptoPayoutAmount);
     if (!Number.isFinite(amount) || amount < 0.01) {
@@ -161,21 +224,9 @@ export default function BalancePage() {
       setCryptoPayoutError(t('cardPayoutInsufficient'));
       return;
     }
-    setCryptoPayoutLoading(true);
     setCryptoPayoutError(null);
     setCryptoPayoutSuccess(null);
-    createCryptoPayoutRequest(
-      { amount, currency: 'USD', walletAddress: wallet },
-      token,
-    )
-      .then(() => {
-        setCryptoPayoutSuccess(t('withdrawCryptoSuccess'));
-        setCryptoPayoutAmount('');
-        setCryptoPayoutWallet('');
-        refetch();
-      })
-      .catch((err) => setCryptoPayoutError(err?.message || t('withdrawCryptoFailed')))
-      .finally(() => setCryptoPayoutLoading(false));
+    requestWithdraw2FA({ type: 'crypto', body: { amount, currency: 'USD', walletAddress: wallet } });
   };
 
   const handleCardPayoutRequest = () => {
@@ -197,20 +248,10 @@ export default function BalancePage() {
     }
     setCardPayoutError(null);
     setCardPayoutSuccess(null);
-    setCardPayoutLoading(true);
-    createCardPayoutRequest(
-      { amount, currency: cardPayoutCurr, cardNumber, cardHolderName: cardHolder },
-      token,
-    )
-      .then(() => {
-        setCardPayoutSuccess(t('cardPayoutSuccess'));
-        setCardPayoutAmount('');
-        setCardPayoutCardNumber('');
-        setCardPayoutCardHolder('');
-        refetch();
-      })
-      .catch((e) => setCardPayoutError(e.message || t('cardPayoutFailed')))
-      .finally(() => setCardPayoutLoading(false));
+    requestWithdraw2FA({
+      type: 'card',
+      body: { amount, currency: cardPayoutCurr, cardNumber, cardHolderName: cardHolder },
+    });
   };
 
   const handleWithdrawWhitebit = () => {
@@ -234,22 +275,10 @@ export default function BalancePage() {
     }
     setWithdrawError(null);
     setWithdrawSuccess(null);
-    setWithdrawLoading(true);
-    createWithdraw(
-      { amount, currency: 'UAH', iban, provider: 'whitebit', firstName, lastName, tin },
-      token,
-    )
-      .then(() => {
-        setWithdrawSuccess(t('withdrawSuccess'));
-        setWithdrawWbAmount('');
-        setWithdrawWbIban('');
-        setWithdrawWbFirstName('');
-        setWithdrawWbLastName('');
-        setWithdrawWbTin('');
-        refetch();
-      })
-      .catch((e) => setWithdrawError(e.message || t('withdrawFailed')))
-      .finally(() => setWithdrawLoading(false));
+    requestWithdraw2FA({
+      type: 'whitebit',
+      body: { amount, currency: 'UAH', iban, provider: 'whitebit', firstName, lastName, tin },
+    });
   };
 
   const handleCreateDeposit = () => {
@@ -910,6 +939,20 @@ export default function BalancePage() {
           </>
         )}
       </Container>
+
+      <Enable2FAModal
+        open={enable2FAModalOpen}
+        onClose={() => setEnable2FAModalOpen(false)}
+        onSuccess={handleEnable2FASuccess}
+        token={token}
+      />
+      <VerifyTOTPModal
+        open={verifyTOTPModalOpen}
+        onClose={() => { setVerifyTOTPModalOpen(false); setPendingWithdrawAction(null); setVerifyTOTPError(null); }}
+        onSubmit={handleVerifyTOTPSubmit}
+        error={verifyTOTPError}
+        submitting={verifyTOTPSubmitting}
+      />
     </Box>
   );
 }
