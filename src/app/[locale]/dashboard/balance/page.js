@@ -19,12 +19,16 @@ import TextField from '@mui/material/TextField';
 import { getDepositInfo, simulateDeposit, addTestCredit, createDepositOrder, createWithdraw, createCardPayoutRequest, createCryptoPayoutRequest, getCardPaymentEnabled, getBalanceHistory } from '@/lib/api';
 import { useLoginModalStore } from '@/store/loginModalStore';
 import { useTranslations } from 'next-intl';
+import useMediaQuery from '@mui/material/useMediaQuery';
+import { useTheme } from '@mui/material/styles';
 import Enable2FAModal from '@/components/Enable2FAModal/Enable2FAModal';
 import VerifyTOTPModal from '@/components/VerifyTOTPModal/VerifyTOTPModal';
 
 export default function BalancePage() {
   const router = useRouter();
   const locale = useLocale();
+  const theme = useTheme();
+  const isMobileCard = useMediaQuery(theme.breakpoints.down('md'));
   const t = useTranslations('Balance');
   const base = `/${locale}`;
   const isAuth = useIsAuthenticated();
@@ -724,6 +728,11 @@ export default function BalancePage() {
                     <Alert severity="warning" sx={{ mb: 2 }}>
                       {t('cardPayoutDaysNotice')}
                     </Alert>
+                    {!profile?.twoFactorEnabled && (
+                      <Alert severity="info" sx={{ mb: 2 }}>
+                        {t('twoFactorRequiredHint')}
+                      </Alert>
+                    )}
                 {cardPayoutSuccess && (
                   <Alert severity="success" sx={{ mb: 2 }} onClose={() => setCardPayoutSuccess(null)}>
                     {cardPayoutSuccess}
@@ -808,26 +817,40 @@ export default function BalancePage() {
                           }}
                         />
                       </Box>
-                      <Box>
-                        <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.6)', letterSpacing: 1, textTransform: 'uppercase', display: 'block', mb: 0.5 }}>
-                          {t('cardPayoutCardHolder')}
-                        </Typography>
-                        <TextField
-                          placeholder="JOHN DOE"
-                          value={cardPayoutCardHolder}
-                          onChange={(e) => setCardPayoutCardHolder(e.target.value.toUpperCase())}
-                          variant="standard"
-                          fullWidth
-                          sx={{
-                            '& .MuiInput-root': { color: '#fff', fontSize: '0.95rem', letterSpacing: 1.5 },
-                            '& .MuiInput-input': { py: 0.5, textTransform: 'uppercase' },
-                            '& .MuiInput-underline:before': { borderColor: 'rgba(255,255,255,0.25)' },
-                            '& .MuiInput-underline:after': { borderColor: 'rgba(255,255,255,0.6)' },
-                          }}
-                        />
-                      </Box>
+                      {!isMobileCard && (
+                        <Box>
+                          <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.6)', letterSpacing: 1, textTransform: 'uppercase', display: 'block', mb: 0.5 }}>
+                            {t('cardPayoutCardHolder')}
+                          </Typography>
+                          <TextField
+                            placeholder="JOHN DOE"
+                            value={cardPayoutCardHolder}
+                            onChange={(e) => setCardPayoutCardHolder(e.target.value.toUpperCase())}
+                            variant="standard"
+                            fullWidth
+                            sx={{
+                              '& .MuiInput-root': { color: '#fff', fontSize: '0.95rem', letterSpacing: 1.5 },
+                              '& .MuiInput-input': { py: 0.5, textTransform: 'uppercase' },
+                              '& .MuiInput-underline:before': { borderColor: 'rgba(255,255,255,0.25)' },
+                              '& .MuiInput-underline:after': { borderColor: 'rgba(255,255,255,0.6)' },
+                            }}
+                          />
+                        </Box>
+                      )}
                     </Box>
                   </Box>
+                  {isMobileCard && (
+                    <TextField
+                      label={t('cardPayoutCardHolder')}
+                      placeholder="JOHN DOE"
+                      value={cardPayoutCardHolder}
+                      onChange={(e) => setCardPayoutCardHolder(e.target.value.toUpperCase())}
+                      size="small"
+                      fullWidth
+                      sx={{ mt: 2 }}
+                      inputProps={{ style: { textTransform: 'uppercase' } }}
+                    />
+                  )}
                   {/* Amount and submit below card */}
                   <Box sx={{ mt: 2.5, display: 'flex', flexDirection: 'column', gap: 2 }}>
                     <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start' }}>
@@ -875,6 +898,11 @@ export default function BalancePage() {
                     <Alert severity="info" sx={{ mb: 2 }} variant="outlined">
                       {t('withdrawCryptoUsdOnly')}
                     </Alert>
+                    {!profile?.twoFactorEnabled && (
+                      <Alert severity="info" sx={{ mb: 2 }}>
+                        {t('twoFactorRequiredHint')}
+                      </Alert>
+                    )}
                     <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
                       {t('withdrawCryptoHint')}
                     </Typography>
@@ -945,6 +973,7 @@ export default function BalancePage() {
         onClose={() => setEnable2FAModalOpen(false)}
         onSuccess={handleEnable2FASuccess}
         token={token}
+        requiredForWithdraw={!!pendingWithdrawAction}
       />
       <VerifyTOTPModal
         open={verifyTOTPModalOpen}

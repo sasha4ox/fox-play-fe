@@ -16,7 +16,7 @@ import useMediaQuery from '@mui/material/useMediaQuery';
 import { useTheme } from '@mui/material/styles';
 import { get2FASetup, verify2FASetup } from '@/lib/api';
 
-export default function Enable2FAModal({ open, onClose, onSuccess, token }) {
+export default function Enable2FAModal({ open, onClose, onSuccess, token, requiredForWithdraw = false }) {
   const t = useTranslations('Balance');
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -110,6 +110,11 @@ export default function Enable2FAModal({ open, onClose, onSuccess, token }) {
         </IconButton>
       </DialogTitle>
       <DialogContent sx={{ px: { xs: 2, sm: 3 }, py: 2 }}>
+        {requiredForWithdraw && (
+          <Alert severity="warning" sx={{ mb: 2 }}>
+            {t('enable2FAClosingCancelsWithdraw')}
+          </Alert>
+        )}
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
           {t('enable2FADescription')}
         </Typography>

@@ -325,6 +325,51 @@ export async function verify2FASetup(code, token) {
   return apiPost('/me/2fa/verify-setup', { code }, token)
 }
 
+/** Disable 2FA. Body: { code }. Requires current TOTP code. */
+export async function disable2FA(code, token) {
+  return apiPost('/me/2fa/disable', { code }, token)
+}
+
+/** Request password reset email. No auth. Body: { email }. */
+export async function requestPasswordReset(email) {
+  return apiPost('/auth/forgot-password', { email }, null)
+}
+
+/** Reset password with token from email. No auth. Body: { token, newPassword }. */
+export async function resetPasswordWithToken(token, newPassword) {
+  return apiPost('/auth/reset-password', { token, newPassword }, null)
+}
+
+/** List saved cards (auth required). Returns { items: [{ id, last4, cardHolderName, label, createdAt }] }. */
+export async function getSavedCards(token) {
+  return apiGet('/me/saved-cards', token)
+}
+
+/** Add saved card. Body: { last4, cardHolderName, label? }. */
+export async function addSavedCard(body, token) {
+  return apiPost('/me/saved-cards', body, token)
+}
+
+/** Delete saved card by id. */
+export async function deleteSavedCard(id, token) {
+  return apiDelete(`/me/saved-cards/${id}`, token)
+}
+
+/** List saved wallets (auth required). Returns { items: [{ id, walletAddress, label, createdAt }] }. */
+export async function getSavedWallets(token) {
+  return apiGet('/me/saved-wallets', token)
+}
+
+/** Add saved wallet. Body: { walletAddress, label? }. */
+export async function addSavedWallet(body, token) {
+  return apiPost('/me/saved-wallets', body, token)
+}
+
+/** Delete saved wallet by id. */
+export async function deleteSavedWallet(id, token) {
+  return apiDelete(`/me/saved-wallets/${id}`, token)
+}
+
 /** Withdraw UAH to bank via WhiteBIT. body: { amount, currency: 'UAH', iban, provider: 'whitebit', firstName, lastName, tin }. Optional totpCode for 2FA. */
 export async function createWithdraw(body, token, totpCode = null) {
   const payload = totpCode != null ? { ...body, totpCode } : body

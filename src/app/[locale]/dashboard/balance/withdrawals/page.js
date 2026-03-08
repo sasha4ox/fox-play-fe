@@ -14,6 +14,10 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Skeleton from '@mui/material/Skeleton';
 import Chip from '@mui/material/Chip';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import useMediaQuery from '@mui/material/useMediaQuery';
+import { useTheme } from '@mui/material/styles';
 import { useAuthStore, useIsAuthenticated } from '@/store/authStore';
 import { getMyCardPayoutRequests, getMyCryptoPayoutRequests } from '@/lib/api';
 import { useLoginModalStore } from '@/store/loginModalStore';
@@ -21,6 +25,8 @@ import { useTranslations } from 'next-intl';
 
 export default function BalanceWithdrawalsPage() {
   const locale = useLocale();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const t = useTranslations('Balance');
   const base = `/${locale}`;
   const isAuth = useIsAuthenticated();
@@ -74,6 +80,57 @@ export default function BalanceWithdrawalsPage() {
           <Skeleton height={200} />
         ) : items.length === 0 ? (
           <Typography color="text.secondary">{t('noWithdrawals')}</Typography>
+        ) : isMobile ? (
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            {items.map((r) => (
+              <Card key={`${r.type}-${r.id}`} variant="outlined" sx={{ bgcolor: 'background.paper' }}>
+                <CardContent sx={{ '&:last-child': { pb: 2 } }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
+                    <Typography variant="caption" color="text.secondary">
+                      {t('date')}
+                    </Typography>
+                    <Typography variant="body2">{formatDate(r.createdAt)}</Typography>
+                  </Box>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                    <Typography variant="caption" color="text.secondary">
+                      {t('withdrawalsType')}
+                    </Typography>
+                    <Typography variant="body2">{r.type === 'crypto' ? t('withdrawWithCrypto') : t('withdrawOnCard')}</Typography>
+                  </Box>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                    <Typography variant="caption" color="text.secondary">
+                      {t('amount')}
+                    </Typography>
+                    <Typography variant="body2" fontWeight={600}>
+                      {r.amount} {r.currency}
+                    </Typography>
+                  </Box>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                    <Typography variant="caption" color="text.secondary">
+                      {t('status')}
+                    </Typography>
+                    <Chip
+                      size="small"
+                      label={r.status}
+                      color={r.status === 'COMPLETED' ? 'success' : r.status === 'FAILED' ? 'error' : 'default'}
+                      variant={r.status === 'PENDING' ? 'outlined' : 'filled'}
+                    />
+                  </Box>
+                  {r.status === 'PENDING' && (
+                    <Typography variant="caption" display="block" color="text.secondary" sx={{ mb: 1 }}>
+                      {t('typicallyProcessedInDays')}
+                    </Typography>
+                  )}
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Typography variant="caption" color="text.secondary">
+                      {t('processedAt')}
+                    </Typography>
+                    <Typography variant="body2">{r.processedAt ? formatDate(r.processedAt) : '—'}</Typography>
+                  </Box>
+                </CardContent>
+              </Card>
+            ))}
+          </Box>
         ) : (
           <Table size="small" sx={{ bgcolor: 'background.paper', borderRadius: 2, overflow: 'hidden' }}>
             <TableHead>
