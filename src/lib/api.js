@@ -14,6 +14,28 @@ export function getAuthHeaders(token = null) {
   return headers
 }
 
+const HTML_INSTEAD_OF_JSON_MESSAGE =
+  'Server returned HTML instead of JSON. Check that NEXT_PUBLIC_API_URL points to the API server.'
+
+/**
+ * Parse response body as JSON. Throws a clear error if the body looks like HTML (e.g. wrong API URL).
+ * @param {Response} res
+ * @returns {Promise<unknown>}
+ */
+async function parseJsonResponse(res) {
+  if (res.status === 204) return null
+  const text = await res.text()
+  const trimmed = text.trimStart()
+  if (trimmed.startsWith('<')) {
+    throw new Error(HTML_INSTEAD_OF_JSON_MESSAGE)
+  }
+  try {
+    return JSON.parse(text)
+  } catch (_) {
+    throw new Error(HTML_INSTEAD_OF_JSON_MESSAGE)
+  }
+}
+
 /**
  * Fetch with optional auth. For client components, pass token from useAuthStore.getState().token
  * On 401, clears auth (token invalid / expired) so user is logged out and can re-login.
@@ -34,10 +56,13 @@ export async function apiFetch(path, options = {}, token = null) {
   if (!res.ok) {
     let message = res.status === 401 ? 'Session expired. Please log in again.' : `API error: ${res.status}`
     let body = {}
-    try {
-      body = await res.json()
-      message = body?.message ?? body?.error?.message ?? message
-    } catch (_) {}
+    const text = await res.text()
+    if (!text.trimStart().startsWith('<')) {
+      try {
+        body = JSON.parse(text)
+        message = body?.message ?? body?.error?.message ?? message
+      } catch (_) {}
+    }
     if (res.status === 403 && body?.error?.code === 'ACCOUNT_RESTRICTED' && typeof window !== 'undefined') {
       useAuthStore.getState().logout()
       try {
@@ -55,28 +80,27 @@ export async function apiFetch(path, options = {}, token = null) {
 
 export async function apiGet(path, token = null) {
   const res = await apiFetch(path, { method: 'GET' }, token)
-  return res.json()
+  return parseJsonResponse(res)
 }
 
 export async function apiPost(path, body, token = null) {
   const res = await apiFetch(path, { method: 'POST', body: JSON.stringify(body) }, token)
-  return res.json()
+  return parseJsonResponse(res)
 }
 
 export async function apiPut(path, body, token = null) {
   const res = await apiFetch(path, { method: 'PUT', body: JSON.stringify(body) }, token)
-  return res.json()
+  return parseJsonResponse(res)
 }
 
 export async function apiPatch(path, body, token = null) {
   const res = await apiFetch(path, { method: 'PATCH', body: JSON.stringify(body) }, token)
-  return res.json()
+  return parseJsonResponse(res)
 }
 
 export async function apiDelete(path, token = null) {
   const res = await apiFetch(path, { method: 'DELETE' }, token)
-  if (res.status === 204) return null
-  return res.json()
+  return parseJsonResponse(res)
 }
 
 /** Public request (no auth) - e.g. games tree */
@@ -87,7 +111,7 @@ export async function fetchGamesTree() {
     headers: { Accept: 'application/json' },
   })
   if (!res.ok) throw new Error(`Games API error: ${res.status}`)
-  return res.json()
+  return parseJsonResponse(res)
 }
 
 /** Offers by server. Pass token when logged in to get displayPrice in your currency. For guests, pass displayCurrency (e.g. 'USD'). params: { offerType, priceMin, priceMax, displayCurrency } */

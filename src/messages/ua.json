@@ -210,6 +210,7 @@
     "enable2FAVerify": "Підтвердити та увімкнути",
     "enable2FALoading": "Завантаження…",
     "enable2FAInvalidCode": "Невірний код. Спробуйте ще раз.",
+    "enable2FAConnectionError": "Помилка з'єднання. Спробуйте пізніше.",
     "verifyTOTPTitle": "Підтвердіть автентифікатором",
     "verifyTOTPDescription": "Введіть 6-значний код з застосунку-автентифікатора, щоб підтвердити виведення.",
     "verifyTOTPPlaceholder": "000000",

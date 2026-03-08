@@ -210,6 +210,7 @@
     "enable2FAVerify": "Verify and enable",
     "enable2FALoading": "Loading…",
     "enable2FAInvalidCode": "Invalid code. Please try again.",
+    "enable2FAConnectionError": "Connection error. Please try again later.",
     "verifyTOTPTitle": "Verify with authenticator",
     "verifyTOTPDescription": "Enter the 6-digit code from your authenticator app to confirm this withdrawal.",
     "verifyTOTPPlaceholder": "000000",

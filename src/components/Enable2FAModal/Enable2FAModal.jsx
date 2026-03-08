@@ -37,7 +37,11 @@ export default function Enable2FAModal({ open, onClose, onSuccess, token }) {
           setQrCodeDataUrl(data?.qrCodeDataUrl ?? null);
           setOtpauthUri(data?.otpauthUri ?? null);
         })
-        .catch((e) => setError(e?.message ?? t('enable2FALoading')))
+        .catch((e) => {
+          const msg = e?.message ?? '';
+          const isHtmlOrJsonError = msg.includes('Server returned HTML') || msg.includes('is not valid JSON');
+          setError(isHtmlOrJsonError ? t('enable2FAConnectionError') : (msg || t('enable2FALoading')));
+        })
         .finally(() => setSetupLoading(false));
     }
   }, [open, token, step]);
