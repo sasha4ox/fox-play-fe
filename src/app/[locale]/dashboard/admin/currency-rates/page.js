@@ -97,7 +97,7 @@ export default function AdminCurrencyRatesPage() {
         <Skeleton variant="rectangular" height={200} sx={{ borderRadius: 1 }} />
       ) : data ? (
         <>
-          <TableContainer component={Card} sx={{ mb: 2 }}>
+          <TableContainer component={Card} sx={{ mb: 2, overflowX: 'auto' }}>
             <Table size="small">
               <TableHead>
                 <TableRow>

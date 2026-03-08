@@ -59,8 +59,8 @@ export default function AdminOrdersPage() {
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
         {t('total')}: {loading ? '…' : data.total}
       </Typography>
-      <TableContainer component={Paper} variant="outlined">
-        <Table size="small">
+      <TableContainer component={Paper} variant="outlined" sx={{ overflowX: 'auto' }}>
+        <Table size="small" sx={{ minWidth: 560 }}>
           <TableHead>
             <TableRow>
               <TableCell>{t('orderId')}</TableCell>

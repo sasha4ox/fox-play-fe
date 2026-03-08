@@ -26,11 +26,27 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata = {
-  title: "FoxyPlay",
-  description: "FoxyPlay – marketplace for in-game items and services",
-  icons: { icon: "/images/favicon.png", apple: "/images/favicon.png" },
-};
+const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://foxyplay.app';
+
+/** Build hreflang alternates. Use BCP 47 "uk" for Ukrainian (URL stays /ua/). */
+export async function generateMetadata({ params, request }) {
+  const { locale } = await params;
+  const pathname = request?.url ? new URL(request.url).pathname : '';
+  const pathWithoutLocale = pathname.replace(/^\/(en|ua)/, '') || '/';
+  return {
+    title: 'FoxyPlay',
+    description: 'FoxyPlay – marketplace for in-game items and services',
+    icons: { icon: '/images/favicon.png', apple: '/images/favicon.png' },
+    alternates: {
+      canonical: `${BASE_URL}/${locale}${pathWithoutLocale}`,
+      languages: {
+        en: `${BASE_URL}/en${pathWithoutLocale}`,
+        uk: `${BASE_URL}/ua${pathWithoutLocale}`,
+        'x-default': `${BASE_URL}/en${pathWithoutLocale}`,
+      },
+    },
+  };
+}
 
 export default async function RootLayout({ children, params }) {
   const { locale } = await params;

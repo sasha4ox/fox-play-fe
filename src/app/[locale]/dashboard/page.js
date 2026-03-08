@@ -136,7 +136,7 @@ export default function DashboardPage() {
       }}
     >
       <Container>
-        <Typography variant="h4" fontWeight={600} color="text.primary" gutterBottom>
+        <Typography component="h1" variant="h4" fontWeight={600} color="text.primary" gutterBottom>
           {t('chooseGame')}
         </Typography>
 
@@ -147,6 +147,7 @@ export default function DashboardPage() {
                 placeholder={t('searchGames')}
                 value={search}
                 onChange={handleSearchChange}
+                inputProps={{ 'aria-label': t('searchGames') }}
                 startAdornment={<SearchIcon sx={{ color: 'text.secondary', mr: 1.5, fontSize: 22 }} />}
                 sx={{
                   width: '100%',
@@ -296,7 +297,7 @@ export default function DashboardPage() {
                 gap: 2,
               }}
             >
-              {gamesToShow.map((game) => {
+              {gamesToShow.map((game, index) => {
                 const imageUrl = getGameImageCandidateUrls(game);
                 return (
                   <SelectCard
@@ -304,6 +305,7 @@ export default function DashboardPage() {
                     name={game.name}
                     imageUrl={imageUrl}
                     onClick={() => handleGameClick(game)}
+                    priority={index === 0}
                   />
                 );
               })}

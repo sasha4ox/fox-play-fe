@@ -46,8 +46,8 @@ export function getFlatGameOfferTarget(game) {
 
 const DEFAULT_GAME_IMAGE = '/images/games/default.png'
 
-/** Supported game image extensions (priority order). */
-const GAME_IMAGE_EXTENSIONS = ['webp', 'png', 'jpg', 'jpeg']
+/** Supported game image extensions (priority order). Prefer PNG first to avoid 404s when WebP is missing; add WebP assets for better delivery. */
+const GAME_IMAGE_EXTENSIONS = ['png', 'webp', 'jpg', 'jpeg']
 
 function slugFromGameName(game) {
   return (game?.name ?? '')

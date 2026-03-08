@@ -59,8 +59,14 @@ export default function AdminLayout({ children }) {
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', pb: 4 }}>
-      <Box sx={{ borderBottom: 1, borderColor: 'divider', px: 2 }}>
-        <Tabs value={currentTab} sx={{ minHeight: 48 }}>
+      <Box sx={{ borderBottom: 1, borderColor: 'divider', px: { xs: 1, sm: 2 } }}>
+        <Tabs
+          value={currentTab}
+          variant="scrollable"
+          scrollButtons="auto"
+          allowScrollButtonsMobile
+          sx={{ minHeight: 48 }}
+        >
           {adminNav.map(({ href, labelKey }) => (
             <Tab
               key={href}
@@ -73,7 +79,7 @@ export default function AdminLayout({ children }) {
           ))}
         </Tabs>
       </Box>
-      <Box sx={{ px: 2, pt: 2 }}>{children}</Box>
+      <Box sx={{ px: { xs: 1, sm: 2 }, pt: 2 }}>{children}</Box>
     </Box>
   );
 }

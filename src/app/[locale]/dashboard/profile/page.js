@@ -187,6 +187,7 @@ export default function ProfilePage() {
           <Box sx={{ position: 'relative' }}>
             <Avatar
               src={avatarUrl}
+              alt={profile?.nickname || profile?.email || tCommon('user')}
               sx={{
                 width: 120,
                 height: 120,

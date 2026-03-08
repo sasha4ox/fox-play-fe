@@ -64,7 +64,7 @@ export default function UserProfilePage() {
   return (
     <Container maxWidth="md" sx={{ py: 3 }}>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
-        <Avatar src={user.avatarUrl} sx={{ width: 64, height: 64 }}>
+        <Avatar src={user.avatarUrl} alt={user.nickname || user.id} sx={{ width: 64, height: 64 }}>
           {(user.nickname || user.id).charAt(0).toUpperCase()}
         </Avatar>
         <Box>

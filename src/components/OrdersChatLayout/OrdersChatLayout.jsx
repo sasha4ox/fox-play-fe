@@ -289,6 +289,7 @@ export default function OrdersChatLayout({ children }) {
                     >
                       <Avatar
                         src={other?.avatarUrl}
+                        alt={other?.nickname || other?.email || t('chats')}
                         sx={{ width: 48, height: 48, flexShrink: 0, bgcolor: order.isSeller ? 'primary.main' : 'grey.600' }}
                       >
                         {(displayName || '?').charAt(0).toUpperCase()}

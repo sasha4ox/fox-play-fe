@@ -21,6 +21,7 @@ import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
+import TableContainer from '@mui/material/TableContainer';
 import Chip from '@mui/material/Chip';
 import Skeleton from '@mui/material/Skeleton';
 import Alert from '@mui/material/Alert';
@@ -92,7 +93,7 @@ export default function AdminDisputesPage() {
       <Typography variant="h5" sx={{ mb: 2 }}>
         {t('disputes')}
       </Typography>
-      <FormControl size="small" sx={{ minWidth: 160, mb: 2 }}>
+      <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 160 }, mb: 2 }} fullWidth>
         <InputLabel>{t('status')}</InputLabel>
         <Select
           value={statusFilter}
@@ -113,7 +114,8 @@ export default function AdminDisputesPage() {
       {loading ? (
         <Skeleton variant="rectangular" height={300} />
       ) : (
-        <Table size="small">
+        <TableContainer sx={{ overflowX: 'auto' }}>
+          <Table size="small" sx={{ minWidth: 640 }}>
           <TableHead>
             <TableRow>
               <TableCell>{t('disputeOrder')}</TableCell>
@@ -147,7 +149,15 @@ export default function AdminDisputesPage() {
                   </TableCell>
                   <TableCell align="right">
                     {d.status === 'OPEN' && (
-                      <Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'flex-end' }}>
+                      <Box
+                        sx={{
+                          display: 'flex',
+                          flexWrap: 'wrap',
+                          gap: 1,
+                          justifyContent: 'flex-end',
+                          '& .MuiButton-root': { minHeight: 44 },
+                        }}
+                      >
                         <Button
                           size="small"
                           color="primary"
@@ -172,6 +182,7 @@ export default function AdminDisputesPage() {
             )}
           </TableBody>
         </Table>
+        </TableContainer>
       )}
       {!loading && data.total > 0 && (
         <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>

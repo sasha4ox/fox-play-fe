@@ -350,6 +350,7 @@ export default function Header() {
         >
           <Avatar
             src={avatarUrl}
+            alt={displayName || tCommon('user')}
             sx={{
               width: 36,
               height: 36,

@@ -456,6 +456,7 @@ export default function OrderChatPage() {
         <Link href={otherParty?.id ? `/${locale}/user/${otherParty.id}` : '#'} style={{ textDecoration: 'none', color: 'inherit' }}>
           <Avatar
             src={otherParty?.avatarUrl}
+            alt={otherParty?.nickname || otherParty?.email || ''}
             sx={{ width: { xs: 36, md: 44 }, height: { xs: 36, md: 44 }, bgcolor: SENDER_BUBBLE }}
           >
             {(otherName || '?').charAt(0).toUpperCase()}

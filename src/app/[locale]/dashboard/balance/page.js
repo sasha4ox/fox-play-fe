@@ -86,6 +86,7 @@ export default function BalancePage() {
   const [enable2FAModalOpen, setEnable2FAModalOpen] = useState(false);
   const [verifyTOTPModalOpen, setVerifyTOTPModalOpen] = useState(false);
   const [pendingWithdrawAction, setPendingWithdrawAction] = useState(null);
+  const [pendingSectionAfter2FA, setPendingSectionAfter2FA] = useState(null);
   const [verifyTOTPError, setVerifyTOTPError] = useState(null);
   const [verifyTOTPSubmitting, setVerifyTOTPSubmitting] = useState(false);
 
@@ -170,7 +171,13 @@ export default function BalancePage() {
 
   const handleEnable2FASuccess = () => {
     setEnable2FAModalOpen(false);
-    refetch().then(() => setVerifyTOTPModalOpen(true));
+    if (pendingSectionAfter2FA) {
+      setWithdrawSection(pendingSectionAfter2FA);
+      setPendingSectionAfter2FA(null);
+      refetch();
+    } else {
+      refetch().then(() => setVerifyTOTPModalOpen(true));
+    }
   };
 
   const handleVerifyTOTPSubmit = (totpCode) => {
@@ -688,7 +695,14 @@ export default function BalancePage() {
                     <Button
                       variant={withdrawSection === 'card' ? 'contained' : 'outlined'}
                       color="primary"
-                      onClick={() => setWithdrawSection(withdrawSection === 'card' ? null : 'card')}
+                      onClick={() => {
+                        if (!profile?.twoFactorEnabled) {
+                          setPendingSectionAfter2FA('card');
+                          setEnable2FAModalOpen(true);
+                        } else {
+                          setWithdrawSection(withdrawSection === 'card' ? null : 'card');
+                        }
+                      }}
                       sx={{ textTransform: 'none', minHeight: 44 }}
                     >
                       {t('withdrawOnCard')}
@@ -698,11 +712,16 @@ export default function BalancePage() {
                     variant={withdrawSection === 'crypto' ? 'contained' : 'outlined'}
                     color="secondary"
                     onClick={() => {
-                      if (withdrawSection === 'crypto') {
-                        setWithdrawSection(null);
+                      if (!profile?.twoFactorEnabled) {
+                        setPendingSectionAfter2FA('crypto');
+                        setEnable2FAModalOpen(true);
                       } else {
-                        setWithdrawSection('crypto');
-                        setCryptoPayoutCurrency('USD');
+                        if (withdrawSection === 'crypto') {
+                          setWithdrawSection(null);
+                        } else {
+                          setWithdrawSection('crypto');
+                          setCryptoPayoutCurrency('USD');
+                        }
                       }
                     }}
                     sx={{ textTransform: 'none', minHeight: 44 }}
@@ -970,10 +989,13 @@ export default function BalancePage() {
 
       <Enable2FAModal
         open={enable2FAModalOpen}
-        onClose={() => setEnable2FAModalOpen(false)}
+        onClose={() => {
+          setEnable2FAModalOpen(false);
+          setPendingSectionAfter2FA(null);
+        }}
         onSuccess={handleEnable2FASuccess}
         token={token}
-        requiredForWithdraw={!!pendingWithdrawAction}
+        requiredForWithdraw={!!pendingWithdrawAction || !!pendingSectionAfter2FA}
       />
       <VerifyTOTPModal
         open={verifyTOTPModalOpen}

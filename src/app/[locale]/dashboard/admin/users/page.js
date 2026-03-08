@@ -20,6 +20,7 @@ import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
+import TableContainer from '@mui/material/TableContainer';
 import Chip from '@mui/material/Chip';
 import Skeleton from '@mui/material/Skeleton';
 import Alert from '@mui/material/Alert';
@@ -90,7 +91,7 @@ export default function AdminUsersPage() {
       <Typography variant="h5" sx={{ mb: 2 }}>
         {t('users')}
       </Typography>
-      <FormControl size="small" sx={{ minWidth: 180, mb: 2 }}>
+      <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 180 }, mb: 2 }} fullWidth>
         <InputLabel>{t('usersBanned')}</InputLabel>
         <Select
           value={bannedFilter}
@@ -114,7 +115,8 @@ export default function AdminUsersPage() {
       ) : data.users.length === 0 ? (
         <Typography color="text.secondary">{t('noUsers')}</Typography>
       ) : (
-        <Table size="small" sx={{ minWidth: 520 }}>
+        <TableContainer sx={{ overflowX: 'auto' }}>
+          <Table size="small" sx={{ minWidth: 520 }}>
           <TableHead>
             <TableRow sx={{ bgcolor: 'action.hover' }}>
               <TableCell>{t('usersEmail')}</TableCell>
@@ -173,6 +175,7 @@ export default function AdminUsersPage() {
             ))}
           </TableBody>
         </Table>
+        </TableContainer>
       )}
       {data.total > 0 && (
         <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>

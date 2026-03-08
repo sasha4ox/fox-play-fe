@@ -780,17 +780,28 @@ export default function AdminMoneyFlowPage() {
                       <TableCell sx={{ maxWidth: 180 }}>{c.paymentComment ? (c.paymentComment.length > 30 ? c.paymentComment.slice(0, 30) + '…' : c.paymentComment) : '—'}</TableCell>
                       <TableCell>{c.isActive ? '✓ Active' : '—'}</TableCell>
                       <TableCell align="right">
-                        <Button size="small" onClick={() => handleOpenEditCard(c)}>
-                          {t('editCard')}
-                        </Button>
-                        {!c.isActive && (
-                          <Button size="small" onClick={() => handleSetActive(c.id)}>
-                            {t('setActive')}
+                        <Box
+                          sx={{
+                            display: 'flex',
+                            flexWrap: 'wrap',
+                            gap: 1,
+                            justifyContent: 'flex-end',
+                            '& .MuiButton-root': { minHeight: 44 },
+                            '& .MuiIconButton-root': { minHeight: 44, minWidth: 44 },
+                          }}
+                        >
+                          <Button size="small" onClick={() => handleOpenEditCard(c)}>
+                            {t('editCard')}
                           </Button>
-                        )}
-                        <IconButton size="small" onClick={() => handleDeleteCard(c.id)} aria-label="Delete">
-                          🗑
-                        </IconButton>
+                          {!c.isActive && (
+                            <Button size="small" onClick={() => handleSetActive(c.id)}>
+                              {t('setActive')}
+                            </Button>
+                          )}
+                          <IconButton size="small" onClick={() => handleDeleteCard(c.id)} aria-label="Delete">
+                            🗑
+                          </IconButton>
+                        </Box>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -841,32 +852,40 @@ export default function AdminMoneyFlowPage() {
                       </TableCell>
                       <TableCell>{r.buyerMarkedSentAt ? new Date(r.buyerMarkedSentAt).toLocaleString() : '—'}</TableCell>
                       <TableCell align="right">
-                        <Button
-                          size="small"
-                          variant="outlined"
-                          sx={{ mr: 1 }}
-                          onClick={() => handleOpenContactBuyer(r.orderId)}
+                        <Box
+                          sx={{
+                            display: 'flex',
+                            flexWrap: 'wrap',
+                            gap: 1,
+                            justifyContent: 'flex-end',
+                            '& .MuiButton-root': { minHeight: 44 },
+                          }}
                         >
-                          {t('messageUser')}
-                        </Button>
-                        <Button
-                          size="small"
-                          variant="outlined"
-                          color="error"
-                          onClick={() => handleDeclineReceipt(r.orderId)}
-                          disabled={decliningReceipt === r.orderId || confirmingReceipt === r.orderId}
-                          sx={{ mr: 1 }}
-                        >
-                          {decliningReceipt === r.orderId ? '…' : t('declineReceipt')}
-                        </Button>
-                        <Button
-                          size="small"
-                          variant="contained"
-                          onClick={() => handleConfirmReceipt(r.orderId)}
-                          disabled={confirmingReceipt === r.orderId}
-                        >
-                          {confirmingReceipt === r.orderId ? '…' : t('confirmReceipt')}
-                        </Button>
+                          <Button
+                            size="small"
+                            variant="outlined"
+                            onClick={() => handleOpenContactBuyer(r.orderId)}
+                          >
+                            {t('messageUser')}
+                          </Button>
+                          <Button
+                            size="small"
+                            variant="outlined"
+                            color="error"
+                            onClick={() => handleDeclineReceipt(r.orderId)}
+                            disabled={decliningReceipt === r.orderId || confirmingReceipt === r.orderId}
+                          >
+                            {decliningReceipt === r.orderId ? '…' : t('declineReceipt')}
+                          </Button>
+                          <Button
+                            size="small"
+                            variant="contained"
+                            onClick={() => handleConfirmReceipt(r.orderId)}
+                            disabled={confirmingReceipt === r.orderId}
+                          >
+                            {confirmingReceipt === r.orderId ? '…' : t('confirmReceipt')}
+                          </Button>
+                        </Box>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -970,12 +989,22 @@ export default function AdminMoneyFlowPage() {
                       <TableCell sx={{ fontFamily: 'monospace', fontSize: '0.75rem', maxWidth: 140 }}>{r.cryptoWalletAddress ? `${r.cryptoWalletAddress.slice(0, 8)}…${r.cryptoWalletAddress.slice(-6)}` : '—'}</TableCell>
                       <TableCell>{r.buyerMarkedSentAt ? new Date(r.buyerMarkedSentAt).toLocaleString() : '—'}</TableCell>
                       <TableCell align="right">
-                        <Button size="small" variant="outlined" color="error" onClick={() => handleDeclineCryptoReceipt(r.orderId)} disabled={decliningCryptoReceipt === r.orderId || confirmingCryptoReceipt === r.orderId} sx={{ mr: 1 }}>
-                          {decliningCryptoReceipt === r.orderId ? '…' : t('declineReceipt')}
-                        </Button>
-                        <Button size="small" variant="contained" onClick={() => handleConfirmCryptoReceipt(r.orderId)} disabled={confirmingCryptoReceipt === r.orderId}>
-                          {confirmingCryptoReceipt === r.orderId ? '…' : t('confirmReceipt')}
-                        </Button>
+                        <Box
+                          sx={{
+                            display: 'flex',
+                            flexWrap: 'wrap',
+                            gap: 1,
+                            justifyContent: 'flex-end',
+                            '& .MuiButton-root': { minHeight: 44 },
+                          }}
+                        >
+                          <Button size="small" variant="outlined" color="error" onClick={() => handleDeclineCryptoReceipt(r.orderId)} disabled={decliningCryptoReceipt === r.orderId || confirmingCryptoReceipt === r.orderId}>
+                            {decliningCryptoReceipt === r.orderId ? '…' : t('declineReceipt')}
+                          </Button>
+                          <Button size="small" variant="contained" onClick={() => handleConfirmCryptoReceipt(r.orderId)} disabled={confirmingCryptoReceipt === r.orderId}>
+                            {confirmingCryptoReceipt === r.orderId ? '…' : t('confirmReceipt')}
+                          </Button>
+                        </Box>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -1087,7 +1116,16 @@ export default function AdminMoneyFlowPage() {
                       <TableCell>{r.createdAt ? new Date(r.createdAt).toLocaleString() : '—'}</TableCell>
                       <TableCell align="right">
                         {r.status === 'PENDING' && (
-                          <Box component="span" sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, justifyContent: 'flex-end' }}>
+                          <Box
+                            component="span"
+                            sx={{
+                              display: 'flex',
+                              flexWrap: 'wrap',
+                              gap: 1,
+                              justifyContent: 'flex-end',
+                              '& .MuiButton-root': { minHeight: 44 },
+                            }}
+                          >
                             <Button
                               size="small"
                               variant="contained"
@@ -1161,7 +1199,16 @@ export default function AdminMoneyFlowPage() {
                       <TableCell>{r.createdAt ? new Date(r.createdAt).toLocaleString() : '—'}</TableCell>
                       <TableCell align="right">
                         {r.status === 'PENDING' && (
-                          <Box component="span" sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, justifyContent: 'flex-end' }}>
+                          <Box
+                            component="span"
+                            sx={{
+                              display: 'flex',
+                              flexWrap: 'wrap',
+                              gap: 1,
+                              justifyContent: 'flex-end',
+                              '& .MuiButton-root': { minHeight: 44 },
+                            }}
+                          >
                             <Button size="small" variant="contained" color="primary" onClick={() => handleCryptoPayoutComplete(r.id)} disabled={confirmingCryptoPayoutComplete === r.id}>
                               {confirmingCryptoPayoutComplete === r.id ? '…' : t('markCompleted')}
                             </Button>

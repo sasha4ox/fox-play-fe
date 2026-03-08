@@ -56,6 +56,7 @@ Open **http://localhost:3000**. You’ll be redirected to a locale (e.g. `/en`).
    | `NEXT_PUBLIC_API_URL`       | `https://your-backend.up.railway.app` | Your **Railway backend** URL (no trailing slash). Required so the app can call `/games`, auth, etc. |
    | `NEXT_PUBLIC_GOOGLE_CLIENT_ID` | Your Google OAuth client ID          | Optional; for "Continue with Google". See backend docs `GOOGLE_OAUTH_SETUP.md`. |
    | `NEXT_PUBLIC_APP_URL`       | `https://your-app.vercel.app`         | Optional; your Vercel app URL.                                                                      |
+   | `NEXT_PUBLIC_SITE_URL`     | `https://foxyplay.app`                | Optional; base URL for metadata (canonical, hreflang). Defaults to https://foxyplay.app.            |
    | `NEXT_PUBLIC_LOCAL_APP_URL` | `http://localhost:3000`               | Optional; for local.                                                                                |
 
    For production, set **NEXT_PUBLIC_API_URL** to the **Railway backend** URL.
@@ -89,6 +90,12 @@ Then the deployed app will load games and auth from the deployed backend.
 | `pnpm build` | Production build      |
 | `pnpm start` | Run production build  |
 | `pnpm lint`  | Run ESLint            |
+
+## Performance & Lighthouse
+
+- **Canonical / hreflang:** Set `NEXT_PUBLIC_SITE_URL` (e.g. `https://foxyplay.app`) so metadata alternates use the correct base URL. Ukrainian uses BCP 47 `hreflang="uk"` with URL path `/ua/`.
+- **Render-blocking:** Next.js and `next/font` already use non-blocking font loading. To reduce blocking further, load third-party scripts (analytics, ads) only after consent or lazily; see `ConditionalAnalytics` and `conditionalScripts.ts`.
+- **Deprecated APIs (SharedStorage, Fledge, StorageType.persistent):** These warnings usually come from the browser or a third-party script (e.g. analytics/ads). If you see them in Lighthouse, identify the script (e.g. in Network or by disabling scripts); update it to a version that uses `navigator.storage` and avoids deprecated APIs, or remove it if not needed.
 
 ## Tech
 

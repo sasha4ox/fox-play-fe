@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import Image from 'next/image';
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import CardActionArea from '@mui/material/CardActionArea';
@@ -14,7 +15,10 @@ function candidateUrls(imageUrl) {
   return Array.isArray(imageUrl) ? imageUrl : [imageUrl];
 }
 
-export default function SelectCard({ name, imageUrl, onClick }) {
+/** Responsive sizes for game card grid (1 col xs, 2 sm, 3 md). */
+const CARD_IMAGE_SIZES = '(max-width: 600px) 100vw, (max-width: 960px) 50vw, 33vw';
+
+export default function SelectCard({ name, imageUrl, onClick, priority = false }) {
   const urls = useMemo(() => candidateUrls(imageUrl), [imageUrl]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const nextUrl = urls[currentIndex];
@@ -59,16 +63,14 @@ export default function SelectCard({ name, imageUrl, onClick }) {
             justifyContent: 'center',
           }}
         >
-          <Box
-            component="img"
+          <Image
             src={src}
-            alt={name}
+            alt=""
+            fill
+            sizes={CARD_IMAGE_SIZES}
+            priority={priority}
             onError={handleImgError}
-            sx={{
-              width: '100%',
-              height: '100%',
-              objectFit: 'cover',
-            }}
+            style={{ objectFit: 'cover' }}
           />
         </Box>
         <CardContent sx={{ py: 1.5, px: 2, textAlign: 'center' }}>

@@ -335,14 +335,15 @@ export default function AdminGamesPage() {
         <Typography variant="h5" fontWeight={600}>
           {t('games')}
         </Typography>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap', width: { xs: '100%', sm: 'auto' } }}>
           <InputBase
             placeholder={t('searchGames')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             startAdornment={<SearchIcon sx={{ color: 'text.secondary', mr: 1.5, fontSize: 20 }} />}
             sx={{
-              minWidth: 240,
+              minWidth: { xs: '100%', sm: 240 },
+              flex: { xs: 1, sm: 'none' },
               py: 1,
               px: 2,
               borderRadius: 1,
@@ -352,7 +353,13 @@ export default function AdminGamesPage() {
               borderColor: 'divider',
             }}
           />
-          <Button variant="contained" startIcon={<AddIcon />} onClick={() => setAddGameOpen(true)} disabled={loading}>
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={() => setAddGameOpen(true)}
+            disabled={loading}
+            sx={{ minHeight: 44 }}
+          >
             {t('addGame')}
           </Button>
         </Box>
@@ -401,13 +408,13 @@ export default function AdminGamesPage() {
                     onClick={() => handleOpenEditGameImage(game)}
                     title={t('editGameImage')}
                     disabled={submitting}
-                    sx={{ color: 'text.secondary' }}
+                    sx={{ color: 'text.secondary', minHeight: 44, minWidth: 44 }}
                   >
                     <ImageIcon sx={{ fontSize: 20 }} />
                   </IconButton>
                 </Box>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
-                  <FormControl size="small" sx={{ minWidth: 200 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap', width: { xs: '100%', sm: 'auto' } }}>
+                  <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 200 } }} fullWidth>
                     <InputLabel>{t('structureType')}</InputLabel>
                     <Select
                       value={game.structureType ?? 'FULL'}
@@ -450,7 +457,7 @@ export default function AdminGamesPage() {
                       onClick={() => setAddVariantOpen(game.id)}
                       title={t('addVariant')}
                       disabled={submitting}
-                      sx={{ color: 'primary.main' }}
+                      sx={{ color: 'primary.main', minHeight: 44, minWidth: 44 }}
                     >
                       <AddIcon />
                     </IconButton>
@@ -463,6 +470,7 @@ export default function AdminGamesPage() {
                       )
                     }
                     aria-label={expandedGame === game.id ? 'Collapse' : 'Expand'}
+                    sx={{ minHeight: 44, minWidth: 44 }}
                   >
                     {expandedGame === game.id ? <ExpandLessIcon /> : <ExpandMoreIcon />}
                   </IconButton>
@@ -518,6 +526,7 @@ export default function AdminGamesPage() {
                               onClick={() => setAddServerOpen({ gameId: game.id, variantId: variant.id })}
                               title={t('addServer')}
                               disabled={submitting}
+                              sx={{ minHeight: 44, minWidth: 44 }}
                             >
                               <AddIcon fontSize="small" />
                             </IconButton>
@@ -529,6 +538,7 @@ export default function AdminGamesPage() {
                                 setExpandedVariant(expandedVariant === variant.id ? null : variant.id)
                               )
                             }
+                            sx={{ minHeight: 44, minWidth: 44 }}
                           >
                             {expandedVariant === variant.id ? (
                               <ExpandLessIcon fontSize="small" />
@@ -594,7 +604,7 @@ export default function AdminGamesPage() {
                                             }}
                                             title={t('editServerName')}
                                             disabled={submitting}
-                                            sx={{ color: 'text.secondary', p: 0.25 }}
+                                            sx={{ color: 'text.secondary', p: 0.25, minHeight: 44, minWidth: 44 }}
                                           >
                                             <EditIcon sx={{ fontSize: 16 }} />
                                           </IconButton>
@@ -628,7 +638,7 @@ export default function AdminGamesPage() {
                                   primaryTypographyProps={{ variant: 'body2', fontWeight: 500 }}
                                 />
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
-                                  <FormControl size="small" sx={{ minWidth: 130 }}>
+                                  <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 130 } }} fullWidth>
                                     <InputLabel>{t('offerCategories')}</InputLabel>
                                     <Select
                                       value={isAllTypes ? '__ALL__' : '__CUSTOM__'}
