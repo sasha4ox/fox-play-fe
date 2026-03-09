@@ -16,9 +16,10 @@ import Alert from '@mui/material/Alert';
 import { useAuthStore } from '@/store/authStore';
 import { useProfile } from '@/hooks/useProfile';
 import { fetchOfferById, updateOffer } from '@/lib/api';
+import { parseAdenaInput } from '@/lib/adenaFormat';
+import { getMinPriceFor100kk } from '@/lib/offerMinPrice';
 
 const MIN_KK = 1;
-const MIN_PRICE_PER_100KK = 0.01;
 
 export default function EditOfferPage() {
   const params = useParams();
@@ -38,8 +39,8 @@ export default function EditOfferPage() {
   const [description, setDescription] = useState('');
   const [quantity, setQuantity] = useState(1);
   const [price, setPrice] = useState('');
-  const [quantityAdena, setQuantityAdena] = useState(1);
-  const [priceAdena, setPriceAdena] = useState(1);
+  const [quantityAdena, setQuantityAdena] = useState('1');
+  const [priceAdena, setPriceAdena] = useState('1');
   const [quantityError, setQuantityError] = useState(null);
   const [priceError, setPriceError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
@@ -62,8 +63,8 @@ export default function EditOfferPage() {
         if (data.offerType === 'ADENA') {
           const q = Number(data.quantity ?? 0);
           const p = Number(data.displayPrice ?? data.price ?? 0);
-          setQuantityAdena(q / 1_000_000 || 1);
-          setPriceAdena(p * 100 || 1); // backend: price per 1kk → display: price for 100kk
+          setQuantityAdena(String(q / 1_000_000 || 1));
+          setPriceAdena(String(p * 100 || 1)); // backend: price per 1kk → display: price for 100kk
         } else {
           setQuantity(Number(data.quantity ?? 1));
           setPrice(String(data.price ?? ''));
@@ -78,10 +79,34 @@ export default function EditOfferPage() {
 
   const isCreator = user?.id && offer?.seller?.id && user.id === offer.seller.id;
 
+  /** Parse price per 100kk string (accepts 1.25, 1,75). Returns NaN if invalid. */
+  const parsePricePer100kk = (str) => {
+    if (str == null || String(str).trim() === '') return NaN;
+    return parseFloat(String(str).trim().replace(',', '.'));
+  };
+
+  /** Parse quantity string to adena amount: "1", "1.5", "1,5", "2kk". Returns null if invalid. */
+  const parseQuantityAdena = (str) => {
+    if (str == null || String(str).trim() === '') return null;
+    const s = String(str).trim().toLowerCase();
+    if (/k/.test(s)) {
+      const adena = parseAdenaInput(String(str));
+      return adena != null ? adena : null;
+    }
+    const kk = parseFloat(s.replace(',', '.'));
+    if (!Number.isFinite(kk) || kk <= 0) return null;
+    return Math.floor(kk * 1_000_000);
+  };
+
+  const minPricePer100kk = getMinPriceFor100kk(currency);
+
   const validateAdenaInputs = () => {
     if (!isAdena) return true;
-    const qOk = Number.isFinite(Number(quantityAdena)) && Number(quantityAdena) >= MIN_KK;
-    const pOk = Number.isFinite(Number(priceAdena)) && Number(priceAdena) >= MIN_PRICE_PER_100KK;
+    const qtyAdena = parseQuantityAdena(quantityAdena);
+    const qtyKk = qtyAdena != null ? qtyAdena / 1_000_000 : 0;
+    const qOk = qtyAdena != null && qtyKk >= MIN_KK;
+    const priceVal = parsePricePer100kk(priceAdena);
+    const pOk = Number.isFinite(priceVal) && priceVal >= minPricePer100kk;
     setQuantityError(qOk ? null : tNew('min1kk'));
     setPriceError(pOk ? null : tNew('minPriceFor100kk'));
     return qOk && pOk;
@@ -91,6 +116,10 @@ export default function EditOfferPage() {
     e.preventDefault();
     if (!offer || !token || !isCreator) return;
     if (isAdena && !validateAdenaInputs()) return;
+    if (!isAdena) {
+      const parsedPrice = parseFloat(String(price).trim().replace(',', '.'));
+      if (!Number.isFinite(parsedPrice) || parsedPrice < 0) return;
+    }
     setSubmitting(true);
     setSubmitError(null);
     try {
@@ -98,14 +127,14 @@ export default function EditOfferPage() {
         ? {
             title,
             description,
-            quantity: Math.floor(Number(quantityAdena) * 1_000_000) || 1_000_000,
-            price: (Number(priceAdena) || 0) / 100,
+            quantity: Math.floor(parseQuantityAdena(quantityAdena) ?? 1_000_000),
+            price: parsePricePer100kk(priceAdena) / 100,
           }
         : {
             title,
             description,
             quantity: Number(quantity) || 1,
-            price: Number(price) || 0,
+            price: parseFloat(String(price).trim().replace(',', '.')) || 0,
           };
       await updateOffer(offer.id, payload, token);
       router.push(`/${locale}/game/${gameId}/${variantId}/${serverId}/offers/${offerId}`);
@@ -165,9 +194,7 @@ export default function EditOfferPage() {
                 inputMode="decimal"
                 value={quantityAdena}
                 onChange={(e) => {
-                  const raw = e.target.value.replace(',', '.');
-                  const v = raw === '' ? '' : Number(raw);
-                  setQuantityAdena(v);
+                  setQuantityAdena(e.target.value);
                   setQuantityError(null);
                 }}
                 helperText={quantityError}
@@ -189,9 +216,7 @@ export default function EditOfferPage() {
                 inputMode="decimal"
                 value={priceAdena}
                 onChange={(e) => {
-                  const raw = e.target.value.replace(',', '.');
-                  const v = raw === '' ? '' : Number(raw);
-                  setPriceAdena(v);
+                  setPriceAdena(e.target.value);
                   setPriceError(null);
                 }}
                 helperText={priceError}
@@ -209,20 +234,33 @@ export default function EditOfferPage() {
               />
               <Box sx={{ mt: 1, mb: 2, p: 1.5, bgcolor: 'action.hover', borderRadius: 1 }}>
                 <Typography variant="body2" color="text.primary" sx={{ mb: 0.5 }}>
-                  <strong>1)</strong> {tNew('youWillReceive')}: <strong>{((Number(quantityAdena) || 0) / 100 * (Number(priceAdena) || 0)).toFixed(2)} {currency}</strong>
+                  <strong>1)</strong> {tNew('youWillReceive')}: <strong>{(((parseQuantityAdena(quantityAdena) ?? 0) / 1_000_000 / 100) * (parsePricePer100kk(priceAdena) || 0)).toFixed(2)} {currency}</strong>
                 </Typography>
                 <Typography variant="body2" color="text.primary" sx={{ mb: 0.5 }}>
-                  <strong>2)</strong> {tNew('cost1kkk')}: <strong>{(10 * (Number(priceAdena) || 0)).toFixed(2)} {currency}</strong>
+                  <strong>2)</strong> {tNew('cost1kkk')}: <strong>{(10 * (parsePricePer100kk(priceAdena) || 0)).toFixed(2)} {currency}</strong>
                 </Typography>
                 <Typography variant="body2" color="text.primary">
-                  <strong>3)</strong> {tNew('pricePer1kk')}: <strong>{((Number(priceAdena) || 0) / 100).toFixed(4)} {currency}</strong>
+                  <strong>3)</strong> {tNew('pricePer1kk')}: <strong>{((parsePricePer100kk(priceAdena) || 0) / 100).toFixed(4)} {currency}</strong>
                 </Typography>
               </Box>
             </Box>
           ) : (
             <>
               <TextField type="number" label={t('quantity')} value={quantity} onChange={(e) => setQuantity(e.target.value)} inputProps={{ min: 1 }} fullWidth sx={{ mb: 2 }} required />
-              <TextField type="number" label={`${t('price')} (${currency})`} value={price} onChange={(e) => setPrice(e.target.value)} inputProps={{ min: 0 }} fullWidth sx={{ mb: 2 }} required />
+              <TextField
+                type="text"
+                inputMode="decimal"
+                label={`${t('price')} (${currency})`}
+                value={price}
+                onChange={(e) => setPrice(e.target.value)}
+                fullWidth
+                sx={{
+                  mb: 2,
+                  '& input': { MozAppearance: 'textfield' },
+                  '& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button': { WebkitAppearance: 'none', margin: 0 },
+                }}
+                required
+              />
             </>
           )}
 
@@ -230,7 +268,16 @@ export default function EditOfferPage() {
           <TextField label={t('description')} value={description} onChange={(e) => setDescription(e.target.value)} multiline rows={4} fullWidth sx={{ mb: 2 }} required />
 
           {submitError && <Alert severity="error" sx={{ mb: 2 }}>{submitError}</Alert>}
-          <Button type="submit" variant="contained" color="secondary" disabled={submitting}>
+          <Button
+            type="submit"
+            variant="contained"
+            color="secondary"
+            disabled={
+              submitting ||
+              (isAdena &&
+                (!Number.isFinite(parsePricePer100kk(priceAdena)) || parsePricePer100kk(priceAdena) < minPricePer100kk))
+            }
+          >
             {submitting ? t('saving') : tCommon('save')}
           </Button>
         </form>

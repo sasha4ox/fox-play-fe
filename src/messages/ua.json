@@ -508,7 +508,14 @@
     "items": "Предмети",
     "accounts": "Акаунти",
     "boosting": "Бустинг",
-    "other": "Інше"
+    "other": "Інше",
+    "gameServer": "Гра",
+    "per100kk": "100kk",
+    "per1kkk": "1kkk",
+    "per1Adena": "1 адена",
+    "offerActive": "Активно",
+    "offerInactive": "Неактивно",
+    "toggleOfferStatus": "Оголошення ввімкнено"
   },
   "Game": {
     "chooseVariant": "Оберіть варіант",
@@ -542,7 +549,8 @@
     "seller": "Продавець",
     "sortAsc": "За зростанням",
     "sortDesc": "За спаданням",
-    "byCreator": "від"
+    "byCreator": "від",
+    "priceBelowMinimum": "Ціна нижча за мінімум"
   },
   "OfferDetail": {
     "offerNotFound": "Оголошення не знайдено.",
@@ -581,7 +589,8 @@
     "reviewsTitle": "Відгуки",
     "noReviews": "Відгуків ще немає.",
     "reviewFrom": "Від",
-    "paymentDeclinedMessage": "Оплату відхилено. Можете спробувати знову або оплатити з балансу."
+    "paymentDeclinedMessage": "Оплату відхилено. Можете спробувати знову або оплатити з балансу.",
+    "priceBelowMinCannotBuy": "Ціна цього оголошення нижча за мінімум (60 UAH / 1 EUR / 1.5 USD за 100kk). Покупка неможлива, доки продавець не оновить ціну."
   },
   "NewOffer": {
     "createOffer": "Створити оголошення",
@@ -610,7 +619,7 @@
     "cost1kkk": "1kkk коштує",
     "pricePer1kk": "Ціна за 1kk",
     "min1kk": "Мінімум 1kk (1 000 000 адени)",
-    "minPriceFor100kk": "Мін. 0.01 за 100kk",
+    "minPriceFor100kk": "Мінімум за 100kk: 60 UAH, 1 EUR, 1.5 USD. Ваша ціна занадто низька.",
     "invalidPrice": "Введіть коректну ціну (напр. 1,97 або 50.02)",
     "invalidAdenaFormat": "Введіть kk (мільйон) або kkk (мільярд), напр. 1kk, 2.5kk, 1kkk",
     "creating": "Створення…",

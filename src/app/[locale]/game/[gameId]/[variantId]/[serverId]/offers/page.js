@@ -32,6 +32,7 @@ import { useLoginModalStore } from '@/store/loginModalStore';
 import { useProfile } from '@/hooks/useProfile';
 import { fetchOffersByServer, addRecentServer } from '@/lib/api';
 import { formatAdena } from '@/lib/adenaFormat';
+import { getMinPriceFor100kk } from '@/lib/offerMinPrice';
 
 const ALL_OFFER_TYPES = ['ADENA', 'ITEMS', 'ACCOUNTS', 'BOOSTING', 'OTHER'];
 const STANDARD_CATEGORY_NAMES = new Set(['adena', 'items', 'accounts', 'boosting', 'other']);
@@ -280,6 +281,7 @@ export default function GameOffersPage() {
                     const availabilityKk = formatAdena(offer.quantity ?? 0);
                     const seller = offer.seller;
                     const sellerNickname = seller?.nickname ?? seller?.email ?? '—';
+                    const isPriceBelowMin = categoryFilter === 'ADENA' && priceFor100kk < getMinPriceFor100kk(currency);
                     return (
                       <Card key={offer.id} variant="outlined">
                         <CardActionArea
@@ -325,6 +327,11 @@ export default function GameOffersPage() {
                               <Typography variant="body2" color="primary.main" fontWeight={600}>
                                 {t('priceFor100kk')}: {priceFor100kk.toFixed(2)} {currency}
                               </Typography>
+                              {isPriceBelowMin && (
+                                <Typography variant="caption" color="warning.main" fontWeight={600}>
+                                  {t('priceBelowMinimum')}
+                                </Typography>
+                              )}
                             </Box>
                           </CardContent>
                         </CardActionArea>
@@ -370,6 +377,7 @@ export default function GameOffersPage() {
                       const availabilityKk = formatAdena(offer.quantity ?? 0);
                       const seller = offer.seller;
                       const sellerNickname = seller?.nickname ?? seller?.email ?? '—';
+                      const isPriceBelowMin = categoryFilter === 'ADENA' && priceFor100kk < getMinPriceFor100kk(currency);
                       return (
                         <TableRow
                           key={offer.id}
@@ -417,9 +425,16 @@ export default function GameOffersPage() {
                             </Typography>
                           </TableCell>
                           <TableCell sx={{ width: '170px' }} align="right">
-                            <Typography variant="body2" fontWeight={600}>
-                              {priceFor100kk.toFixed(2)} {currency}
-                            </Typography>
+                            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 0.25 }}>
+                              <Typography variant="body2" fontWeight={600}>
+                                {priceFor100kk.toFixed(2)} {currency}
+                              </Typography>
+                              {isPriceBelowMin && (
+                                <Typography variant="caption" color="warning.main" fontWeight={600}>
+                                  {t('priceBelowMinimum')}
+                                </Typography>
+                              )}
+                            </Box>
                           </TableCell>
                         </TableRow>
                       );

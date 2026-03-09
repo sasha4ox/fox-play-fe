@@ -55,3 +55,18 @@ export function formatAdena(num) {
   if (n >= K) return `${(n / K).toFixed(2).replace(/\.?0+$/, '')}k`;
   return String(n);
 }
+
+/**
+ * Format price per 1 adena for display (pricePer1kk / 1_000_000). Use when showing cost of 1 adena.
+ * @param { number } pricePer1kk - Price per 1kk adena (e.g. from offer.price or displayPrice)
+ * @param { number } [decimals=6] - Max decimal places
+ * @returns { string }
+ */
+export function formatPricePer1Adena(pricePer1kk, decimals = 6) {
+  if (pricePer1kk == null || !Number.isFinite(pricePer1kk) || pricePer1kk < 0) return '0';
+  const perOne = pricePer1kk / 1_000_000;
+  if (perOne >= 0.01) return perOne.toFixed(Math.min(decimals, 2));
+  if (perOne >= 0.0001) return perOne.toFixed(4);
+  if (perOne >= 0.000001) return perOne.toFixed(6);
+  return perOne.toExponential(2);
+}

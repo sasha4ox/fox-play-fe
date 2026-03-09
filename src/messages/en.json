@@ -508,7 +508,14 @@
     "items": "Items",
     "accounts": "Accounts",
     "boosting": "Boosting",
-    "other": "Other"
+    "other": "Other",
+    "gameServer": "Game",
+    "per100kk": "100kk",
+    "per1kkk": "1kkk",
+    "per1Adena": "1 adena",
+    "offerActive": "Active",
+    "offerInactive": "Inactive",
+    "toggleOfferStatus": "Offer on"
   },
   "Game": {
     "chooseVariant": "Choose variant",
@@ -542,7 +549,8 @@
     "seller": "Seller",
     "sortAsc": "Ascending",
     "sortDesc": "Descending",
-    "byCreator": "by"
+    "byCreator": "by",
+    "priceBelowMinimum": "Price below minimum"
   },
   "OfferDetail": {
     "offerNotFound": "Offer not found.",
@@ -581,7 +589,8 @@
     "reviewsTitle": "Reviews",
     "noReviews": "No reviews yet.",
     "reviewFrom": "From",
-    "paymentDeclinedMessage": "Payment was declined. You can try again or pay with balance."
+    "paymentDeclinedMessage": "Payment was declined. You can try again or pay with balance.",
+    "priceBelowMinCannotBuy": "This offer's price is below the minimum (60 UAH / 1 EUR / 1.5 USD per 100kk). It cannot be purchased until the seller updates the price."
   },
   "NewOffer": {
     "createOffer": "Create offer",
@@ -610,7 +619,7 @@
     "cost1kkk": "1kkk costs",
     "pricePer1kk": "Price per 1kk",
     "min1kk": "Minimum is 1kk (1,000,000 adena)",
-    "minPriceFor100kk": "Min 0.01 per 100kk",
+    "minPriceFor100kk": "Minimum per 100kk: 60 UAH, 1 EUR, 1.5 USD. Your price is too low.",
     "invalidPrice": "Enter a valid price (e.g. 1.97 or 50,02)",
     "invalidAdenaFormat": "Use kk (million) or kkk (billion), e.g. 1kk, 2.5kk, 1kkk",
     "creating": "Creating…",

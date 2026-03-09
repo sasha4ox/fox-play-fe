@@ -21,6 +21,7 @@ import { useAuthStore } from '@/store/authStore';
 import { useProfile } from '@/hooks/useProfile';
 import { createOffer, getPlatformFeePercent, fetchOfferRecentPrices } from '@/lib/api';
 import { formatAdena, parseAdenaInput } from '@/lib/adenaFormat';
+import { getMinPriceFor100kk } from '@/lib/offerMinPrice';
 
 export default function NewOfferPage() {
   const params = useParams();
@@ -95,7 +96,7 @@ export default function NewOfferPage() {
   const isAdena = !selectedTab?.custom && selectedTab?.value === 'ADENA';
 
   const MIN_KK = 1;
-  const MIN_PRICE_PER_100KK = 0.01;
+  const minPricePer100kk = getMinPriceFor100kk(currency);
 
   /** Parse quantity string to adena amount: "100", "100kk", "2.5kkk" etc. Returns null if invalid. */
   const parseQuantityAdena = (str) => {
@@ -123,7 +124,7 @@ export default function NewOfferPage() {
       const qtyKk = qtyAdena != null ? qtyAdena / 1_000_000 : 0;
       const qOk = qtyAdena != null && qtyKk >= MIN_KK;
       const priceVal = parsePricePer100kk(priceAdena);
-      const pOk = Number.isFinite(priceVal) && priceVal >= MIN_PRICE_PER_100KK;
+      const pOk = Number.isFinite(priceVal) && priceVal >= minPricePer100kk;
       setQuantityError(qOk ? null : t('min1kk'));
       setPriceError(pOk ? null : t('minPriceFor100kk'));
       if (!qOk || !pOk) valid = false;
@@ -369,7 +370,17 @@ export default function NewOfferPage() {
             </>
           )}
           {submitError && <Alert severity="error" sx={{ mb: 2 }}>{submitError}</Alert>}
-          <Button type="submit" variant="contained" color="secondary" disabled={submitting} sx={{ mt: 2, mb: 3 }}>
+          <Button
+            type="submit"
+            variant="contained"
+            color="secondary"
+            disabled={
+              submitting ||
+              (isAdena &&
+                (!Number.isFinite(parsePricePer100kk(priceAdena)) || parsePricePer100kk(priceAdena) < minPricePer100kk))
+            }
+            sx={{ mt: 2, mb: 3 }}
+          >
             {submitting ? t('creating') : t('createOfferButton')}
           </Button>
         </form>

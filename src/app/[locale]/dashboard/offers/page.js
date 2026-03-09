@@ -7,13 +7,17 @@ import Box from '@mui/material/Box';
 import Container from '@mui/material/Container';
 import Typography from '@mui/material/Typography';
 import Card from '@mui/material/Card';
-import CardActionArea from '@mui/material/CardActionArea';
 import CardContent from '@mui/material/CardContent';
 import Skeleton from '@mui/material/Skeleton';
 import Alert from '@mui/material/Alert';
 import MuiLink from '@mui/material/Link';
+import Chip from '@mui/material/Chip';
+import Switch from '@mui/material/Switch';
+import FormControlLabel from '@mui/material/FormControlLabel';
 import { useAuthStore } from '@/store/authStore';
-import { getMyOffers } from '@/lib/api';
+import { getMyOffers, updateOffer } from '@/lib/api';
+import { formatAdena, formatPricePer1Adena } from '@/lib/adenaFormat';
+import { logClientError } from '@/lib/clientLogger';
 
 const OFFER_TYPE_LABELS = { ADENA: 'Adena', ITEMS: 'Items', ACCOUNTS: 'Accounts', BOOSTING: 'Boosting', OTHER: 'Other' };
 
@@ -25,6 +29,7 @@ export default function MyOffersPage() {
   const [offers, setOffers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [togglingId, setTogglingId] = useState(null);
 
   useEffect(() => {
     if (!token) {
@@ -36,6 +41,22 @@ export default function MyOffersPage() {
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
   }, [token]);
+
+  const handleToggleStatus = (offer) => {
+    const newStatus = offer.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
+    setTogglingId(offer.id);
+    updateOffer(offer.id, { status: newStatus }, token)
+      .then((updated) => {
+        setOffers((prev) =>
+          prev.map((o) => (o.id === offer.id ? { ...o, status: updated.status } : o))
+        );
+      })
+      .catch((err) => {
+        setError(err.message);
+        logClientError(err);
+      })
+      .finally(() => setTogglingId(null));
+  };
 
   if (!token) {
     return (
@@ -84,6 +105,13 @@ export default function MyOffersPage() {
               const gameId = offer.server?.gameVariant?.game?.id;
               const variantId = offer.server?.gameVariant?.id;
               const serverId = offer.server?.id;
+              const gameName = offer.server?.gameVariant?.game?.name;
+              const variantName = offer.server?.gameVariant?.name;
+              const serverName = offer.server?.name;
+              const offersListHref =
+                gameId && variantId && serverId
+                  ? `/${locale}/game/${gameId}/${variantId}/${serverId}/offers`
+                  : null;
               const href =
                 gameId && variantId && serverId
                   ? `/${locale}/game/${gameId}/${variantId}/${serverId}/offers/${offer.id}`
@@ -92,16 +120,41 @@ export default function MyOffersPage() {
                 gameId && variantId && serverId
                   ? `/${locale}/game/${gameId}/${variantId}/${serverId}/offers/${offer.id}/edit`
                   : null;
+              const isAdena = offer.offerType === 'ADENA';
+              const pricePer1kk = Number(offer.displayPrice ?? offer.price) || 0;
+              const currency = offer.displayCurrency ?? offer.currency;
               return (
                 <Card key={offer.id} variant="outlined">
                   <CardContent sx={{ py: 2, px: 2 }}>
-                    <Typography variant="subtitle1" fontWeight={600} component={Link} href={href} sx={{ color: 'inherit', textDecoration: 'none' }}>
-                      {offer.title}
-                    </Typography>
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 1, mb: 0.5 }}>
+                      <Typography variant="subtitle1" fontWeight={600} component={Link} href={href} sx={{ color: 'inherit', textDecoration: 'none' }}>
+                        {offer.title}
+                      </Typography>
+                      {offer.status != null && (
+                        <Chip
+                          size="small"
+                          label={offer.status === 'ACTIVE' ? t('offerActive') : t('offerInactive')}
+                          color={offer.status === 'ACTIVE' ? 'success' : 'default'}
+                          variant="outlined"
+                        />
+                      )}
+                    </Box>
+                    {offersListHref && (gameName || serverName) && (
+                      <Box sx={{ mb: 1 }}>
+                        <MuiLink component={Link} href={offersListHref} color="secondary" sx={{ fontSize: '0.875rem' }}>
+                          {t('gameServer')}: {gameName ?? ''} → {variantName ?? ''} → {serverName ?? ''}
+                        </MuiLink>
+                      </Box>
+                    )}
                     <Typography variant="body2" color="text.secondary">
-                      {OFFER_TYPE_LABELS[offer.offerType] ?? offer.offerType} · {offer.price} {offer.currency} · {t('qty')}: {offer.quantity}
+                      {OFFER_TYPE_LABELS[offer.offerType] ?? offer.offerType} · {offer.displayPrice != null ? `${offer.displayPrice} ${currency}` : `${offer.price} ${offer.currency}`} · {t('qty')}: {isAdena ? formatAdena(Number(offer.quantity)) : offer.quantity}
                     </Typography>
-                    <Box sx={{ mt: 1 }}>
+                    {isAdena && pricePer1kk > 0 && (
+                      <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                        {t('per100kk')}: {(pricePer1kk * 100).toFixed(2)} {currency} · {t('per1kkk')}: {(pricePer1kk * 1000).toFixed(2)} {currency} · {t('per1Adena')}: {formatPricePer1Adena(pricePer1kk)} {currency}
+                      </Typography>
+                    )}
+                    <Box sx={{ mt: 1, display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 2 }}>
                       <MuiLink component={Link} href={href} color="secondary" sx={{ mr: 1 }}>
                         {tCommon('view')}
                       </MuiLink>
@@ -109,6 +162,20 @@ export default function MyOffersPage() {
                         <MuiLink component={Link} href={editHref} color="secondary">
                           {tCommon('edit')}
                         </MuiLink>
+                      )}
+                      {offer.status != null && (
+                        <FormControlLabel
+                          control={
+                            <Switch
+                              checked={offer.status === 'ACTIVE'}
+                              onChange={() => handleToggleStatus(offer)}
+                              disabled={togglingId === offer.id}
+                              size="small"
+                            />
+                          }
+                          label={t('toggleOfferStatus')}
+                          sx={{ ml: 0 }}
+                        />
                       )}
                     </Box>
                   </CardContent>
