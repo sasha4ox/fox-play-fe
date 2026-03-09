@@ -6,7 +6,7 @@ export const MIN_PRICE_PER_100KK = {
   UAH: 60,
   EUR: 1,
   USD: 1.5,
-  RUB: 1,
+  RUB: 100
 };
 
 /**

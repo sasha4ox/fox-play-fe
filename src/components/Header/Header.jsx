@@ -27,7 +27,7 @@ import { useThemeStore } from '@/store/themeStore';
 import { useLoginModalStore } from '@/store/loginModalStore';
 import { useProfile } from '@/hooks/useProfile';
 import { useSellerNewOrder } from '@/hooks/useSellerNewOrder';
-import { updatePreferredCurrency, getUnreadCount, getAdminPendingReceiptsCount } from '@/lib/api';
+import { updatePreferredCurrency, getUnreadCount, getAdminPendingReceiptsCount, getMySupportConversations } from '@/lib/api';
 import {
   playNewOrderSound,
   playNewMessageSound,
@@ -81,6 +81,7 @@ export default function Header() {
   const [soldSoundOn, setSoldSoundOn] = useState(true);
   const [logoError, setLogoError] = useState(false);
   const [pendingReceiptsCount, setPendingReceiptsCount] = useState(0);
+  const [hasSupportConversations, setHasSupportConversations] = useState(false);
   useEffect(() => {
     setMessageSoundOn(getMessageSoundEnabled());
     setSoldSoundOn(getSoldSoundEnabled());
@@ -191,6 +192,23 @@ export default function Header() {
     return () => window.removeEventListener('refetchUnread', handler);
   }, [refetchUnread]);
 
+  useEffect(() => {
+    if (!isAuth || !token) {
+      setHasSupportConversations(false);
+      return;
+    }
+    const fetchSupport = () => {
+      getMySupportConversations(token)
+        .then((data) => {
+          setHasSupportConversations(Array.isArray(data) && data.length > 0);
+        })
+        .catch(() => setHasSupportConversations(false));
+    };
+    fetchSupport();
+    const interval = setInterval(fetchSupport, 30000);
+    return () => clearInterval(interval);
+  }, [isAuth, token, pathname]);
+
   const handleLogout = () => {
     setAnchorEl(null);
     setMobileOpen(false);
@@ -214,6 +232,7 @@ export default function Header() {
 
   const isHome = !pathname || pathname === '/' || pathname === `/${locale}` || pathname === `/${locale}/`;
 
+  const showSupportLink = hasSupportConversations || pathname?.includes('/dashboard/support');
   const navLinks = [
     { href: base, label: t('home'), active: isHome },
     ...(isAuth
@@ -221,7 +240,7 @@ export default function Header() {
           { href: `${base}/dashboard/orders`, label: t('chats'), active: pathname?.includes('/dashboard/orders'), badge: unreadCount },
           { href: `${base}/dashboard/offers`, label: t('myOffers'), active: pathname?.includes('/dashboard/offers') },
           { href: `${base}/dashboard/balance`, label: t('balance'), active: pathname?.includes('/dashboard/balance') },
-          { href: `${base}/dashboard/support`, label: t('support'), active: pathname?.includes('/dashboard/support') },
+          ...(showSupportLink ? [{ href: `${base}/dashboard/support`, label: t('support'), active: pathname?.includes('/dashboard/support') }] : []),
           { href: `${base}/dashboard/sales`, label: t('mySales'), active: pathname?.includes('/dashboard/sales'), badge: sellerOrderCount },
           ...(isAdminOrMod
             ? [{ href: `${base}/dashboard/admin/overview`, label: t('admin'), active: pathname?.includes('/dashboard/admin'), badge: pendingReceiptsCount }]

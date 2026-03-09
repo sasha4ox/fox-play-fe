@@ -378,7 +378,10 @@
     "messagePlaceholder": "Сообщение…",
     "attachImage": "Прикрепить изображение",
     "imagesAttached": "{count} изображений прикреплено",
-    "openDispute": "Открыть спор"
+    "openDispute": "Открыть спор",
+    "paymentConfirmedAutomatically": "Оплата подтверждена автоматически",
+    "paymentConfirmedByAdmin": "Оплату подтвердил администратор",
+    "viewOnTronscan": "Смотреть в Tronscan"
   },
   "CryptoPayment": {
     "title": "Оплата криптовалютой",

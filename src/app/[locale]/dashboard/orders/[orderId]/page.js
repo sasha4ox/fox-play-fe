@@ -502,6 +502,27 @@ export default function OrderChatPage() {
               '—'
             )}
           </Typography>
+          {order?.paymentMethod === 'CRYPTO_MANUAL' && order?.orderCryptoPayment?.adminConfirmedReceivedAt && (
+            <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.75rem', mt: 0.5 }}>
+              {order.orderCryptoPayment.paymentConfirmedBy === 'AUTO'
+                ? t('paymentConfirmedAutomatically')
+                : t('paymentConfirmedByAdmin')}
+              {order.orderCryptoPayment.cryptoTransactionHash && (
+                <>
+                  {' · '}
+                  <MuiLink
+                    href={`https://tronscan.org/#/transaction/${order.orderCryptoPayment.cryptoTransactionHash}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    underline="hover"
+                    sx={{ fontSize: 'inherit' }}
+                  >
+                    {t('viewOnTronscan')}
+                  </MuiLink>
+                </>
+              )}
+            </Typography>
+          )}
         </Box>
       </Box>
       {showPaymentSuccess && (
