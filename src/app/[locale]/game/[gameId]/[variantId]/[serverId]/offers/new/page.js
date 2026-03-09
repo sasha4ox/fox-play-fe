@@ -65,6 +65,7 @@ export default function NewOfferPage() {
   const [quantityError, setQuantityError] = useState(null);
   const [priceError, setPriceError] = useState(null);
   const [price, setPrice] = useState('');
+  const [priceError, setPriceErrorNonAdena] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
   const [platformFeePercent, setPlatformFeePercent] = useState(20);
@@ -107,15 +108,29 @@ export default function NewOfferPage() {
     return valid;
   };
 
+  const parseDecimalPrice = (value) => {
+    if (value == null || String(value).trim() === '') return NaN;
+    const normalized = String(value).trim().replace(',', '.');
+    return parseFloat(normalized);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!token || !serverId) return;
     setSubmitError(null);
+    setPriceErrorNonAdena(null);
     if (isAdena && !validateAdenaInputs()) return;
+    if (!isAdena) {
+      const parsedPrice = parseDecimalPrice(price);
+      if (!Number.isFinite(parsedPrice) || parsedPrice < 0) {
+        setPriceErrorNonAdena(t('invalidPrice'));
+        return;
+      }
+    }
     setSubmitting(true);
     const quantityNum = isAdena ? Math.floor(Number(quantityAdena) * 1_000_000) : 1;
     const priceFor100kk = Number(priceAdena) || 0;
-    const priceNum = isAdena ? priceFor100kk / 100 : Number(price) || 0;
+    const priceNum = isAdena ? priceFor100kk / 100 : parseDecimalPrice(price) || 0;
     const payload = {
       offerType,
       serverId,
@@ -311,13 +326,22 @@ export default function NewOfferPage() {
                 required
               />
               <TextField
-                type="number"
+                type="text"
+                inputMode="decimal"
                 label={`${t('price')} (${currency})`}
                 value={price}
-                onChange={(e) => setPrice(e.target.value)}
-                inputProps={{ min: 0 }}
+                onChange={(e) => {
+                  setPrice(e.target.value);
+                  setPriceErrorNonAdena(null);
+                }}
+                helperText={priceErrorNonAdena}
+                error={!!priceErrorNonAdena}
                 fullWidth
-                sx={{ mb: 2 }}
+                sx={{
+                  mb: 2,
+                  '& input': { MozAppearance: 'textfield' },
+                  '& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button': { WebkitAppearance: 'none', margin: 0 },
+                }}
                 required
               />
             </>

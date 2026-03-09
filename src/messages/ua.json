@@ -611,6 +611,7 @@
     "pricePer1kk": "Ціна за 1kk",
     "min1kk": "Мінімум 1kk (1 000 000 адени)",
     "minPriceFor100kk": "Мін. 0.01 за 100kk",
+    "invalidPrice": "Введіть коректну ціну (напр. 1,97 або 50.02)",
     "invalidAdenaFormat": "Введіть kk (мільйон) або kkk (мільярд), напр. 1kk, 2.5kk, 1kkk",
     "creating": "Створення…",
     "createOfferButton": "Створити оголошення",

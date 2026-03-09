@@ -611,6 +611,7 @@
     "pricePer1kk": "Price per 1kk",
     "min1kk": "Minimum is 1kk (1,000,000 adena)",
     "minPriceFor100kk": "Min 0.01 per 100kk",
+    "invalidPrice": "Enter a valid price (e.g. 1.97 or 50,02)",
     "invalidAdenaFormat": "Use kk (million) or kkk (billion), e.g. 1kk, 2.5kk, 1kkk",
     "creating": "Creating…",
     "createOfferButton": "Create offer",
