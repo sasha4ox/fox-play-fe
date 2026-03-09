@@ -20,7 +20,7 @@ import { getGameFromTree, getVariantFromTree, getServerFromTree } from '@/lib/ga
 import { useAuthStore } from '@/store/authStore';
 import { useProfile } from '@/hooks/useProfile';
 import { createOffer, getPlatformFeePercent, fetchOfferRecentPrices } from '@/lib/api';
-import { formatAdena } from '@/lib/adenaFormat';
+import { formatAdena, parseAdenaInput } from '@/lib/adenaFormat';
 
 export default function NewOfferPage() {
   const params = useParams();
@@ -60,8 +60,8 @@ export default function NewOfferPage() {
   const [tab, setTab] = useState(0);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [quantityAdena, setQuantityAdena] = useState(1);
-  const [priceAdena, setPriceAdena] = useState(1);
+  const [quantityAdena, setQuantityAdena] = useState('1');
+  const [priceAdena, setPriceAdena] = useState('1');
   const [quantityError, setQuantityError] = useState(null);
   const [priceError, setPriceError] = useState(null);
   const [price, setPrice] = useState('');
@@ -96,11 +96,34 @@ export default function NewOfferPage() {
 
   const MIN_KK = 1;
   const MIN_PRICE_PER_100KK = 0.01;
+
+  /** Parse quantity string to adena amount: "100", "100kk", "2.5kkk" etc. Returns null if invalid. */
+  const parseQuantityAdena = (str) => {
+    if (str == null || String(str).trim() === '') return null;
+    const s = String(str).trim().toLowerCase();
+    if (/k/.test(s)) {
+      const adena = parseAdenaInput(String(str));
+      return adena != null ? adena : null;
+    }
+    const kk = parseFloat(String(str).trim().replace(',', '.'));
+    if (!Number.isFinite(kk) || kk <= 0) return null;
+    return Math.floor(kk * 1_000_000);
+  };
+
+  /** Parse price per 100kk string to number. Returns NaN if invalid. */
+  const parsePricePer100kk = (str) => {
+    if (str == null || String(str).trim() === '') return NaN;
+    return parseFloat(String(str).trim().replace(',', '.'));
+  };
+
   const validateAdenaInputs = () => {
     let valid = true;
     if (isAdena) {
-      const qOk = Number.isFinite(quantityAdena) && quantityAdena >= MIN_KK;
-      const pOk = Number.isFinite(priceAdena) && priceAdena >= MIN_PRICE_PER_100KK;
+      const qtyAdena = parseQuantityAdena(quantityAdena);
+      const qtyKk = qtyAdena != null ? qtyAdena / 1_000_000 : 0;
+      const qOk = qtyAdena != null && qtyKk >= MIN_KK;
+      const priceVal = parsePricePer100kk(priceAdena);
+      const pOk = Number.isFinite(priceVal) && priceVal >= MIN_PRICE_PER_100KK;
       setQuantityError(qOk ? null : t('min1kk'));
       setPriceError(pOk ? null : t('minPriceFor100kk'));
       if (!qOk || !pOk) valid = false;
@@ -128,9 +151,9 @@ export default function NewOfferPage() {
       }
     }
     setSubmitting(true);
-    const quantityNum = isAdena ? Math.floor(Number(quantityAdena) * 1_000_000) : 1;
-    const priceFor100kk = Number(priceAdena) || 0;
-    const priceNum = isAdena ? priceFor100kk / 100 : parseDecimalPrice(price) || 0;
+    const quantityNum = isAdena ? (parseQuantityAdena(quantityAdena) ?? 1_000_000) : 1;
+    const priceFor100kk = isAdena ? parsePricePer100kk(priceAdena) : 0;
+    const priceNum = isAdena ? (Number.isFinite(priceFor100kk) ? priceFor100kk / 100 : 0) : parseDecimalPrice(price) || 0;
     const payload = {
       offerType,
       serverId,
@@ -214,9 +237,7 @@ export default function NewOfferPage() {
                 inputMode="decimal"
                 value={quantityAdena}
                 onChange={(e) => {
-                  const raw = e.target.value.replace(',', '.');
-                  const v = raw === '' ? '' : Number(raw);
-                  setQuantityAdena(v);
+                  setQuantityAdena(e.target.value);
                   setQuantityError(null);
                 }}
                 helperText={quantityError}
@@ -238,9 +259,7 @@ export default function NewOfferPage() {
                 inputMode="decimal"
                 value={priceAdena}
                 onChange={(e) => {
-                  const raw = e.target.value.replace(',', '.');
-                  const v = raw === '' ? '' : Number(raw);
-                  setPriceAdena(v);
+                  setPriceAdena(e.target.value);
                   setPriceError(null);
                 }}
                 helperText={priceError}
@@ -257,15 +276,18 @@ export default function NewOfferPage() {
                 }}
               />
               {(() => {
-                const currentPricePer100kk = Number(priceAdena) || 0;
+                const currentPricePer100kk = parsePricePer100kk(priceAdena);
+                const priceNum = Number.isFinite(currentPricePer100kk) ? currentPricePer100kk : 0;
+                const qtyAdena = parseQuantityAdena(quantityAdena);
+                const quantityKk = qtyAdena != null ? qtyAdena / 1_000_000 : 0;
                 const recentPricesPer100kk = recentPrices.map((p) => p.pricePer100kk).filter((n) => n != null);
-                const allPricesPer100kk = [...recentPricesPer100kk, currentPricePer100kk];
-                const isLowestPrice = allPricesPer100kk.length > 0 && currentPricePer100kk <= Math.min(...allPricesPer100kk);
-                const buyerWillPaySum = ((Number(quantityAdena) || 0) / 100 * (Number(priceAdena) || 0) * (1 + platformFeePercent / 100)).toFixed(2);
+                const allPricesPer100kk = [...recentPricesPer100kk, priceNum];
+                const isLowestPrice = allPricesPer100kk.length > 0 && priceNum <= Math.min(...allPricesPer100kk);
+                const buyerWillPaySum = (quantityKk / 100 * priceNum * (1 + platformFeePercent / 100)).toFixed(2);
                 return (
                   <Box sx={{ mt: 2, p: 1.5, bgcolor: 'action.hover', borderRadius: 1 }}>
                     <Typography variant="body2" color="text.primary" sx={{ mb: 0.5 }}>
-                      <strong>1)</strong> {t('youWillReceive')}: <strong>{((Number(quantityAdena) || 0) / 100 * (Number(priceAdena) || 0)).toFixed(2)} {currency}</strong>
+                      <strong>1)</strong> {t('youWillReceive')}: <strong>{(quantityKk / 100 * priceNum).toFixed(2)} {currency}</strong>
                     </Typography>
                     <Typography variant="body2" color="text.primary" sx={{ mb: 0.5 }}>
                       <strong>2)</strong> {t('buyerWillPay')}:{' '}
@@ -278,10 +300,10 @@ export default function NewOfferPage() {
                       )}
                     </Typography>
                     <Typography variant="body2" color="text.primary" sx={{ mb: 0.5 }}>
-                      <strong>3)</strong> {t('cost1kkk')}: <strong>{(10 * (Number(priceAdena) || 0)).toFixed(2)} {currency}</strong>
+                      <strong>3)</strong> {t('cost1kkk')}: <strong>{(10 * priceNum).toFixed(2)} {currency}</strong>
                     </Typography>
                     <Typography variant="body2" color="text.primary">
-                      <strong>4)</strong> {t('pricePer1kk')}: <strong>{((Number(priceAdena) || 0) / 100).toFixed(4)} {currency}</strong>
+                      <strong>4)</strong> {t('pricePer1kk')}: <strong>{(priceNum / 100).toFixed(4)} {currency}</strong>
                     </Typography>
                     {recentPrices.length > 0 && (
                       <Box sx={{ mt: 1 }}>
