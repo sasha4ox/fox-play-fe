@@ -30,9 +30,17 @@ import { getGameFromTree, getVariantFromTree, getServerFromTree, isSimpleGame } 
 import { useAuthStore, useIsAuthenticated } from '@/store/authStore';
 import { useLoginModalStore } from '@/store/loginModalStore';
 import { useProfile } from '@/hooks/useProfile';
-import { fetchOffersByServer, addRecentServer } from '@/lib/api';
+import { fetchOffersByServer, addRecentServer, deleteOffer } from '@/lib/api';
 import { formatAdena } from '@/lib/adenaFormat';
 import { getMinPriceFor100kk } from '@/lib/offerMinPrice';
+import { logClientError } from '@/lib/clientLogger';
+import IconButton from '@mui/material/IconButton';
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import DialogActions from '@mui/material/DialogActions';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
 
 const ALL_OFFER_TYPES = ['ADENA', 'ITEMS', 'ACCOUNTS', 'BOOSTING', 'OTHER'];
 const STANDARD_CATEGORY_NAMES = new Set(['adena', 'items', 'accounts', 'boosting', 'other']);
@@ -43,6 +51,7 @@ export default function GameOffersPage() {
   const locale = useLocale();
   const t = useTranslations('OffersList');
   const tOffers = useTranslations('Offers');
+  const tCommon = useTranslations('Common');
   const gameId = params?.gameId;
   const variantId = params?.variantId;
   const serverId = params?.serverId;
@@ -60,9 +69,10 @@ export default function GameOffersPage() {
   const isAuthenticated = useIsAuthenticated();
   const token = useAuthStore((s) => s.token);
   const openLoginModal = useLoginModalStore((s) => s.openModal);
-  const { preferredCurrency } = useProfile();
+  const { preferredCurrency, profile } = useProfile();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isAdminOrMod = profile?.role === 'ADMIN' || profile?.role === 'MODERATOR';
 
   const [offers, setOffers] = useState([]);
   const [offersLoading, setOffersLoading] = useState(true);
@@ -70,6 +80,9 @@ export default function GameOffersPage() {
   const [categoryFilter, setCategoryFilter] = useState('ADENA');
   const [sortBy, setSortBy] = useState('price');
   const [sortDir, setSortDir] = useState('asc');
+  const [deleteDialogOfferId, setDeleteDialogOfferId] = useState(null);
+  const [deleteInProgress, setDeleteInProgress] = useState(false);
+  const [deleteError, setDeleteError] = useState(null);
 
   useEffect(() => {
     if (serverId && token) {
@@ -109,6 +122,43 @@ export default function GameOffersPage() {
     }
     router.push(`/${locale}/game/${gameId}/${variantId}/${serverId}/offers/new`);
   };
+
+  const refetchOffers = () => {
+    if (!serverId) return;
+    setOffersLoading(true);
+    setOffersError(null);
+    const params = {
+      offerType: categoryFilter || undefined,
+      displayCurrency: token ? undefined : 'USD',
+    };
+    fetchOffersByServer(serverId, token, params)
+      .then((data) => {
+        setOffers(Array.isArray(data) ? data : []);
+        setOffersLoading(false);
+      })
+      .catch((err) => {
+        setOffersError(err.message);
+        setOffersLoading(false);
+      });
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteDialogOfferId || !token) return;
+    setDeleteInProgress(true);
+    setDeleteError(null);
+    try {
+      await deleteOffer(deleteDialogOfferId, token);
+      setDeleteDialogOfferId(null);
+      refetchOffers();
+    } catch (err) {
+      logClientError(err);
+      setDeleteError(err.message);
+    } finally {
+      setDeleteInProgress(false);
+    }
+  };
+
+  const tOfferDetail = useTranslations('OfferDetail');
 
   if (gamesLoading || !game || !variant || !server) {
     if (gamesError)
@@ -335,6 +385,16 @@ export default function GameOffersPage() {
                             </Box>
                           </CardContent>
                         </CardActionArea>
+                        {isAdminOrMod && token && (
+                          <Box sx={{ display: 'flex', gap: 0.5, px: 1, pb: 1 }} onClick={(e) => e.stopPropagation()}>
+                            <IconButton component={Link} href={`/${locale}/game/${gameId}/${variantId}/${serverId}/offers/${offer.id}/edit`} size="small" aria-label={tOfferDetail('editOffer')}>
+                              <EditIcon fontSize="small" />
+                            </IconButton>
+                            <IconButton size="small" color="error" aria-label={tOfferDetail('deleteOffer')} onClick={() => setDeleteDialogOfferId(offer.id)}>
+                              <DeleteIcon fontSize="small" />
+                            </IconButton>
+                          </Box>
+                        )}
                       </Card>
                     );
                   })}
@@ -367,6 +427,7 @@ export default function GameOffersPage() {
                           {sortBy === 'price' && (sortDir === 'asc' ? ' ▲' : ' ▼')}
                         </Box>
                       </TableCell>
+                      {isAdminOrMod && token && <TableCell sx={{ fontWeight: 600, width: 80 }} align="right" />}
                     </TableRow>
                   </TableHead>
                   <TableBody>
@@ -436,6 +497,16 @@ export default function GameOffersPage() {
                               )}
                             </Box>
                           </TableCell>
+                          {isAdminOrMod && token && (
+                            <TableCell align="right" onClick={(e) => e.stopPropagation()} sx={{ width: 80 }}>
+                              <IconButton component={Link} href={`/${locale}/game/${gameId}/${variantId}/${serverId}/offers/${offer.id}/edit`} size="small" aria-label={tOfferDetail('editOffer')}>
+                                <EditIcon fontSize="small" />
+                              </IconButton>
+                              <IconButton size="small" color="error" aria-label={tOfferDetail('deleteOffer')} onClick={() => setDeleteDialogOfferId(offer.id)}>
+                                <DeleteIcon fontSize="small" />
+                              </IconButton>
+                            </TableCell>
+                          )}
                         </TableRow>
                       );
                     })}
@@ -496,6 +567,16 @@ export default function GameOffersPage() {
                           </Box>
                         </CardContent>
                       </CardActionArea>
+                      {isAdminOrMod && token && (
+                        <Box sx={{ display: 'flex', gap: 0.5, px: 1, pb: 1 }} onClick={(e) => e.stopPropagation()}>
+                          <IconButton component={Link} href={`/${locale}/game/${gameId}/${variantId}/${serverId}/offers/${offer.id}/edit`} size="small" aria-label={tOfferDetail('editOffer')}>
+                            <EditIcon fontSize="small" />
+                          </IconButton>
+                          <IconButton size="small" color="error" aria-label={tOfferDetail('deleteOffer')} onClick={(e) => { e.preventDefault(); e.stopPropagation(); setDeleteDialogOfferId(offer.id); }}>
+                            <DeleteIcon fontSize="small" />
+                          </IconButton>
+                        </Box>
+                      )}
                     </Card>
                   );
                 })}
@@ -503,6 +584,20 @@ export default function GameOffersPage() {
             )}
           </>
         )}
+
+        <Dialog open={!!deleteDialogOfferId} onClose={() => !deleteInProgress && setDeleteDialogOfferId(null)} maxWidth="sm" fullWidth>
+          <DialogTitle>{tOfferDetail('deleteOffer')}</DialogTitle>
+          <DialogContent>
+            {deleteError && <Alert severity="error" sx={{ mb: 1 }}>{deleteError}</Alert>}
+            <Typography>{tOfferDetail('deleteOfferConfirm')}</Typography>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setDeleteDialogOfferId(null)} disabled={deleteInProgress}>{tCommon('cancel')}</Button>
+            <Button color="error" variant="contained" onClick={handleDeleteConfirm} disabled={deleteInProgress}>
+              {deleteInProgress ? tCommon('loading') : tOfferDetail('deleteOffer')}
+            </Button>
+          </DialogActions>
+        </Dialog>
       </Container>
     </Box>
   );

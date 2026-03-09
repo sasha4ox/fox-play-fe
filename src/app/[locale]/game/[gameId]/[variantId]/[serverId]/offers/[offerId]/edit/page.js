@@ -47,9 +47,10 @@ export default function EditOfferPage() {
   const [submitError, setSubmitError] = useState(null);
   const user = useAuthStore((s) => s.user);
   const token = useAuthStore((s) => s.token);
-  const { preferredCurrency } = useProfile();
+  const { preferredCurrency, profile } = useProfile();
   const currency = offer?.displayCurrency ?? offer?.currency ?? preferredCurrency ?? 'EUR';
   const isAdena = offer?.offerType === 'ADENA';
+  const isAdminOrMod = profile?.role === 'ADMIN' || profile?.role === 'MODERATOR';
 
   useEffect(() => {
     if (!offerId) return;
@@ -114,7 +115,7 @@ export default function EditOfferPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!offer || !token || !isCreator) return;
+    if (!offer || !token || (!isCreator && !isAdminOrMod)) return;
     if (isAdena && !validateAdenaInputs()) return;
     if (!isAdena) {
       const parsedPrice = parseFloat(String(price).trim().replace(',', '.'));
@@ -164,7 +165,7 @@ export default function EditOfferPage() {
     );
   }
 
-  if (!isCreator) {
+  if (!isCreator && !isAdminOrMod) {
     return (
       <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', py: 4, px: 2 }}>
         <Container>
@@ -181,6 +182,9 @@ export default function EditOfferPage() {
         <MuiLink component={Link} href={`/${locale}/game/${gameId}/${variantId}/${serverId}/offers/${offerId}`} color="secondary" sx={{ display: 'inline-block', mb: 2 }}>
           {t('backToOffer')}
         </MuiLink>
+        {isAdminOrMod && !isCreator && (
+          <Alert severity="info" sx={{ mb: 2 }}>{t('editingAsAdmin')}</Alert>
+        )}
         <Typography variant="h4" fontWeight={600} gutterBottom>
           {t('editOffer')}
         </Typography>

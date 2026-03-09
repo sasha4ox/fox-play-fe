@@ -593,7 +593,9 @@
     "noReviews": "No reviews yet.",
     "reviewFrom": "From",
     "paymentDeclinedMessage": "Payment was declined. You can try again or pay with balance.",
-    "priceBelowMinCannotBuy": "This offer's price is below the minimum (60 UAH / 1 EUR / 1.5 USD per 100kk). It cannot be purchased until the seller updates the price."
+    "priceBelowMinCannotBuy": "This offer's price is below the minimum (60 UAH / 1 EUR / 1.5 USD per 100kk). It cannot be purchased until the seller updates the price.",
+    "deleteOffer": "Delete offer",
+    "deleteOfferConfirm": "Are you sure you want to delete this offer? This cannot be undone."
   },
   "NewOffer": {
     "createOffer": "Create offer",
@@ -640,7 +642,8 @@
     "title": "Title",
     "description": "Description",
     "quantity": "Quantity",
-    "price": "Price"
+    "price": "Price",
+    "editingAsAdmin": "You are editing this offer as a moderator."
   },
   "Admin": {
     "overview": "Overview",
@@ -802,7 +805,6 @@
     "editGameImage": "Edit game image",
     "gameImageUrl": "Image URL",
     "gameImageUrlHint": "URL or path (e.g. /images/games/lineage-2.webp). Leave empty to use local file by game name (WebP, PNG, JPG).",
-    "save": "Save",
     "top": "Top",
     "topHint": "Show at the very top of the list and prioritize in filters"
   },

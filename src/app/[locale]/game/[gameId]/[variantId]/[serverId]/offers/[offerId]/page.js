@@ -30,7 +30,8 @@ import CardContent from '@mui/material/CardContent';
 import { useAuthStore } from '@/store/authStore';
 import { useLoginModalStore } from '@/store/loginModalStore';
 import { useProfile } from '@/hooks/useProfile';
-import { fetchOfferById, createOrder, getCardPaymentEnabled, getCryptoPaymentEnabled, getOfferMessages, sendOfferMessage, startOfferChat, getOfferInquiryOrderId, getFeedbacksByUserId } from '@/lib/api';
+import { fetchOfferById, createOrder, getCardPaymentEnabled, getCryptoPaymentEnabled, getOfferMessages, sendOfferMessage, startOfferChat, getOfferInquiryOrderId, getFeedbacksByUserId, deleteOffer } from '@/lib/api';
+import { logClientError } from '@/lib/clientLogger';
 import { formatAdena } from '@/lib/adenaFormat';
 import { getMinPriceFor100kk } from '@/lib/offerMinPrice';
 
@@ -68,8 +69,13 @@ export default function OfferPDPPage() {
   const openLoginModal = useLoginModalStore((s) => s.openModal);
   const currentUserId = user?.id ?? user?.userId;
   const isCreator = currentUserId && offer?.seller?.id && currentUserId === offer.seller.id;
+  const isAdminOrMod = profile?.role === 'ADMIN' || profile?.role === 'MODERATOR';
 
   const preferredCurrency = profile?.preferredCurrency;
+
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteInProgress, setDeleteInProgress] = useState(false);
+  const [deleteError, setDeleteError] = useState(null);
 
   useEffect(() => {
     if (!offerId) return;
@@ -244,6 +250,22 @@ export default function OfferPDPPage() {
       setMessageError(err.message || 'Failed to send');
     } finally {
       setMessageSending(false);
+    }
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!offerId || !token) return;
+    setDeleteInProgress(true);
+    setDeleteError(null);
+    try {
+      await deleteOffer(offerId, token);
+      setDeleteDialogOpen(false);
+      router.push(`/${locale}/game/${gameId}/${variantId}/${serverId}/offers`);
+    } catch (err) {
+      logClientError(err);
+      setDeleteError(err.message);
+    } finally {
+      setDeleteInProgress(false);
     }
   };
 
@@ -481,12 +503,31 @@ export default function OfferPDPPage() {
               {t('buy')}
             </Button>
           )}
-          {isCreator && (
+          {(isCreator || isAdminOrMod) && (
             <Button component={Link} href={`/${locale}/game/${gameId}/${variantId}/${serverId}/offers/${offerId}/edit`} variant="outlined" color="secondary">
               {tEdit('editOffer')}
             </Button>
           )}
+          {isAdminOrMod && (
+            <Button variant="outlined" color="error" onClick={() => setDeleteDialogOpen(true)}>
+              {t('deleteOffer')}
+            </Button>
+          )}
         </Box>
+
+        <Dialog open={deleteDialogOpen} onClose={() => !deleteInProgress && setDeleteDialogOpen(false)} maxWidth="sm" fullWidth>
+          <DialogTitle>{t('deleteOffer')}</DialogTitle>
+          <DialogContent>
+            {deleteError && <Alert severity="error" sx={{ mb: 1 }}>{deleteError}</Alert>}
+            <Typography>{t('deleteOfferConfirm')}</Typography>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setDeleteDialogOpen(false)} disabled={deleteInProgress}>{tCommon('cancel')}</Button>
+            <Button color="error" variant="contained" onClick={handleDeleteConfirm} disabled={deleteInProgress}>
+              {deleteInProgress ? tCommon('loading') : t('deleteOffer')}
+            </Button>
+          </DialogActions>
+        </Dialog>
 
         <Dialog open={feedbacksDialogOpen} onClose={() => setFeedbacksDialogOpen(false)} maxWidth="sm" fullWidth>
           <DialogTitle>{t('reviewsTitle')}</DialogTitle>

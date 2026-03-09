@@ -591,7 +591,9 @@
     "noReviews": "No reviews yet.",
     "reviewFrom": "From",
     "paymentDeclinedMessage": "Payment was declined. You can try again or pay with balance.",
-    "priceBelowMinCannotBuy": "This offer's price is below the minimum (60 UAH / 1 EUR / 1.5 USD per 100kk). It cannot be purchased until the seller updates the price."
+    "priceBelowMinCannotBuy": "This offer's price is below the minimum (60 UAH / 1 EUR / 1.5 USD per 100kk). It cannot be purchased until the seller updates the price.",
+    "deleteOffer": "Eliminar oferta",
+    "deleteOfferConfirm": "¿Estás seguro de que quieres eliminar esta oferta? Esta acción no se puede deshacer."
   },
   "NewOffer": {
     "createOffer": "Create offer",
@@ -638,7 +640,8 @@
     "title": "Title",
     "description": "Description",
     "quantity": "Quantity",
-    "price": "Price"
+    "price": "Price",
+    "editingAsAdmin": "Estás editando esta oferta como moderador."
   },
   "Admin": {
     "overview": "Overview",

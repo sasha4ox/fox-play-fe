@@ -171,6 +171,11 @@ export async function updateOffer(offerId, body, token) {
   return apiPut(`/offers/${offerId}`, body, token)
 }
 
+/** Delete offer (auth required; seller or admin/moderator) */
+export async function deleteOffer(offerId, token) {
+  return apiDelete(`/offers/${offerId}`, token)
+}
+
 /** Create order / buy (auth required). body: { offerId, quantity, characterNick, paymentMethod? } (paymentMethod: 'CARD_MANUAL' for pay by card) */
 export async function createOrder(body, token) {
   return apiPost('/orders', body, token)
