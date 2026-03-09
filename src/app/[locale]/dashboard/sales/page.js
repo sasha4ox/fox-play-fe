@@ -23,6 +23,8 @@ import MenuItem from '@mui/material/MenuItem';
 import Tooltip from '@mui/material/Tooltip';
 import IconButton from '@mui/material/IconButton';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
+import MarkEmailUnreadOutlinedIcon from '@mui/icons-material/MarkEmailUnreadOutlined';
+import Chip from '@mui/material/Chip';
 import { useAuthStore } from '@/store/authStore';
 import { getMyOrdersAsBuyer, getMyOrdersAsSeller, getMyOrderChats, getUnreadCount } from '@/lib/api';
 import { formatAdena } from '@/lib/adenaFormat';
@@ -38,10 +40,11 @@ const orderCardBgByStatus = {
   CANCELED: { bgcolor: 'rgba(158, 158, 158, 0.15)', borderLeft: '4px solid', borderLeftColor: '#9e9e9e' },
 };
 
-function getOrderCardSx(order, unread) {
+function getOrderCardSx(order, unread, isUnopened) {
   const byStatus = order?.status ? orderCardBgByStatus[order.status] : {};
   const unreadSx = unread > 0 ? { borderLeft: '4px solid', borderLeftColor: 'primary.main' } : {};
-  return { ...byStatus, ...unreadSx };
+  const unopenedSx = isUnopened ? { borderLeft: '4px solid', borderLeftColor: 'primary.main', bgcolor: 'rgba(25, 118, 210, 0.06)' } : {};
+  return { ...byStatus, ...unopenedSx, ...unreadSx };
 }
 
 export default function MyOrdersPage() {
@@ -53,6 +56,7 @@ export default function MyOrdersPage() {
   const [bought, setBought] = useState([]);
   const [sold, setSold] = useState([]);
   const [unreadByOrderId, setUnreadByOrderId] = useState({});
+  const [isUnopenedByOrderId, setIsUnopenedByOrderId] = useState({});
   const [sellerOrderCount, setSellerOrderCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -81,13 +85,21 @@ export default function MyOrdersPage() {
     getMyOrderChats(token)
       .then((data) => {
         const orders = data?.orders ?? [];
-        const map = {};
+        const unreadMap = {};
+        const unopenedMap = {};
         orders.forEach((o) => {
-          if (o.id != null && (o.unreadCount ?? 0) > 0) map[o.id] = o.unreadCount;
+          if (o.id != null) {
+            if ((o.unreadCount ?? 0) > 0) unreadMap[o.id] = o.unreadCount;
+            if (o.isUnopened === true) unopenedMap[o.id] = true;
+          }
         });
-        setUnreadByOrderId(map);
+        setUnreadByOrderId(unreadMap);
+        setIsUnopenedByOrderId(unopenedMap);
       })
-      .catch(() => setUnreadByOrderId({}));
+      .catch(() => {
+        setUnreadByOrderId({});
+        setIsUnopenedByOrderId({});
+      });
   }, [token]);
 
   useEffect(() => {
@@ -108,8 +120,16 @@ export default function MyOrdersPage() {
   }
 
   const sortByCreatedAtDesc = (a, b) => new Date(b.createdAt ?? 0).getTime() - new Date(a.createdAt ?? 0).getTime();
-  const boughtSorted = [...bought].sort(sortByCreatedAtDesc);
-  const soldSorted = [...sold].sort(sortByCreatedAtDesc);
+  const sortOrdersWithUnopenedFirst = (list) =>
+    [...list].sort((a, b) => {
+      const aUnopened = isUnopenedByOrderId[a.id];
+      const bUnopened = isUnopenedByOrderId[b.id];
+      if (aUnopened && !bUnopened) return -1;
+      if (!aUnopened && bUnopened) return 1;
+      return sortByCreatedAtDesc(a, b);
+    });
+  const boughtSorted = sortOrdersWithUnopenedFirst(bought);
+  const soldSorted = sortOrdersWithUnopenedFirst(sold);
 
   const formatOrderQty = (order) => {
     const qty = order.quantity ?? 1;
@@ -189,15 +209,26 @@ export default function MyOrdersPage() {
                     const sellerName = order.seller?.nickname ?? order.seller?.email ?? '—';
                     const statusLabel = order.status ? t(`status_${order.status}`) : '—';
                     const unread = unreadByOrderId[order.id] ?? 0;
+                    const isUnopened = isUnopenedByOrderId[order.id];
                     return (
-                      <Card key={order.id} variant="outlined" sx={getOrderCardSx(order, unread)}>
+                      <Card key={order.id} variant="outlined" sx={getOrderCardSx(order, unread, isUnopened)}>
                         <CardActionArea component={Link} href={`/${locale}/dashboard/orders/${order.id}`}>
                           <CardContent sx={{ py: 2, px: 2 }}>
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
                               <Typography variant="subtitle1" fontWeight={600}>
                                 {order.offer?.title ?? order.id?.slice(0, 8)}
                               </Typography>
-                              {unread > 0 && (
+                              {isUnopened && (
+                                <Chip
+                                  size="small"
+                                  icon={<MarkEmailUnreadOutlinedIcon sx={{ fontSize: 18 }} />}
+                                  label={t('newOrder')}
+                                  color="primary"
+                                  variant="outlined"
+                                  sx={{ fontWeight: 600 }}
+                                />
+                              )}
+                              {unread > 0 && !isUnopened && (
                                 <Badge badgeContent={unread} color="error" max={99}>
                                   <Typography variant="caption" color="error.main" fontWeight={600}>
                                     {t('unreadMessages')}
@@ -292,15 +323,26 @@ export default function MyOrdersPage() {
                     const buyerName = order.buyer?.nickname ?? order.buyer?.email ?? '—';
                     const statusLabel = order.status ? t(`status_${order.status}`) : '—';
                     const unread = unreadByOrderId[order.id] ?? 0;
+                    const isUnopened = isUnopenedByOrderId[order.id];
                     return (
-                      <Card key={order.id} variant="outlined" sx={getOrderCardSx(order, unread)}>
+                      <Card key={order.id} variant="outlined" sx={getOrderCardSx(order, unread, isUnopened)}>
                         <CardActionArea component={Link} href={`/${locale}/dashboard/orders/${order.id}`}>
                           <CardContent sx={{ py: 2, px: 2 }}>
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
                               <Typography variant="subtitle1" fontWeight={600}>
                                 {order.offer?.title ?? order.id?.slice(0, 8)}
                               </Typography>
-                              {unread > 0 && (
+                              {isUnopened && (
+                                <Chip
+                                  size="small"
+                                  icon={<MarkEmailUnreadOutlinedIcon sx={{ fontSize: 18 }} />}
+                                  label={t('newOrder')}
+                                  color="primary"
+                                  variant="outlined"
+                                  sx={{ fontWeight: 600 }}
+                                />
+                              )}
+                              {unread > 0 && !isUnopened && (
                                 <Badge badgeContent={unread} color="error" max={99}>
                                   <Typography variant="caption" color="error.main" fontWeight={600}>
                                     {t('unreadMessages')}

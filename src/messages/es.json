@@ -324,6 +324,7 @@
     "statusMeaning_DISPUTED": "Buyer opened a dispute. Moderator will resolve.",
     "orderDate": "Date",
     "newestFirst": "Newest first",
+    "newOrder": "Nuevo",
     "unreadMessages": "New messages"
   },
   "OrderDetail": {

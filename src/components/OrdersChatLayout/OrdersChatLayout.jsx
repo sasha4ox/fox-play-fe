@@ -14,6 +14,7 @@ import Divider from '@mui/material/Divider';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useTheme } from '@mui/material/styles';
 import SearchIcon from '@mui/icons-material/Search';
+import MarkEmailUnreadOutlinedIcon from '@mui/icons-material/MarkEmailUnreadOutlined';
 import { useAuthStore } from '@/store/authStore';
 import { useProfile } from '@/hooks/useProfile';
 import { getMyOrderChats } from '@/lib/api';
@@ -274,11 +275,11 @@ export default function OrdersChatLayout({ children }) {
                       px: { xs: 1.5, md: 2 },
                       py: { xs: 1.5, md: 1.75 },
                       cursor: 'pointer',
-                      bgcolor: CHAT_ITEM_BG,
+                      bgcolor: order.isUnopened ? 'rgba(25, 118, 210, 0.06)' : CHAT_ITEM_BG,
                       color: 'var(--third-color)',
                       '&:hover': { filter: 'brightness(0.97)' },
-                      borderLeft: isSelected ? '4px solid' : '4px solid transparent',
-                      borderColor: SENDER_BUBBLE,
+                      borderLeft: isSelected ? '4px solid' : order.isUnopened ? '4px solid' : '4px solid transparent',
+                      borderColor: order.isUnopened ? 'primary.main' : SENDER_BUBBLE,
                       boxShadow: isSelected ? 'inset 0 0 0 1px rgba(0,0,0,0.08)' : 'none',
                     }}
                   >
@@ -297,9 +298,14 @@ export default function OrdersChatLayout({ children }) {
                     </Badge>
                     <Box sx={{ flex: 1, minWidth: 0 }}>
                       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1, mb: 0.25 }}>
-                        <Typography variant="subtitle1" fontWeight={600} noWrap sx={{ color: 'var(--chat-color)' }}>
-                          {displayName}
-                        </Typography>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, minWidth: 0 }}>
+                          {order.isUnopened && (
+                            <MarkEmailUnreadOutlinedIcon sx={{ fontSize: 18, color: 'primary.main', flexShrink: 0 }} titleAccess={tSales('newOrder')} />
+                          )}
+                          <Typography variant="subtitle1" fontWeight={600} noWrap sx={{ color: 'var(--chat-color)' }}>
+                            {displayName}
+                          </Typography>
+                        </Box>
                         <Typography variant="caption" sx={{ flexShrink: 0, fontSize: '0.7rem', color: 'var(--text-second-color)' }}>
                           {formatDate(lastDate)}
                         </Typography>

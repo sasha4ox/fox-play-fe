@@ -325,6 +325,7 @@
     "statusMeaning_DISPUTED": "Buyer opened a dispute. Moderator will resolve.",
     "orderDate": "Date",
     "newestFirst": "Newest first",
+    "newOrder": "New",
     "unreadMessages": "New messages",
     "badgeHint": "The number on \"My sales\" in the menu ({count} now) is how many sold orders you haven't opened yet. Click an order and open the chat to clear it."
   },
