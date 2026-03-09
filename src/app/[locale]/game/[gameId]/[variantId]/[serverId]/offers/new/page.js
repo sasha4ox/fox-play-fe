@@ -65,7 +65,7 @@ export default function NewOfferPage() {
   const [quantityError, setQuantityError] = useState(null);
   const [priceError, setPriceError] = useState(null);
   const [price, setPrice] = useState('');
-  const [priceError, setPriceErrorNonAdena] = useState(null);
+  const [priceErrorNonAdena, setPriceErrorNonAdena] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
   const [platformFeePercent, setPlatformFeePercent] = useState(20);
