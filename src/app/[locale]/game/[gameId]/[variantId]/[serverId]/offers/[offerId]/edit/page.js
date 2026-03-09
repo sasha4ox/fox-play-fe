@@ -15,7 +15,7 @@ import CircularProgress from '@mui/material/CircularProgress';
 import Alert from '@mui/material/Alert';
 import { useAuthStore } from '@/store/authStore';
 import { useProfile } from '@/hooks/useProfile';
-import { fetchOfferById, updateOffer } from '@/lib/api';
+import { fetchOfferById, updateOffer, getPlatformFeePercent, fetchOfferRecentPrices } from '@/lib/api';
 import { parseAdenaInput } from '@/lib/adenaFormat';
 import { getMinPriceFor100kk } from '@/lib/offerMinPrice';
 
@@ -45,6 +45,8 @@ export default function EditOfferPage() {
   const [priceError, setPriceError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
+  const [platformFeePercent, setPlatformFeePercent] = useState(20);
+  const [recentPrices, setRecentPrices] = useState([]);
   const user = useAuthStore((s) => s.user);
   const token = useAuthStore((s) => s.token);
   const { preferredCurrency, profile } = useProfile();
@@ -77,6 +79,21 @@ export default function EditOfferPage() {
         setLoading(false);
       });
   }, [offerId, token]);
+
+  useEffect(() => {
+    getPlatformFeePercent().then(setPlatformFeePercent).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (!serverId || !isAdena) return;
+    fetchOfferRecentPrices({
+      serverId,
+      offerType: 'ADENA',
+      displayCurrency: currency,
+    })
+      .then((data) => setRecentPrices(data?.prices ?? []))
+      .catch(() => setRecentPrices([]));
+  }, [serverId, isAdena, currency]);
 
   const isCreator = user?.id && offer?.seller?.id && user.id === offer.seller.id;
 
@@ -228,7 +245,7 @@ export default function EditOfferPage() {
                 required
                 fullWidth
                 sx={{
-                  mb: 2,
+                  mb: 0.5,
                   '& input': { MozAppearance: 'textfield' },
                   '& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button': { WebkitAppearance: 'none', margin: 0 },
                 }}
@@ -236,17 +253,100 @@ export default function EditOfferPage() {
                   endAdornment: <InputAdornment position="end">{currency}</InputAdornment>,
                 }}
               />
-              <Box sx={{ mt: 1, mb: 2, p: 1.5, bgcolor: 'action.hover', borderRadius: 1 }}>
-                <Typography variant="body2" color="text.primary" sx={{ mb: 0.5 }}>
-                  <strong>1)</strong> {tNew('youWillReceive')}: <strong>{(((parseQuantityAdena(quantityAdena) ?? 0) / 1_000_000 / 100) * (parsePricePer100kk(priceAdena) || 0)).toFixed(2)} {currency}</strong>
-                </Typography>
-                <Typography variant="body2" color="text.primary" sx={{ mb: 0.5 }}>
-                  <strong>2)</strong> {tNew('cost1kkk')}: <strong>{(10 * (parsePricePer100kk(priceAdena) || 0)).toFixed(2)} {currency}</strong>
-                </Typography>
-                <Typography variant="body2" color="text.primary">
-                  <strong>3)</strong> {tNew('pricePer1kk')}: <strong>{((parsePricePer100kk(priceAdena) || 0) / 100).toFixed(4)} {currency}</strong>
-                </Typography>
-              </Box>
+              {(() => {
+                const currentPricePer100kk = parsePricePer100kk(priceAdena);
+                const priceNum = Number.isFinite(currentPricePer100kk) ? currentPricePer100kk : 0;
+                const qtyAdena = parseQuantityAdena(quantityAdena);
+                const quantityKk = qtyAdena != null ? qtyAdena / 1_000_000 : 0;
+                const recentPricesPer100kk = recentPrices.map((p) => p.pricePer100kk).filter((n) => n != null);
+                const allPricesPer100kk = [...recentPricesPer100kk, priceNum];
+                const isLowestPrice = allPricesPer100kk.length > 0 && priceNum <= Math.min(...allPricesPer100kk);
+                const buyerWillPaySum = (quantityKk / 100 * priceNum * (1 + platformFeePercent / 100)).toFixed(2);
+                const feeMultiplier = 1 + platformFeePercent / 100;
+                const hasOtherPrices = recentPricesPer100kk.length > 0;
+                return (
+                  <>
+                    <Typography
+                      variant="body2"
+                      component="p"
+                      sx={{
+                        mb: 2,
+                        color: hasOtherPrices ? (isLowestPrice ? 'success.main' : 'error.main') : 'text.secondary',
+                        fontWeight: 500,
+                      }}
+                    >
+                      {tNew('buyerWillPay')}: <strong>{buyerWillPaySum} {currency}</strong> ({tNew('includesPlatformFee', { percent: platformFeePercent })})
+                    </Typography>
+                    <Box sx={{ mt: 0, mb: 2, p: 1.5, bgcolor: 'action.hover', borderRadius: 1 }}>
+                      <Typography variant="body2" color="text.primary" sx={{ mb: 0.5 }}>
+                        <strong>1)</strong> {tNew('youWillReceive')}: <strong>{(quantityKk / 100 * priceNum).toFixed(2)} {currency}</strong>
+                      </Typography>
+                      <Typography variant="body2" color="text.primary" sx={{ mb: 0.5 }}>
+                        <strong>2)</strong> {tNew('buyerWillPay')}:{' '}
+                        <Box component="span" sx={{ fontWeight: 700, color: isLowestPrice ? 'success.main' : 'inherit' }}>{buyerWillPaySum} {currency}</Box>
+                        {' '}({tNew('includesPlatformFee', { percent: platformFeePercent })})
+                        {isLowestPrice && (
+                          <Box component="span" sx={{ display: 'block', mt: 0.5, fontStyle: 'italic', color: 'success.main', fontSize: '0.875rem' }}>
+                            {tNew('lowerPriceGoodJob')}
+                          </Box>
+                        )}
+                      </Typography>
+                      <Typography variant="body2" color="text.primary" sx={{ mb: 0.5 }}>
+                        <strong>3)</strong> {tNew('cost1kkk')}: <strong>{(10 * priceNum * feeMultiplier).toFixed(2)} {currency}</strong>
+                      </Typography>
+                      <Typography variant="body2" color="text.primary" sx={{ mb: 0.5 }}>
+                        <strong>4)</strong> {tNew('cost100k')}: <strong>{((priceNum / 10) * feeMultiplier).toFixed(2)} {currency}</strong>
+                      </Typography>
+                      <Typography variant="body2" color="text.primary" sx={{ mb: 0.5 }}>
+                        <strong>5)</strong> {tNew('cost1kk')}: <strong>{((priceNum / 100) * feeMultiplier).toFixed(4)} {currency}</strong>
+                      </Typography>
+                      {recentPrices.length > 0 && (
+                        <Box sx={{ mt: 1.5, pt: 1, borderTop: 1, borderColor: 'divider' }}>
+                          <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 0.75 }}>
+                            {tNew('last3LowPrices')}
+                          </Typography>
+                          {recentPrices.map((p, i) => (
+                            <Box key={i} sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 0.5, mb: 0.5 }}>
+                              <Typography component="span" variant="body2" color="text.secondary">
+                                {i + 1})
+                              </Typography>
+                              {p.sellerId ? (
+                                <MuiLink
+                                  component={Link}
+                                  href={`/${locale}/user/${p.sellerId}`}
+                                  sx={{
+                                    fontWeight: 600,
+                                    minHeight: 44,
+                                    minWidth: 44,
+                                    py: 0.5,
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    '&:hover': { textDecoration: 'underline' },
+                                  }}
+                                  aria-label={`Profile of ${p.sellerNickname || 'seller'}`}
+                                >
+                                  {p.sellerNickname || '—'}
+                                </MuiLink>
+                              ) : (
+                                <Typography component="span" variant="body2" color="text.secondary" fontWeight={600}>
+                                  {p.sellerNickname || '—'}
+                                </Typography>
+                              )}
+                              <Typography component="span" variant="body2" color="text.secondary">
+                                {tNew('sellingPriceFor100kkSuffix', {
+                                  quantityKk: p.quantityKk,
+                                  price: p.pricePer100kk != null ? Number(p.pricePer100kk).toFixed(2) : String(p.pricePerUnit ?? '—'),
+                                  currency: p.currency,
+                                })}
+                              </Typography>
+                            </Box>
+                          ))}
+                        </Box>
+                      )}
+                    </Box>
+                  </>
+                );
+              })()}
             </Box>
           ) : (
             <>

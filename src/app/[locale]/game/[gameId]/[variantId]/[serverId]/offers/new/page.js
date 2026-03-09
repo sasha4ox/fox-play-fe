@@ -267,7 +267,7 @@ export default function NewOfferPage() {
                 error={!!priceError}
                 required
                 sx={{
-                  mb: 2,
+                  mb: 0.5,
                   width: '100%',
                   '& input': { MozAppearance: 'textfield' },
                   '& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button': { WebkitAppearance: 'none', margin: 0 },
@@ -285,45 +285,89 @@ export default function NewOfferPage() {
                 const allPricesPer100kk = [...recentPricesPer100kk, priceNum];
                 const isLowestPrice = allPricesPer100kk.length > 0 && priceNum <= Math.min(...allPricesPer100kk);
                 const buyerWillPaySum = (quantityKk / 100 * priceNum * (1 + platformFeePercent / 100)).toFixed(2);
+                const feeMultiplier = 1 + platformFeePercent / 100;
+                const hasOtherPrices = recentPricesPer100kk.length > 0;
                 return (
-                  <Box sx={{ mt: 2, p: 1.5, bgcolor: 'action.hover', borderRadius: 1 }}>
-                    <Typography variant="body2" color="text.primary" sx={{ mb: 0.5 }}>
-                      <strong>1)</strong> {t('youWillReceive')}: <strong>{(quantityKk / 100 * priceNum).toFixed(2)} {currency}</strong>
+                  <>
+                    <Typography
+                      variant="body2"
+                      component="p"
+                      sx={{
+                        mb: 2,
+                        color: hasOtherPrices ? (isLowestPrice ? 'success.main' : 'error.main') : 'text.secondary',
+                        fontWeight: 500,
+                      }}
+                    >
+                      {t('buyerWillPay')}: <strong>{buyerWillPaySum} {currency}</strong> ({t('includesPlatformFee', { percent: platformFeePercent })})
                     </Typography>
-                    <Typography variant="body2" color="text.primary" sx={{ mb: 0.5 }}>
-                      <strong>2)</strong> {t('buyerWillPay')}:{' '}
-                      <Box component="span" sx={{ fontWeight: 700, color: isLowestPrice ? 'success.main' : 'inherit' }}>{buyerWillPaySum} {currency}</Box>
-                      {' '}({t('includesPlatformFee', { percent: platformFeePercent })})
-                      {isLowestPrice && (
-                        <Box component="span" sx={{ display: 'block', mt: 0.5, fontStyle: 'italic', color: 'success.main', fontSize: '0.875rem' }}>
-                          {t('lowerPriceGoodJob')}
+                    <Box sx={{ mt: 0, mb: 2, p: 1.5, bgcolor: 'action.hover', borderRadius: 1 }}>
+                      <Typography variant="body2" color="text.primary" sx={{ mb: 0.5 }}>
+                        <strong>1)</strong> {t('youWillReceive')}: <strong>{(quantityKk / 100 * priceNum).toFixed(2)} {currency}</strong>
+                      </Typography>
+                      <Typography variant="body2" color="text.primary" sx={{ mb: 0.5 }}>
+                        <strong>2)</strong> {t('buyerWillPay')}:{' '}
+                        <Box component="span" sx={{ fontWeight: 700, color: isLowestPrice ? 'success.main' : 'inherit' }}>{buyerWillPaySum} {currency}</Box>
+                        {' '}({t('includesPlatformFee', { percent: platformFeePercent })})
+                        {isLowestPrice && (
+                          <Box component="span" sx={{ display: 'block', mt: 0.5, fontStyle: 'italic', color: 'success.main', fontSize: '0.875rem' }}>
+                            {t('lowerPriceGoodJob')}
+                          </Box>
+                        )}
+                      </Typography>
+                      <Typography variant="body2" color="text.primary" sx={{ mb: 0.5 }}>
+                        <strong>3)</strong> {t('cost1kkk')}: <strong>{(10 * priceNum * feeMultiplier).toFixed(2)} {currency}</strong>
+                      </Typography>
+                      <Typography variant="body2" color="text.primary" sx={{ mb: 0.5 }}>
+                        <strong>4)</strong> {t('cost100k')}: <strong>{((priceNum / 10) * feeMultiplier).toFixed(2)} {currency}</strong>
+                      </Typography>
+                      <Typography variant="body2" color="text.primary" sx={{ mb: 0.5 }}>
+                        <strong>5)</strong> {t('cost1kk')}: <strong>{((priceNum / 100) * feeMultiplier).toFixed(4)} {currency}</strong>
+                      </Typography>
+                      {recentPrices.length > 0 && (
+                        <Box sx={{ mt: 1.5, pt: 1, borderTop: 1, borderColor: 'divider' }}>
+                          <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 0.75 }}>
+                            {t('last3LowPrices')}
+                          </Typography>
+                          {recentPrices.map((p, i) => (
+                            <Box key={i} sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 0.5, mb: 0.5 }}>
+                              <Typography component="span" variant="body2" color="text.secondary">
+                                {i + 1})
+                              </Typography>
+                              {p.sellerId ? (
+                                <MuiLink
+                                  component={Link}
+                                  href={`/${locale}/user/${p.sellerId}`}
+                                  sx={{
+                                    fontWeight: 600,
+                                    minHeight: 44,
+                                    minWidth: 44,
+                                    py: 0.5,
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    '&:hover': { textDecoration: 'underline' },
+                                  }}
+                                  aria-label={`Profile of ${p.sellerNickname || 'seller'}`}
+                                >
+                                  {p.sellerNickname || '—'}
+                                </MuiLink>
+                              ) : (
+                                <Typography component="span" variant="body2" color="text.secondary" fontWeight={600}>
+                                  {p.sellerNickname || '—'}
+                                </Typography>
+                              )}
+                              <Typography component="span" variant="body2" color="text.secondary">
+                                {t('sellingPriceFor100kkSuffix', {
+                                  quantityKk: p.quantityKk,
+                                  price: p.pricePer100kk != null ? Number(p.pricePer100kk).toFixed(2) : String(p.pricePerUnit ?? '—'),
+                                  currency: p.currency,
+                                })}
+                              </Typography>
+                            </Box>
+                          ))}
                         </Box>
                       )}
-                    </Typography>
-                    <Typography variant="body2" color="text.primary" sx={{ mb: 0.5 }}>
-                      <strong>3)</strong> {t('cost1kkk')}: <strong>{(10 * priceNum).toFixed(2)} {currency}</strong>
-                    </Typography>
-                    <Typography variant="body2" color="text.primary">
-                      <strong>4)</strong> {t('pricePer1kk')}: <strong>{(priceNum / 100).toFixed(4)} {currency}</strong>
-                    </Typography>
-                    {recentPrices.length > 0 && (
-                      <Box sx={{ mt: 1 }}>
-                        <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-                          {t('last3LowPrices')}
-                        </Typography>
-                        {recentPrices.map((p, i) => (
-                          <Typography key={i} variant="body2" color="text.secondary" sx={{ ml: 1 }}>
-                            {i + 1}) {t('userSellingPriceFor100kk', {
-                              nickname: p.sellerNickname || '—',
-                              quantityKk: p.quantityKk,
-                              price: p.pricePer100kk != null ? Number(p.pricePer100kk).toFixed(2) : String(p.pricePerUnit ?? '—'),
-                              currency: p.currency,
-                            })}
-                          </Typography>
-                        ))}
-                      </Box>
-                    )}
-                  </Box>
+                    </Box>
+                  </>
                 );
               })()}
             </Box>
