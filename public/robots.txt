@@ -1,3 +1,3 @@
-User-agent: *
-Allow: /
-Sitemap: https://foxyplay.app/sitemap.xml
+user-agent: *
+allow: /
+sitemap: https://foxyplay.app/sitemap.xml

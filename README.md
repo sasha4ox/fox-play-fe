@@ -97,6 +97,10 @@ Then the deployed app will load games and auth from the deployed backend.
 - **Render-blocking:** Next.js and `next/font` already use non-blocking font loading. To reduce blocking further, load third-party scripts (analytics, ads) only after consent or lazily; see `ConditionalAnalytics` and `conditionalScripts.ts`.
 - **Deprecated APIs (SharedStorage, Fledge, StorageType.persistent):** These warnings usually come from the browser or a third-party script (e.g. analytics/ads). If you see them in Lighthouse, identify the script (e.g. in Network or by disabling scripts); update it to a version that uses `navigator.storage` and avoids deprecated APIs, or remove it if not needed.
 
+### Console / Lighthouse deprecation warnings
+
+Deprecation warnings for **SharedStorage**, **Fledge**, and **StorageType.persistent** (use `navigator.storage` instead) are known to appear in the console or Lighthouse. They originate from the browser or third-party scripts (e.g. extensions), not from this app’s first-party code. To track down the exact script: use DevTools → Network (disable cache), reload, and see which script runs when the warning appears; or disable browser extensions and repeat.
+
 ## Tech
 
 - **Next.js** (App Router), **next-intl** (en/ua)

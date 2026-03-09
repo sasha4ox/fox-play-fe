@@ -69,6 +69,7 @@ export default function SelectCard({ name, imageUrl, onClick, priority = false }
             fill
             sizes={CARD_IMAGE_SIZES}
             priority={priority}
+            unoptimized
             onError={handleImgError}
             style={{ objectFit: 'cover' }}
           />
