@@ -152,6 +152,9 @@ export default function OrderChatPage() {
       .then(([ord, msgs]) => {
         setOrder(ord);
         setMessages(Array.isArray(msgs) ? msgs : []);
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('refetchUnread'));
+        }
       })
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));

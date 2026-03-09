@@ -24,7 +24,7 @@ import Tooltip from '@mui/material/Tooltip';
 import IconButton from '@mui/material/IconButton';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import { useAuthStore } from '@/store/authStore';
-import { getMyOrdersAsBuyer, getMyOrdersAsSeller, getMyOrderChats } from '@/lib/api';
+import { getMyOrdersAsBuyer, getMyOrdersAsSeller, getMyOrderChats, getUnreadCount } from '@/lib/api';
 import { formatAdena } from '@/lib/adenaFormat';
 
 const SOLD_STATUS_OPTIONS = ['', 'CREATED', 'PAID', 'DELIVERED', 'COMPLETED', 'CANCELED', 'DISPUTED'];
@@ -53,6 +53,7 @@ export default function MyOrdersPage() {
   const [bought, setBought] = useState([]);
   const [sold, setSold] = useState([]);
   const [unreadByOrderId, setUnreadByOrderId] = useState({});
+  const [sellerOrderCount, setSellerOrderCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -89,6 +90,13 @@ export default function MyOrdersPage() {
       .catch(() => setUnreadByOrderId({}));
   }, [token]);
 
+  useEffect(() => {
+    if (!token) return;
+    getUnreadCount(token)
+      .then((data) => setSellerOrderCount(data?.sellerOrderCount ?? 0))
+      .catch(() => setSellerOrderCount(0));
+  }, [token]);
+
   if (!token) {
     return (
       <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', py: 4, px: 2 }}>
@@ -123,6 +131,12 @@ export default function MyOrdersPage() {
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
           {t('hint')}
         </Typography>
+
+        {sellerOrderCount > 0 && (
+          <Alert severity="info" sx={{ mb: 2 }} variant="outlined">
+            {t('badgeHint', { count: sellerOrderCount })}
+          </Alert>
+        )}
 
         <Tabs value={tab} onChange={(_, v) => setTab(v)} sx={{ mb: 2, borderBottom: 1, borderColor: 'divider' }}>
           <Tab

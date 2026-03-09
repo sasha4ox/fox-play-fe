@@ -2,9 +2,9 @@ import type { MetadataRoute } from 'next';
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://foxyplay.app';
 
-const LOCALES = ['en', 'ua'] as const;
+const LOCALES = ['en', 'ua', 'ru', 'es'] as const;
 /** BCP 47 for hreflang: Ukrainian is "uk", URL segment stays "ua" */
-const HREFLANG_LOCALES = { en: 'en', ua: 'uk' } as const;
+const HREFLANG_LOCALES = { en: 'en', ua: 'uk', ru: 'ru', es: 'es' } as const;
 
 /** Static paths under [locale] to include in sitemap (no auth, dashboard, or API). */
 const STATIC_PATHS = [

@@ -47,9 +47,9 @@ export default function SupportPage() {
       <Typography variant="h5" fontWeight={600} gutterBottom>
         {t('title')}
       </Typography>
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+      <Alert severity="info" variant="outlined" sx={{ mb: 3 }}>
         {t('intro')}
-      </Typography>
+      </Alert>
 
       {error && (
         <Alert severity="error" onClose={() => setError(null)} sx={{ mb: 2 }}>

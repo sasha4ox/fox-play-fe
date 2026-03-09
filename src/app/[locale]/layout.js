@@ -32,7 +32,7 @@ const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://foxyplay.app';
 export async function generateMetadata({ params, request }) {
   const { locale } = await params;
   const pathname = request?.url ? new URL(request.url).pathname : '';
-  const pathWithoutLocale = pathname ? pathname.replace(/^\/(en|ua)/, '') || '/' : '/';
+  const pathWithoutLocale = pathname ? pathname.replace(/^\/(en|ua|ru|es)/, '') || '/' : '/';
   const canonical = `${BASE_URL}/${locale}${pathWithoutLocale}`;
   return {
     title: 'FoxyPlay',
@@ -43,6 +43,8 @@ export async function generateMetadata({ params, request }) {
       languages: {
         en: `${BASE_URL}/en${pathWithoutLocale}`,
         uk: `${BASE_URL}/ua${pathWithoutLocale}`,
+        ru: `${BASE_URL}/ru${pathWithoutLocale}`,
+        es: `${BASE_URL}/es${pathWithoutLocale}`,
         'x-default': `${BASE_URL}/en${pathWithoutLocale}`,
       },
     },
@@ -53,7 +55,7 @@ export default async function RootLayout({ children, params }) {
   const { locale } = await params;
 
 
-  if (!['en', 'ua'].includes(locale)) {
+  if (!['en', 'ua', 'ru', 'es'].includes(locale)) {
     notFound();
   }
 

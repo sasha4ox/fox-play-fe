@@ -5,7 +5,7 @@ import { usePathname, useSearchParams } from 'next/navigation';
 import { useLocale } from 'next-intl';
 import { componentClass } from '@/lib/componentPath';
 
-const LOCALES = ['en', 'ua'];
+const LOCALES = ['en', 'ua', 'ru', 'es'];
 
 export default function LocaleSwitcher() {
   const pathname = usePathname();

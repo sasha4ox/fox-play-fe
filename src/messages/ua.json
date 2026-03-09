@@ -72,7 +72,8 @@
     "soundPreset_bell": "Дзвін",
     "soundPreset_soft": "Тихо",
     "soundPreset_custom": "Свій (public/sounds/)",
-    "notificationSound": "Звук сповіщень"
+    "notificationSound": "Звук сповіщень",
+    "mySalesBadgeTooltip": "У вас {count} продаж(ів), які ви ще не відкривали. Відкрийте кожне замовлення, щоб очистити."
   },
   "Profile": {
     "title": "Профіль",
@@ -324,7 +325,8 @@
     "statusMeaning_DISPUTED": "Покупець відкрив спір. Модератор вирішить.",
     "orderDate": "Дата",
     "newestFirst": "Спочатку нові",
-    "unreadMessages": "Нові повідомлення"
+    "unreadMessages": "Нові повідомлення",
+    "badgeHint": "Число біля «Мої продажі» в меню (зараз {count}) — це кількість продажів, які ви ще не відкривали. Натисніть на замовлення та відкрийте чат, щоб очистити."
   },
   "OrderDetail": {
     "orderChat": "Чат замовлення",

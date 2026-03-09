@@ -72,8 +72,7 @@
     "soundPreset_bell": "Bell",
     "soundPreset_soft": "Soft",
     "soundPreset_custom": "Custom (public/sounds/)",
-    "notificationSound": "Notification sound",
-    "mySalesBadgeTooltip": "You have {count} sold order(s) you haven't opened yet. Open each order to clear."
+    "notificationSound": "Notification sound"
   },
   "Profile": {
     "title": "Profile",
@@ -325,8 +324,7 @@
     "statusMeaning_DISPUTED": "Buyer opened a dispute. Moderator will resolve.",
     "orderDate": "Date",
     "newestFirst": "Newest first",
-    "unreadMessages": "New messages",
-    "badgeHint": "The number on \"My sales\" in the menu ({count} now) is how many sold orders you haven't opened yet. Click an order and open the chat to clear it."
+    "unreadMessages": "New messages"
   },
   "OrderDetail": {
     "orderChat": "Order chat",

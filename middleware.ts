@@ -2,7 +2,7 @@ import createMiddleware from 'next-intl/middleware';
 import { NextResponse } from 'next/server';
 
 const intlMiddleware = createMiddleware({
-  locales: ['en', 'ua'],
+  locales: ['en', 'ua', 'ru', 'es'],
   defaultLocale: 'en',
   alternateLinks: false, // hreflang set in [locale]/layout.js with BCP 47 "uk" for Ukrainian
 });
@@ -10,7 +10,7 @@ const intlMiddleware = createMiddleware({
 /** Fix bad redirects like /ua/en/dashboard/... -> /ua/dashboard/... */
 export default function middleware(request) {
   const pathname = request.nextUrl.pathname;
-  const badMatch = pathname.match(/^\/(en|ua)\/(en|ua)(\/.*|$)/);
+  const badMatch = pathname.match(/^\/(en|ua|ru|es)\/(en|ua|ru|es)(\/.*|$)/);
   if (badMatch) {
     const locale = badMatch[1];
     const rest = badMatch[3] || '/';
@@ -29,9 +29,9 @@ export default function middleware(request) {
 
 export const config = {
   matcher: [
-    '/',                // root
-    '/(en|ua)',         // locale root
-    '/(en|ua)/:path*'   // locale sub-routes
+    '/',                    // root
+    '/(en|ua|ru|es)',       // locale root
+    '/(en|ua|ru|es)/:path*' // locale sub-routes
   ]
 };
 

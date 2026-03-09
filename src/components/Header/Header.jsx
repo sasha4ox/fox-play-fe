@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
@@ -39,6 +39,7 @@ import {
   setSoldSoundEnabled,
 } from '@/lib/notificationSound';
 import Badge from '@mui/material/Badge';
+import Tooltip from '@mui/material/Tooltip';
 import Alert from '@mui/material/Alert';
 import Switch from '@mui/material/Switch';
 import Image from 'next/image';
@@ -183,6 +184,13 @@ export default function Header() {
     return () => clearInterval(interval);
   }, [isAuth, token, pathname]);
 
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const handler = () => refetchUnread();
+    window.addEventListener('refetchUnread', handler);
+    return () => window.removeEventListener('refetchUnread', handler);
+  }, [refetchUnread]);
+
   const handleLogout = () => {
     setAnchorEl(null);
     setMobileOpen(false);
@@ -224,44 +232,57 @@ export default function Header() {
 
   const NavBlock = () => (
     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25, flexWrap: 'wrap' }}>
-      {navLinks.map(({ href, label, active, badge }) => (
-        <Link key={href + label} href={href} style={{ textDecoration: 'none' }}>
-          <Badge
-            badgeContent={badge ?? 0}
-            color="error"
-            invisible={!(badge > 0)}
-            sx={{
-              '& .MuiBadge-badge': {
-                right: 1,
-                top: 2,
-                fontSize: '0.65rem',
-                minWidth: 16,
-                height: 16,
-              },
-            }}
-          >
-            <Button
-              size="small"
+      {navLinks.map(({ href, label, active, badge }) => {
+        const count = badge ?? 0;
+        const isMySales = href.includes('/dashboard/sales');
+        const showSalesTooltip = isMySales && count > 0;
+        const linkContent = (
+          <Link href={href} style={{ textDecoration: 'none' }}>
+            <Badge
+              badgeContent={count}
+              color="error"
+              invisible={!(count > 0)}
               sx={{
-                color: active ? 'primary.main' : 'text.secondary',
-                fontWeight: active ? 600 : 500,
-                fontSize: '0.8125rem',
-                px: 1.25,
-                py: 0.5,
-                minWidth: 0,
-                borderRadius: 2,
-                bgcolor: active ? 'action.selected' : 'transparent',
-                '&:hover': {
-                  bgcolor: active ? 'action.selected' : 'action.hover',
-                  color: active ? 'primary.main' : 'text.primary',
+                '& .MuiBadge-badge': {
+                  right: 1,
+                  top: 2,
+                  fontSize: '0.65rem',
+                  minWidth: 16,
+                  height: 16,
                 },
               }}
             >
-              {label}
-            </Button>
-          </Badge>
-        </Link>
-      ))}
+              <Button
+                size="small"
+                sx={{
+                  color: active ? 'primary.main' : 'text.secondary',
+                  fontWeight: active ? 600 : 500,
+                  fontSize: '0.8125rem',
+                  px: 1.25,
+                  py: 0.5,
+                  minWidth: 0,
+                  borderRadius: 2,
+                  bgcolor: active ? 'action.selected' : 'transparent',
+                  '&:hover': {
+                    bgcolor: active ? 'action.selected' : 'action.hover',
+                    color: active ? 'primary.main' : 'text.primary',
+                  },
+                }}
+                aria-label={showSalesTooltip ? t('mySalesBadgeTooltip', { count }) : undefined}
+              >
+                {label}
+              </Button>
+            </Badge>
+          </Link>
+        );
+        return showSalesTooltip ? (
+          <Tooltip key={href + label} title={t('mySalesBadgeTooltip', { count })} placement="bottom" enterTouchDelay={0}>
+            <span style={{ display: 'inline-flex' }}>{linkContent}</span>
+          </Tooltip>
+        ) : (
+          <React.Fragment key={href + label}>{linkContent}</React.Fragment>
+        );
+      })}
     </Box>
   );
 
@@ -443,7 +464,9 @@ export default function Header() {
       </Box>
       {navLinks.map(({ href, label, badge }) => {
         const count = badge ?? 0
-        return (
+        const isMySales = href.includes('/dashboard/sales')
+        const showSalesTooltip = isMySales && count > 0
+        const btn = (
           <Button
             key={href + label}
             component={Link}
@@ -451,6 +474,7 @@ export default function Header() {
             fullWidth
             sx={{ justifyContent: 'flex-start', px: 2, py: 1.5 }}
             onClick={() => setMobileOpen(false)}
+            aria-label={showSalesTooltip ? t('mySalesBadgeTooltip', { count }) : undefined}
           >
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <span>{label}</span>
@@ -475,6 +499,13 @@ export default function Header() {
               )}
             </Box>
           </Button>
+        )
+        return showSalesTooltip ? (
+          <Tooltip key={href + label} title={t('mySalesBadgeTooltip', { count })} placement="right" enterTouchDelay={0}>
+            <span style={{ display: 'block' }}>{btn}</span>
+          </Tooltip>
+        ) : (
+          btn
         )
       })}
       <Divider sx={{ my: 1 }} />
