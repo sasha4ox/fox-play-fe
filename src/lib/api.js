@@ -1,6 +1,6 @@
 import { useAuthStore } from '@/store/authStore'
 
-const getApiBase = () =>
+export const getApiBase = () =>
   process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'
 
 /**

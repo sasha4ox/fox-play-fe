@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import TextField from '@mui/material/TextField';
 import Alert from '@mui/material/Alert';
 import Button from '@mui/material/Button';
@@ -14,6 +14,7 @@ import { useLocale } from 'next-intl';
 import { redirect, useRouter } from 'next/navigation';
 import { GoogleLogin } from '@react-oauth/google';
 import { useAuthStore } from '@/store/authStore';
+import { getApiBase } from '@/lib/api';
 import { componentClass } from '@/lib/componentPath';
 import styles from './form.module.css';
 
@@ -28,7 +29,7 @@ export default function Form({ popupMode = false, onLoginSuccess }) {
   const [showActivationCooldown, setShowActivationCooldown] = useState(false);
   const [resendCooldownSeconds, setResendCooldownSeconds] = useState(0);
   const [lastRegisteredEmail, setLastRegisteredEmail] = useState('');
-  const { control, handleSubmit, setError, formState: { isSubmitting } } = useForm({
+  const { control, handleSubmit, setValue, getValues, setError, formState: { isSubmitting } } = useForm({
     defaultValues: {
       password: "",
       email: "",
@@ -36,6 +37,7 @@ export default function Form({ popupMode = false, onLoginSuccess }) {
       countryCode: "",
     },
   });
+  const suggestedCountryFetchedRef = useRef(false);
   const locale = useLocale();
   const router = useRouter();
   const t = useTranslations('Form');
@@ -67,6 +69,19 @@ export default function Form({ popupMode = false, onLoginSuccess }) {
       }
     } catch (_) {}
   }, []);
+
+  useEffect(() => {
+    if (isLoginForm || suggestedCountryFetchedRef.current) return;
+    suggestedCountryFetchedRef.current = true;
+    fetch(`${getApiBase()}/auth/suggested-country`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.countryCode && getValues('countryCode') === '') {
+          setValue('countryCode', data.countryCode);
+        }
+      })
+      .catch(() => {});
+  }, [isLoginForm, setValue, getValues]);
 
   const getAuthErrorMessage = (responseBody) => {
     const msg = responseBody?.error?.message ?? responseBody?.message ?? '';
