@@ -3,8 +3,10 @@ import { logger } from '@/lib/logger';
 
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
-const MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
+/** Keep under typical serverless body limit (e.g. Vercel 4.5 MB) including multipart overhead */
+const MAX_IMAGE_SIZE_BYTES = 4 * 1024 * 1024; // 4 MB
 const TELEGRAM_CAPTION_MAX_LENGTH = 1024;
+const REQUEST_BODY_LIMIT_BYTES = 4.5 * 1024 * 1024; // 4.5 MB
 
 /** Build multipart/form-data body for Telegram sendPhoto (avoids FormData in serverless fetch). */
 function buildSendPhotoBody(chatId: string, caption: string, imageBuffer: Buffer, mimeType: string, filename: string): { body: Buffer; contentType: string } {
@@ -46,6 +48,18 @@ export async function POST(request: Request) {
   let message: string;
   let imageFile: File | null = null;
 
+  const contentLength = request.headers.get('content-length');
+  if (contentLength) {
+    const size = parseInt(contentLength, 10);
+    if (!Number.isNaN(size) && size > REQUEST_BODY_LIMIT_BYTES) {
+      logger.warn({ size, limit: REQUEST_BODY_LIMIT_BYTES }, 'Contact API: request body too large');
+      return NextResponse.json(
+        { success: false, error: 'Request too large. Please use an image under 4 MB or send without an image.' },
+        { status: 413 }
+      );
+    }
+  }
+
   try {
     const contentType = request.headers.get('content-type') || '';
     if (contentType.includes('multipart/form-data')) {
@@ -66,7 +80,7 @@ export async function POST(request: Request) {
         if (image.size > MAX_IMAGE_SIZE_BYTES) {
           logger.warn({ size: image.size }, 'Contact form: image too large');
           return NextResponse.json(
-            { success: false, error: 'Image is too large. Maximum size is 10 MB.' },
+            { success: false, error: 'Image is too large. Maximum size is 4 MB.' },
             { status: 400 }
           );
         }
@@ -80,9 +94,12 @@ export async function POST(request: Request) {
       message = (body.message as string)?.trim() || '';
     }
   } catch (err) {
-    logger.error({ err, message: (err as Error)?.message }, 'Contact API: failed to parse request body');
+    const errMsg = (err as Error)?.message ?? String(err);
+    const stack = (err as Error)?.stack;
+    const contentType = request.headers.get('content-type') ?? '';
+    logger.error({ err, message: errMsg, stack, contentType }, 'Contact API: failed to parse request body');
     return NextResponse.json(
-      { success: false, error: 'Invalid request. Try again without an image or use a smaller image.' },
+      { success: false, error: 'Invalid request or failed to read form. Please try again.' },
       { status: 500 }
     );
   }
@@ -115,8 +132,18 @@ export async function POST(request: Request) {
 
   try {
     if (imageFile) {
-      const arrayBuffer = await imageFile.arrayBuffer();
-      const imageBuffer = Buffer.from(arrayBuffer);
+      let imageBuffer: Buffer;
+      try {
+        const arrayBuffer = await imageFile.arrayBuffer();
+        imageBuffer = Buffer.from(arrayBuffer);
+      } catch (imgErr) {
+        const msg = (imgErr as Error)?.message ?? String(imgErr);
+        logger.error({ err: imgErr, message: msg }, 'Contact API: failed to read image file');
+        return NextResponse.json(
+          { success: false, error: 'Failed to process image. Try a smaller file or send without an image.' },
+          { status: 500 }
+        );
+      }
       const caption =
         text.length <= TELEGRAM_CAPTION_MAX_LENGTH ? text : text.slice(0, TELEGRAM_CAPTION_MAX_LENGTH - 1) + '…';
       const mimeType = imageFile.type || 'image/jpeg';
@@ -164,9 +191,13 @@ export async function POST(request: Request) {
         return NextResponse.json({ success: false, error: 'Failed to send message' }, { status: 500 });
       }
       if (!res.ok || !data.ok) {
-        logger.warn({ ok: data.ok, description: data.description, status: res.status }, 'Telegram sendMessage failed');
+        const telegramError = data.description || 'Unknown Telegram error';
+        logger.warn(
+          { ok: data.ok, description: telegramError, status: res.status, rawBody: rawBody.slice(0, 300) },
+          'Telegram sendMessage failed'
+        );
         return NextResponse.json(
-          { success: false, error: data.description || 'Failed to send message' },
+          { success: false, error: telegramError },
           { status: 500 }
         );
       }
@@ -175,7 +206,15 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true });
   } catch (err) {
-    logger.error({ err, message: (err as Error)?.message }, 'Contact API error');
-    return NextResponse.json({ success: false, error: 'Failed to send message' }, { status: 500 });
+    const errMsg = (err as Error)?.message ?? String(err);
+    const stack = (err as Error)?.stack;
+    logger.error({ err, message: errMsg, stack }, 'Contact API error');
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'Failed to send message. Please try again later or contact support by email.',
+      },
+      { status: 500 }
+    );
   }
 }

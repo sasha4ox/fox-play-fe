@@ -132,99 +132,178 @@
     "recentServersEmpty": "Откройте страницу предложений сервера, чтобы он появился здесь."
   },
 
-  "Balance": {
+ "Balance": {
     "loading": "Загрузка…",
     "title": "Баланс",
     "yourBalance": "Ваш баланс",
-    "loginToView": "Войдите, чтобы просмотреть и управлять балансом.",
+    "loginToView": "Пожалуйста, войдите, чтобы просматривать и управлять балансом.",
     "login": "Войти",
-    "dashboard": "← Панель",
-    "totalIn": "Всего в {currency} (все кошельки с учётом конвертации)",
+    "dashboard": "← Панель управления",
+
+    "totalIn": "Всего в {currency} (все кошельки конвертированы)",
     "frozen": "Заморожено",
     "otherCurrencies": "Другие валюты",
-    "changeCurrencyHint": "Изменить валюту отображения можно в выпадающем меню в шапке.",
+    "changeCurrencyHint": "Изменить валюту отображения можно в выпадающем списке в шапке.",
+
     "uploadBalance": "Пополнить баланс",
-    "depositHint": "Пополните баланс через WhiteBIT (UAH/карта). После оплаты средства зачисляются автоматически.",
+    "depositHint": "Добавьте средства через WhiteBIT (UAH / карта). После оплаты баланс будет зачислен автоматически.",
     "depositOptions": "Способы пополнения",
     "whitebit": "WhiteBIT (UAH / карта)",
+
     "amount": "Сумма",
     "amountInCurrency": "Сумма ({currency})",
     "currency": "Валюта",
+
     "depositViaWhitebit": "Пополнить через WhiteBIT",
     "creating": "Создание…",
     "openWhitebit": "Открыть WhiteBIT",
-    "simulateDeposit": "Симулировать депозит (+{amount} к балансу)",
+
+    "simulateDeposit": "Симулировать пополнение (+{amount} к вашему балансу)",
     "adding": "Добавление…",
-    "enterAmountMin": "Введите корректную сумму (мин. 1)",
-    "enterAmountUsdt": "Введите корректную сумму (мин. 1 USDT)",
-    "noPaymentUrl": "Ссылка для оплаты не получена",
-    "failedDeposit": "Не удалось создать депозит",
-    "testCreditTitle": "Тестовый баланс (для тестеров)",
-    "testCreditHint": "Добавить {amount} {currency} на баланс для тестирования. Оплата картой не требуется.",
-    "getTestCredit": "Получить {amount} {currency} тестового баланса",
+
+    "enterAmountMin": "Введите корректную сумму (минимум 1)",
+    "enterAmountUsdt": "Введите корректную сумму (минимум 1 USDT)",
+    "noPaymentUrl": "URL оплаты не получен",
+    "failedDeposit": "Не удалось создать пополнение",
+
+    "testCreditTitle": "Тестовый баланс (для тестировщиков)",
+    "testCreditHint": "Добавьте {amount} {currency} на баланс для тестирования. Оплата картой не требуется.",
+    "getTestCredit": "Получить тестовые {amount} {currency}",
     "testCreditFailed": "Не удалось добавить тестовый баланс",
 
-    "withdrawTitle": "Вывод средств",
-    "withdrawHint": "Выведите UAH со своего баланса на украинский банковский счёт (IBAN) через WhiteBIT.",
+    "withdrawTitle": "Вывод",
+    "withdrawHint": "Выведите средства с баланса на банковский счёт (IBAN) или карту.",
+
     "withdrawAmount": "Сумма (UAH)",
     "withdrawIban": "IBAN",
+    "withdrawIbanPlaceholder": "UA123456789012345678901234567",
+
     "withdrawOkpo": "ОКПО",
-    "withdrawAccountName": "Имя владельца счёта",
+    "withdrawOkpoPlaceholder": "12345678",
+
+    "withdrawAccountName": "Имя получателя",
+    "withdrawAccountNamePlaceholder": "например: ФОП Иванов Иван",
+
     "withdrawDescription": "Назначение платежа (необязательно)",
+
     "withdrawSubmit": "Вывести",
     "withdrawSubmitting": "Обработка…",
-    "withdrawSuccess": "Заявка на вывод успешно отправлена. Средства будут отправлены на ваш счёт.",
-    "withdrawFailed": "Ошибка вывода. Попробуйте снова или обратитесь в поддержку.",
-    "withdrawInsufficient": "Недостаточно средств на балансе UAH.",
-    "withdrawRequired": "Сумма, IBAN, ОКПО и имя владельца счёта обязательны.",
 
-    "withdrawOnCard": "Вывод на карту",
-    "withdrawWithCrypto": "Вывод в криптовалюте",
-    "withdrawCardFeeExplanation": "Комиссия может составлять примерно 5–10% в зависимости от провайдера.",
+    "withdrawSuccess": "Запрос на вывод отправлен. Средства будут переведены на ваш счёт.",
+    "withdrawFailed": "Ошибка вывода. Попробуйте снова или обратитесь в поддержку.",
+    "withdrawInsufficient": "Недостаточно средств в UAH.",
+    "withdrawRequired": "Необходимо указать сумму, IBAN, ОКПО и имя получателя.",
+
+    "withdrawWhitebitTitle": "Вывод через WhiteBIT (UAH)",
+    "withdrawWhitebitHint": "Вывод UAH на украинский IBAN. Требуется имя, фамилия и ИНН получателя (10 цифр).",
+
+    "withdrawFirstName": "Имя получателя",
+    "withdrawLastName": "Фамилия получателя",
+
+    "withdrawTin": "ИНН / ЄДРПОУ (10 цифр)",
+    "withdrawTinPlaceholder": "1234567890",
+
+    "withdrawRequiredWhitebit": "Требуются сумма, IBAN, имя, фамилия и ИНН (10 цифр).",
+
+    "withdrawOnCard": "Вывести на карту",
+    "withdrawWithCrypto": "Вывести криптовалютой",
+
+    "withdrawCardFeeExplanation": "Комиссия может составлять примерно 5–10% в зависимости от платёжного провайдера.",
 
     "withdrawToCardTitle": "Вывод на карту",
-    "withdrawToCardHint": "Отправьте запрос на вывод средств на вашу карту. Администратор обработает его вручную.",
+    "withdrawToCardHint": "Отправьте запрос на вывод средств на карту. Администратор обработает его вручную.",
+
     "cardPayoutFeeNotice": "За эту операцию может взиматься дополнительная комиссия.",
-    "cardPayoutDaysNotice": "Операция может занять около 3 рабочих дней.",
+    "cardPayoutDaysNotice": "Операция может занять до 3 рабочих дней.",
+
     "cardPayoutCardNumber": "Номер карты",
     "cardPayoutCardHolder": "Имя владельца карты",
+
     "withdrawToCardSubmit": "Запросить вывод на карту",
-    "cardPayoutAmountMin": "Введите корректную сумму (мин. 0.01).",
-    "cardPayoutCardRequired": "Введите корректный номер карты (минимум 12 цифр) и имя владельца.",
-    "cardPayoutSuccess": "Запрос на вывод отправлен. Администратор обработает его в течение ~3 рабочих дней.",
+
+    "cardPayoutAmountMin": "Введите корректную сумму (минимум 0.01).",
+    "cardPayoutCardRequired": "Введите корректный номер карты (не менее 12 цифр) и имя владельца.",
+
+    "cardPayoutSuccess": "Запрос на вывод отправлен. Администратор обработает его примерно в течение 3 рабочих дней.",
     "cardPayoutFailed": "Не удалось отправить запрос на вывод.",
-    "cardPayoutInsufficient": "Недостаточно средств на балансе выбранной валюты.",
+    "cardPayoutInsufficient": "Недостаточно средств в выбранной валюте.",
 
-    "youHaveInCurrency": "У вас есть {amount} {currency} (всего в этой валюте, включая конвертацию других балансов)",
-
+    "youHaveInCurrency": "Доступно {amount} {currency} (общая сумма в этой валюте с учётом конвертации)",
     "withdrawAll": "Вывести всё",
 
-    "withdrawCryptoHint": "Отправьте запрос на вывод в USDT (TRC20) на ваш кошелёк. Администратор обработает его вручную.",
-    "withdrawCryptoUsdOnly": "Вывод криптовалюты доступен только в USD. Средства будут отправлены в USDT (TRC20).",
+    "withdrawCryptoHint": "Отправьте запрос на вывод USDT (TRC20) на ваш кошелёк. Администратор обработает его вручную.",
+    "withdrawCryptoUsdOnly": "Криптовывод доступен только в USD. Средства будут отправлены в USDT (TRC20).",
+
     "withdrawCryptoWalletLabel": "Адрес кошелька USDT TRC20",
-    "withdrawCryptoSubmit": "Запросить вывод криптовалюты",
-    "withdrawCryptoSuccess": "Запрос на вывод криптовалюты отправлен. Администратор обработает его.",
-    "withdrawCryptoFailed": "Не удалось отправить запрос на вывод криптовалюты.",
-    "withdrawToIban": "Вывод на IBAN",
-    "withdrawToIbanHint": "Заявка на вывод в EUR на ваш европейский IBAN. Админ обработает вручную.",
+    "withdrawCryptoSubmit": "Запросить криптовывод",
+
+    "withdrawCryptoSuccess": "Запрос на криптовывод отправлен. Администратор обработает его.",
+    "withdrawCryptoFailed": "Не удалось отправить запрос на криптовывод.",
+
+    "withdrawToIban": "Вывести на IBAN",
+    "withdrawToIbanHint": "Запросите выплату в EUR на ваш европейский IBAN. Администратор обработает её вручную.",
+
     "ibanLabel": "IBAN",
     "bicSwiftLabel": "BIC / SWIFT (необязательно)",
     "beneficiaryNameLabel": "Имя получателя",
-    "ibanPayoutFieldsRequired": "Введите сумму, IBAN (не менее 15 символов) и имя получателя.",
-    "withdrawIbanSuccess": "Заявка на вывод на IBAN отправлена. Админ обработает.",
+
+    "ibanPayoutFieldsRequired": "Введите сумму, IBAN (минимум 15 символов) и имя получателя.",
+    "withdrawIbanSuccess": "Запрос на выплату на IBAN отправлен. Администратор обработает его.",
+
     "withdrawalsTitle": "История выводов",
-    "withdrawalsHint": "Ваши заявки на вывод на карту и криптокошелёк. Обычно обрабатываются в течение ~3 рабочих дней.",
+    "withdrawalsHint": "Ваши запросы на вывод на карту и криптовалюту. Обычно обрабатываются в течение ~3 рабочих дней.",
+
     "withdrawalsType": "Тип",
-    "noWithdrawals": "Пока нет заявок на вывод.",
+    "noWithdrawals": "Запросов на вывод пока нет.",
+
     "date": "Дата",
     "status": "Статус",
     "processedAt": "Обработано",
+
     "typicallyProcessedInDays": "Обычно в течение ~3 рабочих дней.",
     "viewWithdrawals": "Посмотреть историю выводов",
 
-    "balanceHistoryTitle": "История баланса",
-    "balanceHistoryHint": "Продажи, возвраты, депозиты (входящие); покупки (исходящие).",
-    "noBalanceHistory": "Пока нет транзакций."
+    "balanceHistoryTitle": "Движение средств",
+    "balanceHistoryHint": "Продажи, возвраты, пополнения (входящие); покупки (исходящие).",
+
+    "noBalanceHistory": "Операций пока нет.",
+
+    "balanceHistoryType_sale": "Продажа",
+    "balanceHistoryType_refund": "Возврат",
+    "balanceHistoryType_deposit": "Пополнение",
+    "balanceHistoryType_card_payout_refund": "Возврат вывода на карту",
+    "balanceHistoryType_purchase": "Покупка",
+
+    "order": "Заказ",
+
+    "twoFactorRequired": "Для вывода средств требуется двухфакторная аутентификация.",
+    "twoFactorRequiredHint": "Для вывода необходимо включить двухфакторную аутентификацию. Вам будет предложено сделать это при отправке запроса.",
+
+    "enable2FAClosingCancelsWithdraw": "Закрытие окна отменит вывод. Завершите настройку 2FA, чтобы продолжить.",
+
+    "enable2FATitle": "Включить двухфакторную аутентификацию",
+    "enable2FADescription": "Отсканируйте QR-код в приложении-аутентификаторе (например Google Authenticator), затем введите 6-значный код.",
+
+    "enable2FAScanQR": "Сканируйте QR-код",
+    "enable2FAManualEntry": "Не получается отсканировать? Введите этот ключ вручную:",
+
+    "enable2FAEnterCode": "Введите 6-значный код",
+    "enable2FAVerify": "Подтвердить и включить",
+
+    "enable2FALoading": "Загрузка…",
+    "enable2FAInvalidCode": "Неверный код. Попробуйте снова.",
+    "enable2FAConnectionError": "Ошибка соединения. Попробуйте позже.",
+
+    "verifyTOTPTitle": "Подтверждение через аутентификатор",
+    "verifyTOTPDescription": "Введите 6-значный код из приложения-аутентификатора для подтверждения вывода.",
+
+    "verifyTOTPPlaceholder": "000000",
+    "verifyTOTPSubmit": "Подтвердить вывод",
+
+    "verifyTOTPInvalidCode": "Неверный или просроченный код. Попробуйте снова.",
+    "verifyTOTPSubmitting": "Проверка…",
+
+    "enable2FABack": "Назад"
   },
   "Orders": {
     "chats": "Сообщения",

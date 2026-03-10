@@ -16,7 +16,7 @@ import SendIcon from '@mui/icons-material/Send';
 import AttachFileIcon from '@mui/icons-material/AttachFile';
 import CloseIcon from '@mui/icons-material/Close';
 
-const MAX_IMAGE_SIZE_MB = 10;
+const MAX_IMAGE_SIZE_MB = 4;
 
 export default function ContactPage() {
   const locale = useLocale();
@@ -74,7 +74,7 @@ export default function ContactPage() {
         body: formData,
       });
 
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
       if (res.ok && data.success) {
         setStatus('success');
         setName('');
@@ -84,6 +84,9 @@ export default function ContactPage() {
         clearImage();
       } else if (res.status === 503) {
         setStatus('unavailable');
+      } else if (res.status === 413) {
+        setStatus('error');
+        setErrorMessage(data.error || 'File too large. Use an image under 4 MB or send without an image.');
       } else {
         setStatus('error');
         setErrorMessage(data.error || null);
