@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import Link from 'next/link';
 import { useLocale, useTranslations } from 'next-intl';
 import Box from '@mui/material/Box';
@@ -10,21 +10,47 @@ import TextField from '@mui/material/TextField';
 import Container from '@mui/material/Container';
 import Paper from '@mui/material/Paper';
 import Alert from '@mui/material/Alert';
+import IconButton from '@mui/material/IconButton';
 import EmailIcon from '@mui/icons-material/Email';
 import SendIcon from '@mui/icons-material/Send';
+import AttachFileIcon from '@mui/icons-material/AttachFile';
+import CloseIcon from '@mui/icons-material/Close';
 
+const MAX_IMAGE_SIZE_MB = 10;
 
 export default function ContactPage() {
   const locale = useLocale();
   const t = useTranslations('Contact');
   const basePath = `/${locale}`;
+  const fileInputRef = useRef(null);
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
+  const [imageFile, setImageFile] = useState(null);
   const [status, setStatus] = useState(null); // 'success' | 'error' | null
   const [submitting, setSubmitting] = useState(false);
+
+  const handleImageChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      setStatus('error');
+      return;
+    }
+    if (file.size > MAX_IMAGE_SIZE_MB * 1024 * 1024) {
+      setStatus('error');
+      return;
+    }
+    setImageFile(file);
+    setStatus(null);
+  };
+
+  const clearImage = () => {
+    setImageFile(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -32,10 +58,18 @@ export default function ContactPage() {
     setSubmitting(true);
 
     try {
+      const formData = new FormData();
+      formData.append('name', name);
+      formData.append('email', email);
+      formData.append('subject', subject);
+      formData.append('message', message);
+      if (imageFile) {
+        formData.append('image', imageFile);
+      }
+
       const res = await fetch('/api/contact', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, subject, message }),
+        body: formData,
       });
 
       const data = await res.json();
@@ -45,6 +79,7 @@ export default function ContactPage() {
         setEmail('');
         setSubject('');
         setMessage('');
+        clearImage();
       } else {
         setStatus('error');
       }
@@ -150,6 +185,34 @@ export default function ContactPage() {
             sx={{ mb: 2 }}
             variant="outlined"
           />
+          <input
+            type="file"
+            ref={fileInputRef}
+            accept="image/*"
+            style={{ display: 'none' }}
+            onChange={handleImageChange}
+          />
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2, flexWrap: 'wrap' }}>
+            <Button
+              type="button"
+              variant="outlined"
+              size="small"
+              startIcon={<AttachFileIcon />}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              {t('attachImage')}
+            </Button>
+            {imageFile && (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                <Typography variant="body2" color="text.secondary">
+                  {t('imageAttached')}: {imageFile.name}
+                </Typography>
+                <IconButton size="small" onClick={clearImage} aria-label={t('removeImage')}>
+                  <CloseIcon fontSize="small" />
+                </IconButton>
+              </Box>
+            )}
+          </Box>
 
           {status === 'success' && (
             <Alert severity="success" sx={{ mb: 2 }}>

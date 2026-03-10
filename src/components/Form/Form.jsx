@@ -7,6 +7,10 @@ import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 import Divider from '@mui/material/Divider';
+import FormControl from '@mui/material/FormControl';
+import InputLabel from '@mui/material/InputLabel';
+import Select from '@mui/material/Select';
+import MenuItem from '@mui/material/MenuItem';
 import { useForm, Controller } from 'react-hook-form';
 import { useTranslations } from 'next-intl';
 import { useLocale } from 'next-intl';
@@ -59,6 +63,7 @@ export default function Form({ popupMode = false, onLoginSuccess }) {
       password: "",
       email: "",
       nickname: "",
+      countryCode: "",
     },
   });
   const locale = useLocale();
@@ -98,6 +103,7 @@ export default function Form({ popupMode = false, onLoginSuccess }) {
     if (/invalid credentials/i.test(msg)) return t('invalidCredentials');
     if (/user already exists/i.test(msg)) return t('emailAlreadyRegistered');
     if (/nickname is required/i.test(msg)) return t('nicknameRequired');
+    if (/country is required/i.test(msg)) return t('countryRequired');
     if (/sent a new activation link/i.test(msg)) return t('activationEmailSentAgain');
     if (/verify your email/i.test(msg)) return t('pleaseVerifyEmail');
     if (/account is already verified/i.test(msg)) return t('alreadyVerified');
@@ -259,6 +265,38 @@ export default function Form({ popupMode = false, onLoginSuccess }) {
                 error={!!error}
                 helperText={error ? error.message : null}
               />
+            )}
+          />
+        )}
+        {!isLoginForm && (
+          <Controller
+            name="countryCode"
+            control={control}
+            rules={{ required: t('mandatatory') }}
+            render={({ field, fieldState: { error } }) => (
+              <FormControl fullWidth variant="outlined" sx={{ mt: 2 }} error={!!error}>
+                <InputLabel id="form-country-label">{t('whereAreYouFrom')}</InputLabel>
+                <Select
+                  {...field}
+                  labelId="form-country-label"
+                  label={t('whereAreYouFrom')}
+                  value={field.value || ''}
+                >
+                  <MenuItem value="">
+                    <em>{t('selectCountry')}</em>
+                  </MenuItem>
+                  {conriesToShow.map((code) => (
+                    <MenuItem key={code} value={code}>
+                      {code}
+                    </MenuItem>
+                  ))}
+                </Select>
+                {error && (
+                  <Typography variant="caption" color="error" sx={{ mt: 0.5, display: 'block' }}>
+                    {error.message}
+                  </Typography>
+                )}
+              </FormControl>
             )}
           />
         )}

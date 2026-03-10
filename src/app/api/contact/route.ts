@@ -1,19 +1,63 @@
 import { NextResponse } from 'next/server';
+import { logger } from '@/lib/logger';
 
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
+const MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
 
 export async function POST(request: Request) {
-  const body = await request.json();
-  const { name, email, subject, message } = body;
+  let name: string;
+  let email: string;
+  let subject: string;
+  let message: string;
+  let imageFile: File | null = null;
+
+  const contentType = request.headers.get('content-type') || '';
+  if (contentType.includes('multipart/form-data')) {
+    const formData = await request.formData();
+    name = (formData.get('name') as string)?.trim() || '';
+    email = (formData.get('email') as string)?.trim() || '';
+    subject = (formData.get('subject') as string)?.trim() || '';
+    message = (formData.get('message') as string)?.trim() || '';
+    const image = formData.get('image');
+    if (image instanceof File && image.size > 0) {
+      if (!image.type.startsWith('image/')) {
+        logger.warn({ type: image.type }, 'Contact form: rejected non-image file');
+        return NextResponse.json(
+          { success: false, error: 'Invalid file type. Only images are allowed.' },
+          { status: 400 }
+        );
+      }
+      if (image.size > MAX_IMAGE_SIZE_BYTES) {
+        logger.warn({ size: image.size }, 'Contact form: image too large');
+        return NextResponse.json(
+          { success: false, error: 'Image is too large. Maximum size is 10 MB.' },
+          { status: 400 }
+        );
+      }
+      imageFile = image;
+    }
+  } else {
+    const body = await request.json();
+    name = (body.name as string)?.trim() || '';
+    email = (body.email as string)?.trim() || '';
+    subject = (body.subject as string)?.trim() || '';
+    message = (body.message as string)?.trim() || '';
+  }
 
   if (!name || !email || !message) {
-    return NextResponse.json({ success: false, error: 'Missing required fields' }, { status: 400 });
+    return NextResponse.json(
+      { success: false, error: 'Missing required fields' },
+      { status: 400 }
+    );
   }
 
   if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) {
-    console.error('TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID not configured');
-    return NextResponse.json({ success: false, error: 'Contact form not configured' }, { status: 500 });
+    logger.error('TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID not configured');
+    return NextResponse.json(
+      { success: false, error: 'Contact form not configured' },
+      { status: 500 }
+    );
   }
 
   const text = [
@@ -28,24 +72,50 @@ export async function POST(request: Request) {
   ].join('\n');
 
   try {
-    const res = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        chat_id: TELEGRAM_CHAT_ID,
-        text,
-      }),
-    });
+    if (imageFile) {
+      const formData = new FormData();
+      formData.append('chat_id', TELEGRAM_CHAT_ID);
+      formData.append('caption', text);
+      formData.append('photo', imageFile);
 
-    const data = await res.json();
-    if (!res.ok) {
-      console.error('Telegram send failed:', data);
-      return NextResponse.json({ success: false }, { status: 500 });
+      const res = await fetch(
+        `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendPhoto`,
+        {
+          method: 'POST',
+          body: formData,
+        }
+      );
+
+      const data = await res.json();
+      if (!res.ok) {
+        logger.warn({ ok: data.ok, description: data.description }, 'Telegram sendPhoto failed');
+        return NextResponse.json({ success: false }, { status: 500 });
+      }
+      logger.info({ hasImage: true }, 'Contact form submitted via sendPhoto');
+    } else {
+      const res = await fetch(
+        `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            chat_id: TELEGRAM_CHAT_ID,
+            text,
+          }),
+        }
+      );
+
+      const data = await res.json();
+      if (!res.ok) {
+        logger.warn({ ok: data.ok, description: data.description }, 'Telegram sendMessage failed');
+        return NextResponse.json({ success: false }, { status: 500 });
+      }
+      logger.info('Contact form submitted via sendMessage');
     }
 
     return NextResponse.json({ success: true });
   } catch (err) {
-    console.error('Contact API error:', err);
+    logger.error(err, 'Contact API error');
     return NextResponse.json({ success: false }, { status: 500 });
   }
 }

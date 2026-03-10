@@ -467,11 +467,11 @@ export default function OrderChatPage() {
         </Link>
         <Box sx={{ flex: 1, minWidth: 0 }}>
           {otherParty?.id ? (
-            <Typography variant="subtitle1" fontWeight={600} noWrap component={Link} href={`/${locale}/user/${otherParty.id}`} sx={{ color: 'inherit', textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}>
+            <Typography variant="subtitle1" fontWeight={600} noWrap component={Link} href={`/${locale}/user/${otherParty.id}`} sx={{ color: 'text.primary', textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}>
               {otherName}
             </Typography>
           ) : (
-            <Typography variant="subtitle1" fontWeight={600} noWrap>
+            <Typography variant="subtitle1" fontWeight={600} noWrap sx={{ color: 'text.primary' }}>
               {otherName}
             </Typography>
           )}
