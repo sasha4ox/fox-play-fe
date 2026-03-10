@@ -95,7 +95,7 @@ a {
 }
 [data-theme="dark"] .country-select [class*="ReactFlagsSelect-module_selectOption"]:hover,
 [data-theme="dark"] .country-select [class*="ReactFlagsSelect-module_selectOption"]:focus {
-  background: rgba(241, 245, 249, 0.08);
+  background: #334155;
 }
 [data-theme="dark"] .country-select [class*="ReactFlagsSelect-module_filterBox"] {
   background: var(--second-color);
