@@ -33,7 +33,7 @@ import { useProfile } from '@/hooks/useProfile';
 import { fetchOfferById, createOrder, getAvailablePaymentMethods, getOfferMessages, sendOfferMessage, startOfferChat, getOfferInquiryOrderId, getFeedbacksByUserId, deleteOffer } from '@/lib/api';
 import { logClientError } from '@/lib/clientLogger';
 import { formatAdena } from '@/lib/adenaFormat';
-import { getMinPriceFor100kk } from '@/lib/offerMinPrice';
+import { getMinPriceForUnit } from '@/lib/offerMinPrice';
 
 export default function OfferPDPPage() {
   const params = useParams();
@@ -345,13 +345,14 @@ export default function OfferPDPPage() {
   const isAdenaOffer = offer.offerType === 'ADENA';
   const maxKk = isAdenaOffer ? offer.quantity : null;
   const offerCurrency = offer.displayCurrency ?? offer.currency ?? '';
+  const adenaPriceUnitKk = offer?.server?.gameVariant?.game?.adenaPriceUnitKk ?? 100;
   const priceRaw = offer.displayPrice ?? offer.price;
   const pNum = typeof priceRaw === 'object' && priceRaw != null && typeof priceRaw.toString === 'function'
     ? Number(priceRaw.toString())
     : Number(priceRaw) || 0;
   const pricePer1kkForMin = pNum < 0.001 && pNum > 0 ? pNum * 1_000_000 : pNum;
-  const priceFor100kkForMin = pricePer1kkForMin * 100;
-  const isPriceBelowMin = isAdenaOffer && priceFor100kkForMin < getMinPriceFor100kk(offerCurrency);
+  const priceForUnitForMin = pricePer1kkForMin * adenaPriceUnitKk;
+  const isPriceBelowMin = isAdenaOffer && priceForUnitForMin < getMinPriceForUnit(offerCurrency, adenaPriceUnitKk);
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', py: 4, px: 2 }}>
@@ -475,9 +476,9 @@ export default function OfferPDPPage() {
           const quantityKk = q / 1_000_000;
           const currency = offer.displayCurrency ?? offer.currency ?? '';
           const pricePer1kk = p < 0.001 && p > 0 ? p * 1_000_000 : p;
-          const priceFor100kkDisplay = pricePer1kk * 100;
-          const totalIfBuyFull = quantityKk * (priceFor100kkDisplay / 100);
-          const isPriceBelowMin = priceFor100kkDisplay < getMinPriceFor100kk(currency);
+          const priceForDisplay = pricePer1kk * adenaPriceUnitKk;
+          const totalIfBuyFull = quantityKk * pricePer1kk;
+          const isPriceBelowMinLocal = priceForDisplay < getMinPriceForUnit(currency, adenaPriceUnitKk);
           return (
             <>
               <Card variant="outlined" sx={{ mb: 2 }}>
@@ -489,9 +490,9 @@ export default function OfferPDPPage() {
                       <Typography variant="caption" color="text.secondary">{t('availabilityKkHint')}</Typography>
                     </Box>
                     <Box>
-                      <Typography variant="overline" color="text.secondary">{t('priceFor100kk')}</Typography>
+                      <Typography variant="overline" color="text.secondary">{t('pricePerNkk', { n: adenaPriceUnitKk })}</Typography>
                       <Typography variant="h6" fontWeight={600} color="primary.main">
-                        {priceFor100kkDisplay.toFixed(2)} {currency}
+                        {priceForDisplay.toFixed(2)} {currency}
                       </Typography>
                     </Box>
                     <Box>
@@ -503,7 +504,7 @@ export default function OfferPDPPage() {
                   </Box>
                 </CardContent>
               </Card>
-              {isPriceBelowMin && (
+              {isPriceBelowMinLocal && (
                 <Alert severity="warning" sx={{ mb: 2 }}>
                   {t('priceBelowMinCannotBuy')}
                 </Alert>

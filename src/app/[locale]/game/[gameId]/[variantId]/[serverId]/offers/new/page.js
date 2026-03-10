@@ -21,7 +21,7 @@ import { useAuthStore } from '@/store/authStore';
 import { useProfile } from '@/hooks/useProfile';
 import { createOffer, getPlatformFeePercent, fetchOfferRecentPrices } from '@/lib/api';
 import { formatAdena, parseAdenaInput } from '@/lib/adenaFormat';
-import { getMinPriceFor100kk } from '@/lib/offerMinPrice';
+import { getMinPriceForUnit } from '@/lib/offerMinPrice';
 
 export default function NewOfferPage() {
   const params = useParams();
@@ -44,6 +44,7 @@ export default function NewOfferPage() {
   const game = tree ? getGameFromTree(tree, gameId) : null;
   const variant = tree ? getVariantFromTree(tree, gameId, variantId) : null;
   const server = tree ? getServerFromTree(tree, gameId, variantId, serverId) : null;
+  const adenaPriceUnitKk = game?.adenaPriceUnitKk ?? 100;
   const serverTypes = server?.enabledOfferTypes && server.enabledOfferTypes.length > 0
     ? server.enabledOfferTypes
     : null;
@@ -96,7 +97,7 @@ export default function NewOfferPage() {
   const isAdena = !selectedTab?.custom && selectedTab?.value === 'ADENA';
 
   const MIN_KK = 1;
-  const minPricePer100kk = getMinPriceFor100kk(currency);
+  const minPricePerUnit = getMinPriceForUnit(currency, adenaPriceUnitKk);
 
   /** Parse quantity string to adena amount: "100", "100kk", "2.5kkk" etc. Returns null if invalid. */
   const parseQuantityAdena = (str) => {
@@ -111,8 +112,8 @@ export default function NewOfferPage() {
     return Math.floor(kk * 1_000_000);
   };
 
-  /** Parse price per 100kk string to number. Returns NaN if invalid. */
-  const parsePricePer100kk = (str) => {
+  /** Parse price per unit (adenaPriceUnitKk) string to number. Returns NaN if invalid. */
+  const parsePricePerUnit = (str) => {
     if (str == null || String(str).trim() === '') return NaN;
     return parseFloat(String(str).trim().replace(',', '.'));
   };
@@ -123,8 +124,8 @@ export default function NewOfferPage() {
       const qtyAdena = parseQuantityAdena(quantityAdena);
       const qtyKk = qtyAdena != null ? qtyAdena / 1_000_000 : 0;
       const qOk = qtyAdena != null && qtyKk >= MIN_KK;
-      const priceVal = parsePricePer100kk(priceAdena);
-      const pOk = Number.isFinite(priceVal) && priceVal >= minPricePer100kk;
+      const priceVal = parsePricePerUnit(priceAdena);
+      const pOk = Number.isFinite(priceVal) && priceVal >= minPricePerUnit;
       setQuantityError(qOk ? null : t('min1kk'));
       setPriceError(pOk ? null : t('minPriceFor100kk'));
       if (!qOk || !pOk) valid = false;
@@ -153,8 +154,8 @@ export default function NewOfferPage() {
     }
     setSubmitting(true);
     const quantityNum = isAdena ? (parseQuantityAdena(quantityAdena) ?? 1_000_000) : 1;
-    const priceFor100kk = isAdena ? parsePricePer100kk(priceAdena) : 0;
-    const priceNum = isAdena ? (Number.isFinite(priceFor100kk) ? priceFor100kk / 100 : 0) : parseDecimalPrice(price) || 0;
+    const priceForUnit = isAdena ? parsePricePerUnit(priceAdena) : 0;
+    const priceNum = isAdena ? (Number.isFinite(priceForUnit) ? priceForUnit / adenaPriceUnitKk : 0) : parseDecimalPrice(price) || 0;
     const payload = {
       offerType,
       serverId,
@@ -255,7 +256,7 @@ export default function NewOfferPage() {
                 }}
               />
               <TextField
-                label={t('priceFor100kk', { currency })}
+                label={t('pricePerNkk', { n: adenaPriceUnitKk, currency })}
                 type="text"
                 inputMode="decimal"
                 value={priceAdena}
@@ -277,16 +278,16 @@ export default function NewOfferPage() {
                 }}
               />
               {(() => {
-                const currentPricePer100kk = parsePricePer100kk(priceAdena);
-                const priceNum = Number.isFinite(currentPricePer100kk) ? currentPricePer100kk : 0;
+                const currentPricePerUnit = parsePricePerUnit(priceAdena);
+                const priceNum = Number.isFinite(currentPricePerUnit) ? currentPricePerUnit : 0;
                 const qtyAdena = parseQuantityAdena(quantityAdena);
                 const quantityKk = qtyAdena != null ? qtyAdena / 1_000_000 : 0;
-                const recentPricesPer100kk = recentPrices.map((p) => p.pricePer100kk).filter((n) => n != null);
-                const allPricesPer100kk = [...recentPricesPer100kk, priceNum];
-                const isLowestPrice = allPricesPer100kk.length > 0 && priceNum <= Math.min(...allPricesPer100kk);
-                const buyerWillPaySum = (quantityKk / 100 * priceNum * (1 + platformFeePercent / 100)).toFixed(2);
+                const recentPricesPerUnit = recentPrices.map((p) => p.pricePerUnitKk ?? p.pricePer100kk).filter((n) => n != null);
+                const allPricesPerUnit = [...recentPricesPerUnit, priceNum];
+                const isLowestPrice = allPricesPerUnit.length > 0 && priceNum <= Math.min(...allPricesPerUnit);
+                const buyerWillPaySum = (quantityKk / adenaPriceUnitKk * priceNum * (1 + platformFeePercent / 100)).toFixed(2);
                 const feeMultiplier = 1 + platformFeePercent / 100;
-                const hasOtherPrices = recentPricesPer100kk.length > 0;
+                const hasOtherPrices = recentPricesPerUnit.length > 0;
                 return (
                   <>
                     <Typography
@@ -302,7 +303,7 @@ export default function NewOfferPage() {
                     </Typography>
                     <Box sx={{ mt: 0, mb: 2, p: 1.5, bgcolor: 'action.hover', borderRadius: 1 }}>
                       <Typography variant="body2" color="text.primary" sx={{ mb: 0.5 }}>
-                        <strong>1)</strong> {t('youWillReceive')}: <strong>{(quantityKk / 100 * priceNum).toFixed(2)} {currency}</strong>
+                        <strong>1)</strong> {t('youWillReceive')}: <strong>{(quantityKk / adenaPriceUnitKk * priceNum).toFixed(2)} {currency}</strong>
                       </Typography>
                       <Typography variant="body2" color="text.primary" sx={{ mb: 0.5 }}>
                         <strong>2)</strong> {t('buyerWillPay')}:{' '}
@@ -315,13 +316,13 @@ export default function NewOfferPage() {
                         )}
                       </Typography>
                       <Typography variant="body2" color="text.primary" sx={{ mb: 0.5 }}>
-                        <strong>3)</strong> {t('cost1kkk')}: <strong>{(10 * priceNum * feeMultiplier).toFixed(2)} {currency}</strong>
+                        <strong>3)</strong> {t('cost1kkk')}: <strong>{((1000 / adenaPriceUnitKk) * priceNum * feeMultiplier).toFixed(2)} {currency}</strong>
                       </Typography>
                       <Typography variant="body2" color="text.primary" sx={{ mb: 0.5 }}>
-                        <strong>4)</strong> {t('cost100k')}: <strong>{((priceNum / 10) * feeMultiplier).toFixed(2)} {currency}</strong>
+                        <strong>4)</strong> {t('cost100k')}: <strong>{((100 / adenaPriceUnitKk) * priceNum * feeMultiplier).toFixed(2)} {currency}</strong>
                       </Typography>
                       <Typography variant="body2" color="text.primary" sx={{ mb: 0.5 }}>
-                        <strong>5)</strong> {t('cost1kk')}: <strong>{((priceNum / 100) * feeMultiplier).toFixed(4)} {currency}</strong>
+                        <strong>5)</strong> {t('cost1kk')}: <strong>{((1 / adenaPriceUnitKk) * priceNum * feeMultiplier).toFixed(4)} {currency}</strong>
                       </Typography>
                       {recentPrices.length > 0 && (
                         <Box sx={{ mt: 1.5, pt: 1, borderTop: 1, borderColor: 'divider' }}>
@@ -356,10 +357,11 @@ export default function NewOfferPage() {
                                 </Typography>
                               )}
                               <Typography component="span" variant="body2" color="text.secondary">
-                                {t('sellingPriceFor100kkSuffix', {
+                                {t('sellingPricePerNkkSuffix', {
                                   quantityKk: p.quantityKk,
-                                  price: p.pricePer100kk != null ? Number(p.pricePer100kk).toFixed(2) : String(p.pricePerUnit ?? '—'),
+                                  price: (p.pricePerUnitKk ?? p.pricePer100kk) != null ? Number(p.pricePerUnitKk ?? p.pricePer100kk).toFixed(2) : String(p.pricePerUnit ?? '—'),
                                   currency: p.currency,
+                                  n: p.adenaPriceUnitKk ?? adenaPriceUnitKk,
                                 })}
                               </Typography>
                             </Box>

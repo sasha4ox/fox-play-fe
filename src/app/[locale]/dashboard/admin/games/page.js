@@ -173,6 +173,17 @@ export default function AdminGamesPage() {
       .finally(() => setSubmitting(false));
   };
 
+  const handleGameAdenaPriceUnit = (gameId, adenaPriceUnitKk) => {
+    if (!token) return;
+    const n = Number(adenaPriceUnitKk);
+    if (!Number.isInteger(n) || n < 1 || n > 1000) return;
+    setSubmitting(true);
+    adminUpdateGame(gameId, { adenaPriceUnitKk: n }, token)
+      .then(load)
+      .catch((e) => setError(e.message || 'Failed to update'))
+      .finally(() => setSubmitting(false));
+  };
+
   const handleServerOfferTypes = (serverId, enabledOfferTypes) => {
     if (!token) return;
     setSubmitting(true);
@@ -451,6 +462,21 @@ export default function AdminGamesPage() {
                     label={t('top')}
                     title={t('topHint')}
                   />
+                  <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 140 } }}>
+                    <InputLabel>{t('adenaPriceUnitKk')}</InputLabel>
+                    <Select
+                      value={String(game.adenaPriceUnitKk ?? 100)}
+                      label={t('adenaPriceUnitKk')}
+                      onChange={(e) => handleGameAdenaPriceUnit(game.id, Number(e.target.value))}
+                      disabled={submitting}
+                      sx={{ bgcolor: 'background.paper' }}
+                    >
+                      <MenuItem value="1">1 kk</MenuItem>
+                      <MenuItem value="10">10 kk</MenuItem>
+                      <MenuItem value="100">100 kk</MenuItem>
+                      <MenuItem value="1000">1000 kk</MenuItem>
+                    </Select>
+                  </FormControl>
                   {!isSimple(game) && (
                     <IconButton
                       size="small"

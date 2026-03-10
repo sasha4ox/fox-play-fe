@@ -428,6 +428,7 @@
     "qty": "Кол-во",
     "perUnit": "за единицу",
     "priceFor100kk": "Цена за 100kk",
+    "pricePerNkk": "Цена за {n}kk",
     "total": "итого",
     "amountsFixedAtPurchase": "суммы зафиксированы при покупке",
     "yourTotal": "Ваш итог",
@@ -571,6 +572,7 @@
     "pricePer1kk": "Цена за 1kk",
     "availability": "В наличии",
     "priceFor100kk": "Цена за 100kk",
+    "pricePerNkk": "Цена за {n}kk",
     "seller": "Продавец",
     "sortAsc": "По возрастанию",
     "sortDesc": "По убыванию",
@@ -589,6 +591,7 @@
     "availabilityKk": "В продаже (kk)",
     "availabilityKkHint": "1 kk = 1 миллион адены",
     "priceFor100kk": "Цена за 100kk",
+    "pricePerNkk": "Цена за {n}kk",
     "priceIfBuyFull": "Цена при покупке всего объёма",
     "youWillPay": "Вы заплатите",
     "bankFeeHint": "Ваш банк может взимать дополнительную комиссию.",
@@ -630,6 +633,7 @@
     "availabilityKk": "В продаже (kk)",
     "availabilityKkHint": "1 kk = 1 миллион адены",
     "priceFor100kk": "Цена за 100kk",
+    "pricePerNkk": "Цена за {n}kk",
     "priceIfBuyFull": "Цена при покупке всего объёма",
     "youWillPay": "Вы заплатите",
     "bankFeeHint": "Ваш банк может взимать дополнительную комиссию.",
@@ -677,6 +681,8 @@
     "amountOfAdena": "Количество адены",
     "pricePerUnit": "Цена за единицу ({currency})",
     "priceFor100kk": "Цена за 100kk ({currency})",
+    "pricePerNkk": "Цена за {n}kk ({currency})",
+    "sellingPricePerNkkSuffix": "продаёт {quantityKk}kk, цена: {price} {currency} за {n}kk",
     "amountPlaceholder": "например: 1kk или 1kkk",
     "pricePlaceholder": "например: 1kk (минимум 1kk)",
     "youWillReceive": "Вы получите",
@@ -932,7 +938,8 @@
     "gameImageUrlHint": "URL или путь (например /images/games/lineage-2.webp). Если пусто — используется локальный файл по имени игры.",
 
     "top": "Топ",
-    "topHint": "Показывать в самом верху списка и приоритетно в фильтрах"
+    "topHint": "Показывать в самом верху списка и приоритетно в фильтрах",
+    "adenaPriceUnitKk": "Единица цены адены (kk)"
   },
   "Footer": {
     "brand": "FoxyPlay",

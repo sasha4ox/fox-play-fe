@@ -32,7 +32,7 @@ import { useLoginModalStore } from '@/store/loginModalStore';
 import { useProfile } from '@/hooks/useProfile';
 import { fetchOffersByServer, addRecentServer, deleteOffer } from '@/lib/api';
 import { formatAdena } from '@/lib/adenaFormat';
-import { getMinPriceFor100kk } from '@/lib/offerMinPrice';
+import { getMinPriceForUnit } from '@/lib/offerMinPrice';
 import { logClientError } from '@/lib/clientLogger';
 import IconButton from '@mui/material/IconButton';
 import Dialog from '@mui/material/Dialog';
@@ -59,6 +59,7 @@ export default function GameOffersPage() {
   const game = tree ? getGameFromTree(tree, gameId) : null;
   const variant = tree ? getVariantFromTree(tree, gameId, variantId) : null;
   const server = tree ? getServerFromTree(tree, gameId, variantId, serverId) : null;
+  const adenaPriceUnitKk = game?.adenaPriceUnitKk ?? 100;
   const serverTypes = server?.enabledOfferTypes && server.enabledOfferTypes.length > 0
     ? server.enabledOfferTypes
     : null;
@@ -321,17 +322,17 @@ export default function GameOffersPage() {
                       variant={sortBy === 'price' ? 'contained' : 'outlined'}
                       onClick={() => handleSort('price')}
                     >
-                      {t('priceFor100kk')} {sortBy === 'price' ? (sortDir === 'asc' ? '▲' : '▼') : '▲'}
+                      {t('pricePerNkk', { n: adenaPriceUnitKk })} {sortBy === 'price' ? (sortDir === 'asc' ? '▲' : '▼') : '▲'}
                     </Button>
                   </Box>
                   {sortedOffers.map((offer) => {
                     const pricePer1kk = Number(offer.displayPrice ?? offer.price) || 0;
-                    const priceFor100kk = pricePer1kk * 100;
+                    const priceForDisplay = pricePer1kk * adenaPriceUnitKk;
                     const currency = offer.displayCurrency ?? offer.currency ?? '';
                     const availabilityKk = formatAdena(offer.quantity ?? 0);
                     const seller = offer.seller;
                     const sellerNickname = seller?.nickname ?? seller?.email ?? '—';
-                    const isPriceBelowMin = categoryFilter === 'ADENA' && priceFor100kk < getMinPriceFor100kk(currency);
+                    const isPriceBelowMin = categoryFilter === 'ADENA' && priceForDisplay < getMinPriceForUnit(currency, adenaPriceUnitKk);
                     return (
                       <Card key={offer.id} variant="outlined">
                         <CardActionArea
@@ -375,7 +376,7 @@ export default function GameOffersPage() {
                                 {t('availability')}: <strong>{availabilityKk}</strong>
                               </Typography>
                               <Typography variant="body2" color="primary.main" fontWeight={600}>
-                                {t('priceFor100kk')}: {priceFor100kk.toFixed(2)} {currency}
+                                {t('pricePerNkk', { n: adenaPriceUnitKk })}: {priceForDisplay.toFixed(2)} {currency}
                               </Typography>
                               {isPriceBelowMin && (
                                 <Typography variant="caption" color="warning.main" fontWeight={600}>
@@ -423,7 +424,7 @@ export default function GameOffersPage() {
                           sx={{ cursor: 'pointer', userSelect: 'none', display: 'inline-flex', alignItems: 'center', gap: 0.25 }}
                           title={sortBy === 'price' && sortDir === 'asc' ? t('sortAsc') : t('sortDesc')}
                         >
-                          {t('priceFor100kk')}
+                          {t('pricePerNkk', { n: adenaPriceUnitKk })}
                           {sortBy === 'price' && (sortDir === 'asc' ? ' ▲' : ' ▼')}
                         </Box>
                       </TableCell>
@@ -433,12 +434,12 @@ export default function GameOffersPage() {
                   <TableBody>
                     {sortedOffers.map((offer) => {
                       const pricePer1kk = Number(offer.displayPrice ?? offer.price) || 0;
-                      const priceFor100kk = pricePer1kk * 100;
+                      const priceForDisplay = pricePer1kk * adenaPriceUnitKk;
                       const currency = offer.displayCurrency ?? offer.currency ?? '';
                       const availabilityKk = formatAdena(offer.quantity ?? 0);
                       const seller = offer.seller;
                       const sellerNickname = seller?.nickname ?? seller?.email ?? '—';
-                      const isPriceBelowMin = categoryFilter === 'ADENA' && priceFor100kk < getMinPriceFor100kk(currency);
+                      const isPriceBelowMin = categoryFilter === 'ADENA' && priceForDisplay < getMinPriceForUnit(currency, adenaPriceUnitKk);
                       return (
                         <TableRow
                           key={offer.id}
@@ -488,7 +489,7 @@ export default function GameOffersPage() {
                           <TableCell sx={{ width: '170px' }} align="right">
                             <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 0.25 }}>
                               <Typography variant="body2" fontWeight={600}>
-                                {priceFor100kk.toFixed(2)} {currency}
+                                {priceForDisplay.toFixed(2)} {currency}
                               </Typography>
                               {isPriceBelowMin && (
                                 <Typography variant="caption" color="warning.main" fontWeight={600}>

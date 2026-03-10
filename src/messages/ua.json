@@ -373,6 +373,7 @@
     "qty": "К-сть",
     "perUnit": "за од.",
     "priceFor100kk": "Ціна за 100kk",
+    "pricePerNkk": "Ціна за {n}kk",
     "total": "всього",
     "amountsFixedAtPurchase": "суми зафіксовані на момент покупки",
     "yourTotal": "Ваша сума",
@@ -587,6 +588,7 @@
     "pricePer1kk": "Ціна за 1kk",
     "availability": "Наявність",
     "priceFor100kk": "Ціна/100кк",
+    "pricePerNkk": "Ціна за {n}kk",
     "seller": "Продавець",
     "sortAsc": "За зростанням",
     "sortDesc": "За спаданням",
@@ -604,6 +606,7 @@
     "availabilityKk": "Продає (kk)",
     "availabilityKkHint": "1 kk = 1 млн адени",
     "priceFor100kk": "Ціна за 100kk",
+    "pricePerNkk": "Ціна за {n}kk",
     "priceIfBuyFull": "Ціна при покупці всього",
     "youWillPay": "Ви сплатите",
     "bankFeeHint": "Банк може стягнути додаткову комісію.",
@@ -651,6 +654,8 @@
     "amountOfAdena": "Кількість адени",
     "pricePerUnit": "Ціна за од. ({currency})",
     "priceFor100kk": "Ціна за 100kk ({currency})",
+    "pricePerNkk": "Ціна за {n}kk ({currency})",
+    "sellingPricePerNkkSuffix": "продає {quantityKk}kk, ціна: {price} {currency} за {n}kk",
     "amountPlaceholder": "напр. 1kk або 1kkk",
     "pricePlaceholder": "напр. 1kk (мін. 1kk)",
     "youWillReceive": "Ви отримаєте",
@@ -864,7 +869,8 @@
     "gameImageUrlHint": "URL або шлях (наприклад /images/games/lineage-2.webp). Залиште пустим, щоб використовувати локальний файл за назвою гри (WebP, PNG, JPG).",
     "save": "Зберегти",
     "top": "Топ",
-    "topHint": "Показувати на самому верху списку та пріоритизувати у фільтрах"
+    "topHint": "Показувати на самому верху списку та пріоритизувати у фільтрах",
+    "adenaPriceUnitKk": "Одиниця ціни адени (kk)"
   },
   "Footer": {
     "brand": "FoxyPlay",

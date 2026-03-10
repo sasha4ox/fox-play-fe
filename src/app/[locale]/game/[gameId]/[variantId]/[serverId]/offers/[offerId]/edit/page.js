@@ -17,7 +17,7 @@ import { useAuthStore } from '@/store/authStore';
 import { useProfile } from '@/hooks/useProfile';
 import { fetchOfferById, updateOffer, getPlatformFeePercent, fetchOfferRecentPrices } from '@/lib/api';
 import { parseAdenaInput } from '@/lib/adenaFormat';
-import { getMinPriceFor100kk } from '@/lib/offerMinPrice';
+import { getMinPriceForUnit } from '@/lib/offerMinPrice';
 
 const MIN_KK = 1;
 
@@ -52,6 +52,7 @@ export default function EditOfferPage() {
   const { preferredCurrency, profile } = useProfile();
   const currency = offer?.displayCurrency ?? offer?.currency ?? preferredCurrency ?? 'EUR';
   const isAdena = offer?.offerType === 'ADENA';
+  const adenaPriceUnitKk = offer?.server?.gameVariant?.game?.adenaPriceUnitKk ?? 100;
   const isAdminOrMod = profile?.role === 'ADMIN' || profile?.role === 'MODERATOR';
 
   useEffect(() => {
@@ -66,8 +67,9 @@ export default function EditOfferPage() {
         if (data.offerType === 'ADENA') {
           const q = Number(data.quantity ?? 0);
           const p = Number(data.displayPrice ?? data.price ?? 0);
+          const unitKk = data.server?.gameVariant?.game?.adenaPriceUnitKk ?? 100;
           setQuantityAdena(String(q / 1_000_000 || 1));
-          setPriceAdena(String(p * 100 || 1)); // backend: price per 1kk → display: price for 100kk
+          setPriceAdena(String(p * unitKk || 1)); // backend: price per 1kk → display: price per unit
         } else {
           setQuantity(Number(data.quantity ?? 1));
           setPrice(String(data.price ?? ''));
@@ -97,8 +99,8 @@ export default function EditOfferPage() {
 
   const isCreator = user?.id && offer?.seller?.id && user.id === offer.seller.id;
 
-  /** Parse price per 100kk string (accepts 1.25, 1,75). Returns NaN if invalid. */
-  const parsePricePer100kk = (str) => {
+  /** Parse price per unit string (accepts 1.25, 1,75). Returns NaN if invalid. */
+  const parsePricePerUnit = (str) => {
     if (str == null || String(str).trim() === '') return NaN;
     return parseFloat(String(str).trim().replace(',', '.'));
   };
@@ -116,15 +118,15 @@ export default function EditOfferPage() {
     return Math.floor(kk * 1_000_000);
   };
 
-  const minPricePer100kk = getMinPriceFor100kk(currency);
+  const minPricePerUnit = getMinPriceForUnit(currency, adenaPriceUnitKk);
 
   const validateAdenaInputs = () => {
     if (!isAdena) return true;
     const qtyAdena = parseQuantityAdena(quantityAdena);
     const qtyKk = qtyAdena != null ? qtyAdena / 1_000_000 : 0;
     const qOk = qtyAdena != null && qtyKk >= MIN_KK;
-    const priceVal = parsePricePer100kk(priceAdena);
-    const pOk = Number.isFinite(priceVal) && priceVal >= minPricePer100kk;
+    const priceVal = parsePricePerUnit(priceAdena);
+    const pOk = Number.isFinite(priceVal) && priceVal >= minPricePerUnit;
     setQuantityError(qOk ? null : tNew('min1kk'));
     setPriceError(pOk ? null : tNew('minPriceFor100kk'));
     return qOk && pOk;
@@ -146,7 +148,7 @@ export default function EditOfferPage() {
             title,
             description,
             quantity: Math.floor(parseQuantityAdena(quantityAdena) ?? 1_000_000),
-            price: parsePricePer100kk(priceAdena) / 100,
+            price: parsePricePerUnit(priceAdena) / adenaPriceUnitKk,
           }
         : {
             title,
@@ -232,7 +234,7 @@ export default function EditOfferPage() {
                 }}
               />
               <TextField
-                label={tNew('priceFor100kk', { currency })}
+                label={tNew('pricePerNkk', { n: adenaPriceUnitKk, currency })}
                 type="text"
                 inputMode="decimal"
                 value={priceAdena}
@@ -254,16 +256,16 @@ export default function EditOfferPage() {
                 }}
               />
               {(() => {
-                const currentPricePer100kk = parsePricePer100kk(priceAdena);
-                const priceNum = Number.isFinite(currentPricePer100kk) ? currentPricePer100kk : 0;
+                const currentPricePerUnit = parsePricePerUnit(priceAdena);
+                const priceNum = Number.isFinite(currentPricePerUnit) ? currentPricePerUnit : 0;
                 const qtyAdena = parseQuantityAdena(quantityAdena);
                 const quantityKk = qtyAdena != null ? qtyAdena / 1_000_000 : 0;
-                const recentPricesPer100kk = recentPrices.map((p) => p.pricePer100kk).filter((n) => n != null);
-                const allPricesPer100kk = [...recentPricesPer100kk, priceNum];
-                const isLowestPrice = allPricesPer100kk.length > 0 && priceNum <= Math.min(...allPricesPer100kk);
-                const buyerWillPaySum = (quantityKk / 100 * priceNum * (1 + platformFeePercent / 100)).toFixed(2);
+                const recentPricesPerUnit = recentPrices.map((p) => p.pricePerUnitKk ?? p.pricePer100kk).filter((n) => n != null);
+                const allPricesPerUnit = [...recentPricesPerUnit, priceNum];
+                const isLowestPrice = allPricesPerUnit.length > 0 && priceNum <= Math.min(...allPricesPerUnit);
+                const buyerWillPaySum = (quantityKk / adenaPriceUnitKk * priceNum * (1 + platformFeePercent / 100)).toFixed(2);
                 const feeMultiplier = 1 + platformFeePercent / 100;
-                const hasOtherPrices = recentPricesPer100kk.length > 0;
+                const hasOtherPrices = recentPricesPerUnit.length > 0;
                 return (
                   <>
                     <Typography
@@ -279,7 +281,7 @@ export default function EditOfferPage() {
                     </Typography>
                     <Box sx={{ mt: 0, mb: 2, p: 1.5, bgcolor: 'action.hover', borderRadius: 1 }}>
                       <Typography variant="body2" color="text.primary" sx={{ mb: 0.5 }}>
-                        <strong>1)</strong> {tNew('youWillReceive')}: <strong>{(quantityKk / 100 * priceNum).toFixed(2)} {currency}</strong>
+                        <strong>1)</strong> {tNew('youWillReceive')}: <strong>{(quantityKk / adenaPriceUnitKk * priceNum).toFixed(2)} {currency}</strong>
                       </Typography>
                       <Typography variant="body2" color="text.primary" sx={{ mb: 0.5 }}>
                         <strong>2)</strong> {tNew('buyerWillPay')}:{' '}
@@ -292,13 +294,13 @@ export default function EditOfferPage() {
                         )}
                       </Typography>
                       <Typography variant="body2" color="text.primary" sx={{ mb: 0.5 }}>
-                        <strong>3)</strong> {tNew('cost1kkk')}: <strong>{(10 * priceNum * feeMultiplier).toFixed(2)} {currency}</strong>
+                        <strong>3)</strong> {tNew('cost1kkk')}: <strong>{((1000 / adenaPriceUnitKk) * priceNum * feeMultiplier).toFixed(2)} {currency}</strong>
                       </Typography>
                       <Typography variant="body2" color="text.primary" sx={{ mb: 0.5 }}>
-                        <strong>4)</strong> {tNew('cost100k')}: <strong>{((priceNum / 10) * feeMultiplier).toFixed(2)} {currency}</strong>
+                        <strong>4)</strong> {tNew('cost100k')}: <strong>{((100 / adenaPriceUnitKk) * priceNum * feeMultiplier).toFixed(2)} {currency}</strong>
                       </Typography>
                       <Typography variant="body2" color="text.primary" sx={{ mb: 0.5 }}>
-                        <strong>5)</strong> {tNew('cost1kk')}: <strong>{((priceNum / 100) * feeMultiplier).toFixed(4)} {currency}</strong>
+                        <strong>5)</strong> {tNew('cost1kk')}: <strong>{((1 / adenaPriceUnitKk) * priceNum * feeMultiplier).toFixed(4)} {currency}</strong>
                       </Typography>
                       {recentPrices.length > 0 && (
                         <Box sx={{ mt: 1.5, pt: 1, borderTop: 1, borderColor: 'divider' }}>
@@ -333,10 +335,11 @@ export default function EditOfferPage() {
                                 </Typography>
                               )}
                               <Typography component="span" variant="body2" color="text.secondary">
-                                {tNew('sellingPriceFor100kkSuffix', {
+                                {tNew('sellingPricePerNkkSuffix', {
                                   quantityKk: p.quantityKk,
-                                  price: p.pricePer100kk != null ? Number(p.pricePer100kk).toFixed(2) : String(p.pricePerUnit ?? '—'),
+                                  price: (p.pricePerUnitKk ?? p.pricePer100kk) != null ? Number(p.pricePerUnitKk ?? p.pricePer100kk).toFixed(2) : String(p.pricePerUnit ?? '—'),
                                   currency: p.currency,
+                                  n: p.adenaPriceUnitKk ?? adenaPriceUnitKk,
                                 })}
                               </Typography>
                             </Box>
@@ -379,7 +382,7 @@ export default function EditOfferPage() {
             disabled={
               submitting ||
               (isAdena &&
-                (!Number.isFinite(parsePricePer100kk(priceAdena)) || parsePricePer100kk(priceAdena) < minPricePer100kk))
+                (!Number.isFinite(parsePricePerUnit(priceAdena)) || parsePricePerUnit(priceAdena) < minPricePerUnit))
             }
           >
             {submitting ? t('saving') : tCommon('save')}

@@ -421,6 +421,7 @@
     "qty": "Qty",
     "perUnit": "per unit",
     "priceFor100kk": "Price for 100kk",
+    "pricePerNkk": "Price per {n}kk",
     "total": "total",
     "amountsFixedAtPurchase": "amounts fixed at purchase",
     "yourTotal": "Your total",
@@ -635,6 +636,7 @@
     "pricePer1kk": "Price per 1kk",
     "availability": "Availability",
     "priceFor100kk": "Price for 100kk",
+    "pricePerNkk": "Price per {n}kk",
     "seller": "Seller",
     "sortAsc": "Ascending",
     "sortDesc": "Descending",
@@ -652,6 +654,7 @@
     "availabilityKk": "Selling (kk)",
     "availabilityKkHint": "1 kk = 1 million adena",
     "priceFor100kk": "Price for 100kk",
+    "pricePerNkk": "Price per {n}kk",
     "priceIfBuyFull": "Price if you buy full",
     "youWillPay": "You will pay",
     "bankFeeHint": "Your bank may charge an additional fee.",
@@ -699,6 +702,8 @@
     "amountOfAdena": "Amount of adena",
     "pricePerUnit": "Price per unit ({currency})",
     "priceFor100kk": "Price for 100kk ({currency})",
+    "pricePerNkk": "Price per {n}kk ({currency})",
+    "sellingPricePerNkkSuffix": "selling {quantityKk}kk, price: {price} {currency} per {n}kk",
     "amountPlaceholder": "e.g. 1kk or 1kkk",
     "pricePlaceholder": "e.g. 1kk (min 1kk)",
     "youWillReceive": "You'll receive",
@@ -912,7 +917,8 @@
     "gameImageUrlHint": "URL or path (e.g. /images/games/lineage-2.webp). Leave empty to use local file by game name (WebP, PNG, JPG).",
     "save": "Save",
     "top": "Top",
-    "topHint": "Show at the very top of the list and prioritize in filters"
+    "topHint": "Show at the very top of the list and prioritize in filters",
+    "adenaPriceUnitKk": "Unidad de precio adena (kk)"
   },
   "Footer": {
     "brand": "FoxyPlay",

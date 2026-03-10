@@ -641,7 +641,7 @@ export default function OrderChatPage() {
               </Typography>
               {order.offer.offerType === 'ADENA' ? (
                 <Typography variant="body1" color="text.primary" fontWeight={600}>
-                  {t('qty')}: {formatAdena(Number(order.quantity ?? 0))} · {t('priceFor100kk')}: {Number(order.offer?.price ?? 0) * 100} {order.sellerCurrency ?? order.buyerCurrency}
+                  {t('qty')}: {formatAdena(Number(order.quantity ?? 0))} · {t('pricePerNkk', { n: order.offer?.server?.gameVariant?.game?.adenaPriceUnitKk ?? 100 })}: {Number(order.offer?.price ?? 0) * (order.offer?.server?.gameVariant?.game?.adenaPriceUnitKk ?? 100)} {order.sellerCurrency ?? order.buyerCurrency}
                 </Typography>
               ) : (
                 <Typography variant="body1" color="text.primary" fontWeight={600}>
