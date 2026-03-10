@@ -104,7 +104,9 @@
     "savedCardsWalletsHint": "Add cards and wallets here for faster withdrawals.",
     "addCard": "Add card",
     "addWallet": "Add wallet",
-    "cardHolderName": "Cardholder name"
+    "cardHolderName": "Cardholder name",
+    "country": "Country",
+    "selectCountry": "Select country"
   },
   "LoginModal": {
     "title": "Log in or sign up"
@@ -205,6 +207,13 @@
     "withdrawCryptoSubmit": "Request crypto payout",
     "withdrawCryptoSuccess": "Crypto payout request submitted. Admin will process it.",
     "withdrawCryptoFailed": "Failed to submit crypto payout request.",
+    "withdrawToIban": "Withdraw to IBAN",
+    "withdrawToIbanHint": "Request a payout in EUR to your European IBAN. Admin will process it manually.",
+    "ibanLabel": "IBAN",
+    "bicSwiftLabel": "BIC / SWIFT (optional)",
+    "beneficiaryNameLabel": "Beneficiary name",
+    "ibanPayoutFieldsRequired": "Enter a valid amount, IBAN (at least 15 characters) and beneficiary name.",
+    "withdrawIbanSuccess": "IBAN payout request submitted. Admin will process it.",
     "withdrawalsTitle": "Withdrawal history",
     "withdrawalsHint": "Your card and crypto payout requests. Pending requests are typically processed within about 3 working days.",
     "withdrawalsType": "Type",
@@ -1113,7 +1122,8 @@
     "submitTicket": "Submit ticket",
     "submitting": "Sending…",
     "successMessage": "Thank you! Your message has been sent successfully.",
-    "errorMessage": "Something went wrong. Please try again later."
+    "errorMessage": "Something went wrong. Please try again later.",
+    "formUnavailable": "Contact form is temporarily unavailable. Please try again later or email us directly."
   },
   "CookiePolicy": {
     "title": "COOKIE POLICY",

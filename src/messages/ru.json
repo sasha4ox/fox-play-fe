@@ -103,7 +103,9 @@
     "savedCardsWalletsHint": "Добавьте карты и кошельки для более быстрого вывода средств.",
     "addCard": "Добавить карту",
     "addWallet": "Добавить кошелёк",
-    "cardHolderName": "Имя владельца карты"
+    "cardHolderName": "Имя владельца карты",
+    "country": "Страна",
+    "selectCountry": "Выберите страну"
   },
 
   "LoginModal": {
@@ -203,7 +205,13 @@
     "withdrawCryptoSubmit": "Запросить вывод криптовалюты",
     "withdrawCryptoSuccess": "Запрос на вывод криптовалюты отправлен. Администратор обработает его.",
     "withdrawCryptoFailed": "Не удалось отправить запрос на вывод криптовалюты.",
-
+    "withdrawToIban": "Вывод на IBAN",
+    "withdrawToIbanHint": "Заявка на вывод в EUR на ваш европейский IBAN. Админ обработает вручную.",
+    "ibanLabel": "IBAN",
+    "bicSwiftLabel": "BIC / SWIFT (необязательно)",
+    "beneficiaryNameLabel": "Имя получателя",
+    "ibanPayoutFieldsRequired": "Введите сумму, IBAN (не менее 15 символов) и имя получателя.",
+    "withdrawIbanSuccess": "Заявка на вывод на IBAN отправлена. Админ обработает.",
     "withdrawalsTitle": "История выводов",
     "withdrawalsHint": "Ваши заявки на вывод на карту и криптокошелёк. Обычно обрабатываются в течение ~3 рабочих дней.",
     "withdrawalsType": "Тип",
@@ -1130,7 +1138,8 @@
     "submitTicket": "Отправить запрос",
     "submitting": "Отправка…",
     "successMessage": "Спасибо! Ваше сообщение успешно отправлено.",
-    "errorMessage": "Что-то пошло не так. Попробуйте позже."
+    "errorMessage": "Что-то пошло не так. Попробуйте позже.",
+    "formUnavailable": "Форма связи временно недоступна. Попробуйте позже или напишите нам на email."
   },
 
   "CookiePolicy": {

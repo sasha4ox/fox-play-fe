@@ -104,7 +104,9 @@
     "savedCardsWalletsHint": "Додайте картки та гаманці для швидшого виведення коштів.",
     "addCard": "Додати картку",
     "addWallet": "Додати гаманець",
-    "cardHolderName": "Ім'я на картці"
+    "cardHolderName": "Ім'я на картці",
+    "country": "Країна",
+    "selectCountry": "Оберіть країну"
   },
   "LoginModal": {
     "title": "Увійти або зареєструватися"
@@ -205,6 +207,13 @@
     "withdrawCryptoSubmit": "Запросити виведення крипто",
     "withdrawCryptoSuccess": "Заявку на виведення крипто надіслано. Адмін обробить її.",
     "withdrawCryptoFailed": "Не вдалося надіслати заявку на виведення крипто.",
+    "withdrawToIban": "Виведення на IBAN",
+    "withdrawToIbanHint": "Заявка на виведення в EUR на ваш європейський IBAN. Адмін обробить її вручну.",
+    "ibanLabel": "IBAN",
+    "bicSwiftLabel": "BIC / SWIFT (необов'язково)",
+    "beneficiaryNameLabel": "Ім'я отримувача",
+    "ibanPayoutFieldsRequired": "Введіть суму, IBAN (не менше 15 символів) та ім'я отримувача.",
+    "withdrawIbanSuccess": "Заявку на виведення на IBAN надіслано. Адмін обробить її.",
     "withdrawalsTitle": "Історія виведень",
     "withdrawalsHint": "Ваші заявки на виведення на картку та крипто. Очікувані заявки зазвичай обробляються протягом близько 3 робочих днів.",
     "withdrawalsType": "Тип",
@@ -1114,7 +1123,8 @@
     "submitTicket": "Submit ticket",
     "submitting": "Надсилаю…",
     "successMessage": "Дякуємо! Ваше повідомлення надіслано.",
-    "errorMessage": "Щось пішло не так. Спробуйте пізніше."
+    "errorMessage": "Щось пішло не так. Спробуйте пізніше.",
+    "formUnavailable": "Форма зв'язку тимчасово недоступна. Спробуйте пізніше або напишіть нам на email."
   },
   "CookiePolicy": {
     "title": "COOKIE POLICY",

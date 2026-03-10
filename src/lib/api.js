@@ -202,6 +202,17 @@ export async function getIbanPaymentEnabled() {
   return data?.ibanPaymentEnabled === true
 }
 
+/** Auth: payment methods available for current user by region (UA: card+crypto; Europe: IBAN+crypto; Other: crypto). Returns { cardPaymentEnabled, ibanPaymentEnabled, cryptoPaymentEnabled }. */
+export async function getAvailablePaymentMethods(token) {
+  if (!token) return { cardPaymentEnabled: false, ibanPaymentEnabled: false, cryptoPaymentEnabled: false }
+  const data = await apiGet('/me/available-payment-methods', token)
+  return {
+    cardPaymentEnabled: data?.cardPaymentEnabled === true,
+    ibanPaymentEnabled: data?.ibanPaymentEnabled === true,
+    cryptoPaymentEnabled: data?.cryptoPaymentEnabled === true,
+  }
+}
+
 /** Public: platform fee percent (e.g. 20 for 20%). Used on sell page to show "buyer will pay X + fee". */
 export async function getPlatformFeePercent() {
   const res = await apiFetch('/settings/platform-fee-percent', { method: 'GET' }, null)
@@ -293,7 +304,7 @@ export async function updatePreferredCurrency(currency, token) {
   return apiPatch('/me', { preferredCurrency: currency }, token)
 }
 
-/** Update profile (nickname, avatarUrl). body: { nickname?, avatarUrl? } */
+/** Update profile (nickname, avatarUrl, countryCode). body: { nickname?, avatarUrl?, countryCode? } */
 export async function updateProfile(body, token) {
   return apiPatch('/me', body, token)
 }
@@ -408,6 +419,21 @@ export async function createCardPayoutRequest(body, token, totpCode = null) {
 export async function createCryptoPayoutRequest(body, token, totpCode = null) {
   const payload = totpCode != null ? { ...body, totpCode } : body
   return apiPost('/me/crypto-payout-request', payload, token)
+}
+
+/** Request payout to IBAN (Europe). body: { amount, currency: 'EUR', iban, bicSwift?, beneficiaryName }. Optional totpCode for 2FA. */
+export async function createIbanPayoutRequest(body, token, totpCode = null) {
+  const payload = totpCode != null ? { ...body, totpCode } : body
+  return apiPost('/me/iban-payout-request', payload, token)
+}
+
+/** List current user's IBAN payout requests. */
+export async function getMyIbanPayoutRequests(token, params = {}) {
+  const q = new URLSearchParams()
+  if (params.skip != null) q.set('skip', String(params.skip))
+  if (params.take != null) q.set('take', String(params.take))
+  const s = q.toString()
+  return apiGet(`/me/iban-payout-requests${s ? `?${s}` : ''}`, token)
 }
 
 /** List current user's crypto payout requests. */

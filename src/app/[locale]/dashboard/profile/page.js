@@ -20,9 +20,10 @@ import CloseIcon from '@mui/icons-material/Close';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useAuthStore, useIsAuthenticated } from '@/store/authStore';
 import { useProfile } from '@/hooks/useProfile';
-import { uploadAvatar, disable2FA, requestPasswordReset, getSavedCards, getSavedWallets, addSavedCard, addSavedWallet, deleteSavedCard, deleteSavedWallet } from '@/lib/api';
+import { uploadAvatar, disable2FA, requestPasswordReset, getSavedCards, getSavedWallets, addSavedCard, addSavedWallet, deleteSavedCard, deleteSavedWallet, updateProfile } from '@/lib/api';
 import { useLoginModalStore } from '@/store/loginModalStore';
 import Enable2FAModal from '@/components/Enable2FAModal/Enable2FAModal';
+import CountrySelect from '@/components/CountrySelect/CountrySelect';
 
 export default function ProfilePage() {
   const locale = useLocale();
@@ -226,6 +227,24 @@ export default function ProfilePage() {
           <Typography variant="body2" color="text.secondary">
             {profile?.email}
           </Typography>
+        </Box>
+
+        <Typography variant="subtitle2" color="text.secondary" sx={{ mt: 3, mb: 0.5 }}>
+          {t('country')}
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+          {t('selectCountry')}
+        </Typography>
+        <Box sx={{ maxWidth: 320 }}>
+          <CountrySelect
+            selected={profile?.countryCode ?? ''}
+            onSelect={(code) => {
+              if (!token) return;
+              updateProfile({ countryCode: code }, token).then(() => refetch()).catch(() => {});
+            }}
+            placeholder={t('selectCountry')}
+            fullWidth
+          />
         </Box>
 
         <Typography variant="subtitle1" fontWeight={600} sx={{ mt: 4, mb: 1 }}>

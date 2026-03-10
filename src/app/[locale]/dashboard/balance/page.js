@@ -16,7 +16,7 @@ import Link from 'next/link';
 import { useAuthStore, useIsAuthenticated } from '@/store/authStore';
 import { useProfile } from '@/hooks/useProfile';
 import TextField from '@mui/material/TextField';
-import { getDepositInfo, simulateDeposit, addTestCredit, createDepositOrder, createWithdraw, createCardPayoutRequest, createCryptoPayoutRequest, getCardPaymentEnabled, getBalanceHistory } from '@/lib/api';
+import { getDepositInfo, simulateDeposit, addTestCredit, createDepositOrder, createWithdraw, createCardPayoutRequest, createCryptoPayoutRequest, createIbanPayoutRequest, getAvailablePaymentMethods, getBalanceHistory } from '@/lib/api';
 import { useLoginModalStore } from '@/store/loginModalStore';
 import { useTranslations } from 'next-intl';
 import useMediaQuery from '@mui/material/useMediaQuery';
@@ -74,6 +74,8 @@ export default function BalancePage() {
   const [cardPayoutError, setCardPayoutError] = useState(null);
   const [cardPayoutSuccess, setCardPayoutSuccess] = useState(null);
   const [cardPaymentEnabled, setCardPaymentEnabled] = useState(false);
+  const [ibanPaymentEnabled, setIbanPaymentEnabled] = useState(false);
+  const [cryptoPaymentEnabled, setCryptoPaymentEnabled] = useState(false);
   const [withdrawSection, setWithdrawSection] = useState(null);
   const [cryptoPayoutAmount, setCryptoPayoutAmount] = useState('');
   const [cryptoPayoutCurrency, setCryptoPayoutCurrency] = useState('');
@@ -81,6 +83,12 @@ export default function BalancePage() {
   const [cryptoPayoutLoading, setCryptoPayoutLoading] = useState(false);
   const [cryptoPayoutError, setCryptoPayoutError] = useState(null);
   const [cryptoPayoutSuccess, setCryptoPayoutSuccess] = useState(null);
+  const [ibanPayoutAmount, setIbanPayoutAmount] = useState('');
+  const [ibanPayoutIban, setIbanPayoutIban] = useState('');
+  const [ibanPayoutBicSwift, setIbanPayoutBicSwift] = useState('');
+  const [ibanPayoutBeneficiaryName, setIbanPayoutBeneficiaryName] = useState('');
+  const [ibanPayoutError, setIbanPayoutError] = useState(null);
+  const [ibanPayoutSuccess, setIbanPayoutSuccess] = useState(null);
   const [balanceHistory, setBalanceHistory] = useState({ items: [], total: 0 });
   const [balanceHistoryLoading, setBalanceHistoryLoading] = useState(false);
   const [enable2FAModalOpen, setEnable2FAModalOpen] = useState(false);
@@ -91,8 +99,17 @@ export default function BalancePage() {
   const [verifyTOTPSubmitting, setVerifyTOTPSubmitting] = useState(false);
 
   useEffect(() => {
-    getCardPaymentEnabled().then(setCardPaymentEnabled).catch(() => setCardPaymentEnabled(false));
-  }, []);
+    if (!token) return;
+    getAvailablePaymentMethods(token).then((methods) => {
+      setCardPaymentEnabled(methods.cardPaymentEnabled);
+      setIbanPaymentEnabled(methods.ibanPaymentEnabled);
+      setCryptoPaymentEnabled(methods.cryptoPaymentEnabled);
+    }).catch(() => {
+      setCardPaymentEnabled(false);
+      setIbanPaymentEnabled(false);
+      setCryptoPaymentEnabled(false);
+    });
+  }, [token]);
 
   useEffect(() => {
     if (!token) return;
@@ -189,6 +206,7 @@ export default function BalancePage() {
       if (type === 'whitebit') return createWithdraw(body, token, totpCode);
       if (type === 'card') return createCardPayoutRequest(body, token, totpCode);
       if (type === 'crypto') return createCryptoPayoutRequest(body, token, totpCode);
+      if (type === 'iban') return createIbanPayoutRequest(body, token, totpCode);
       return Promise.reject(new Error('Unknown withdraw type'));
     };
     run()
@@ -211,6 +229,12 @@ export default function BalancePage() {
           setCryptoPayoutSuccess(t('withdrawCryptoSuccess'));
           setCryptoPayoutAmount('');
           setCryptoPayoutWallet('');
+        } else if (type === 'iban') {
+          setIbanPayoutSuccess(t('withdrawIbanSuccess'));
+          setIbanPayoutAmount('');
+          setIbanPayoutIban('');
+          setIbanPayoutBicSwift('');
+          setIbanPayoutBeneficiaryName('');
         }
         refetch();
       })
@@ -262,6 +286,39 @@ export default function BalancePage() {
     requestWithdraw2FA({
       type: 'card',
       body: { amount, currency: cardPayoutCurr, cardNumber, cardHolderName: cardHolder },
+    });
+  };
+
+  const totalAvailableForIban = Number(profile?.totalAvailableByCurrency?.['EUR']) ?? 0;
+
+  const handleIbanPayoutRequest = () => {
+    if (!token) return;
+    const amount = parseFloat(ibanPayoutAmount);
+    if (!Number.isFinite(amount) || amount < 0.01) {
+      setIbanPayoutError(t('cardPayoutAmountMin'));
+      return;
+    }
+    if (totalAvailableForIban < amount) {
+      setIbanPayoutError(t('cardPayoutInsufficient'));
+      return;
+    }
+    const iban = (ibanPayoutIban || '').replace(/\s/g, '').trim();
+    const beneficiaryName = (ibanPayoutBeneficiaryName || '').trim();
+    if (iban.length < 15 || !beneficiaryName) {
+      setIbanPayoutError(t('ibanPayoutFieldsRequired'));
+      return;
+    }
+    setIbanPayoutError(null);
+    setIbanPayoutSuccess(null);
+    requestWithdraw2FA({
+      type: 'iban',
+      body: {
+        amount,
+        currency: 'EUR',
+        iban,
+        bicSwift: (ibanPayoutBicSwift || '').trim() || undefined,
+        beneficiaryName,
+      },
     });
   };
 
@@ -398,7 +455,7 @@ export default function BalancePage() {
               <Typography variant="h6" fontWeight={600}>
                 {t('balanceHistoryTitle')}
               </Typography>
-              {cardPaymentEnabled && (
+              {(cardPaymentEnabled || ibanPaymentEnabled || cryptoPaymentEnabled) && (
                 <Button
                   component={Link}
                   href={`${base}/dashboard/balance/withdrawals`}
@@ -685,7 +742,7 @@ export default function BalancePage() {
               </Box>
             )}
 
-            {(cardPaymentEnabled || true) && (
+            {(cardPaymentEnabled || ibanPaymentEnabled || cryptoPaymentEnabled) && (
               <Box sx={{ mt: 4 }}>
                 <Typography variant="h6" fontWeight={600} gutterBottom>
                   {t('withdrawTitle')}
@@ -708,26 +765,45 @@ export default function BalancePage() {
                       {t('withdrawOnCard')}
                     </Button>
                   )}
-                  <Button
-                    variant={withdrawSection === 'crypto' ? 'contained' : 'outlined'}
-                    color="secondary"
-                    onClick={() => {
-                      if (!profile?.twoFactorEnabled) {
-                        setPendingSectionAfter2FA('crypto');
-                        setEnable2FAModalOpen(true);
-                      } else {
-                        if (withdrawSection === 'crypto') {
-                          setWithdrawSection(null);
+                  {ibanPaymentEnabled && (
+                    <Button
+                      variant={withdrawSection === 'iban' ? 'contained' : 'outlined'}
+                      color="primary"
+                      onClick={() => {
+                        if (!profile?.twoFactorEnabled) {
+                          setPendingSectionAfter2FA('iban');
+                          setEnable2FAModalOpen(true);
                         } else {
-                          setWithdrawSection('crypto');
-                          setCryptoPayoutCurrency('USD');
+                          setWithdrawSection(withdrawSection === 'iban' ? null : 'iban');
                         }
-                      }
-                    }}
-                    sx={{ textTransform: 'none', minHeight: 44 }}
-                  >
-                    {t('withdrawWithCrypto')}
-                  </Button>
+                      }}
+                      sx={{ textTransform: 'none', minHeight: 44 }}
+                    >
+                      {t('withdrawToIban')}
+                    </Button>
+                  )}
+                  {cryptoPaymentEnabled && (
+                    <Button
+                      variant={withdrawSection === 'crypto' ? 'contained' : 'outlined'}
+                      color="secondary"
+                      onClick={() => {
+                        if (!profile?.twoFactorEnabled) {
+                          setPendingSectionAfter2FA('crypto');
+                          setEnable2FAModalOpen(true);
+                        } else {
+                          if (withdrawSection === 'crypto') {
+                            setWithdrawSection(null);
+                          } else {
+                            setWithdrawSection('crypto');
+                            setCryptoPayoutCurrency('USD');
+                          }
+                        }
+                      }}
+                      sx={{ textTransform: 'none', minHeight: 44 }}
+                    >
+                      {t('withdrawWithCrypto')}
+                    </Button>
+                  )}
                 </Box>
 
                 {withdrawSection === 'card' && cardPaymentEnabled && (
@@ -907,6 +983,75 @@ export default function BalancePage() {
                   </Box>
                 </Box>
               </Box>
+                )}
+
+                {withdrawSection === 'iban' && ibanPaymentEnabled && (
+                  <Box sx={{ mb: 3, maxWidth: 420 }}>
+                    <Typography variant="subtitle1" fontWeight={600} gutterBottom>
+                      {t('withdrawToIban')}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                      {t('withdrawToIbanHint')}
+                    </Typography>
+                    {ibanPayoutSuccess && (
+                      <Alert severity="success" sx={{ mb: 2 }} onClose={() => setIbanPayoutSuccess(null)}>
+                        {ibanPayoutSuccess}
+                      </Alert>
+                    )}
+                    {ibanPayoutError && (
+                      <Alert severity="error" sx={{ mb: 2 }} onClose={() => setIbanPayoutError(null)}>
+                        {ibanPayoutError}
+                      </Alert>
+                    )}
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                      {t('totalIn', { currency: 'EUR' })}: {totalAvailableForIban.toFixed(2)} EUR
+                    </Typography>
+                    <TextField
+                      type="number"
+                      label={t('amount')}
+                      value={ibanPayoutAmount}
+                      onChange={(e) => setIbanPayoutAmount(e.target.value)}
+                      inputProps={{ min: 0.01, step: 0.01 }}
+                      size="small"
+                      fullWidth
+                      sx={{ mb: 2 }}
+                    />
+                    <TextField
+                      label={t('ibanLabel')}
+                      value={ibanPayoutIban}
+                      onChange={(e) => setIbanPayoutIban(e.target.value)}
+                      placeholder="DE89 3704 0044 0532 0130 00"
+                      size="small"
+                      fullWidth
+                      sx={{ mb: 2 }}
+                    />
+                    <TextField
+                      label={t('bicSwiftLabel')}
+                      value={ibanPayoutBicSwift}
+                      onChange={(e) => setIbanPayoutBicSwift(e.target.value)}
+                      placeholder="COBADEFFXXX"
+                      size="small"
+                      fullWidth
+                      sx={{ mb: 2 }}
+                    />
+                    <TextField
+                      label={t('beneficiaryNameLabel')}
+                      value={ibanPayoutBeneficiaryName}
+                      onChange={(e) => setIbanPayoutBeneficiaryName(e.target.value)}
+                      size="small"
+                      fullWidth
+                      sx={{ mb: 2 }}
+                    />
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      onClick={handleIbanPayoutRequest}
+                      disabled={totalAvailableForIban < 0.01}
+                      sx={{ textTransform: 'none' }}
+                    >
+                      {t('withdrawSubmit')}
+                    </Button>
+                  </Box>
                 )}
 
                 {withdrawSection === 'crypto' && (

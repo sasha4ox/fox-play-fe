@@ -80,6 +80,8 @@ export default function ContactPage() {
         setSubject('');
         setMessage('');
         clearImage();
+      } else if (res.status === 503) {
+        setStatus('unavailable');
       } else {
         setStatus('error');
       }
@@ -217,6 +219,11 @@ export default function ContactPage() {
           {status === 'success' && (
             <Alert severity="success" sx={{ mb: 2 }}>
               {t('successMessage')}
+            </Alert>
+          )}
+          {status === 'unavailable' && (
+            <Alert severity="info" sx={{ mb: 2 }}>
+              {t('formUnavailable')}
             </Alert>
           )}
           {status === 'error' && (

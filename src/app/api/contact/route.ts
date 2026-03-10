@@ -52,11 +52,12 @@ export async function POST(request: Request) {
     );
   }
 
+  // Contact form requires Telegram env vars; return 503 so frontend can show "temporarily unavailable"
   if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) {
-    logger.error('TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID not configured');
+    logger.warn('TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID not configured; contact form unavailable');
     return NextResponse.json(
-      { success: false, error: 'Contact form not configured' },
-      { status: 500 }
+      { success: false, error: 'Contact form is not configured' },
+      { status: 503 }
     );
   }
 

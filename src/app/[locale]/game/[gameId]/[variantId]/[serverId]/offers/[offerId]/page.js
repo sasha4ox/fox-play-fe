@@ -30,7 +30,7 @@ import CardContent from '@mui/material/CardContent';
 import { useAuthStore } from '@/store/authStore';
 import { useLoginModalStore } from '@/store/loginModalStore';
 import { useProfile } from '@/hooks/useProfile';
-import { fetchOfferById, createOrder, getCardPaymentEnabled, getCryptoPaymentEnabled, getIbanPaymentEnabled, getOfferMessages, sendOfferMessage, startOfferChat, getOfferInquiryOrderId, getFeedbacksByUserId, deleteOffer } from '@/lib/api';
+import { fetchOfferById, createOrder, getAvailablePaymentMethods, getOfferMessages, sendOfferMessage, startOfferChat, getOfferInquiryOrderId, getFeedbacksByUserId, deleteOffer } from '@/lib/api';
 import { logClientError } from '@/lib/clientLogger';
 import { formatAdena } from '@/lib/adenaFormat';
 import { getMinPriceFor100kk } from '@/lib/offerMinPrice';
@@ -107,6 +107,19 @@ export default function OfferPDPPage() {
   const [inquiryOrderId, setInquiryOrderId] = useState(null);
 
   useEffect(() => {
+    if (!token) return;
+    getAvailablePaymentMethods(token).then((methods) => {
+      setCardPaymentEnabled(methods.cardPaymentEnabled);
+      setCryptoPaymentEnabled(methods.cryptoPaymentEnabled);
+      setIbanPaymentEnabled(methods.ibanPaymentEnabled);
+    }).catch(() => {
+      setCardPaymentEnabled(false);
+      setCryptoPaymentEnabled(false);
+      setIbanPaymentEnabled(false);
+    });
+  }, [token]);
+
+  useEffect(() => {
     if (!offerId || !token) return;
     getOfferMessages(offerId, token, isCreator ? undefined : null)
       .then((data) => setOfferMessages(Array.isArray(data) ? data : []))
@@ -119,16 +132,6 @@ export default function OfferPDPPage() {
       .then((data) => setInquiryOrderId(data?.orderId ?? null))
       .catch(() => setInquiryOrderId(null));
   }, [offerId, token, isCreator]);
-
-  useEffect(() => {
-    getCardPaymentEnabled().then(setCardPaymentEnabled).catch(() => setCardPaymentEnabled(false));
-  }, []);
-  useEffect(() => {
-    getCryptoPaymentEnabled().then(setCryptoPaymentEnabled).catch(() => setCryptoPaymentEnabled(false));
-  }, []);
-  useEffect(() => {
-    getIbanPaymentEnabled().then(setIbanPaymentEnabled).catch(() => setIbanPaymentEnabled(false));
-  }, []);
 
   useEffect(() => {
     if (!feedbacksDialogOpen || !offer?.seller?.id) return;
@@ -788,9 +791,11 @@ export default function OfferPDPPage() {
               </Button>
             ) : null;
           })()}
-          <Button variant="contained" onClick={handleManuauCardBuySubmit} disabled={buySubmitting || isPriceBelowMin || (isAdenaOffer ? buyQuantityKk <= 0 : buyQuantity < 1)}>
-            {buySubmitting ? 'Creating…' : (t('payByCard') || 'Pay by card')}
-          </Button>
+          {cardPaymentEnabled && (
+            <Button variant="contained" onClick={handleManuauCardBuySubmit} disabled={buySubmitting || isPriceBelowMin || (isAdenaOffer ? buyQuantityKk <= 0 : buyQuantity < 1)}>
+              {buySubmitting ? 'Creating…' : (t('payByCard') || 'Pay by card')}
+            </Button>
+          )}
           {cryptoPaymentEnabled && (
             <Tooltip title={t('payWithCryptoUsdNotice')}>
               <Button variant="contained" color="secondary" onClick={handleCryptoBuySubmit} disabled={buySubmitting || isPriceBelowMin || (isAdenaOffer ? buyQuantityKk <= 0 : buyQuantity < 1)}>

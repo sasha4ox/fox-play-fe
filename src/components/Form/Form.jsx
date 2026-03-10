@@ -7,10 +7,7 @@ import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 import Divider from '@mui/material/Divider';
-import FormControl from '@mui/material/FormControl';
-import InputLabel from '@mui/material/InputLabel';
-import Select from '@mui/material/Select';
-import MenuItem from '@mui/material/MenuItem';
+import CountrySelect from '@/components/CountrySelect/CountrySelect';
 import { useForm, Controller } from 'react-hook-form';
 import { useTranslations } from 'next-intl';
 import { useLocale } from 'next-intl';
@@ -21,33 +18,6 @@ import { componentClass } from '@/lib/componentPath';
 import styles from './form.module.css';
 
 const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '';
-
-const conriesToShow = [
-                    // EU
-                    'AT','BE','BG','HR','CY','CZ','DK','EE','FI','FR','DE','GR','HU','IE','IT',
-                    'LV','LT','LU','MT','NL','PL','PT','RO','SK','SI','ES','SE', 'UA',
-
-                    // Major / common world countries
-                    'US', // United States
-                    'CA', // Canada
-                    'GB', // United Kingdom
-                    'AU', // Australia
-                    'NZ', // New Zealand
-                    'JP', // Japan
-                    'CN', // China
-                    'IN', // India
-                    'BR', // Brazil
-                    'MX', // Mexico
-                    'KR', // South Korea
-                    'SG', // Singapore
-                    'CH', // Switzerland
-                    'NO', // Norway
-                    'TR', // Turkey
-                    'IL', // Israel
-                    'AE', // United Arab Emirates
-                    'SA', // Saudi Arabia
-                    'ZA'  // South Africa
-                    ]
 
 export default function Form({ popupMode = false, onLoginSuccess }) {
   const [isLoginForm, setIsloginForm] = useState(true);
@@ -274,29 +244,22 @@ export default function Form({ popupMode = false, onLoginSuccess }) {
             control={control}
             rules={{ required: t('mandatatory') }}
             render={({ field, fieldState: { error } }) => (
-              <FormControl fullWidth variant="outlined" sx={{ mt: 2 }} error={!!error}>
-                <InputLabel id="form-country-label">{t('whereAreYouFrom')}</InputLabel>
-                <Select
-                  {...field}
-                  labelId="form-country-label"
-                  label={t('whereAreYouFrom')}
-                  value={field.value || ''}
-                >
-                  <MenuItem value="">
-                    <em>{t('selectCountry')}</em>
-                  </MenuItem>
-                  {conriesToShow.map((code) => (
-                    <MenuItem key={code} value={code}>
-                      {code}
-                    </MenuItem>
-                  ))}
-                </Select>
+              <Box sx={{ mt: 2 }}>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+                  {t('whereAreYouFrom')}
+                </Typography>
+                <CountrySelect
+                  selected={field.value || ''}
+                  onSelect={field.onChange}
+                  placeholder={t('selectCountry')}
+                  fullWidth
+                />
                 {error && (
                   <Typography variant="caption" color="error" sx={{ mt: 0.5, display: 'block' }}>
                     {error.message}
                   </Typography>
                 )}
-              </FormControl>
+              </Box>
             )}
           />
         )}
