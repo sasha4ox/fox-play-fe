@@ -64,3 +64,48 @@ a {
 [data-theme="dark"] {
   color-scheme: dark;
 }
+
+/* Country select (react-flags-select) dark theme overrides */
+[data-theme="dark"] .country-select [class*="ReactFlagsSelect-module_selectBtn"] {
+  background: var(--second-color);
+  color: var(--text-primary);
+  border-color: rgba(241, 245, 249, 0.2);
+}
+[data-theme="dark"] .country-select [class*="ReactFlagsSelect-module_selectBtn"]::after {
+  border-top-color: var(--text-primary);
+  border-left-color: transparent;
+  border-right-color: transparent;
+  border-bottom-color: transparent;
+}
+[data-theme="dark"] .country-select [class*="ReactFlagsSelect-module_selectBtn"][aria-expanded="true"]::after {
+  border-top-color: transparent;
+  border-left-color: transparent;
+  border-right-color: transparent;
+  border-bottom-color: var(--text-primary);
+}
+[data-theme="dark"] .country-select [class*="ReactFlagsSelect-module_label"] {
+  color: var(--text-primary);
+}
+[data-theme="dark"] .country-select [class*="ReactFlagsSelect-module_secondaryLabel"] {
+  color: var(--text-second-color);
+}
+[data-theme="dark"] .country-select [class*="ReactFlagsSelect-module_selectOptions"] {
+  background: var(--second-color);
+  border-color: rgba(241, 245, 249, 0.12);
+}
+[data-theme="dark"] .country-select [class*="ReactFlagsSelect-module_selectOption"]:hover,
+[data-theme="dark"] .country-select [class*="ReactFlagsSelect-module_selectOption"]:focus {
+  background: rgba(241, 245, 249, 0.08);
+}
+[data-theme="dark"] .country-select [class*="ReactFlagsSelect-module_filterBox"] {
+  background: var(--second-color);
+}
+[data-theme="dark"] .country-select [class*="ReactFlagsSelect-module_filterBox"] input {
+  color: var(--text-primary);
+  background: var(--background);
+  border: 1px solid rgba(241, 245, 249, 0.12);
+}
+[data-theme="dark"] .country-select [class*="ReactFlagsSelect-module_disabledBtn"] {
+  background: var(--second-color);
+  color: var(--text-second-color);
+}

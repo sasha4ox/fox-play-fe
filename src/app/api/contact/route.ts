@@ -126,7 +126,7 @@ export async function POST(request: Request) {
       const res = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendPhoto`, {
         method: 'POST',
         headers: { 'Content-Type': contentType, 'Content-Length': String(body.length) },
-        body,
+        body: body as unknown as BodyInit,
       });
 
       const rawBody = await res.text();
