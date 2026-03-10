@@ -25,7 +25,7 @@ const CREATED_DEFAULT = '#0d47a1';
 export function getOrderStatusTextColor(status, paymentMethod) {
   if (!status) return '#757575';
   if (status === 'CREATED') {
-    return paymentMethod === 'CARD_MANUAL' || paymentMethod === 'CRYPTO_MANUAL'
+    return paymentMethod === 'CARD_MANUAL' || paymentMethod === 'CRYPTO_MANUAL' || paymentMethod === 'IBAN_MANUAL'
       ? CREATED_WAITING_MONEY
       : CREATED_DEFAULT;
   }

@@ -30,7 +30,7 @@ import CardContent from '@mui/material/CardContent';
 import { useAuthStore } from '@/store/authStore';
 import { useLoginModalStore } from '@/store/loginModalStore';
 import { useProfile } from '@/hooks/useProfile';
-import { fetchOfferById, createOrder, getCardPaymentEnabled, getCryptoPaymentEnabled, getOfferMessages, sendOfferMessage, startOfferChat, getOfferInquiryOrderId, getFeedbacksByUserId, deleteOffer } from '@/lib/api';
+import { fetchOfferById, createOrder, getCardPaymentEnabled, getCryptoPaymentEnabled, getIbanPaymentEnabled, getOfferMessages, sendOfferMessage, startOfferChat, getOfferInquiryOrderId, getFeedbacksByUserId, deleteOffer } from '@/lib/api';
 import { logClientError } from '@/lib/clientLogger';
 import { formatAdena } from '@/lib/adenaFormat';
 import { getMinPriceFor100kk } from '@/lib/offerMinPrice';
@@ -103,6 +103,7 @@ export default function OfferPDPPage() {
   const showPaymentDeclined = searchParams.get('payment') === 'declined' && !paymentDeclinedDismissed;
   const [cardPaymentEnabled, setCardPaymentEnabled] = useState(false);
   const [cryptoPaymentEnabled, setCryptoPaymentEnabled] = useState(false);
+  const [ibanPaymentEnabled, setIbanPaymentEnabled] = useState(false);
   const [inquiryOrderId, setInquiryOrderId] = useState(null);
 
   useEffect(() => {
@@ -124,6 +125,9 @@ export default function OfferPDPPage() {
   }, []);
   useEffect(() => {
     getCryptoPaymentEnabled().then(setCryptoPaymentEnabled).catch(() => setCryptoPaymentEnabled(false));
+  }, []);
+  useEffect(() => {
+    getIbanPaymentEnabled().then(setIbanPaymentEnabled).catch(() => setIbanPaymentEnabled(false));
   }, []);
 
   useEffect(() => {
@@ -218,6 +222,33 @@ export default function OfferPDPPage() {
       setBuyDialogOpen(false);
       setBuyCharacterNick('');
       router.push(`/${locale}/pay-crypto/${order.id}`);
+    } catch (err) {
+      setBuyError(err.message || 'Failed to create order');
+    } finally {
+      setBuySubmitting(false);
+    }
+  };
+
+  const handleIbanBuySubmit = async () => {
+    if (!offer || !token) return;
+    const nick = (buyCharacterNick || '').trim();
+    if (!nick) {
+      setBuyError(t('inGameNickRequired'));
+      return;
+    }
+    const isAdena = offer.offerType === 'ADENA';
+    const qty = isAdena
+      ? Math.min(offer.quantity, Math.max(1, Math.floor(buyQuantityKk * 1_000_000)))
+      : Math.min(Math.max(1, Math.floor(buyQuantity)), offer.quantity);
+    setBuySubmitting(true);
+    setBuyError(null);
+    try {
+      const body = { offerId: offer.id, quantity: qty, characterNick: nick };
+      body.paymentMethod = 'IBAN_MANUAL';
+      const order = await createOrder(body, token);
+      setBuyDialogOpen(false);
+      setBuyCharacterNick('');
+      router.push(`/${locale}/dashboard/orders/${order.id}/iban-payment`);
     } catch (err) {
       setBuyError(err.message || 'Failed to create order');
     } finally {
@@ -766,6 +797,11 @@ export default function OfferPDPPage() {
                 {buySubmitting ? 'Creating…' : (t('payWithCrypto') || 'Pay with Crypto')}
               </Button>
             </Tooltip>
+          )}
+          {ibanPaymentEnabled && (
+            <Button variant="contained" color="secondary" onClick={handleIbanBuySubmit} disabled={buySubmitting || isPriceBelowMin || (isAdenaOffer ? buyQuantityKk <= 0 : buyQuantity < 1)}>
+              {buySubmitting ? 'Creating…' : (t('payViaIban') || 'Pay via IBAN (EUR)')}
+            </Button>
           )}
         </DialogActions>
       </Dialog>

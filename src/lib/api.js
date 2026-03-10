@@ -195,6 +195,13 @@ export async function getCryptoPaymentEnabled() {
   return data?.cryptoPaymentEnabled === true
 }
 
+/** Public: whether IBAN payment (Pay via IBAN) is enabled for users */
+export async function getIbanPaymentEnabled() {
+  const res = await apiFetch('/settings/iban-payment-enabled', { method: 'GET' }, null)
+  const data = await res.json()
+  return data?.ibanPaymentEnabled === true
+}
+
 /** Public: platform fee percent (e.g. 20 for 20%). Used on sell page to show "buyer will pay X + fee". */
 export async function getPlatformFeePercent() {
   const res = await apiFetch('/settings/platform-fee-percent', { method: 'GET' }, null)
@@ -236,6 +243,16 @@ export async function getOrderCryptoPayment(orderId, token) {
 /** Mark that buyer has sent crypto (buyer only). No body required. */
 export async function markOrderCryptoPaymentSent(orderId, token) {
   return apiPost(`/orders/${orderId}/crypto-payment/sent`, {}, token)
+}
+
+/** Order IBAN payment page data (buyer only). Returns { status, iban?, bicSwift?, beneficiaryName?, bankName?, paymentReference?, paymentDeadlineAt, amount, currency, ... } */
+export async function getOrderIbanPayment(orderId, token) {
+  return apiGet(`/orders/${orderId}/iban-payment`, token)
+}
+
+/** Mark that buyer has sent IBAN transfer (buyer only). No body required. */
+export async function markOrderIbanPaymentSent(orderId, token) {
+  return apiPost(`/orders/${orderId}/iban-payment/sent`, {}, token)
 }
 
 /** Profile: user + balances in preferred currency (auth required) */
@@ -682,6 +699,28 @@ export async function setAdminCryptoPaymentWallet({ wallet }, token) {
   return data?.wallet ?? ''
 }
 
+/** Admin: get IBAN payment enabled. */
+export async function getAdminIbanPaymentEnabled(token) {
+  const data = await apiGet('/admin/settings/iban-payment-enabled', token)
+  return data?.ibanPaymentEnabled === true
+}
+
+/** Admin: set IBAN payment enabled. */
+export async function setAdminIbanPaymentEnabled(enabled, token) {
+  const data = await apiPatch('/admin/settings/iban-payment-enabled', { enabled }, token)
+  return data?.ibanPaymentEnabled === true
+}
+
+/** Admin: get IBAN payment config (iban, bicSwift, beneficiaryName, bankName, paymentReference). */
+export async function getAdminIbanPaymentConfig(token) {
+  return apiGet('/admin/settings/iban-payment-config', token)
+}
+
+/** Admin: set IBAN payment config. body: { iban?, bicSwift?, beneficiaryName?, bankName?, paymentReference? } */
+export async function setAdminIbanPaymentConfig(config, token) {
+  return apiPatch('/admin/settings/iban-payment-config', config || {}, token)
+}
+
 export async function getAdminPlatformProfit(token) {
   return apiGet('/admin/money-flow/platform-profit', token)
 }
@@ -754,6 +793,31 @@ export async function adminDeclineCryptoReceipt(orderId, token) {
 
 export async function adminConfirmCryptoPayout(orderId, token) {
   return apiPost(`/admin/money-flow/orders/${orderId}/confirm-crypto-payout`, {}, token)
+}
+
+export async function getAdminPendingIbanReceipts(token) {
+  return apiGet('/admin/money-flow/iban-receipts', token)
+}
+
+export async function getAdminPendingIbanReceiptsCount(token) {
+  const data = await apiGet('/admin/money-flow/iban-receipts-count', token)
+  return typeof data?.count === 'number' ? data.count : 0
+}
+
+export async function getAdminPendingIbanPayouts(token) {
+  return apiGet('/admin/money-flow/iban-payouts', token)
+}
+
+export async function adminConfirmIbanReceipt(orderId, token) {
+  return apiPost(`/admin/money-flow/orders/${orderId}/confirm-iban-receipt`, {}, token)
+}
+
+export async function adminDeclineIbanReceipt(orderId, token) {
+  return apiPost(`/admin/money-flow/orders/${orderId}/decline-iban-receipt`, {}, token)
+}
+
+export async function adminConfirmIbanPayout(orderId, token) {
+  return apiPost(`/admin/money-flow/orders/${orderId}/confirm-iban-payout`, {}, token)
 }
 
 export async function getAdminCryptoPayoutRequests(token, params = {}) {

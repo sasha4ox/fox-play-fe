@@ -201,8 +201,8 @@ export default function OrderChatPage() {
   const isModerator = role === 'ADMIN' || role === 'MODERATOR';
   const isSeller = order && currentUserId && (order.sellerId === currentUserId || order.seller?.id === currentUserId);
   const isBuyer = order && currentUserId && (order.buyerId === currentUserId || order.buyer?.id === currentUserId);
-  const buyerPendingAdminConfirm = isBuyer && (order?.paymentMethod === 'CARD_MANUAL' || order?.paymentMethod === 'CRYPTO_MANUAL') && order?.status === 'CREATED';
-  const sellerPendingAdminConfirm = isSeller && (order?.paymentMethod === 'CARD_MANUAL' || order?.paymentMethod === 'CRYPTO_MANUAL') && order?.status === 'CREATED';
+  const buyerPendingAdminConfirm = isBuyer && (order?.paymentMethod === 'CARD_MANUAL' || order?.paymentMethod === 'CRYPTO_MANUAL' || order?.paymentMethod === 'IBAN_MANUAL') && order?.status === 'CREATED';
+  const sellerPendingAdminConfirm = isSeller && (order?.paymentMethod === 'CARD_MANUAL' || order?.paymentMethod === 'CRYPTO_MANUAL' || order?.paymentMethod === 'IBAN_MANUAL') && order?.status === 'CREATED';
   const pendingAdminConfirm = buyerPendingAdminConfirm || sellerPendingAdminConfirm;
   const chatBgColor = 'var(--background)';
   const canSellerDeliver =
@@ -523,6 +523,11 @@ export default function OrderChatPage() {
               )}
             </Typography>
           )}
+          {order?.paymentMethod === 'IBAN_MANUAL' && order?.orderIbanPayment?.adminConfirmedReceivedAt && (
+            <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.75rem', mt: 0.5 }}>
+              {t('paymentConfirmedByAdmin')}
+            </Typography>
+          )}
         </Box>
       </Box>
       {showPaymentSuccess && (
@@ -542,6 +547,14 @@ export default function OrderChatPage() {
         <Alert severity="warning" sx={{ mx: { xs: 1, md: 2 }, mt: 1 }}>
           {t('cryptoPaymentBanner')}{' '}
           <Button component={Link} href={`/${locale}/pay-crypto/${orderId}`} size="small" variant="outlined" sx={{ mt: 0.5 }}>
+            {t('openPaymentPage')}
+          </Button>
+        </Alert>
+      )}
+      {isBuyer && order?.paymentMethod === 'IBAN_MANUAL' && order?.status === 'CREATED' && order?.orderIbanPayment && !order?.orderIbanPayment?.buyerMarkedSentAt && (
+        <Alert severity="warning" sx={{ mx: { xs: 1, md: 2 }, mt: 1 }}>
+          {t('ibanPaymentBanner')}{' '}
+          <Button component={Link} href={`/${locale}/dashboard/orders/${orderId}/iban-payment`} size="small" variant="outlined" sx={{ mt: 0.5 }}>
             {t('openPaymentPage')}
           </Button>
         </Alert>

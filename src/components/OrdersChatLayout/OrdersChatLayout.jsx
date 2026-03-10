@@ -45,6 +45,7 @@ export default function OrdersChatLayout({ children }) {
 
   const orderIdFromPath = pathname?.match(/\/orders\/([a-f0-9-]+)/i)?.[1];
   const isCardPaymentPage = pathname?.includes('/card-payment');
+  const isIbanPaymentPage = pathname?.includes('/iban-payment');
   const rawOrders = chatSummary.orders ?? [];
   const sortedOrders = useMemo(
     () =>
@@ -111,8 +112,8 @@ export default function OrdersChatLayout({ children }) {
     return <Box sx={{ minHeight: '100vh', bgcolor: 'var(--background)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{children}</Box>;
   }
 
-  // Card payment page: standalone, no chat sidebar
-  if (isCardPaymentPage) {
+  // Card / IBAN payment page: standalone, no chat sidebar
+  if (isCardPaymentPage || isIbanPaymentPage) {
     return (
       <Box
         sx={{
@@ -275,7 +276,11 @@ export default function OrdersChatLayout({ children }) {
                       px: { xs: 1.5, md: 2 },
                       py: { xs: 1.5, md: 1.75 },
                       cursor: 'pointer',
-                      bgcolor: order.isUnopened ? 'rgba(25, 118, 210, 0.06)' : CHAT_ITEM_BG,
+                      bgcolor: isSelected
+                        ? theme.palette.action.selected
+                        : order.isUnopened
+                          ? 'rgba(25, 118, 210, 0.06)'
+                          : CHAT_ITEM_BG,
                       color: 'var(--third-color)',
                       '&:hover': { filter: 'brightness(0.97)' },
                       borderLeft: isSelected ? '4px solid' : order.isUnopened ? '4px solid' : '4px solid transparent',

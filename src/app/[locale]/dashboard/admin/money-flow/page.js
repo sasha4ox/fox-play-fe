@@ -57,6 +57,16 @@ import {
   getAdminCryptoPayoutRequests,
   adminCryptoPayoutComplete,
   adminCryptoPayoutFail,
+  getAdminIbanPaymentEnabled,
+  setAdminIbanPaymentEnabled,
+  getAdminIbanPaymentConfig,
+  setAdminIbanPaymentConfig,
+  getAdminPendingIbanReceipts,
+  getAdminPendingIbanReceiptsCount,
+  getAdminPendingIbanPayouts,
+  adminConfirmIbanReceipt,
+  adminDeclineIbanReceipt,
+  adminConfirmIbanPayout,
   adminGetOrCreateContactBuyer,
   adminSendContactBuyerMessage,
 } from '@/lib/api';
@@ -135,6 +145,20 @@ export default function AdminMoneyFlowPage() {
   const [confirmingCryptoPayout, setConfirmingCryptoPayout] = useState(null);
   const [confirmingCryptoPayoutComplete, setConfirmingCryptoPayoutComplete] = useState(null);
   const [confirmingCryptoPayoutFail, setConfirmingCryptoPayoutFail] = useState(null);
+  const [ibanPaymentEnabled, setIbanPaymentEnabled] = useState(false);
+  const [loadingIbanFlag, setLoadingIbanFlag] = useState(true);
+  const [savingIbanFlag, setSavingIbanFlag] = useState(false);
+  const [ibanConfig, setIbanConfig] = useState({ iban: '', bicSwift: '', beneficiaryName: '', bankName: '', paymentReference: null });
+  const [ibanConfigInput, setIbanConfigInput] = useState({ iban: '', bicSwift: '', beneficiaryName: '', bankName: '', paymentReference: '' });
+  const [loadingIbanConfig, setLoadingIbanConfig] = useState(true);
+  const [savingIbanConfig, setSavingIbanConfig] = useState(false);
+  const [ibanReceipts, setIbanReceipts] = useState([]);
+  const [loadingIbanReceipts, setLoadingIbanReceipts] = useState(true);
+  const [ibanPayouts, setIbanPayouts] = useState([]);
+  const [loadingIbanPayouts, setLoadingIbanPayouts] = useState(true);
+  const [confirmingIbanReceipt, setConfirmingIbanReceipt] = useState(null);
+  const [decliningIbanReceipt, setDecliningIbanReceipt] = useState(null);
+  const [confirmingIbanPayout, setConfirmingIbanPayout] = useState(null);
 
   const loadFlag = () => {
     if (!token) return;
@@ -312,6 +336,101 @@ export default function AdminMoneyFlowPage() {
   useEffect(() => {
     loadCryptoPayoutRequests();
   }, [token, cryptoPayoutStatusFilter]);
+
+  const loadIbanFlag = () => {
+    if (!token) return;
+    setLoadingIbanFlag(true);
+    getAdminIbanPaymentEnabled(token)
+      .then(setIbanPaymentEnabled)
+      .catch(() => setIbanPaymentEnabled(false))
+      .finally(() => setLoadingIbanFlag(false));
+  };
+  const loadIbanConfig = () => {
+    if (!token) return;
+    setLoadingIbanConfig(true);
+    getAdminIbanPaymentConfig(token)
+      .then((c) => {
+        setIbanConfig({ iban: c?.iban ?? '', bicSwift: c?.bicSwift ?? '', beneficiaryName: c?.beneficiaryName ?? '', bankName: c?.bankName ?? '', paymentReference: c?.paymentReference ?? null });
+        setIbanConfigInput({ iban: c?.iban ?? '', bicSwift: c?.bicSwift ?? '', beneficiaryName: c?.beneficiaryName ?? '', bankName: c?.bankName ?? '', paymentReference: c?.paymentReference ?? '' });
+      })
+      .catch(() => {})
+      .finally(() => setLoadingIbanConfig(false));
+  };
+  const loadIbanReceipts = () => {
+    if (!token) return;
+    setLoadingIbanReceipts(true);
+    getAdminPendingIbanReceipts(token)
+      .then((data) => setIbanReceipts(data?.items ?? []))
+      .catch(() => setIbanReceipts([]))
+      .finally(() => setLoadingIbanReceipts(false));
+  };
+  const loadIbanPayouts = () => {
+    if (!token) return;
+    setLoadingIbanPayouts(true);
+    getAdminPendingIbanPayouts(token)
+      .then((data) => setIbanPayouts(data?.items ?? []))
+      .catch(() => setIbanPayouts([]))
+      .finally(() => setLoadingIbanPayouts(false));
+  };
+  useEffect(() => {
+    loadIbanFlag();
+    loadIbanConfig();
+  }, [token]);
+  useEffect(() => {
+    loadIbanReceipts();
+    loadIbanPayouts();
+  }, [token]);
+  const handleSaveIbanFlag = () => {
+    if (!token) return;
+    setSavingIbanFlag(true);
+    setError(null);
+    setAdminIbanPaymentEnabled(ibanPaymentEnabled, token)
+      .then(setIbanPaymentEnabled)
+      .catch((err) => setError(err?.message || 'Failed to save'))
+      .finally(() => setSavingIbanFlag(false));
+  };
+  const handleSaveIbanConfig = () => {
+    if (!token) return;
+    setSavingIbanConfig(true);
+    setError(null);
+    setAdminIbanPaymentConfig({
+      iban: ibanConfigInput.iban.trim(),
+      bicSwift: ibanConfigInput.bicSwift.trim(),
+      beneficiaryName: ibanConfigInput.beneficiaryName.trim(),
+      bankName: ibanConfigInput.bankName.trim(),
+      paymentReference: ibanConfigInput.paymentReference?.trim() || null,
+    }, token)
+      .then((c) => {
+        setIbanConfig({ iban: c?.iban ?? '', bicSwift: c?.bicSwift ?? '', beneficiaryName: c?.beneficiaryName ?? '', bankName: c?.bankName ?? '', paymentReference: c?.paymentReference ?? null });
+        setIbanConfigInput({ iban: c?.iban ?? '', bicSwift: c?.bicSwift ?? '', beneficiaryName: c?.beneficiaryName ?? '', bankName: c?.bankName ?? '', paymentReference: c?.paymentReference ?? '' });
+      })
+      .catch((err) => setError(err?.message || 'Failed to save'))
+      .finally(() => setSavingIbanConfig(false));
+  };
+  const handleConfirmIbanReceipt = (orderId) => {
+    setConfirmingIbanReceipt(orderId);
+    setError(null);
+    adminConfirmIbanReceipt(orderId, token)
+      .then(() => { loadIbanReceipts(); loadReceipts(); })
+      .catch((err) => setError(err?.message || 'Failed'))
+      .finally(() => setConfirmingIbanReceipt(null));
+  };
+  const handleDeclineIbanReceipt = (orderId) => {
+    setDecliningIbanReceipt(orderId);
+    setError(null);
+    adminDeclineIbanReceipt(orderId, token)
+      .then(() => { loadIbanReceipts(); loadReceipts(); })
+      .catch((err) => setError(err?.message || 'Failed'))
+      .finally(() => setDecliningIbanReceipt(null));
+  };
+  const handleConfirmIbanPayout = (orderId) => {
+    setConfirmingIbanPayout(orderId);
+    setError(null);
+    adminConfirmIbanPayout(orderId, token)
+      .then(() => { loadIbanPayouts(); loadPayouts(); })
+      .catch((err) => setError(err?.message || 'Failed'))
+      .finally(() => setConfirmingIbanPayout(null));
+  };
 
   const handleSaveCryptoWallet = () => {
     setSavingCryptoWallet(true);
@@ -748,6 +867,89 @@ export default function AdminMoneyFlowPage() {
 
       <Card sx={{ mb: 3 }}>
         <CardContent sx={{ px: { xs: 1.5, sm: 2 } }}>
+          <Typography variant="subtitle1" fontWeight={600} gutterBottom>
+            {t('ibanPaymentTitle')}
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            {t('ibanPaymentHint')}
+          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2, flexWrap: 'wrap' }}>
+            {loadingIbanFlag ? (
+              <Skeleton width={120} height={40} />
+            ) : (
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={ibanPaymentEnabled}
+                    onChange={(e) => {
+                      setIbanPaymentEnabled(e.target.checked);
+                      setSavingIbanFlag(true);
+                      setError(null);
+                      setAdminIbanPaymentEnabled(e.target.checked, token)
+                        .then(setIbanPaymentEnabled)
+                        .catch((err) => setError(err?.message || 'Failed to save'))
+                        .finally(() => setSavingIbanFlag(false));
+                    }}
+                    disabled={savingIbanFlag}
+                  />
+                }
+                label={t('ibanPaymentEnabled')}
+              />
+            )}
+          </Box>
+          {loadingIbanConfig ? (
+            <Skeleton height={200} />
+          ) : (
+            <Box component="form" sx={{ display: 'flex', flexDirection: 'column', gap: 2, maxWidth: 560 }}>
+              <TextField
+                label={t('ibanLabel')}
+                value={ibanConfigInput.iban}
+                onChange={(e) => setIbanConfigInput((prev) => ({ ...prev, iban: e.target.value }))}
+                placeholder="UA123456789012345678901234567"
+                size="small"
+                fullWidth
+              />
+              <TextField
+                label={t('ibanBicSwiftLabel')}
+                value={ibanConfigInput.bicSwift}
+                onChange={(e) => setIbanConfigInput((prev) => ({ ...prev, bicSwift: e.target.value }))}
+                placeholder="XXXXXXXX"
+                size="small"
+                fullWidth
+              />
+              <TextField
+                label={t('ibanBeneficiaryNameLabel')}
+                value={ibanConfigInput.beneficiaryName}
+                onChange={(e) => setIbanConfigInput((prev) => ({ ...prev, beneficiaryName: e.target.value }))}
+                size="small"
+                fullWidth
+              />
+              <TextField
+                label={t('ibanBankNameLabel')}
+                value={ibanConfigInput.bankName}
+                onChange={(e) => setIbanConfigInput((prev) => ({ ...prev, bankName: e.target.value }))}
+                size="small"
+                fullWidth
+              />
+              <TextField
+                label={t('ibanPaymentReferenceLabel')}
+                value={ibanConfigInput.paymentReference ?? ''}
+                onChange={(e) => setIbanConfigInput((prev) => ({ ...prev, paymentReference: e.target.value }))}
+                placeholder="Order {{orderId}}"
+                size="small"
+                fullWidth
+                helperText={t('ibanPaymentReferenceHint')}
+              />
+              <Button variant="contained" onClick={handleSaveIbanConfig} disabled={savingIbanConfig} sx={{ alignSelf: 'flex-start' }}>
+                {savingIbanConfig ? '…' : t('save')}
+              </Button>
+            </Box>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card sx={{ mb: 3 }}>
+        <CardContent sx={{ px: { xs: 1.5, sm: 2 } }}>
           <Box sx={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: 1, mb: 2 }}>
             <Typography variant="subtitle1" fontWeight={600}>
               {t('paymentCards')}
@@ -1051,6 +1253,107 @@ export default function AdminMoneyFlowPage() {
                       <TableCell align="right">
                         <Button size="small" variant="contained" color="primary" onClick={() => handleConfirmCryptoPayout(p.orderId)} disabled={confirmingCryptoPayout === p.orderId}>
                           {confirmingCryptoPayout === p.orderId ? '…' : t('confirmPayout')}
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card sx={{ mb: 3 }}>
+        <CardContent sx={{ px: { xs: 1.5, sm: 2 } }}>
+          <Typography variant="subtitle1" fontWeight={600} gutterBottom>
+            {t('pendingIbanReceipts')}
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            {t('pendingIbanReceiptsHint')}
+          </Typography>
+          {loadingIbanReceipts ? (
+            <Skeleton height={60} />
+          ) : ibanReceipts.length === 0 ? (
+            <Typography color="text.secondary">{t('noPendingIbanReceipts')}</Typography>
+          ) : (
+            <TableContainer sx={{ overflowX: 'auto' }}>
+              <Table size="small" sx={{ minWidth: 480 }}>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Order</TableCell>
+                    <TableCell>Buyer</TableCell>
+                    <TableCell>Amount</TableCell>
+                    <TableCell>Marked sent</TableCell>
+                    <TableCell align="right">{t('actions')}</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {ibanReceipts.map((r) => (
+                    <TableRow key={r.orderId}>
+                      <TableCell>
+                        <Link href={`/${locale}/dashboard/orders/${r.orderId}`} target="_blank" rel="noopener">
+                          {r.orderNumber ?? `${r.orderId.slice(0, 8)}…`}
+                        </Link>
+                      </TableCell>
+                      <TableCell>{r.buyer?.email ?? r.buyer?.nickname ?? r.buyer?.id}</TableCell>
+                      <TableCell>{r.buyerAmount} {r.buyerCurrency}</TableCell>
+                      <TableCell>{r.buyerMarkedSentAt ? new Date(r.buyerMarkedSentAt).toLocaleString() : '—'}</TableCell>
+                      <TableCell align="right">
+                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, justifyContent: 'flex-end', '& .MuiButton-root': { minHeight: 44 } }}>
+                          <Button size="small" variant="outlined" color="error" onClick={() => handleDeclineIbanReceipt(r.orderId)} disabled={decliningIbanReceipt === r.orderId || confirmingIbanReceipt === r.orderId}>
+                            {decliningIbanReceipt === r.orderId ? '…' : t('declineReceipt')}
+                          </Button>
+                          <Button size="small" variant="contained" onClick={() => handleConfirmIbanReceipt(r.orderId)} disabled={confirmingIbanReceipt === r.orderId}>
+                            {confirmingIbanReceipt === r.orderId ? '…' : t('confirmReceipt')}
+                          </Button>
+                        </Box>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card sx={{ mb: 3 }}>
+        <CardContent sx={{ px: { xs: 1.5, sm: 2 } }}>
+          <Typography variant="subtitle1" fontWeight={600} gutterBottom>
+            {t('pendingIbanPayouts')}
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            {t('pendingIbanPayoutsHint')}
+          </Typography>
+          {loadingIbanPayouts ? (
+            <Skeleton height={60} />
+          ) : ibanPayouts.length === 0 ? (
+            <Typography color="text.secondary">{t('noPendingIbanPayouts')}</Typography>
+          ) : (
+            <TableContainer sx={{ overflowX: 'auto' }}>
+              <Table size="small" sx={{ minWidth: 360 }}>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Order</TableCell>
+                    <TableCell>Seller</TableCell>
+                    <TableCell>Amount</TableCell>
+                    <TableCell align="right">{t('actions')}</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {ibanPayouts.map((p) => (
+                    <TableRow key={p.orderId}>
+                      <TableCell>
+                        <Link href={`/${locale}/dashboard/orders/${p.orderId}`} target="_blank" rel="noopener">
+                          {p.orderNumber ?? `${p.orderId.slice(0, 8)}…`}
+                        </Link>
+                      </TableCell>
+                      <TableCell>{p.seller?.email ?? p.seller?.nickname ?? p.seller?.id}</TableCell>
+                      <TableCell>{p.sellerAmount} {p.sellerCurrency}</TableCell>
+                      <TableCell align="right">
+                        <Button size="small" variant="contained" color="primary" onClick={() => handleConfirmIbanPayout(p.orderId)} disabled={confirmingIbanPayout === p.orderId}>
+                          {confirmingIbanPayout === p.orderId ? '…' : t('confirmPayout')}
                         </Button>
                       </TableCell>
                     </TableRow>
