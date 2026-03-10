@@ -4,6 +4,7 @@ import { logger } from '@/lib/logger';
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
 const MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
+const TELEGRAM_CAPTION_MAX_LENGTH = 1024;
 
 export async function POST(request: Request) {
   let name: string;
@@ -74,10 +75,15 @@ export async function POST(request: Request) {
 
   try {
     if (imageFile) {
+      // Read file into buffer and send as Blob so the outgoing request serializes correctly (File from request may not)
+      const arrayBuffer = await imageFile.arrayBuffer();
+      const blob = new Blob([arrayBuffer], { type: imageFile.type || 'image/jpeg' });
       const formData = new FormData();
       formData.append('chat_id', TELEGRAM_CHAT_ID);
-      formData.append('caption', text);
-      formData.append('photo', imageFile);
+      const caption =
+        text.length <= TELEGRAM_CAPTION_MAX_LENGTH ? text : text.slice(0, TELEGRAM_CAPTION_MAX_LENGTH - 1) + '…';
+      formData.append('caption', caption);
+      formData.append('photo', blob, imageFile.name || 'image.jpg');
 
       const res = await fetch(
         `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendPhoto`,
@@ -87,10 +93,17 @@ export async function POST(request: Request) {
         }
       );
 
-      const data = await res.json();
-      if (!res.ok) {
-        logger.warn({ ok: data.ok, description: data.description }, 'Telegram sendPhoto failed');
-        return NextResponse.json({ success: false }, { status: 500 });
+      const rawBody = await res.text();
+      let data: { ok?: boolean; description?: string };
+      try {
+        data = JSON.parse(rawBody);
+      } catch {
+        logger.warn({ status: res.status, body: rawBody.slice(0, 500) }, 'Telegram sendPhoto non-JSON response');
+        return NextResponse.json({ success: false, error: 'Failed to send message' }, { status: 500 });
+      }
+      if (!res.ok || !data.ok) {
+        logger.warn({ ok: data.ok, description: data.description, status: res.status }, 'Telegram sendPhoto failed');
+        return NextResponse.json({ success: false, error: data.description || 'Failed to send message' }, { status: 500 });
       }
       logger.info({ hasImage: true }, 'Contact form submitted via sendPhoto');
     } else {
@@ -106,10 +119,17 @@ export async function POST(request: Request) {
         }
       );
 
-      const data = await res.json();
-      if (!res.ok) {
-        logger.warn({ ok: data.ok, description: data.description }, 'Telegram sendMessage failed');
-        return NextResponse.json({ success: false }, { status: 500 });
+      const rawBody = await res.text();
+      let data: { ok?: boolean; description?: string };
+      try {
+        data = JSON.parse(rawBody);
+      } catch {
+        logger.warn({ status: res.status, body: rawBody.slice(0, 500) }, 'Telegram sendMessage non-JSON response');
+        return NextResponse.json({ success: false, error: 'Failed to send message' }, { status: 500 });
+      }
+      if (!res.ok || !data.ok) {
+        logger.warn({ ok: data.ok, description: data.description, status: res.status }, 'Telegram sendMessage failed');
+        return NextResponse.json({ success: false, error: data.description || 'Failed to send message' }, { status: 500 });
       }
       logger.info('Contact form submitted via sendMessage');
     }
@@ -117,6 +137,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: true });
   } catch (err) {
     logger.error(err, 'Contact API error');
-    return NextResponse.json({ success: false }, { status: 500 });
+    return NextResponse.json({ success: false, error: 'Failed to send message' }, { status: 500 });
   }
 }

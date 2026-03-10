@@ -29,7 +29,8 @@ export default function ContactPage() {
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
   const [imageFile, setImageFile] = useState(null);
-  const [status, setStatus] = useState(null); // 'success' | 'error' | null
+  const [status, setStatus] = useState(null); // 'success' | 'error' | 'unavailable' | null
+  const [errorMessage, setErrorMessage] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
   const handleImageChange = (e) => {
@@ -55,6 +56,7 @@ export default function ContactPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setStatus(null);
+    setErrorMessage(null);
     setSubmitting(true);
 
     try {
@@ -84,9 +86,11 @@ export default function ContactPage() {
         setStatus('unavailable');
       } else {
         setStatus('error');
+        setErrorMessage(data.error || null);
       }
     } catch {
       setStatus('error');
+      setErrorMessage(null);
     } finally {
       setSubmitting(false);
     }
@@ -228,7 +232,7 @@ export default function ContactPage() {
           )}
           {status === 'error' && (
             <Alert severity="error" sx={{ mb: 2 }}>
-              {t('errorMessage')}
+              {errorMessage || t('errorMessage')}
             </Alert>
           )}
 
