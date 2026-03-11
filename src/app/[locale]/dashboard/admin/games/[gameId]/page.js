@@ -487,10 +487,8 @@ export default function AdminGameEditPage() {
                 value={search}
                 onChange={(e) => {
                   const value = e.target.value;
-                  startTransition(() => {
-                    setSearch(value);
-                    if (value.trim()) setSelectedLetter(null);
-                  });
+                  setSearch(value);
+                  if (value.trim()) setSelectedLetter(null);
                 }}
                 startAdornment={
                   <>
