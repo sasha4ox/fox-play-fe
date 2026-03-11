@@ -52,7 +52,7 @@ export default function EditOfferPage() {
   const { preferredCurrency, profile } = useProfile();
   const currency = offer?.displayCurrency ?? offer?.currency ?? preferredCurrency ?? 'EUR';
   const isAdena = offer?.offerType === 'ADENA';
-  const adenaPriceUnitKk = offer?.server?.gameVariant?.game?.adenaPriceUnitKk ?? 100;
+  const adenaPriceUnitKk = offer?.server?.adenaPriceUnitKk ?? offer?.server?.gameVariant?.game?.adenaPriceUnitKk ?? 100;
   const isAdminOrMod = profile?.role === 'ADMIN' || profile?.role === 'MODERATOR';
 
   useEffect(() => {
@@ -67,7 +67,7 @@ export default function EditOfferPage() {
         if (data.offerType === 'ADENA') {
           const q = Number(data.quantity ?? 0);
           const p = Number(data.displayPrice ?? data.price ?? 0);
-          const unitKk = data.server?.gameVariant?.game?.adenaPriceUnitKk ?? 100;
+          const unitKk = data.server?.adenaPriceUnitKk ?? data.server?.gameVariant?.game?.adenaPriceUnitKk ?? 100;
           setQuantityAdena(String(q / 1_000_000 || 1));
           setPriceAdena(String(p * unitKk || 1)); // backend: price per 1kk → display: price per unit
         } else {

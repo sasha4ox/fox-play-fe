@@ -949,7 +949,8 @@
 
     "top": "Топ",
     "topHint": "Показывать в самом верху списка и приоритетно в фильтрах",
-    "adenaPriceUnitKk": "Единица цены адены (kk)"
+    "adenaPriceUnitKk": "Единица цены адены (kk)",
+    "inherit": "Наследовать"
   },
   "Footer": {
     "brand": "FoxyPlay",

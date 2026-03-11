@@ -59,7 +59,7 @@ export default function GameOffersPage() {
   const game = tree ? getGameFromTree(tree, gameId) : null;
   const variant = tree ? getVariantFromTree(tree, gameId, variantId) : null;
   const server = tree ? getServerFromTree(tree, gameId, variantId, serverId) : null;
-  const adenaPriceUnitKk = game?.adenaPriceUnitKk ?? 100;
+  const adenaPriceUnitKk = server?.adenaPriceUnitKk ?? game?.adenaPriceUnitKk ?? 100;
   const serverTypes = server?.enabledOfferTypes && server.enabledOfferTypes.length > 0
     ? server.enabledOfferTypes
     : null;

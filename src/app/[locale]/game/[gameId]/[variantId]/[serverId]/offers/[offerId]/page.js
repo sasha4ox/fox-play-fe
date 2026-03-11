@@ -345,7 +345,7 @@ export default function OfferPDPPage() {
   const isAdenaOffer = offer.offerType === 'ADENA';
   const maxKk = isAdenaOffer ? offer.quantity : null;
   const offerCurrency = offer.displayCurrency ?? offer.currency ?? '';
-  const adenaPriceUnitKk = offer?.server?.gameVariant?.game?.adenaPriceUnitKk ?? 100;
+  const adenaPriceUnitKk = offer?.server?.adenaPriceUnitKk ?? offer?.server?.gameVariant?.game?.adenaPriceUnitKk ?? 100;
   const priceRaw = offer.displayPrice ?? offer.price;
   const pNum = typeof priceRaw === 'object' && priceRaw != null && typeof priceRaw.toString === 'function'
     ? Number(priceRaw.toString())

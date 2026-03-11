@@ -928,7 +928,8 @@
     "save": "Save",
     "top": "Top",
     "topHint": "Show at the very top of the list and prioritize in filters",
-    "adenaPriceUnitKk": "Unidad de precio adena (kk)"
+    "adenaPriceUnitKk": "Unidad de precio adena (kk)",
+    "inherit": "Heredar"
   },
   "Footer": {
     "brand": "FoxyPlay",

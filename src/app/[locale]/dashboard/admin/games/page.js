@@ -242,6 +242,17 @@ export default function AdminGamesPage() {
       .finally(() => setSubmitting(false));
   };
 
+  const handleServerAdenaPriceUnit = (serverId, adenaPriceUnitKk) => {
+    if (!token) return;
+    const value = adenaPriceUnitKk === '__inherit__' || adenaPriceUnitKk === null ? null : Number(adenaPriceUnitKk);
+    if (value !== null && (!Number.isInteger(value) || value < 1 || value > 1000)) return;
+    setSubmitting(true);
+    adminUpdateServer(serverId, { adenaPriceUnitKk: value }, token)
+      .then(load)
+      .catch((e) => setError(e.message || 'Failed to update adena price unit'))
+      .finally(() => setSubmitting(false));
+  };
+
   const handleAddGame = () => {
     if (!token || !addGameName.trim()) return;
     setSubmitting(true);
@@ -664,6 +675,24 @@ export default function AdminGamesPage() {
                                   primaryTypographyProps={{ variant: 'body2', fontWeight: 500 }}
                                 />
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
+                                  <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 120 } }}>
+                                    <InputLabel>{t('adenaPriceUnitKk')}</InputLabel>
+                                    <Select
+                                      value={server.adenaPriceUnitKk != null ? String(server.adenaPriceUnitKk) : '__inherit__'}
+                                      label={t('adenaPriceUnitKk')}
+                                      onChange={(e) => handleServerAdenaPriceUnit(server.id, e.target.value)}
+                                      disabled={submitting}
+                                      sx={{ height: 36, minWidth: 120 }}
+                                    >
+                                      <MenuItem value="__inherit__">
+                                        {t('inherit')} ({game?.adenaPriceUnitKk ?? 100} kk)
+                                      </MenuItem>
+                                      <MenuItem value="1">1 kk</MenuItem>
+                                      <MenuItem value="10">10 kk</MenuItem>
+                                      <MenuItem value="100">100 kk</MenuItem>
+                                      <MenuItem value="1000">1000 kk</MenuItem>
+                                    </Select>
+                                  </FormControl>
                                   <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 130 } }} fullWidth>
                                     <InputLabel>{t('offerCategories')}</InputLabel>
                                     <Select

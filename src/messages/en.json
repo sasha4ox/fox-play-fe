@@ -879,7 +879,8 @@
     "gameImageUrlHint": "URL or path (e.g. /images/games/lineage-2.webp). Leave empty to use local file by game name (WebP, PNG, JPG).",
     "top": "Top",
     "topHint": "Show at the very top of the list and prioritize in filters",
-    "adenaPriceUnitKk": "Adena price unit (kk)"
+    "adenaPriceUnitKk": "Adena price unit (kk)",
+    "inherit": "Inherit"
   },
   "Footer": {
     "brand": "FoxyPlay",
