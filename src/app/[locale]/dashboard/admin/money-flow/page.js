@@ -148,8 +148,16 @@ export default function AdminMoneyFlowPage() {
   const [ibanPaymentEnabled, setIbanPaymentEnabled] = useState(false);
   const [loadingIbanFlag, setLoadingIbanFlag] = useState(true);
   const [savingIbanFlag, setSavingIbanFlag] = useState(false);
-  const [ibanConfig, setIbanConfig] = useState({ iban: '', bicSwift: '', beneficiaryName: '', bankName: '', paymentReference: null });
-  const [ibanConfigInput, setIbanConfigInput] = useState({ iban: '', bicSwift: '', beneficiaryName: '', bankName: '', paymentReference: '' });
+  const [ibanConfig, setIbanConfig] = useState({
+    iban: '', bicSwift: '', beneficiaryName: '', beneficiaryBank: '',
+    accountCurrency: '', taxId: '', legalAddress: '', correspondentAccount: '', correspondentBank: '',
+    paymentReference: null,
+  });
+  const [ibanConfigInput, setIbanConfigInput] = useState({
+    iban: '', bicSwift: '', beneficiaryName: '', beneficiaryBank: '',
+    accountCurrency: '', taxId: '', legalAddress: '', correspondentAccount: '', correspondentBank: '',
+    paymentReference: '',
+  });
   const [loadingIbanConfig, setLoadingIbanConfig] = useState(true);
   const [savingIbanConfig, setSavingIbanConfig] = useState(false);
   const [ibanReceipts, setIbanReceipts] = useState([]);
@@ -350,8 +358,19 @@ export default function AdminMoneyFlowPage() {
     setLoadingIbanConfig(true);
     getAdminIbanPaymentConfig(token)
       .then((c) => {
-        setIbanConfig({ iban: c?.iban ?? '', bicSwift: c?.bicSwift ?? '', beneficiaryName: c?.beneficiaryName ?? '', bankName: c?.bankName ?? '', paymentReference: c?.paymentReference ?? null });
-        setIbanConfigInput({ iban: c?.iban ?? '', bicSwift: c?.bicSwift ?? '', beneficiaryName: c?.beneficiaryName ?? '', bankName: c?.bankName ?? '', paymentReference: c?.paymentReference ?? '' });
+        const beneficiaryBank = c?.beneficiaryBank ?? c?.bankName ?? '';
+        setIbanConfig({
+          iban: c?.iban ?? '', bicSwift: c?.bicSwift ?? '', beneficiaryName: c?.beneficiaryName ?? '', beneficiaryBank,
+          accountCurrency: c?.accountCurrency ?? '', taxId: c?.taxId ?? '', legalAddress: c?.legalAddress ?? '',
+          correspondentAccount: c?.correspondentAccount ?? '', correspondentBank: c?.correspondentBank ?? '',
+          paymentReference: c?.paymentReference ?? null,
+        });
+        setIbanConfigInput({
+          iban: c?.iban ?? '', bicSwift: c?.bicSwift ?? '', beneficiaryName: c?.beneficiaryName ?? '', beneficiaryBank,
+          accountCurrency: c?.accountCurrency ?? '', taxId: c?.taxId ?? '', legalAddress: c?.legalAddress ?? '',
+          correspondentAccount: c?.correspondentAccount ?? '', correspondentBank: c?.correspondentBank ?? '',
+          paymentReference: c?.paymentReference ?? '',
+        });
       })
       .catch(() => {})
       .finally(() => setLoadingIbanConfig(false));
