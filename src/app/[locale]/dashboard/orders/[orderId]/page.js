@@ -50,6 +50,7 @@ import {
 import { useOrderSocket } from '@/hooks/useOrderSocket';
 import { playNewMessageSound } from '@/lib/notificationSound';
 import { formatAdena } from '@/lib/adenaFormat';
+import { getEffectiveUnitKk } from '@/lib/offerMinPrice';
 import { getOrderStatusTextColor } from '@/lib/orderStatusColors';
 
 export default function OrderChatPage() {
@@ -639,11 +640,16 @@ export default function OrderChatPage() {
               <Typography variant="h6" fontWeight={600} sx={{ mb: 0.5 }}>
                 {order.offer.title}
               </Typography>
-              {order.offer.offerType === 'ADENA' ? (
-                <Typography variant="body1" color="text.primary" fontWeight={600}>
-                  {t('qty')}: {formatAdena(Number(order.quantity ?? 0))} · {t('pricePerNkk', { n: order.offer?.server?.adenaPriceUnitKk ?? order.offer?.server?.gameVariant?.game?.adenaPriceUnitKk ?? 100 })}: {Number(order.offer?.price ?? 0) * (order.offer?.server?.adenaPriceUnitKk ?? order.offer?.server?.gameVariant?.game?.adenaPriceUnitKk ?? 100)} {order.sellerCurrency ?? order.buyerCurrency}
-                </Typography>
-              ) : (
+              {order.offer.offerType === 'ADENA' ? (() => {
+                const rawUnit = order.offer?.server?.adenaPriceUnitKk ?? order.offer?.server?.gameVariant?.game?.adenaPriceUnitKk ?? 100;
+                const effectiveUnit = getEffectiveUnitKk(rawUnit);
+                const unitLabel = rawUnit === 0 ? t('pricePer1k') : t('pricePerNkk', { n: rawUnit });
+                return (
+                  <Typography variant="body1" color="text.primary" fontWeight={600}>
+                    {t('qty')}: {formatAdena(Number(order.quantity ?? 0))} · {unitLabel}: {Number(order.offer?.price ?? 0) * effectiveUnit} {order.sellerCurrency ?? order.buyerCurrency}
+                  </Typography>
+                );
+              })() : (
                 <Typography variant="body1" color="text.primary" fontWeight={600}>
                   {t('qty')}: {order.quantity} · {Number(order.sellerAmount ?? 0).toFixed(2)} {order.sellerCurrency} {t('total')}
                 </Typography>

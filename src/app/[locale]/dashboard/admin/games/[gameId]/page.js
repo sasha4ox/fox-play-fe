@@ -175,7 +175,7 @@ export default function AdminGameEditPage() {
   const handleGameAdenaPriceUnit = (id, adenaPriceUnitKk) => {
     if (!token) return;
     const n = Number(adenaPriceUnitKk);
-    if (!Number.isInteger(n) || n < 1 || n > 1000) return;
+    if (!Number.isInteger(n) || n < 0 || n > 1000) return;
     setSubmitting(true);
     adminUpdateGame(id, { adenaPriceUnitKk: n }, token)
       .then(load)
@@ -244,7 +244,7 @@ export default function AdminGameEditPage() {
   const handleServerAdenaPriceUnit = (serverId, adenaPriceUnitKk) => {
     if (!token) return;
     const value = adenaPriceUnitKk === '__inherit__' || adenaPriceUnitKk === null ? null : Number(adenaPriceUnitKk);
-    if (value !== null && (!Number.isInteger(value) || value < 1 || value > 1000)) return;
+    if (value !== null && (!Number.isInteger(value) || value < 0 || value > 1000)) return;
     setSubmitting(true);
     adminUpdateServer(serverId, { adenaPriceUnitKk: value }, token)
       .then(load)
@@ -456,6 +456,7 @@ export default function AdminGameEditPage() {
                 disabled={submitting}
                 sx={{ bgcolor: 'background.paper' }}
               >
+                <MenuItem value="0">1 k</MenuItem>
                 <MenuItem value="1">1 kk</MenuItem>
                 <MenuItem value="10">10 kk</MenuItem>
                 <MenuItem value="100">100 kk</MenuItem>
@@ -819,8 +820,9 @@ export default function AdminGameEditPage() {
                                 sx={{ height: 36, minWidth: 120 }}
                               >
                                 <MenuItem value="__inherit__">
-                                  {t('inherit')} ({game?.adenaPriceUnitKk ?? 100} kk)
+                                  {t('inherit')} ({game?.adenaPriceUnitKk === 0 ? '1 k' : `${game?.adenaPriceUnitKk ?? 100} kk`})
                                 </MenuItem>
+                                <MenuItem value="0">1 k</MenuItem>
                                 <MenuItem value="1">1 kk</MenuItem>
                                 <MenuItem value="10">10 kk</MenuItem>
                                 <MenuItem value="100">100 kk</MenuItem>

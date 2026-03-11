@@ -175,7 +175,7 @@ export default function AdminGamesPage() {
   const handleGameAdenaPriceUnit = (gameId, adenaPriceUnitKk) => {
     if (!token) return;
     const n = Number(adenaPriceUnitKk);
-    if (!Number.isInteger(n) || n < 1 || n > 1000) return;
+    if (!Number.isInteger(n) || n < 0 || n > 1000) return;
     setSubmitting(true);
     adminUpdateGame(gameId, { adenaPriceUnitKk: n }, token)
       .then(load)
@@ -427,12 +427,13 @@ export default function AdminGamesPage() {
                   <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 140 } }}>
                     <InputLabel>{t('adenaPriceUnitKk')}</InputLabel>
                     <Select
-                      value={String(game.adenaPriceUnitKk ?? 100)}
+                      value={String(game.adenaPriceUnitKk != null ? game.adenaPriceUnitKk : 100)}
                       label={t('adenaPriceUnitKk')}
                       onChange={(e) => handleGameAdenaPriceUnit(game.id, Number(e.target.value))}
                       disabled={submitting}
                       sx={{ bgcolor: 'background.paper' }}
                     >
+                      <MenuItem value="0">1 k</MenuItem>
                       <MenuItem value="1">1 kk</MenuItem>
                       <MenuItem value="10">10 kk</MenuItem>
                       <MenuItem value="100">100 kk</MenuItem>

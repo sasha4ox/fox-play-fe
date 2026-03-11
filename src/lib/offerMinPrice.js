@@ -10,15 +10,26 @@ export const MIN_PRICE_PER_100KK = {
 };
 
 /**
- * Minimum price for a given adena unit (e.g. per 1kk or per 100kk).
+ * Effective unit in kk for calculations. 0 means 1k (1000 adena) = 0.001 kk.
+ * @param {number} adenaPriceUnitKk - Raw value: 0 = 1k, 1 = 1kk, 10, 100, 1000
+ * @returns {number} Unit in kk (0.001 for 1k, 1 for 1kk, etc.)
+ */
+export function getEffectiveUnitKk(adenaPriceUnitKk) {
+  const v = Number(adenaPriceUnitKk);
+  return (v === 0 || Number.isNaN(v)) ? 0.001 : v;
+}
+
+/**
+ * Minimum price for a given adena unit (e.g. per 1k, 1kk or 100kk).
  * @param {string} currency - Currency code (UAH, EUR, USD, RUB, etc.)
- * @param {number} adenaPriceUnitKk - Display unit in kk (e.g. 100 = per 100kk, 1 = per 1kk)
+ * @param {number} adenaPriceUnitKk - Raw unit: 0 = 1k (1000 adena), 1 = 1kk, 100 = 100kk
  * @returns {number} Minimum price per that unit for that currency, or 0 if unknown
  */
 export function getMinPriceForUnit(currency, adenaPriceUnitKk = 100) {
   if (!currency) return 0;
   const minPer100kk = MIN_PRICE_PER_100KK[currency] ?? 0;
-  return minPer100kk * (adenaPriceUnitKk / 100);
+  const unitKk = getEffectiveUnitKk(adenaPriceUnitKk);
+  return minPer100kk * (unitKk / 100);
 }
 
 /**
