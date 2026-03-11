@@ -49,16 +49,38 @@ function CopyRow({ label, value, tCopy }) {
   };
   if (!value) return null;
   return (
-    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap', mb: 1.5 }}>
-      <Typography variant="body2" color="text.secondary" sx={{ minWidth: { xs: '100%', sm: 140 } }}>
-        {label}
-      </Typography>
-      <Typography variant="body1" sx={{ fontFamily: 'monospace', flex: 1, wordBreak: 'break-all' }}>
+    <Box sx={{ mb: 2 }}>
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 1,
+          flexWrap: 'wrap',
+          mb: 0.5,
+        }}
+      >
+        <Typography variant="body2" color="text.secondary">
+          {label}
+        </Typography>
+        <IconButton
+          size="small"
+          onClick={copy}
+          aria-label={tCopy}
+          sx={{ flexShrink: 0, minWidth: 44, minHeight: 44 }}
+        >
+          <ContentCopy fontSize="small" />
+        </IconButton>
+      </Box>
+      <Typography
+        variant="body1"
+        sx={{
+          wordBreak: 'break-word',
+          overflowWrap: 'break-word',
+        }}
+      >
         {value}
       </Typography>
-      <IconButton size="small" onClick={copy} aria-label={tCopy} sx={{ flexShrink: 0, minWidth: 44, minHeight: 44 }}>
-        <ContentCopy fontSize="small" />
-      </IconButton>
     </Box>
   );
 }
@@ -122,7 +144,7 @@ export default function OrderIbanPaymentPage() {
     status === 'awaiting_payment' && !expired && (data?.iban || data?.bicSwift);
 
   return (
-    <Container maxWidth="sm" sx={{ py: 4 }}>
+    <Container maxWidth={{ xs: 'sm', md: 'md' }} sx={{ py: 4 }}>
       <Typography variant="h5" fontWeight={600} gutterBottom>
         {t('title')}
       </Typography>
