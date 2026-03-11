@@ -256,7 +256,7 @@ export async function markOrderCryptoPaymentSent(orderId, token) {
   return apiPost(`/orders/${orderId}/crypto-payment/sent`, {}, token)
 }
 
-/** Order IBAN payment page data (buyer only). Returns { status, iban?, bicSwift?, beneficiaryName?, bankName?, paymentReference?, paymentDeadlineAt, amount, currency, ... } */
+/** Order IBAN payment page data (buyer only). Returns { status, iban?, bicSwift?, beneficiaryName?, beneficiaryBank?, accountCurrency?, taxId?, legalAddress?, correspondentAccount?, correspondentBank?, paymentReference?, paymentDeadlineAt, amount, currency, ... } */
 export async function getOrderIbanPayment(orderId, token) {
   return apiGet(`/orders/${orderId}/iban-payment`, token)
 }
@@ -737,12 +737,12 @@ export async function setAdminIbanPaymentEnabled(enabled, token) {
   return data?.ibanPaymentEnabled === true
 }
 
-/** Admin: get IBAN payment config (iban, bicSwift, beneficiaryName, bankName, paymentReference). */
+/** Admin: get IBAN payment config (iban, bicSwift, beneficiaryName, beneficiaryBank, accountCurrency, taxId, legalAddress, correspondentAccount, correspondentBank, paymentReference). */
 export async function getAdminIbanPaymentConfig(token) {
   return apiGet('/admin/settings/iban-payment-config', token)
 }
 
-/** Admin: set IBAN payment config. body: { iban?, bicSwift?, beneficiaryName?, bankName?, paymentReference? } */
+/** Admin: set IBAN payment config. body: { iban?, bicSwift?, beneficiaryName?, beneficiaryBank?, accountCurrency?, taxId?, legalAddress?, correspondentAccount?, correspondentBank?, paymentReference? } */
 export async function setAdminIbanPaymentConfig(config, token) {
   return apiPatch('/admin/settings/iban-payment-config', config || {}, token)
 }

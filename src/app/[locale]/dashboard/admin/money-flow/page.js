@@ -416,12 +416,27 @@ export default function AdminMoneyFlowPage() {
       iban: ibanConfigInput.iban.trim(),
       bicSwift: ibanConfigInput.bicSwift.trim(),
       beneficiaryName: ibanConfigInput.beneficiaryName.trim(),
-      bankName: ibanConfigInput.bankName.trim(),
+      beneficiaryBank: ibanConfigInput.beneficiaryBank.trim(),
+      accountCurrency: ibanConfigInput.accountCurrency.trim(),
+      taxId: ibanConfigInput.taxId.trim(),
+      legalAddress: ibanConfigInput.legalAddress.trim(),
+      correspondentAccount: ibanConfigInput.correspondentAccount.trim(),
+      correspondentBank: ibanConfigInput.correspondentBank.trim(),
       paymentReference: ibanConfigInput.paymentReference?.trim() || null,
     }, token)
       .then((c) => {
-        setIbanConfig({ iban: c?.iban ?? '', bicSwift: c?.bicSwift ?? '', beneficiaryName: c?.beneficiaryName ?? '', bankName: c?.bankName ?? '', paymentReference: c?.paymentReference ?? null });
-        setIbanConfigInput({ iban: c?.iban ?? '', bicSwift: c?.bicSwift ?? '', beneficiaryName: c?.beneficiaryName ?? '', bankName: c?.bankName ?? '', paymentReference: c?.paymentReference ?? '' });
+        setIbanConfig({
+          iban: c?.iban ?? '', bicSwift: c?.bicSwift ?? '', beneficiaryName: c?.beneficiaryName ?? '', beneficiaryBank: c?.beneficiaryBank ?? '',
+          accountCurrency: c?.accountCurrency ?? '', taxId: c?.taxId ?? '', legalAddress: c?.legalAddress ?? '',
+          correspondentAccount: c?.correspondentAccount ?? '', correspondentBank: c?.correspondentBank ?? '',
+          paymentReference: c?.paymentReference ?? null,
+        });
+        setIbanConfigInput({
+          iban: c?.iban ?? '', bicSwift: c?.bicSwift ?? '', beneficiaryName: c?.beneficiaryName ?? '', beneficiaryBank: c?.beneficiaryBank ?? '',
+          accountCurrency: c?.accountCurrency ?? '', taxId: c?.taxId ?? '', legalAddress: c?.legalAddress ?? '',
+          correspondentAccount: c?.correspondentAccount ?? '', correspondentBank: c?.correspondentBank ?? '',
+          paymentReference: c?.paymentReference ?? '',
+        });
       })
       .catch((err) => setError(err?.message || 'Failed to save'))
       .finally(() => setSavingIbanConfig(false));
@@ -929,10 +944,17 @@ export default function AdminMoneyFlowPage() {
                 fullWidth
               />
               <TextField
-                label={t('ibanBicSwiftLabel')}
-                value={ibanConfigInput.bicSwift}
-                onChange={(e) => setIbanConfigInput((prev) => ({ ...prev, bicSwift: e.target.value }))}
-                placeholder="XXXXXXXX"
+                label={t('ibanAccountCurrencyLabel')}
+                value={ibanConfigInput.accountCurrency}
+                onChange={(e) => setIbanConfigInput((prev) => ({ ...prev, accountCurrency: e.target.value }))}
+                placeholder="EUR"
+                size="small"
+                fullWidth
+              />
+              <TextField
+                label={t('ibanTaxIdLabel')}
+                value={ibanConfigInput.taxId}
+                onChange={(e) => setIbanConfigInput((prev) => ({ ...prev, taxId: e.target.value }))}
                 size="small"
                 fullWidth
               />
@@ -944,9 +966,40 @@ export default function AdminMoneyFlowPage() {
                 fullWidth
               />
               <TextField
-                label={t('ibanBankNameLabel')}
-                value={ibanConfigInput.bankName}
-                onChange={(e) => setIbanConfigInput((prev) => ({ ...prev, bankName: e.target.value }))}
+                label={t('ibanLegalAddressLabel')}
+                value={ibanConfigInput.legalAddress}
+                onChange={(e) => setIbanConfigInput((prev) => ({ ...prev, legalAddress: e.target.value }))}
+                size="small"
+                fullWidth
+                multiline
+                minRows={2}
+              />
+              <TextField
+                label={t('ibanBeneficiaryBankLabel')}
+                value={ibanConfigInput.beneficiaryBank}
+                onChange={(e) => setIbanConfigInput((prev) => ({ ...prev, beneficiaryBank: e.target.value }))}
+                size="small"
+                fullWidth
+              />
+              <TextField
+                label={t('ibanBicSwiftLabel')}
+                value={ibanConfigInput.bicSwift}
+                onChange={(e) => setIbanConfigInput((prev) => ({ ...prev, bicSwift: e.target.value }))}
+                placeholder="XXXXXXXX"
+                size="small"
+                fullWidth
+              />
+              <TextField
+                label={t('ibanCorrespondentAccountLabel')}
+                value={ibanConfigInput.correspondentAccount}
+                onChange={(e) => setIbanConfigInput((prev) => ({ ...prev, correspondentAccount: e.target.value }))}
+                size="small"
+                fullWidth
+              />
+              <TextField
+                label={t('ibanCorrespondentBankLabel')}
+                value={ibanConfigInput.correspondentBank}
+                onChange={(e) => setIbanConfigInput((prev) => ({ ...prev, correspondentBank: e.target.value }))}
                 size="small"
                 fullWidth
               />

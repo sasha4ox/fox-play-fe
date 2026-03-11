@@ -116,7 +116,8 @@ export default function OrderIbanPaymentPage() {
   const status = data?.status;
   const showCredentials =
     (status === 'awaiting_payment' || status === 'awaiting_confirmation') &&
-    (data?.iban || data?.bicSwift || data?.beneficiaryName || data?.bankName);
+    (data?.iban || data?.bicSwift || data?.beneficiaryName || data?.beneficiaryBank || data?.bankName ||
+      data?.accountCurrency || data?.taxId || data?.legalAddress || data?.correspondentAccount || data?.correspondentBank);
   const canMarkSent =
     status === 'awaiting_payment' && !expired && (data?.iban || data?.bicSwift);
 
@@ -179,9 +180,14 @@ export default function OrderIbanPaymentPage() {
             {t('credentialsTitle')}
           </Typography>
           <CopyRow label={t('ibanLabel')} value={data.iban} tCopy={t('copy')} />
-          <CopyRow label={t('bicSwiftLabel')} value={data.bicSwift} tCopy={t('copy')} />
+          <CopyRow label={t('accountCurrencyLabel')} value={data.accountCurrency} tCopy={t('copy')} />
+          <CopyRow label={t('taxIdLabel')} value={data.taxId} tCopy={t('copy')} />
           <CopyRow label={t('beneficiaryNameLabel')} value={data.beneficiaryName} tCopy={t('copy')} />
-          <CopyRow label={t('bankNameLabel')} value={data.bankName} tCopy={t('copy')} />
+          <CopyRow label={t('legalAddressLabel')} value={data.legalAddress} tCopy={t('copy')} />
+          <CopyRow label={t('beneficiaryBankLabel')} value={data.beneficiaryBank ?? data.bankName} tCopy={t('copy')} />
+          <CopyRow label={t('bicSwiftLabel')} value={data.bicSwift} tCopy={t('copy')} />
+          <CopyRow label={t('correspondentAccountLabel')} value={data.correspondentAccount} tCopy={t('copy')} />
+          <CopyRow label={t('correspondentBankLabel')} value={data.correspondentBank} tCopy={t('copy')} />
           {data.paymentReference && (
             <CopyRow label={t('paymentReferenceLabel')} value={data.paymentReference} tCopy={t('copy')} />
           )}
