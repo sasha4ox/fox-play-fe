@@ -46,6 +46,9 @@ export default function NewOfferPage() {
   const server = tree ? getServerFromTree(tree, gameId, variantId, serverId) : null;
   const adenaPriceUnitKk = server?.adenaPriceUnitKk ?? game?.adenaPriceUnitKk ?? 100;
   const effectiveUnitKk = getEffectiveUnitKk(adenaPriceUnitKk);
+  const token = useAuthStore((s) => s.token);
+  const { preferredCurrency } = useProfile();
+  const currency = preferredCurrency ?? 'EUR';
   const unitLabel = adenaPriceUnitKk === 0 ? t('pricePer1k') : t('pricePerNkk', { n: adenaPriceUnitKk, currency });
   const serverTypes = server?.enabledOfferTypes && server.enabledOfferTypes.length > 0
     ? server.enabledOfferTypes
@@ -57,9 +60,6 @@ export default function NewOfferPage() {
   const standardTabs = ALL_OFFER_TYPES.filter((t) => allowedOfferTypes.includes(t.value));
   const customTabs = customCategoriesOnly.map((c) => ({ value: c.id, label: c.name, custom: true }));
   const OFFER_TYPES = [...standardTabs, ...customTabs];
-  const token = useAuthStore((s) => s.token);
-  const { preferredCurrency } = useProfile();
-  const currency = preferredCurrency ?? 'EUR';
 
   const [tab, setTab] = useState(0);
   const [title, setTitle] = useState('');
