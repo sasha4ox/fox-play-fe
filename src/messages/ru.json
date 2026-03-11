@@ -797,7 +797,10 @@
     "addServer": "Добавить сервер",
     "enabled": "Включено",
     "noGames": "Игр нет.",
-
+    "filterByLetter": "Фильтр по букве",
+    "editGame": "Редактировать",
+    "gameNotFound": "Игра не найдена.",
+    "backToGamesList": "Назад к играм",
     "whitebitEnabled": "WhiteBIT (депозит и вывод)",
     "whitebitEnabledHint": "Если включено, пользователи могут пополнять баланс через WhiteBIT и выводить UAH на IBAN через WhiteBIT.",
 

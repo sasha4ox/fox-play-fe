@@ -599,6 +599,11 @@ export async function getAdminGames(token) {
   return apiGet('/admin/games', token)
 }
 
+/** Single game with variants and servers (for admin game edit page). */
+export async function getAdminGame(token, gameId) {
+  return apiGet(`/admin/games/${gameId}`, token)
+}
+
 /** Update game (name, enabled). */
 export async function adminUpdateGame(gameId, body, token) {
   return apiPatch(`/admin/games/${gameId}`, body, token)

@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect, useMemo, useDeferredValue, useTransition, useRef } from 'react';
-import { useTranslations } from 'next-intl';
+import { useRouter } from 'next/navigation';
+import { useLocale, useTranslations } from 'next-intl';
 import Container from '@mui/material/Container';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
@@ -15,19 +16,13 @@ import InputLabel from '@mui/material/InputLabel';
 import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
 import Card from '@mui/material/Card';
-import Chip from '@mui/material/Chip';
-import List from '@mui/material/List';
-import ListItem from '@mui/material/ListItem';
-import ListItemText from '@mui/material/ListItemText';
-import Collapse from '@mui/material/Collapse';
 import IconButton from '@mui/material/IconButton';
 import AddIcon from '@mui/icons-material/Add';
-import EditIcon from '@mui/icons-material/Edit';
-import ImageIcon from '@mui/icons-material/Image';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import SearchIcon from '@mui/icons-material/Search';
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import Skeleton from '@mui/material/Skeleton';
+import CircularProgress from '@mui/material/CircularProgress';
 import Alert from '@mui/material/Alert';
 import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
@@ -37,17 +32,18 @@ import { useAuthStore } from '@/store/authStore';
 import {
   getAdminGames,
   adminUpdateGame,
-  adminUpdateVariant,
-  adminUpdateServer,
   adminCreateGame,
-  adminCreateVariant,
-  adminCreateServer,
-  adminCreateServerCustomCategory,
-  adminDeleteServerCustomCategory,
 } from '@/lib/api';
-
-const STANDARD_OFFER_TYPES = ['ADENA', 'ITEMS', 'ACCOUNTS', 'BOOSTING', 'OTHER'];
 const GAMES_PER_PAGE = 15;
+const LETTERS = ['#', ...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')];
+
+function getLetterKey(name) {
+  const first = String(name ?? '').trim().charAt(0).toUpperCase();
+  if (!first) return '#';
+  if (/[A-Z]/.test(first)) return first;
+  if (/[0-9]/.test(first)) return '#';
+  return '#';
+}
 
 function filterAdminGamesBySearch(games, searchQuery) {
   if (!searchQuery) return games;
@@ -69,42 +65,46 @@ function filterAdminGamesBySearch(games, searchQuery) {
 export default function AdminGamesPage() {
   const t = useTranslations('Admin');
   const token = useAuthStore((s) => s.token);
+  const router = useRouter();
+  const locale = useLocale();
   const [games, setGames] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [expandedGame, setExpandedGame] = useState(null);
-  const [expandedVariant, setExpandedVariant] = useState(null);
   const [addGameOpen, setAddGameOpen] = useState(false);
   const [addGameName, setAddGameName] = useState('');
-  const [addVariantOpen, setAddVariantOpen] = useState(null);
-  const [addVariantName, setAddVariantName] = useState('');
-  const [addServerOpen, setAddServerOpen] = useState(null);
-  const [addServerName, setAddServerName] = useState('');
-  const [addCategoryOpen, setAddCategoryOpen] = useState(null); // serverId
-  const [addCategoryName, setAddCategoryName] = useState('');
   const [addGameStructureType, setAddGameStructureType] = useState('FULL');
-  const isSimple = (game) => game?.structureType === 'SIMPLE';
-  const isVariantOnly = (game) => game?.structureType === 'VARIANT_ONLY';
   const [submitting, setSubmitting] = useState(false);
-  const [editServerId, setEditServerId] = useState(null);
-  const [editServerName, setEditServerName] = useState('');
-  const [editGameImageOpen, setEditGameImageOpen] = useState(null); // game
-  const [editGameImageUrl, setEditGameImageUrl] = useState('');
   const [search, setSearch] = useState('');
+  const [selectedLetter, setSelectedLetter] = useState(null);
+  const [lettersOpen, setLettersOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const deferredSearch = useDeferredValue(search);
   const searchQuery = deferredSearch.trim().toLowerCase();
-  const filteredGames = useMemo(
+  const filteredBySearch = useMemo(
     () => filterAdminGamesBySearch(games, searchQuery),
     [games, searchQuery]
   );
+  const filteredGames = useMemo(
+    () =>
+      searchQuery
+        ? filteredBySearch
+        : selectedLetter
+          ? filteredBySearch.filter((g) => getLetterKey(g.name) === selectedLetter)
+          : filteredBySearch,
+    [filteredBySearch, selectedLetter, searchQuery]
+  );
+  const availableLetters = useMemo(() => {
+    const set = new Set();
+    for (const g of filteredBySearch) set.add(getLetterKey(g.name));
+    return set;
+  }, [filteredBySearch]);
   const [visibleCount, setVisibleCount] = useState(GAMES_PER_PAGE);
   const loadMoreRef = useRef(null);
 
-  // Reset visible count when search or filtered list changes
+  // Reset visible count when search, letter filter, or list changes
   useEffect(() => {
     setVisibleCount(GAMES_PER_PAGE);
-  }, [searchQuery, games]);
+  }, [searchQuery, selectedLetter, games]);
 
   // Load more when sentinel enters viewport
   useEffect(() => {
@@ -184,75 +184,6 @@ export default function AdminGamesPage() {
       .finally(() => setSubmitting(false));
   };
 
-  const handleServerOfferTypes = (serverId, enabledOfferTypes) => {
-    if (!token) return;
-    setSubmitting(true);
-    adminUpdateServer(serverId, { enabledOfferTypes }, token)
-      .then(load)
-      .catch((e) => setError(e.message || 'Failed to update'))
-      .finally(() => setSubmitting(false));
-  };
-
-  const handleVariantEnabled = (variantId, enabled) => {
-    if (!token) return;
-    setSubmitting(true);
-    adminUpdateVariant(variantId, { enabled }, token)
-      .then(load)
-      .catch((e) => setError(e.message || 'Failed to update'))
-      .finally(() => setSubmitting(false));
-  };
-
-  const handleVariantTop = (variantId, isTop) => {
-    if (!token) return;
-    setSubmitting(true);
-    adminUpdateVariant(variantId, { isTop }, token)
-      .then(load)
-      .catch((e) => setError(e.message || 'Failed to update'))
-      .finally(() => setSubmitting(false));
-  };
-
-  const handleServerEnabled = (serverId, enabled) => {
-    if (!token) return;
-    setSubmitting(true);
-    adminUpdateServer(serverId, { enabled }, token)
-      .then(load)
-      .catch((e) => setError(e.message || 'Failed to update'))
-      .finally(() => setSubmitting(false));
-  };
-
-  const handleServerTop = (serverId, isTop) => {
-    if (!token) return;
-    setSubmitting(true);
-    adminUpdateServer(serverId, { isTop }, token)
-      .then(load)
-      .catch((e) => setError(e.message || 'Failed to update'))
-      .finally(() => setSubmitting(false));
-  };
-
-  const handleServerNameChange = (serverId, newName) => {
-    if (!token || !newName?.trim()) return;
-    setSubmitting(true);
-    adminUpdateServer(serverId, { name: newName.trim() }, token)
-      .then(() => {
-        setEditServerId(null);
-        setEditServerName('');
-        load();
-      })
-      .catch((e) => setError(e.message || 'Failed to update server name'))
-      .finally(() => setSubmitting(false));
-  };
-
-  const handleServerAdenaPriceUnit = (serverId, adenaPriceUnitKk) => {
-    if (!token) return;
-    const value = adenaPriceUnitKk === '__inherit__' || adenaPriceUnitKk === null ? null : Number(adenaPriceUnitKk);
-    if (value !== null && (!Number.isInteger(value) || value < 1 || value > 1000)) return;
-    setSubmitting(true);
-    adminUpdateServer(serverId, { adenaPriceUnitKk: value }, token)
-      .then(load)
-      .catch((e) => setError(e.message || 'Failed to update adena price unit'))
-      .finally(() => setSubmitting(false));
-  };
-
   const handleAddGame = () => {
     if (!token || !addGameName.trim()) return;
     setSubmitting(true);
@@ -267,88 +198,11 @@ export default function AdminGamesPage() {
       .finally(() => setSubmitting(false));
   };
 
-  const handleAddVariant = () => {
-    const gameId = addVariantOpen;
-    if (!token || !gameId || !addVariantName.trim()) return;
-    setSubmitting(true);
-    adminCreateVariant(gameId, { name: addVariantName.trim() }, token)
-      .then(() => {
-        setAddVariantOpen(null);
-        setAddVariantName('');
-        load();
-      })
-      .catch((e) => setError(e.message || 'Failed to create variant'))
-      .finally(() => setSubmitting(false));
-  };
-
-  const handleAddServer = () => {
-    const { gameId, variantId } = addServerOpen || {};
-    if (!token || !gameId || !variantId || !addServerName.trim()) return;
-    setSubmitting(true);
-    adminCreateServer(gameId, variantId, { name: addServerName.trim() }, token)
-      .then(() => {
-        setAddServerOpen(null);
-        setAddServerName('');
-        load();
-      })
-      .catch((e) => setError(e.message || 'Failed to create server'))
-      .finally(() => setSubmitting(false));
-  };
-
-  const handleAddCustomCategory = () => {
-    const serverId = addCategoryOpen;
-    if (!token || !serverId || !addCategoryName.trim()) return;
-    setSubmitting(true);
-    adminCreateServerCustomCategory(serverId, { name: addCategoryName.trim() }, token)
-      .then(() => {
-        setAddCategoryOpen(null);
-        setAddCategoryName('');
-        load();
-      })
-      .catch((e) => setError(e.message || 'Failed to create category'))
-      .finally(() => setSubmitting(false));
-  };
-
-  const handleDeleteCustomCategory = (id) => {
-    if (!token) return;
-    setSubmitting(true);
-    adminDeleteServerCustomCategory(id, token)
-      .then(load)
-      .catch((e) => setError(e.message || 'Failed to delete category'))
-      .finally(() => setSubmitting(false));
-  };
-
-  const handleOpenEditGameImage = (game) => {
-    setEditGameImageOpen(game);
-    setEditGameImageUrl(game?.imageUrl ?? '');
-  };
-
-  const handleSaveGameImage = () => {
-    const game = editGameImageOpen;
-    if (!token || !game) return;
-    setSubmitting(true);
-    adminUpdateGame(game.id, { imageUrl: editGameImageUrl.trim() || null }, token)
-      .then(() => {
-        setEditGameImageOpen(null);
-        setEditGameImageUrl('');
-        load();
-      })
-      .catch((e) => setError(e.message || 'Failed to update image'))
-      .finally(() => setSubmitting(false));
-  };
-
-  const getCategoryLabel = (typeOrId, server) => {
-    if (STANDARD_OFFER_TYPES.includes(typeOrId)) {
-      return t(`offerType${typeOrId.charAt(0) + typeOrId.slice(1).toLowerCase()}`);
-    }
-    const custom = server?.customCategories?.find((c) => c.id === typeOrId);
-    return custom?.name ?? typeOrId;
-  };
-
-  const getAllCategoriesForServer = (server) => {
-    const standard = STANDARD_OFFER_TYPES.map((id) => ({ id, name: id }));
-    const custom = (server?.customCategories ?? []).map((c) => ({ id: c.id, name: c.name }));
-    return [...standard, ...custom];
+  const handleLetterClick = (letterOrNull) => {
+    startTransition(() => {
+      setSelectedLetter((prev) => (prev === letterOrNull ? null : letterOrNull));
+      setLettersOpen(false);
+    });
   };
 
   return (
@@ -361,8 +215,19 @@ export default function AdminGamesPage() {
           <InputBase
             placeholder={t('searchGames')}
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            startAdornment={<SearchIcon sx={{ color: 'text.secondary', mr: 1.5, fontSize: 20 }} />}
+            onChange={(e) => {
+              const value = e.target.value;
+              startTransition(() => {
+                setSearch(value);
+                if (value.trim()) setSelectedLetter(null);
+              });
+            }}
+            startAdornment={
+              <>
+                <SearchIcon sx={{ color: 'text.secondary', mr: 1.5, fontSize: 20 }} />
+                {isPending && <CircularProgress size={20} sx={{ mr: 1, flexShrink: 0 }} />}
+              </>
+            }
             sx={{
               minWidth: { xs: '100%', sm: 240 },
               flex: { xs: 1, sm: 'none' },
@@ -386,6 +251,104 @@ export default function AdminGamesPage() {
           </Button>
         </Box>
       </Box>
+      {!loading && games.length > 0 && filteredBySearch.length > 0 && (
+        <Box sx={{ mb: 2, display: 'flex', flexDirection: 'column', gap: 1 }}>
+          <Button
+            variant="outlined"
+            size="small"
+            onClick={() => setLettersOpen((o) => !o)}
+            endIcon={
+              <ExpandMoreIcon sx={{ transform: lettersOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
+            }
+            sx={{
+              display: { xs: 'flex', md: 'none' },
+              alignSelf: 'flex-start',
+              textTransform: 'none',
+              borderColor: 'divider',
+              color: selectedLetter ? 'primary.main' : 'text.secondary',
+            }}
+          >
+            {t('filterByLetter')}
+            {selectedLetter && ` (${selectedLetter})`}
+          </Button>
+          <Box
+            sx={{
+              display: { xs: lettersOpen ? 'flex' : 'none', md: 'flex' },
+              flexWrap: 'wrap',
+              gap: 0.5,
+              alignItems: 'center',
+              py: 1,
+              borderBottom: '1px solid',
+              borderColor: 'divider',
+            }}
+            role="navigation"
+            aria-label={t('filterByLetter')}
+          >
+            <Box
+              component="button"
+              type="button"
+              onClick={() => handleLetterClick(null)}
+              aria-label="Show all games"
+              sx={{
+                minWidth: 36,
+                minHeight: 36,
+                px: 1,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                border: 'none',
+                borderRadius: 1,
+                bgcolor: 'transparent',
+                color: selectedLetter === null ? 'primary.main' : 'text.secondary',
+                fontSize: '0.875rem',
+                fontWeight: selectedLetter === null ? 700 : 500,
+                cursor: 'pointer',
+                transition: 'color 0.15s, background 0.15s',
+                '&:hover': { bgcolor: 'action.hover', color: 'primary.main' },
+                '&:focus-visible': { outline: '2px solid', outlineColor: 'primary.main', outlineOffset: 2 },
+                '&:active': { bgcolor: 'action.selected' },
+              }}
+            >
+              {t('all')}
+            </Box>
+            {LETTERS.map((letter) => {
+              const hasGames = availableLetters.has(letter);
+              const isSelected = selectedLetter === letter;
+              return (
+                <Box
+                  key={letter}
+                  component="button"
+                  type="button"
+                  onClick={() => hasGames && handleLetterClick(letter)}
+                  disabled={!hasGames}
+                  aria-label={hasGames ? `Filter to ${letter}` : `${letter} (no games)`}
+                  sx={{
+                    minWidth: 36,
+                    minHeight: 36,
+                    px: 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    border: 'none',
+                    borderRadius: 1,
+                    bgcolor: 'transparent',
+                    color: hasGames ? (isSelected ? 'primary.main' : 'text.secondary') : 'action.disabled',
+                    fontSize: '0.875rem',
+                    fontWeight: isSelected ? 700 : 500,
+                    cursor: hasGames ? 'pointer' : 'default',
+                    transition: 'color 0.15s, background 0.15s',
+                    '&:hover': hasGames ? { bgcolor: 'action.hover', color: 'primary.main' } : {},
+                    '&:focus-visible': { outline: '2px solid', outlineColor: 'primary.main', outlineOffset: 2 },
+                    '&:active': hasGames ? { bgcolor: 'action.selected' } : {},
+                  }}
+                >
+                  {letter}
+                </Box>
+              );
+            })}
+          </Box>
+        </Box>
+      )}
       {error && (
         <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
           {error}
@@ -421,20 +384,9 @@ export default function AdminGamesPage() {
                   gap: 2,
                 }}
               >
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <Typography variant="h6" fontWeight={600}>
-                    {game.name}
-                  </Typography>
-                  <IconButton
-                    size="small"
-                    onClick={() => handleOpenEditGameImage(game)}
-                    title={t('editGameImage')}
-                    disabled={submitting}
-                    sx={{ color: 'text.secondary', minHeight: 44, minWidth: 44 }}
-                  >
-                    <ImageIcon sx={{ fontSize: 20 }} />
-                  </IconButton>
-                </Box>
+                <Typography variant="h6" fontWeight={600}>
+                  {game.name}
+                </Typography>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap', width: { xs: '100%', sm: 'auto' } }}>
                   <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 200 } }} fullWidth>
                     <InputLabel>{t('structureType')}</InputLabel>
@@ -488,286 +440,17 @@ export default function AdminGamesPage() {
                       <MenuItem value="1000">1000 kk</MenuItem>
                     </Select>
                   </FormControl>
-                  {!isSimple(game) && (
-                    <IconButton
-                      size="small"
-                      onClick={() => setAddVariantOpen(game.id)}
-                      title={t('addVariant')}
-                      disabled={submitting}
-                      sx={{ color: 'primary.main', minHeight: 44, minWidth: 44 }}
-                    >
-                      <AddIcon />
-                    </IconButton>
-                  )}
-                  <IconButton
+                  <Button
+                    variant="outlined"
                     size="small"
-                    onClick={() =>
-                      startTransition(() =>
-                        setExpandedGame(expandedGame === game.id ? null : game.id)
-                      )
-                    }
-                    aria-label={expandedGame === game.id ? 'Collapse' : 'Expand'}
-                    sx={{ minHeight: 44, minWidth: 44 }}
+                    endIcon={<ArrowForwardIcon />}
+                    onClick={() => router.push(`/${locale}/dashboard/admin/games/${game.id}`)}
+                    sx={{ minHeight: 44 }}
                   >
-                    {expandedGame === game.id ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-                  </IconButton>
+                    {t('editGame')}
+                  </Button>
                 </Box>
               </Box>
-
-              <Collapse in={expandedGame === game.id} timeout="auto">
-                <Box sx={{ p: 2 }}>
-                  {(game.variants || []).map((variant) => (
-                    <Card key={variant.id} variant="outlined" sx={{ mb: 2, borderRadius: 1.5 }}>
-                      <Box
-                        sx={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          p: 1.5,
-                          bgcolor: 'action.hover',
-                          borderRadius: '4px 4px 0 0',
-                        }}
-                      >
-                        <Typography variant="subtitle2" fontWeight={600}>
-                          {variant.name}
-                        </Typography>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <FormControlLabel
-                            control={
-                              <Switch
-                                size="small"
-                                checked={variant.enabled}
-                                onChange={(e) => handleVariantEnabled(variant.id, e.target.checked)}
-                                disabled={submitting}
-                              />
-                            }
-                            label={t('enabled')}
-                            sx={{ '& .MuiFormControlLabel-label': { fontSize: '0.8rem' } }}
-                          />
-                          <FormControlLabel
-                            control={
-                              <Switch
-                                size="small"
-                                checked={variant.isTop ?? false}
-                                onChange={(e) => handleVariantTop(variant.id, e.target.checked)}
-                                disabled={submitting}
-                              />
-                            }
-                            label={t('top')}
-                            title={t('topHint')}
-                            sx={{ '& .MuiFormControlLabel-label': { fontSize: '0.8rem' } }}
-                          />
-                          {!isVariantOnly(game) && (
-                            <IconButton
-                              size="small"
-                              onClick={() => setAddServerOpen({ gameId: game.id, variantId: variant.id })}
-                              title={t('addServer')}
-                              disabled={submitting}
-                              sx={{ minHeight: 44, minWidth: 44 }}
-                            >
-                              <AddIcon fontSize="small" />
-                            </IconButton>
-                          )}
-                          <IconButton
-                            size="small"
-                            onClick={() =>
-                              startTransition(() =>
-                                setExpandedVariant(expandedVariant === variant.id ? null : variant.id)
-                              )
-                            }
-                            sx={{ minHeight: 44, minWidth: 44 }}
-                          >
-                            {expandedVariant === variant.id ? (
-                              <ExpandLessIcon fontSize="small" />
-                            ) : (
-                              <ExpandMoreIcon fontSize="small" />
-                            )}
-                          </IconButton>
-                        </Box>
-                      </Box>
-                      <Collapse in={expandedVariant === variant.id}>
-                        <List dense disablePadding>
-                          {(variant.servers || []).map((server) => {
-                            const isAllTypes =
-                              !server.enabledOfferTypes || server.enabledOfferTypes.length === 0;
-                            const selectedTypes = isAllTypes
-                              ? []
-                              : [...(server.enabledOfferTypes || [])];
-                            const allCats = getAllCategoriesForServer(server);
-                            return (
-                              <ListItem
-                                key={server.id}
-                                sx={{
-                                  borderBottom: '1px solid',
-                                  borderColor: 'divider',
-                                  '&:last-child': { borderBottom: 'none' },
-                                  py: 1.5,
-                                }}
-                              >
-                                <ListItemText
-                                  primary={
-                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
-                                      {editServerId === server.id ? (
-                                        <TextField
-                                          size="small"
-                                          value={editServerName}
-                                          onChange={(e) => setEditServerName(e.target.value)}
-                                          onKeyDown={(e) => {
-                                            if (e.key === 'Enter') handleServerNameChange(server.id, editServerName);
-                                            if (e.key === 'Escape') {
-                                              setEditServerId(null);
-                                              setEditServerName('');
-                                            }
-                                          }}
-                                          onBlur={() => {
-                                            if (editServerName.trim() && editServerName.trim() !== server.name) {
-                                              handleServerNameChange(server.id, editServerName);
-                                            } else {
-                                              setEditServerId(null);
-                                              setEditServerName('');
-                                            }
-                                          }}
-                                          autoFocus
-                                          sx={{ minWidth: 140, '& .MuiInputBase-input': { py: 0.5 } }}
-                                        />
-                                      ) : (
-                                        <>
-                                          <span>{server.name}</span>
-                                          <IconButton
-                                            size="small"
-                                            onClick={() => {
-                                              setEditServerId(server.id);
-                                              setEditServerName(server.name);
-                                            }}
-                                            title={t('editServerName')}
-                                            disabled={submitting}
-                                            sx={{ color: 'text.secondary', p: 0.25, minHeight: 44, minWidth: 44 }}
-                                          >
-                                            <EditIcon sx={{ fontSize: 16 }} />
-                                          </IconButton>
-                                        </>
-                                      )}
-                                      {editServerId !== server.id && (
-                                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                                          {(server.customCategories ?? []).map((cat) => (
-                                            <Chip
-                                              key={cat.id}
-                                              label={cat.name}
-                                              size="small"
-                                              onDelete={() => handleDeleteCustomCategory(cat.id)}
-                                              disabled={submitting}
-                                              sx={{ height: 22, fontSize: '0.7rem' }}
-                                            />
-                                          ))}
-                                          <Chip
-                                            icon={<AddIcon sx={{ fontSize: 14 }} />}
-                                            label={t('addCustomCategory')}
-                                            size="small"
-                                            variant="outlined"
-                                            onClick={() => setAddCategoryOpen(server.id)}
-                                            disabled={submitting}
-                                            sx={{ height: 22, fontSize: '0.7rem' }}
-                                          />
-                                        </Box>
-                                      )}
-                                    </Box>
-                                  }
-                                  primaryTypographyProps={{ variant: 'body2', fontWeight: 500 }}
-                                />
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
-                                  <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 120 } }}>
-                                    <InputLabel>{t('adenaPriceUnitKk')}</InputLabel>
-                                    <Select
-                                      value={server.adenaPriceUnitKk != null ? String(server.adenaPriceUnitKk) : '__inherit__'}
-                                      label={t('adenaPriceUnitKk')}
-                                      onChange={(e) => handleServerAdenaPriceUnit(server.id, e.target.value)}
-                                      disabled={submitting}
-                                      sx={{ height: 36, minWidth: 120 }}
-                                    >
-                                      <MenuItem value="__inherit__">
-                                        {t('inherit')} ({game?.adenaPriceUnitKk ?? 100} kk)
-                                      </MenuItem>
-                                      <MenuItem value="1">1 kk</MenuItem>
-                                      <MenuItem value="10">10 kk</MenuItem>
-                                      <MenuItem value="100">100 kk</MenuItem>
-                                      <MenuItem value="1000">1000 kk</MenuItem>
-                                    </Select>
-                                  </FormControl>
-                                  <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 130 } }} fullWidth>
-                                    <InputLabel>{t('offerCategories')}</InputLabel>
-                                    <Select
-                                      value={isAllTypes ? '__ALL__' : '__CUSTOM__'}
-                                      label={t('offerCategories')}
-                                      onChange={(e) => {
-                                        const v = e.target.value;
-                                        handleServerOfferTypes(
-                                          server.id,
-                                          v === '__ALL__' ? null : selectedTypes.length ? selectedTypes : allCats.map((c) => c.id)
-                                        );
-                                      }}
-                                      disabled={submitting}
-                                      sx={{ height: 36 }}
-                                    >
-                                      <MenuItem value="__ALL__">{t('offerCategoriesAll')}</MenuItem>
-                                      <MenuItem value="__CUSTOM__">{t('offerCategoriesCustom')}</MenuItem>
-                                    </Select>
-                                  </FormControl>
-                                  {!isAllTypes && (
-                                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                                      {allCats.map(({ id }) => (
-                                        <Chip
-                                          key={id}
-                                          label={getCategoryLabel(id, server)}
-                                          size="small"
-                                          color={selectedTypes.includes(id) ? 'primary' : 'default'}
-                                          variant={selectedTypes.includes(id) ? 'filled' : 'outlined'}
-                                          onClick={() => {
-                                            const next = selectedTypes.includes(id)
-                                              ? selectedTypes.filter((x) => x !== id)
-                                              : [...selectedTypes, id];
-                                            handleServerOfferTypes(server.id, next.length ? next : null);
-                                          }}
-                                          disabled={submitting}
-                                          sx={{ height: 28 }}
-                                        />
-                                      ))}
-                                    </Box>
-                                  )}
-                                  <FormControlLabel
-                                    control={
-                                      <Switch
-                                        size="small"
-                                        checked={server.enabled}
-                                        onChange={(e) => handleServerEnabled(server.id, e.target.checked)}
-                                        disabled={submitting}
-                                      />
-                                    }
-                                    label={t('enabled')}
-                                    sx={{ '& .MuiFormControlLabel-label': { fontSize: '0.75rem' } }}
-                                  />
-                                  <FormControlLabel
-                                    control={
-                                      <Switch
-                                        size="small"
-                                        checked={server.isTop ?? false}
-                                        onChange={(e) => handleServerTop(server.id, e.target.checked)}
-                                        disabled={submitting}
-                                      />
-                                    }
-                                    label={t('top')}
-                                    title={t('topHint')}
-                                    sx={{ '& .MuiFormControlLabel-label': { fontSize: '0.75rem' } }}
-                                  />
-                                </Box>
-                              </ListItem>
-                            );
-                          })}
-                        </List>
-                      </Collapse>
-                    </Card>
-                  ))}
-                </Box>
-              </Collapse>
             </Card>
           ))}
           {hasMore && (
@@ -819,113 +502,6 @@ export default function AdminGamesPage() {
             {t('cancel')}
           </Button>
           <Button onClick={handleAddGame} variant="contained" disabled={submitting || !addGameName.trim()}>
-            {t('add')}
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      <Dialog open={!!addVariantOpen} onClose={() => !submitting && setAddVariantOpen(null)} maxWidth="xs" fullWidth>
-        <DialogTitle>{t('addVariant')}</DialogTitle>
-        <DialogContent>
-          <TextField
-            autoFocus
-            margin="dense"
-            label={t('variantName')}
-            fullWidth
-            value={addVariantName}
-            onChange={(e) => setAddVariantName(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleAddVariant()}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setAddVariantOpen(null)} disabled={submitting}>
-            {t('cancel')}
-          </Button>
-          <Button
-            onClick={handleAddVariant}
-            variant="contained"
-            disabled={submitting || !addVariantName.trim()}
-          >
-            {t('add')}
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      <Dialog open={!!addServerOpen} onClose={() => !submitting && setAddServerOpen(null)} maxWidth="xs" fullWidth>
-        <DialogTitle>{t('addServer')}</DialogTitle>
-        <DialogContent>
-          <TextField
-            autoFocus
-            margin="dense"
-            label={t('serverName')}
-            fullWidth
-            value={addServerName}
-            onChange={(e) => setAddServerName(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleAddServer()}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setAddServerOpen(null)} disabled={submitting}>
-            {t('cancel')}
-          </Button>
-          <Button
-            onClick={handleAddServer}
-            variant="contained"
-            disabled={submitting || !addServerName.trim()}
-          >
-            {t('add')}
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      <Dialog open={!!editGameImageOpen} onClose={() => !submitting && setEditGameImageOpen(null)} maxWidth="sm" fullWidth>
-        <DialogTitle>{t('editGameImage')} — {editGameImageOpen?.name}</DialogTitle>
-        <DialogContent sx={{ pt: 1 }}>
-          <TextField
-            autoFocus
-            margin="dense"
-            label={t('gameImageUrl')}
-            placeholder="/images/games/lineage-2.png"
-            fullWidth
-            value={editGameImageUrl}
-            onChange={(e) => setEditGameImageUrl(e.target.value)}
-            helperText={t('gameImageUrlHint')}
-            onKeyDown={(e) => e.key === 'Enter' && handleSaveGameImage()}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setEditGameImageOpen(null)} disabled={submitting}>
-            {t('cancel')}
-          </Button>
-          <Button onClick={handleSaveGameImage} variant="contained" disabled={submitting}>
-            {t('save')}
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      <Dialog open={!!addCategoryOpen} onClose={() => !submitting && setAddCategoryOpen(null)} maxWidth="xs" fullWidth>
-        <DialogTitle>{t('addCustomCategory')}</DialogTitle>
-        <DialogContent>
-          <TextField
-            autoFocus
-            margin="dense"
-            label={t('customCategoryName')}
-            fullWidth
-            placeholder="e.g. Skins, Coins"
-            value={addCategoryName}
-            onChange={(e) => setAddCategoryName(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleAddCustomCategory()}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setAddCategoryOpen(null)} disabled={submitting}>
-            {t('cancel')}
-          </Button>
-          <Button
-            onClick={handleAddCustomCategory}
-            variant="contained"
-            disabled={submitting || !addCategoryName.trim()}
-          >
             {t('add')}
           </Button>
         </DialogActions>
