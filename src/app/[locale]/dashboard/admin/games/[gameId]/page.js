@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useTransition } from 'react';
+import { useState, useEffect, useTransition, useDeferredValue, useMemo } from 'react';
 import { useParams } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
 import Link from 'next/link';
@@ -9,6 +9,7 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
+import InputBase from '@mui/material/InputBase';
 import Switch from '@mui/material/Switch';
 import FormControl from '@mui/material/FormControl';
 import FormControlLabel from '@mui/material/FormControlLabel';
@@ -28,6 +29,8 @@ import ImageIcon from '@mui/icons-material/Image';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import SearchIcon from '@mui/icons-material/Search';
+import CircularProgress from '@mui/material/CircularProgress';
 import Skeleton from '@mui/material/Skeleton';
 import Alert from '@mui/material/Alert';
 import Dialog from '@mui/material/Dialog';
@@ -47,9 +50,41 @@ import {
 } from '@/lib/api';
 
 const STANDARD_OFFER_TYPES = ['ADENA', 'ITEMS', 'ACCOUNTS', 'BOOSTING', 'OTHER'];
+const LETTERS = ['#', ...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')];
+
+function getLetterKey(name) {
+  const first = String(name ?? '').trim().charAt(0).toUpperCase();
+  if (!first) return '#';
+  if (/[A-Z]/.test(first)) return first;
+  if (/[0-9]/.test(first)) return '#';
+  return '#';
+}
+
+function filterVariantsBySearch(variants, searchQuery) {
+  if (!variants?.length) return [];
+  if (!searchQuery?.trim()) return variants;
+  const q = searchQuery.trim().toLowerCase();
+  return variants
+    .filter((v) => {
+      const vName = String(v?.name ?? '').toLowerCase();
+      if (vName.includes(q)) return true;
+      for (const s of v?.servers ?? []) {
+        if (String(s?.name ?? '').toLowerCase().includes(q)) return true;
+      }
+      return false;
+    })
+    .map((v) => {
+      const servers = v?.servers ?? [];
+      const filtered = servers.filter((s) =>
+        String(s?.name ?? '').toLowerCase().includes(q)
+      );
+      return { ...v, serversFiltered: filtered.length > 0 ? filtered : servers };
+    });
+}
 
 export default function AdminGameEditPage() {
   const t = useTranslations('Admin');
+  const tGame = useTranslations('Game');
   const token = useAuthStore((s) => s.token);
   const locale = useLocale();
   const params = useParams();
@@ -70,7 +105,28 @@ export default function AdminGameEditPage() {
   const [editServerName, setEditServerName] = useState('');
   const [editGameImageOpen, setEditGameImageOpen] = useState(false);
   const [editGameImageUrl, setEditGameImageUrl] = useState('');
-  const [, startTransition] = useTransition();
+  const [search, setSearch] = useState('');
+  const [selectedLetter, setSelectedLetter] = useState(null);
+  const [lettersOpen, setLettersOpen] = useState(false);
+  const [isPending, startTransition] = useTransition();
+  const deferredSearch = useDeferredValue(search);
+  const searchQuery = deferredSearch.trim().toLowerCase();
+  const filteredBySearch = useMemo(
+    () => filterVariantsBySearch(game?.variants ?? [], searchQuery),
+    [game?.variants, searchQuery]
+  );
+  const filteredVariants = useMemo(
+    () =>
+      selectedLetter
+        ? filteredBySearch.filter((v) => getLetterKey(v.name) === selectedLetter)
+        : filteredBySearch,
+    [filteredBySearch, selectedLetter]
+  );
+  const availableLetters = useMemo(() => {
+    const set = new Set();
+    for (const v of filteredBySearch) set.add(getLetterKey(v.name));
+    return set;
+  }, [filteredBySearch]);
 
   const isSimple = (g) => g?.structureType === 'SIMPLE';
   const isVariantOnly = (g) => g?.structureType === 'VARIANT_ONLY';
@@ -263,6 +319,13 @@ export default function AdminGameEditPage() {
       .finally(() => setSubmitting(false));
   };
 
+  const handleLetterClick = (letterOrNull) => {
+    startTransition(() => {
+      setSelectedLetter((prev) => (prev === letterOrNull ? null : letterOrNull));
+      setLettersOpen(false);
+    });
+  };
+
   const getCategoryLabel = (typeOrId, server) => {
     if (STANDARD_OFFER_TYPES.includes(typeOrId)) {
       return t(`offerType${typeOrId.charAt(0) + typeOrId.slice(1).toLowerCase()}`);
@@ -415,8 +478,178 @@ export default function AdminGameEditPage() {
       </Card>
 
       {(game.variants || []).length > 0 && (
+        <>
+          <Box sx={{ mb: 2, display: 'flex', flexDirection: 'column', gap: 1 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
+              <InputBase
+                placeholder={t('searchVariantsAndServers')}
+                value={search}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  startTransition(() => {
+                    setSearch(value);
+                    if (value.trim()) setSelectedLetter(null);
+                  });
+                }}
+                startAdornment={
+                  <>
+                    <SearchIcon sx={{ color: 'text.secondary', mr: 1.5, fontSize: 20 }} />
+                    {isPending && (
+                      <CircularProgress size={20} sx={{ mr: 1, flexShrink: 0 }} />
+                    )}
+                  </>
+                }
+                sx={{
+                  minWidth: { xs: '100%', sm: 240 },
+                  flex: { xs: 1, sm: 'none' },
+                  py: 1,
+                  px: 2,
+                  borderRadius: 1,
+                  bgcolor: 'action.hover',
+                  fontSize: '0.95rem',
+                  border: '1px solid',
+                  borderColor: 'divider',
+                }}
+              />
+            </Box>
+            {filteredBySearch.length > 0 && (
+              <>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  onClick={() => setLettersOpen((o) => !o)}
+                  endIcon={
+                    <ExpandMoreIcon
+                      sx={{
+                        transform: lettersOpen ? 'rotate(180deg)' : 'none',
+                        transition: 'transform 0.2s',
+                      }}
+                    />
+                  }
+                  sx={{
+                    display: { xs: 'flex', md: 'none' },
+                    alignSelf: 'flex-start',
+                    textTransform: 'none',
+                    borderColor: 'divider',
+                    color: selectedLetter ? 'primary.main' : 'text.secondary',
+                  }}
+                >
+                  {t('filterByLetter')}
+                  {selectedLetter && ` (${selectedLetter})`}
+                </Button>
+                <Box
+                  sx={{
+                    display: { xs: lettersOpen ? 'flex' : 'none', md: 'flex' },
+                    flexWrap: 'wrap',
+                    gap: 0.5,
+                    alignItems: 'center',
+                    py: 1,
+                    borderBottom: '1px solid',
+                    borderColor: 'divider',
+                  }}
+                  role="navigation"
+                  aria-label={t('filterByLetter')}
+                >
+                  <Box
+                    component="button"
+                    type="button"
+                    onClick={() => handleLetterClick(null)}
+                    aria-label="Show all variants"
+                    sx={{
+                      minWidth: 36,
+                      minHeight: 36,
+                      px: 1,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      border: 'none',
+                      borderRadius: 1,
+                      bgcolor: 'transparent',
+                      color:
+                        selectedLetter === null ? 'primary.main' : 'text.secondary',
+                      fontSize: '0.875rem',
+                      fontWeight: selectedLetter === null ? 700 : 500,
+                      cursor: 'pointer',
+                      transition: 'color 0.15s, background 0.15s',
+                      '&:hover': {
+                        bgcolor: 'action.hover',
+                        color: 'primary.main',
+                      },
+                      '&:focus-visible': {
+                        outline: '2px solid',
+                        outlineColor: 'primary.main',
+                        outlineOffset: 2,
+                      },
+                      '&:active': { bgcolor: 'action.selected' },
+                    }}
+                  >
+                    {t('all')}
+                  </Box>
+                  {LETTERS.map((letter) => {
+                    const hasVariants = availableLetters.has(letter);
+                    const isSelected = selectedLetter === letter;
+                    return (
+                      <Box
+                        key={letter}
+                        component="button"
+                        type="button"
+                        onClick={() => hasVariants && handleLetterClick(letter)}
+                        disabled={!hasVariants}
+                        aria-label={
+                          hasVariants
+                            ? `Filter to ${letter}`
+                            : `${letter} (no variants)`
+                        }
+                        sx={{
+                          minWidth: 36,
+                          minHeight: 36,
+                          px: 1,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          border: 'none',
+                          borderRadius: 1,
+                          bgcolor: 'transparent',
+                          color: hasVariants
+                            ? isSelected
+                              ? 'primary.main'
+                              : 'text.secondary'
+                            : 'action.disabled',
+                          fontSize: '0.875rem',
+                          fontWeight: isSelected ? 700 : 500,
+                          cursor: hasVariants ? 'pointer' : 'default',
+                          transition: 'color 0.15s, background 0.15s',
+                          '&:hover': hasVariants
+                            ? { bgcolor: 'action.hover', color: 'primary.main' }
+                            : {},
+                          '&:focus-visible': {
+                            outline: '2px solid',
+                            outlineColor: 'primary.main',
+                            outlineOffset: 2,
+                          },
+                          '&:active': hasVariants
+                            ? { bgcolor: 'action.selected' }
+                            : {},
+                        }}
+                      >
+                        {letter}
+                      </Box>
+                    );
+                  })}
+                </Box>
+              </>
+            )}
+          </Box>
+          {filteredVariants.length === 0 ? (
+            (game.variants || []).length > 0 && (
+              <Alert severity="info" sx={{ mb: 2 }}>
+                {tGame('noSearchResults')}
+              </Alert>
+            )
+          ) : (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          {(game.variants || []).map((variant) => {
+          {filteredVariants.map((variant) => {
+            const serversToShow = variant.serversFiltered ?? variant.servers ?? [];
             const isAllTypes = (s) => !s.enabledOfferTypes || s.enabledOfferTypes.length === 0;
             const selectedTypes = (s) => isAllTypes(s) ? [] : [...(s.enabledOfferTypes || [])];
             const allCats = (s) => getAllCategoriesForServer(s);
@@ -491,7 +724,7 @@ export default function AdminGameEditPage() {
                 </Box>
                 <Collapse in={expandedVariant === variant.id}>
                   <List dense disablePadding>
-                    {(variant.servers || []).map((server) => {
+                    {serversToShow.map((server) => {
                       const isAll = isAllTypes(server);
                       const selected = selectedTypes(server);
                       const allCatsForServer = allCats(server);
@@ -669,6 +902,8 @@ export default function AdminGameEditPage() {
             );
           })}
         </Box>
+          )}
+        </>
       )}
 
       <Dialog open={editGameImageOpen} onClose={() => !submitting && setEditGameImageOpen(false)} maxWidth="sm" fullWidth>

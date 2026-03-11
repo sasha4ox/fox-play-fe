@@ -798,6 +798,7 @@
     "enabled": "Включено",
     "noGames": "Игр нет.",
     "filterByLetter": "Фильтр по букве",
+    "searchVariantsAndServers": "Поиск по вариантам и серверам",
     "editGame": "Редактировать",
     "gameNotFound": "Игра не найдена.",
     "backToGamesList": "Назад к играм",

@@ -761,6 +761,7 @@
     "enabled": "Enabled",
     "noGames": "No games.",
     "filterByLetter": "Filter by letter",
+    "searchVariantsAndServers": "Search variants and servers",
     "editGame": "Edit",
     "gameNotFound": "Game not found.",
     "backToGamesList": "Back to games",
