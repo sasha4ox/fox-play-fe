@@ -89,8 +89,7 @@ export default function BalancePage() {
   const [ibanPayoutBeneficiaryName, setIbanPayoutBeneficiaryName] = useState('');
   const [ibanPayoutError, setIbanPayoutError] = useState(null);
   const [ibanPayoutSuccess, setIbanPayoutSuccess] = useState(null);
-  const [balanceHistory, setBalanceHistory] = useState({ items: [], total: 0 });
-  const [balanceHistoryLoading, setBalanceHistoryLoading] = useState(false);
+  const [balanceHistory, setBalanceHistory] = useState({ items: [], total: 0, status: 'idle' });
   const [enable2FAModalOpen, setEnable2FAModalOpen] = useState(false);
   const [verifyTOTPModalOpen, setVerifyTOTPModalOpen] = useState(false);
   const [pendingWithdrawAction, setPendingWithdrawAction] = useState(null);
@@ -111,13 +110,19 @@ export default function BalancePage() {
     });
   }, [token]);
 
+  const balanceHistoryLoading = !!token && balanceHistory.status === 'idle';
+
   useEffect(() => {
     if (!token) return;
-    setBalanceHistoryLoading(true);
+    let cancelled = false;
     getBalanceHistory(token, { take: 50 })
-      .then((data) => setBalanceHistory({ items: data?.items ?? [], total: data?.total ?? 0 }))
-      .catch(() => setBalanceHistory({ items: [], total: 0 }))
-      .finally(() => setBalanceHistoryLoading(false));
+      .then((data) => {
+        if (!cancelled) setBalanceHistory({ items: data?.items ?? [], total: data?.total ?? 0, status: 'success' });
+      })
+      .catch(() => {
+        if (!cancelled) setBalanceHistory({ items: [], total: 0, status: 'error' });
+      });
+    return () => { cancelled = true; };
   }, [token]);
 
   const handleLoadDepositInfo = () => {
@@ -473,7 +478,7 @@ export default function BalancePage() {
             </Typography>
             {balanceHistoryLoading ? (
               <Skeleton height={120} sx={{ mb: 2 }} />
-            ) : balanceHistory.items.length === 0 ? (
+            ) : balanceHistory.status === 'success' && balanceHistory.items.length === 0 ? (
               <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>{t('noBalanceHistory')}</Typography>
             ) : (
               <Card variant="outlined" sx={{ mb: 3 }}>

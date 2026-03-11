@@ -51,7 +51,6 @@ const STANDARD_OFFER_TYPES = ['ADENA', 'ITEMS', 'ACCOUNTS', 'BOOSTING', 'OTHER']
 export default function AdminGameEditPage() {
   const t = useTranslations('Admin');
   const token = useAuthStore((s) => s.token);
-  const router = useRouter();
   const locale = useLocale();
   const params = useParams();
   const gameId = params?.gameId ?? null;
