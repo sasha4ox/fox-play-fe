@@ -423,7 +423,7 @@ export default function NewOfferPage() {
             disabled={
               submitting ||
               (isAdena &&
-                (!Number.isFinite(parsePricePer100kk(priceAdena)) || parsePricePer100kk(priceAdena) < minPricePer100kk))
+                (!Number.isFinite(parsePricePerUnit(priceAdena)) || parsePricePerUnit(priceAdena) < minPricePerUnit))
             }
             sx={{ mt: 2, mb: 3 }}
           >

@@ -642,7 +642,8 @@
     "paymentDeclinedMessage": "Payment was declined. You can try again or pay with balance.",
     "priceBelowMinCannotBuy": "This offer's price is below the minimum (60 UAH / 1 EUR / 1.5 USD per 100kk). It cannot be purchased until the seller updates the price.",
     "deleteOffer": "Delete offer",
-    "deleteOfferConfirm": "Are you sure you want to delete this offer? This cannot be undone."
+    "deleteOfferConfirm": "Are you sure you want to delete this offer? This cannot be undone.",
+    "editOffer": "Edit offer"
   },
   "NewOffer": {
     "createOffer": "Create offer",
