@@ -98,10 +98,10 @@ export default function NewOfferPage() {
   const customCategoryId = selectedTab?.custom ? selectedTab.value : null;
   const isAdena = !selectedTab?.custom && selectedTab?.value === 'ADENA';
 
-  const MIN_KK = 1;
+  const minQuantityAdena = adenaPriceUnitKk === 0 ? 1000 : 1_000_000;
   const minPricePerUnit = getMinPriceForUnit(currency, adenaPriceUnitKk);
 
-  /** Parse quantity string to adena amount: "100", "100kk", "2.5kkk" etc. Returns null if invalid. */
+  /** Parse quantity string to adena amount. When unit is 1k: plain number = k (×1000). When unit is kk: plain number = kk (×1M). Also accepts "100k", "2kk", etc. Returns null if invalid. */
   const parseQuantityAdena = (str) => {
     if (str == null || String(str).trim() === '') return null;
     const s = String(str).trim().toLowerCase();
@@ -109,9 +109,10 @@ export default function NewOfferPage() {
       const adena = parseAdenaInput(String(str));
       return adena != null ? adena : null;
     }
-    const kk = parseFloat(String(str).trim().replace(',', '.'));
-    if (!Number.isFinite(kk) || kk <= 0) return null;
-    return Math.floor(kk * 1_000_000);
+    const num = parseFloat(String(str).trim().replace(',', '.'));
+    if (!Number.isFinite(num) || num <= 0) return null;
+    const multiplier = adenaPriceUnitKk === 0 ? 1_000 : 1_000_000;
+    return Math.floor(num * multiplier);
   };
 
   /** Parse price per unit (adenaPriceUnitKk) string to number. Returns NaN if invalid. */
@@ -124,12 +125,11 @@ export default function NewOfferPage() {
     let valid = true;
     if (isAdena) {
       const qtyAdena = parseQuantityAdena(quantityAdena);
-      const qtyKk = qtyAdena != null ? qtyAdena / 1_000_000 : 0;
-      const qOk = qtyAdena != null && qtyKk >= MIN_KK;
+      const qOk = qtyAdena != null && qtyAdena >= minQuantityAdena;
       const priceVal = parsePricePerUnit(priceAdena);
       const pOk = Number.isFinite(priceVal) && priceVal >= minPricePerUnit;
-      setQuantityError(qOk ? null : t('min1kk'));
-      setPriceError(pOk ? null : t('minPriceFor100kk'));
+      setQuantityError(qOk ? null : (adenaPriceUnitKk === 0 ? t('min1k') : t('min1kk')));
+      setPriceError(pOk ? null : (adenaPriceUnitKk === 0 ? t('minPriceFor1k') : t('minPriceFor100kk')));
       if (!qOk || !pOk) valid = false;
     }
     return valid;
@@ -155,7 +155,7 @@ export default function NewOfferPage() {
       }
     }
     setSubmitting(true);
-    const quantityNum = isAdena ? (parseQuantityAdena(quantityAdena) ?? 1_000_000) : 1;
+    const quantityNum = isAdena ? (parseQuantityAdena(quantityAdena) ?? minQuantityAdena) : 1;
     const priceForUnit = isAdena ? parsePricePerUnit(priceAdena) : 0;
     const priceNum = isAdena ? (Number.isFinite(priceForUnit) ? priceForUnit / effectiveUnitKk : 0) : parseDecimalPrice(price) || 0;
     const payload = {
@@ -254,7 +254,7 @@ export default function NewOfferPage() {
                   '& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button': { WebkitAppearance: 'none', margin: 0 },
                 }}
                 InputProps={{
-                  endAdornment: <InputAdornment position="end">kk</InputAdornment>,
+                  endAdornment: <InputAdornment position="end">{adenaPriceUnitKk === 0 ? 'k' : 'kk'}</InputAdornment>,
                 }}
               />
               <TextField
@@ -360,8 +360,8 @@ export default function NewOfferPage() {
                               )}
                               <Typography component="span" variant="body2" color="text.secondary">
                                 {(p.adenaPriceUnitKk ?? adenaPriceUnitKk) === 0
-                                ? t('sellingPricePer1kSuffix', {
-                                    quantityKk: p.quantityKk,
+                                ? t('sellingPricePer1kSuffixWithK', {
+                                    quantityK: p.quantityKk * 1000,
                                     price: (p.pricePerUnitKk ?? p.pricePer100kk) != null ? Number(p.pricePerUnitKk ?? p.pricePer100kk).toFixed(2) : String(p.pricePerUnit ?? '—'),
                                     currency: p.currency,
                                   })

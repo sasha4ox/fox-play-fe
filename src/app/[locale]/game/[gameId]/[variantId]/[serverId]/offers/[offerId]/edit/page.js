@@ -19,8 +19,6 @@ import { fetchOfferById, updateOffer, getPlatformFeePercent, fetchOfferRecentPri
 import { parseAdenaInput } from '@/lib/adenaFormat';
 import { getMinPriceForUnit, getEffectiveUnitKk } from '@/lib/offerMinPrice';
 
-const MIN_KK = 1;
-
 export default function EditOfferPage() {
   const params = useParams();
   const router = useRouter();
@@ -71,7 +69,7 @@ export default function EditOfferPage() {
           const p = Number(data.displayPrice ?? data.price ?? 0);
           const rawUnit = data.server?.adenaPriceUnitKk ?? data.server?.gameVariant?.game?.adenaPriceUnitKk ?? 100;
           const unitKk = getEffectiveUnitKk(rawUnit);
-          setQuantityAdena(String(q / 1_000_000 || 1));
+          setQuantityAdena(String(rawUnit === 0 ? (q / 1000 || 1) : (q / 1_000_000 || 1)));
           setPriceAdena(String(p * unitKk || 1)); // backend: price per 1kk → display: price per unit
         } else {
           setQuantity(Number(data.quantity ?? 1));
@@ -108,7 +106,7 @@ export default function EditOfferPage() {
     return parseFloat(String(str).trim().replace(',', '.'));
   };
 
-  /** Parse quantity string to adena amount: "1", "1.5", "1,5", "2kk". Returns null if invalid. */
+  /** Parse quantity string to adena amount. When unit is 1k: plain number = k (×1000). When unit is kk: plain number = kk (×1M). Also accepts "100k", "2kk", etc. Returns null if invalid. */
   const parseQuantityAdena = (str) => {
     if (str == null || String(str).trim() === '') return null;
     const s = String(str).trim().toLowerCase();
@@ -116,22 +114,23 @@ export default function EditOfferPage() {
       const adena = parseAdenaInput(String(str));
       return adena != null ? adena : null;
     }
-    const kk = parseFloat(s.replace(',', '.'));
-    if (!Number.isFinite(kk) || kk <= 0) return null;
-    return Math.floor(kk * 1_000_000);
+    const num = parseFloat(s.replace(',', '.'));
+    if (!Number.isFinite(num) || num <= 0) return null;
+    const multiplier = adenaPriceUnitKk === 0 ? 1_000 : 1_000_000;
+    return Math.floor(num * multiplier);
   };
 
+  const minQuantityAdena = adenaPriceUnitKk === 0 ? 1000 : 1_000_000;
   const minPricePerUnit = getMinPriceForUnit(currency, adenaPriceUnitKk);
 
   const validateAdenaInputs = () => {
     if (!isAdena) return true;
     const qtyAdena = parseQuantityAdena(quantityAdena);
-    const qtyKk = qtyAdena != null ? qtyAdena / 1_000_000 : 0;
-    const qOk = qtyAdena != null && qtyKk >= MIN_KK;
+    const qOk = qtyAdena != null && qtyAdena >= minQuantityAdena;
     const priceVal = parsePricePerUnit(priceAdena);
     const pOk = Number.isFinite(priceVal) && priceVal >= minPricePerUnit;
-    setQuantityError(qOk ? null : tNew('min1kk'));
-    setPriceError(pOk ? null : tNew('minPriceFor100kk'));
+    setQuantityError(qOk ? null : (adenaPriceUnitKk === 0 ? tNew('min1k') : tNew('min1kk')));
+    setPriceError(pOk ? null : (adenaPriceUnitKk === 0 ? tNew('minPriceFor1k') : tNew('minPriceFor100kk')));
     return qOk && pOk;
   };
 
@@ -150,7 +149,7 @@ export default function EditOfferPage() {
         ? {
             title,
             description,
-            quantity: Math.floor(parseQuantityAdena(quantityAdena) ?? 1_000_000),
+            quantity: Math.floor(parseQuantityAdena(quantityAdena) ?? minQuantityAdena),
             price: parsePricePerUnit(priceAdena) / effectiveUnitKk,
           }
         : {
@@ -233,7 +232,7 @@ export default function EditOfferPage() {
                   '& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button': { WebkitAppearance: 'none', margin: 0 },
                 }}
                 InputProps={{
-                  endAdornment: <InputAdornment position="end">kk</InputAdornment>,
+                  endAdornment: <InputAdornment position="end">{adenaPriceUnitKk === 0 ? 'k' : 'kk'}</InputAdornment>,
                 }}
               />
               <TextField
@@ -339,8 +338,8 @@ export default function EditOfferPage() {
                               )}
                               <Typography component="span" variant="body2" color="text.secondary">
                                 {(p.adenaPriceUnitKk ?? adenaPriceUnitKk) === 0
-                                ? tNew('sellingPricePer1kSuffix', {
-                                    quantityKk: p.quantityKk,
+                                ? tNew('sellingPricePer1kSuffixWithK', {
+                                    quantityK: p.quantityKk * 1000,
                                     price: (p.pricePerUnitKk ?? p.pricePer100kk) != null ? Number(p.pricePerUnitKk ?? p.pricePer100kk).toFixed(2) : String(p.pricePerUnit ?? '—'),
                                     currency: p.currency,
                                   })
