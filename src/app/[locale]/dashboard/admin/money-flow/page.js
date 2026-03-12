@@ -38,10 +38,8 @@ import {
   setAdminCardActive,
   deleteAdminCard,
   getAdminPendingReceipts,
-  getAdminPendingPayouts,
   adminConfirmReceipt,
   adminDeclineReceipt,
-  adminConfirmPayout,
   getAdminCardPayouts,
   adminCardPayoutComplete,
   adminCardPayoutFail,
@@ -50,10 +48,8 @@ import {
   getAdminCryptoPaymentWallet,
   setAdminCryptoPaymentWallet,
   getAdminPendingCryptoReceipts,
-  getAdminPendingCryptoPayouts,
   adminConfirmCryptoReceipt,
   adminDeclineCryptoReceipt,
-  adminConfirmCryptoPayout,
   getAdminCryptoPayoutRequests,
   adminCryptoPayoutComplete,
   adminCryptoPayoutFail,
@@ -63,10 +59,8 @@ import {
   setAdminIbanPaymentConfig,
   getAdminPendingIbanReceipts,
   getAdminPendingIbanReceiptsCount,
-  getAdminPendingIbanPayouts,
   adminConfirmIbanReceipt,
   adminDeclineIbanReceipt,
-  adminConfirmIbanPayout,
   adminGetOrCreateContactBuyer,
   adminSendContactBuyerMessage,
 } from '@/lib/api';
@@ -97,9 +91,7 @@ export default function AdminMoneyFlowPage() {
   const [cards, setCards] = useState([]);
   const [loadingCards, setLoadingCards] = useState(true);
   const [receipts, setReceipts] = useState([]);
-  const [payouts, setPayouts] = useState([]);
   const [loadingReceipts, setLoadingReceipts] = useState(true);
-  const [loadingPayouts, setLoadingPayouts] = useState(true);
   const [addCardOpen, setAddCardOpen] = useState(false);
   const [newCardNumber, setNewCardNumber] = useState('');
   const [newCardHolder, setNewCardHolder] = useState('');
@@ -112,7 +104,6 @@ export default function AdminMoneyFlowPage() {
   const [savingEditCard, setSavingEditCard] = useState(false);
   const [confirmingReceipt, setConfirmingReceipt] = useState(null);
   const [decliningReceipt, setDecliningReceipt] = useState(null);
-  const [confirmingPayout, setConfirmingPayout] = useState(null);
   const [cardPayouts, setCardPayouts] = useState([]);
   const [loadingCardPayouts, setLoadingCardPayouts] = useState(true);
   const [cardPayoutStatusFilter, setCardPayoutStatusFilter] = useState('');
@@ -135,14 +126,11 @@ export default function AdminMoneyFlowPage() {
   const [savingCryptoWallet, setSavingCryptoWallet] = useState(false);
   const [cryptoReceipts, setCryptoReceipts] = useState([]);
   const [loadingCryptoReceipts, setLoadingCryptoReceipts] = useState(true);
-  const [cryptoPayouts, setCryptoPayouts] = useState([]);
-  const [loadingCryptoPayouts, setLoadingCryptoPayouts] = useState(true);
   const [cryptoPayoutRequests, setCryptoPayoutRequests] = useState([]);
   const [loadingCryptoPayoutRequests, setLoadingCryptoPayoutRequests] = useState(true);
   const [cryptoPayoutStatusFilter, setCryptoPayoutStatusFilter] = useState('');
   const [confirmingCryptoReceipt, setConfirmingCryptoReceipt] = useState(null);
   const [decliningCryptoReceipt, setDecliningCryptoReceipt] = useState(null);
-  const [confirmingCryptoPayout, setConfirmingCryptoPayout] = useState(null);
   const [confirmingCryptoPayoutComplete, setConfirmingCryptoPayoutComplete] = useState(null);
   const [confirmingCryptoPayoutFail, setConfirmingCryptoPayoutFail] = useState(null);
   const [ibanPaymentEnabled, setIbanPaymentEnabled] = useState(false);
@@ -162,11 +150,8 @@ export default function AdminMoneyFlowPage() {
   const [savingIbanConfig, setSavingIbanConfig] = useState(false);
   const [ibanReceipts, setIbanReceipts] = useState([]);
   const [loadingIbanReceipts, setLoadingIbanReceipts] = useState(true);
-  const [ibanPayouts, setIbanPayouts] = useState([]);
-  const [loadingIbanPayouts, setLoadingIbanPayouts] = useState(true);
   const [confirmingIbanReceipt, setConfirmingIbanReceipt] = useState(null);
   const [decliningIbanReceipt, setDecliningIbanReceipt] = useState(null);
-  const [confirmingIbanPayout, setConfirmingIbanPayout] = useState(null);
 
   const loadFlag = () => {
     if (!token) return;
@@ -255,15 +240,6 @@ export default function AdminMoneyFlowPage() {
       .finally(() => setLoadingReceipts(false));
   };
 
-  const loadPayouts = () => {
-    if (!token) return;
-    setLoadingPayouts(true);
-    getAdminPendingPayouts(token)
-      .then((data) => setPayouts(data?.items ?? []))
-      .catch(() => setPayouts([]))
-      .finally(() => setLoadingPayouts(false));
-  };
-
   const loadCardPayouts = () => {
     if (!token) return;
     setLoadingCardPayouts(true);
@@ -292,7 +268,6 @@ export default function AdminMoneyFlowPage() {
   }, [token]);
   useEffect(() => {
     loadReceipts();
-    loadPayouts();
   }, [token]);
   useEffect(() => {
     loadCardPayouts();
@@ -317,14 +292,6 @@ export default function AdminMoneyFlowPage() {
       .catch(() => setCryptoReceipts([]))
       .finally(() => setLoadingCryptoReceipts(false));
   };
-  const loadCryptoPayouts = () => {
-    if (!token) return;
-    setLoadingCryptoPayouts(true);
-    getAdminPendingCryptoPayouts(token)
-      .then((data) => setCryptoPayouts(data?.items ?? []))
-      .catch(() => setCryptoPayouts([]))
-      .finally(() => setLoadingCryptoPayouts(false));
-  };
   const loadCryptoPayoutRequests = () => {
     if (!token) return;
     setLoadingCryptoPayoutRequests(true);
@@ -339,7 +306,6 @@ export default function AdminMoneyFlowPage() {
   }, [token]);
   useEffect(() => {
     loadCryptoReceipts();
-    loadCryptoPayouts();
   }, [token]);
   useEffect(() => {
     loadCryptoPayoutRequests();
@@ -383,21 +349,12 @@ export default function AdminMoneyFlowPage() {
       .catch(() => setIbanReceipts([]))
       .finally(() => setLoadingIbanReceipts(false));
   };
-  const loadIbanPayouts = () => {
-    if (!token) return;
-    setLoadingIbanPayouts(true);
-    getAdminPendingIbanPayouts(token)
-      .then((data) => setIbanPayouts(data?.items ?? []))
-      .catch(() => setIbanPayouts([]))
-      .finally(() => setLoadingIbanPayouts(false));
-  };
   useEffect(() => {
     loadIbanFlag();
     loadIbanConfig();
   }, [token]);
   useEffect(() => {
     loadIbanReceipts();
-    loadIbanPayouts();
   }, [token]);
   const handleSaveIbanFlag = () => {
     if (!token) return;
@@ -457,15 +414,6 @@ export default function AdminMoneyFlowPage() {
       .catch((err) => setError(err?.message || 'Failed'))
       .finally(() => setDecliningIbanReceipt(null));
   };
-  const handleConfirmIbanPayout = (orderId) => {
-    setConfirmingIbanPayout(orderId);
-    setError(null);
-    adminConfirmIbanPayout(orderId, token)
-      .then(() => { loadIbanPayouts(); loadPayouts(); })
-      .catch((err) => setError(err?.message || 'Failed'))
-      .finally(() => setConfirmingIbanPayout(null));
-  };
-
   const handleSaveCryptoWallet = () => {
     setSavingCryptoWallet(true);
     setError(null);
@@ -492,14 +440,6 @@ export default function AdminMoneyFlowPage() {
       .then(() => { loadCryptoReceipts(); loadReceipts(); })
       .catch((err) => setError(err?.message || 'Failed'))
       .finally(() => setDecliningCryptoReceipt(null));
-  };
-  const handleConfirmCryptoPayout = (orderId) => {
-    setConfirmingCryptoPayout(orderId);
-    setError(null);
-    adminConfirmCryptoPayout(orderId, token)
-      .then(() => { loadCryptoPayouts(); loadPayouts(); })
-      .catch((err) => setError(err?.message || 'Failed'))
-      .finally(() => setConfirmingCryptoPayout(null));
   };
   const handleCryptoPayoutComplete = (id) => {
     setConfirmingCryptoPayoutComplete(id);
@@ -672,15 +612,6 @@ export default function AdminMoneyFlowPage() {
     setContactBuyerOrderId(null);
     setContactBuyerConvo(null);
     setContactBuyerMessage('');
-  };
-
-  const handleConfirmPayout = (orderId) => {
-    setConfirmingPayout(orderId);
-    setError(null);
-    adminConfirmPayout(orderId, token)
-      .then(() => loadPayouts())
-      .catch((err) => setError(err.message || 'Failed'))
-      .finally(() => setConfirmingPayout(null));
   };
 
   const handleCardPayoutComplete = (id) => {
@@ -1173,61 +1104,6 @@ export default function AdminMoneyFlowPage() {
       <Card sx={{ mb: 3 }}>
         <CardContent sx={{ px: { xs: 1.5, sm: 2 } }}>
           <Typography variant="subtitle1" fontWeight={600} gutterBottom>
-            {t('pendingPayouts')}
-          </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            {t('pendingPayoutsHint')}
-          </Typography>
-          {loadingPayouts ? (
-            <Skeleton height={60} />
-          ) : payouts.length === 0 ? (
-            <Typography color="text.secondary">{t('noPendingPayouts')}</Typography>
-          ) : (
-            <TableContainer sx={{ overflowX: 'auto' }}>
-              <Table size="small" sx={{ minWidth: 360 }}>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Order</TableCell>
-                    <TableCell>Seller</TableCell>
-                    <TableCell>Amount</TableCell>
-                    <TableCell align="right">{t('actions')}</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {payouts.map((p) => (
-                    <TableRow key={p.orderId}>
-                      <TableCell>
-                        <Link href={`/${locale}/dashboard/orders/${p.orderId}`} target="_blank" rel="noopener">
-                          {p.orderNumber ?? `${p.orderId.slice(0, 8)}…`}
-                        </Link>
-                      </TableCell>
-                      <TableCell>{p.seller?.email ?? p.seller?.nickname ?? p.seller?.id}</TableCell>
-                      <TableCell>
-                        {p.sellerAmount} {p.sellerCurrency}
-                      </TableCell>
-                      <TableCell align="right">
-                        <Button
-                          size="small"
-                          variant="contained"
-                          color="primary"
-                          onClick={() => handleConfirmPayout(p.orderId)}
-                          disabled={confirmingPayout === p.orderId}
-                        >
-                          {confirmingPayout === p.orderId ? '…' : t('confirmPayout')}
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          )}
-        </CardContent>
-      </Card>
-
-      <Card sx={{ mb: 3 }}>
-        <CardContent sx={{ px: { xs: 1.5, sm: 2 } }}>
-          <Typography variant="subtitle1" fontWeight={600} gutterBottom>
             {t('pendingCryptoReceipts')}
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
@@ -1292,53 +1168,6 @@ export default function AdminMoneyFlowPage() {
       <Card sx={{ mb: 3 }}>
         <CardContent sx={{ px: { xs: 1.5, sm: 2 } }}>
           <Typography variant="subtitle1" fontWeight={600} gutterBottom>
-            {t('pendingCryptoPayouts')}
-          </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            {t('pendingCryptoPayoutsHint')}
-          </Typography>
-          {loadingCryptoPayouts ? (
-            <Skeleton height={60} />
-          ) : cryptoPayouts.length === 0 ? (
-            <Typography color="text.secondary">{t('noPendingCryptoPayouts')}</Typography>
-          ) : (
-            <TableContainer sx={{ overflowX: 'auto' }}>
-              <Table size="small" sx={{ minWidth: 360 }}>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Order</TableCell>
-                    <TableCell>Seller</TableCell>
-                    <TableCell>Amount</TableCell>
-                    <TableCell align="right">{t('actions')}</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {cryptoPayouts.map((p) => (
-                    <TableRow key={p.orderId}>
-                      <TableCell>
-                        <Link href={`/${locale}/dashboard/orders/${p.orderId}`} target="_blank" rel="noopener">
-                          {p.orderNumber ?? `${p.orderId.slice(0, 8)}…`}
-                        </Link>
-                      </TableCell>
-                      <TableCell>{p.seller?.email ?? p.seller?.nickname ?? p.seller?.id}</TableCell>
-                      <TableCell>{p.sellerAmount} {p.sellerCurrency}</TableCell>
-                      <TableCell align="right">
-                        <Button size="small" variant="contained" color="primary" onClick={() => handleConfirmCryptoPayout(p.orderId)} disabled={confirmingCryptoPayout === p.orderId}>
-                          {confirmingCryptoPayout === p.orderId ? '…' : t('confirmPayout')}
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          )}
-        </CardContent>
-      </Card>
-
-      <Card sx={{ mb: 3 }}>
-        <CardContent sx={{ px: { xs: 1.5, sm: 2 } }}>
-          <Typography variant="subtitle1" fontWeight={600} gutterBottom>
             {t('pendingIbanReceipts')}
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
@@ -1380,53 +1209,6 @@ export default function AdminMoneyFlowPage() {
                             {confirmingIbanReceipt === r.orderId ? '…' : t('confirmReceipt')}
                           </Button>
                         </Box>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          )}
-        </CardContent>
-      </Card>
-
-      <Card sx={{ mb: 3 }}>
-        <CardContent sx={{ px: { xs: 1.5, sm: 2 } }}>
-          <Typography variant="subtitle1" fontWeight={600} gutterBottom>
-            {t('pendingIbanPayouts')}
-          </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            {t('pendingIbanPayoutsHint')}
-          </Typography>
-          {loadingIbanPayouts ? (
-            <Skeleton height={60} />
-          ) : ibanPayouts.length === 0 ? (
-            <Typography color="text.secondary">{t('noPendingIbanPayouts')}</Typography>
-          ) : (
-            <TableContainer sx={{ overflowX: 'auto' }}>
-              <Table size="small" sx={{ minWidth: 360 }}>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Order</TableCell>
-                    <TableCell>Seller</TableCell>
-                    <TableCell>Amount</TableCell>
-                    <TableCell align="right">{t('actions')}</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {ibanPayouts.map((p) => (
-                    <TableRow key={p.orderId}>
-                      <TableCell>
-                        <Link href={`/${locale}/dashboard/orders/${p.orderId}`} target="_blank" rel="noopener">
-                          {p.orderNumber ?? `${p.orderId.slice(0, 8)}…`}
-                        </Link>
-                      </TableCell>
-                      <TableCell>{p.seller?.email ?? p.seller?.nickname ?? p.seller?.id}</TableCell>
-                      <TableCell>{p.sellerAmount} {p.sellerCurrency}</TableCell>
-                      <TableCell align="right">
-                        <Button size="small" variant="contained" color="primary" onClick={() => handleConfirmIbanPayout(p.orderId)} disabled={confirmingIbanPayout === p.orderId}>
-                          {confirmingIbanPayout === p.orderId ? '…' : t('confirmPayout')}
-                        </Button>
                       </TableCell>
                     </TableRow>
                   ))}
