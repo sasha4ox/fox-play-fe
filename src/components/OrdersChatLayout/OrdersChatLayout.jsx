@@ -369,7 +369,7 @@ export default function OrdersChatLayout({ children }) {
         sx={{
           flex: 1,
           width: { xs: '100%' },
-          maxWidth: { xs: '100%', xl: 1080 },
+          maxWidth: { xs: '100%' },
           maxHeight: '100%',
           display: showChat ? 'flex' : 'none',
           flexDirection: 'column',

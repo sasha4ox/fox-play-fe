@@ -76,7 +76,7 @@ export default async function RootLayout({ children, params }) {
             <div style={{ width: '100%', minWidth: '100%', maxWidth: '100vw', overflowX: 'hidden', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
               <Header />
               <RecentServersBar />
-              <main style={{ flex: 1 }}>{children}</main>
+              <main style={{ flex: 1, maxWidth: 1600, width: '100%', margin: '0 auto' }}>{children}</main>
               <Footer />
               <LoginModal />
               <CookieConsent />
