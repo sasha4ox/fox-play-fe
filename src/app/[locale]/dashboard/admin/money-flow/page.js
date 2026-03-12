@@ -1053,7 +1053,7 @@ export default function AdminMoneyFlowPage() {
                       <TableCell>{r.buyer?.email ?? r.buyer?.nickname ?? r.buyer?.id}</TableCell>
                       <TableCell>{r.buyerCardLast4 ?? '—'}</TableCell>
                       <TableCell>
-                        {r.buyerAmount} {r.buyerCurrency}
+                        {r.buyerAmount != null ? Number(r.buyerAmount).toFixed(2) : '—'} {r.buyerCurrency}
                       </TableCell>
                       <TableCell>{r.buyerMarkedSentAt ? new Date(r.buyerMarkedSentAt).toLocaleString() : '—'}</TableCell>
                       <TableCell align="right">
@@ -1135,7 +1135,7 @@ export default function AdminMoneyFlowPage() {
                         </Link>
                       </TableCell>
                       <TableCell>{r.buyer?.email ?? r.buyer?.nickname ?? r.buyer?.id}</TableCell>
-                      <TableCell>{r.buyerAmount} {r.buyerCurrency}</TableCell>
+                      <TableCell>{r.buyerAmount != null ? Number(r.buyerAmount).toFixed(2) : '—'} {r.buyerCurrency}</TableCell>
                       <TableCell sx={{ fontFamily: 'monospace', fontSize: '0.75rem', maxWidth: 140 }}>{r.cryptoWalletAddress ? `${r.cryptoWalletAddress.slice(0, 8)}…${r.cryptoWalletAddress.slice(-6)}` : '—'}</TableCell>
                       <TableCell>{r.buyerMarkedSentAt ? new Date(r.buyerMarkedSentAt).toLocaleString() : '—'}</TableCell>
                       <TableCell align="right">
@@ -1198,7 +1198,7 @@ export default function AdminMoneyFlowPage() {
                         </Link>
                       </TableCell>
                       <TableCell>{r.buyer?.email ?? r.buyer?.nickname ?? r.buyer?.id}</TableCell>
-                      <TableCell>{r.buyerAmount} {r.buyerCurrency}</TableCell>
+                      <TableCell>{r.buyerAmount != null ? Number(r.buyerAmount).toFixed(2) : '—'} {r.buyerCurrency}</TableCell>
                       <TableCell>{r.buyerMarkedSentAt ? new Date(r.buyerMarkedSentAt).toLocaleString() : '—'}</TableCell>
                       <TableCell align="right">
                         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, justifyContent: 'flex-end', '& .MuiButton-root': { minHeight: 44 } }}>

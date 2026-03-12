@@ -280,6 +280,7 @@ export default function EditOfferPage() {
                 label={unitLabel}
                 type="text"
                 inputMode="decimal"
+                inputProps={{ step: '0.01', min: 0 }}
                 value={priceAdena}
                 onChange={(e) => {
                   setPriceAdena(e.target.value);
@@ -406,6 +407,7 @@ export default function EditOfferPage() {
               <TextField
                 type="text"
                 inputMode="decimal"
+                inputProps={{ step: '0.01', min: 0 }}
                 label={`${t('price')} (${currency})`}
                 value={price}
                 onChange={(e) => setPrice(e.target.value)}

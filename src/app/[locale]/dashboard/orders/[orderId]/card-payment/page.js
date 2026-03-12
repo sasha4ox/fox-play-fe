@@ -189,7 +189,7 @@ export default function OrderCardPaymentPage() {
         <Box sx={{ mb: 2 }}>
           <Typography variant="overline" color="text.secondary">{t('amount')}</Typography>
           <Typography variant="h4" fontWeight={700} color="primary.main">
-            {data.amount} {data.currency}
+            {Number(data.amount).toFixed(2)} {data.currency}
           </Typography>
           {(status === 'awaiting_payment' || status === 'awaiting_confirmation') && (
             <Alert severity="info" sx={{ mt: 1.5 }}>

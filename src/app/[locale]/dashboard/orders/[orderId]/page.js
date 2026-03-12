@@ -714,7 +714,7 @@ export default function OrderChatPage() {
                 const unitLabel = rawUnit === 0 ? t('pricePer1k') : t('pricePerNkk', { n: rawUnit });
                 return (
                   <Typography variant="body1" color="text.primary" fontWeight={600}>
-                    {t('qty')}: {formatAdena(Number(order.quantity ?? 0))} · {unitLabel}: {Number(order.offer?.price ?? 0) * effectiveUnit} {order.sellerCurrency ?? order.buyerCurrency}
+                    {t('qty')}: {formatAdena(Number(order.quantity ?? 0))} · {unitLabel}: {(Number(order.offer?.price ?? 0) * effectiveUnit).toFixed(2)} {order.sellerCurrency ?? order.buyerCurrency}
                   </Typography>
                 );
               })() : (
