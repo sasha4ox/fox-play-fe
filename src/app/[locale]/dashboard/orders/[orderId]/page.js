@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
 import Link from 'next/link';
@@ -111,7 +111,7 @@ export default function OrderChatPage() {
   const setOrderRef = useRef(setOrder);
   setOrderRef.current = setOrder;
   const currentUserIdRef = useRef(null);
-  const { connected, onlineUserIds } = useOrderSocket(orderId, token, {
+  const { connected, onlineUserIds, typingUserIds, emitTyping, emitTypingStop } = useOrderSocket(orderId, token, {
     onMessage: (msg) => {
       const senderId = msg.senderId ?? msg.sender?.id;
       const isFromOther = senderId !== currentUserIdRef.current;
@@ -168,6 +168,13 @@ export default function OrderChatPage() {
     }
   }, [messages]);
 
+  useEffect(() => {
+    return () => {
+      if (typingDebounceRef.current) clearTimeout(typingDebounceRef.current);
+      if (typingStopRef.current) clearTimeout(typingStopRef.current);
+    };
+  }, []);
+
   // Refetch order periodically so read receipts (Seen) update when the other user reads
   useEffect(() => {
     if (!orderId || !token) return;
@@ -175,20 +182,60 @@ export default function OrderChatPage() {
     return () => clearInterval(interval);
   }, [orderId, token]);
 
+  const typingDebounceRef = useRef(null);
+  const typingStopRef = useRef(null);
+  const TYPING_DEBOUNCE_MS = 300;
+  const TYPING_STOP_MS = 2000;
+
+  const handleTextChange = useCallback(
+    (e) => {
+      const value = e.target.value;
+      setText(value);
+      if (typingDebounceRef.current) clearTimeout(typingDebounceRef.current);
+      if (typingStopRef.current) clearTimeout(typingStopRef.current);
+      typingDebounceRef.current = setTimeout(() => {
+        typingDebounceRef.current = null;
+        if (value.trim()) emitTyping();
+      }, TYPING_DEBOUNCE_MS);
+      typingStopRef.current = setTimeout(() => {
+        typingStopRef.current = null;
+        emitTypingStop();
+      }, TYPING_STOP_MS);
+    },
+    [emitTyping, emitTypingStop]
+  );
+
+  function normalizeMessage(msg) {
+    if (!msg) return null;
+    return {
+      id: msg.id,
+      text: msg.text,
+      createdAt: msg.createdAt,
+      senderId: msg.senderId ?? msg.sender?.id,
+      sender: msg.sender,
+      attachments: msg.attachments ?? [],
+    };
+  }
+
   const handleSend = async () => {
     if (!orderId || !token || (!text.trim() && files.length === 0)) return;
-    setSending(true);
-    setSendError(null);
+    emitTypingStop();
+    if (typingDebounceRef.current) clearTimeout(typingDebounceRef.current);
+    if (typingStopRef.current) clearTimeout(typingStopRef.current);
+    typingDebounceRef.current = null;
+    typingStopRef.current = null;
     const formData = new FormData();
     formData.append('text', text.trim() || ' ');
     files.forEach((file) => formData.append('files', file));
+    setText('');
+    setFiles([]);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+    setSending(true);
+    setSendError(null);
     try {
-      await sendOrderMessage(orderId, formData, token);
-      setText('');
-      setFiles([]);
-      if (fileInputRef.current) fileInputRef.current.value = '';
-      // Refetch messages so the new one appears (socket may not echo to sender)
-      getOrderMessages(orderId, token).then((msgs) => setMessages(Array.isArray(msgs) ? msgs : [])).catch(() => {});
+      const created = await sendOrderMessage(orderId, formData, token);
+      const normalized = normalizeMessage(created);
+      if (normalized) setMessages((prev) => [...prev, normalized]);
     } catch (err) {
       setSendError(err.message);
     } finally {
@@ -434,6 +481,8 @@ export default function OrderChatPage() {
 
   const otherParty = order?.buyerId === currentUserId ? order?.seller : order?.buyer;
   const otherName = otherParty?.nickname ?? (isBuyer ? t('seller') : t('buyer'));
+  const otherUserId = order?.buyerId === currentUserId ? order?.sellerId : order?.buyerId;
+  const isOtherTyping = otherUserId && typingUserIds?.includes(otherUserId);
   const SENDER_BUBBLE = '#1B4332';
 
   return (
@@ -1198,6 +1247,11 @@ export default function OrderChatPage() {
         </Box>
 
         {sendError && <Alert severity="error" sx={{ mx: { xs: 1, md: 2 }, mb: 1 }}>{sendError}</Alert>}
+        {isOtherTyping && (
+          <Typography variant="caption" color="text.secondary" sx={{ px: { xs: 1.5, md: 2 }, py: 0.5 }}>
+            {t('isTyping', { name: otherName })}
+          </Typography>
+        )}
         {/* Input area – fixed at bottom of chat panel, always visible on mobile */}
         <Box
         sx={{
@@ -1231,7 +1285,7 @@ export default function OrderChatPage() {
           <TextField
             placeholder={t('messagePlaceholder')}
             value={text}
-            onChange={(e) => setText(e.target.value)}
+            onChange={handleTextChange}
             onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), handleSend())}
             multiline
             maxRows={4}

@@ -367,7 +367,10 @@ export default function OrdersChatLayout({ children }) {
       {/* Right panel – chat content (hidden on mobile when no chat selected) */}
       <Box
         sx={{
-          flex: 1,
+          flex: { xs: 1, md: '0 0 565px' },
+          width: { xs: '100%', md: 565 },
+          maxWidth: { xs: '100%', md: 565 },
+          maxHeight: { xs: '100%', md: 709 },
           display: showChat ? 'flex' : 'none',
           flexDirection: 'column',
           overflow: 'hidden',

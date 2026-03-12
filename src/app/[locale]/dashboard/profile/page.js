@@ -16,6 +16,8 @@ import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
 import TextField from '@mui/material/TextField';
 import IconButton from '@mui/material/IconButton';
+import Switch from '@mui/material/Switch';
+import FormControlLabel from '@mui/material/FormControlLabel';
 import CloseIcon from '@mui/icons-material/Close';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useAuthStore, useIsAuthenticated } from '@/store/authStore';
@@ -308,6 +310,34 @@ export default function ProfilePage() {
         <Typography variant="subtitle1" fontWeight={600} sx={{ mt: 4, mb: 1 }}>
           {t('notifications')}
         </Typography>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0, mb: 2 }}>
+          <FormControlLabel
+            control={
+              <Switch
+                checked={!!profile?.notifyByEmail}
+                onChange={(_, checked) => {
+                  if (!token) return;
+                  updateProfile({ notifyByEmail: checked }, token).then(() => refetch()).catch(() => {});
+                }}
+                color="primary"
+              />
+            }
+            label={t('notifyByEmail')}
+          />
+          <FormControlLabel
+            control={
+              <Switch
+                checked={!!profile?.notifyByTelegram}
+                onChange={(_, checked) => {
+                  if (!token) return;
+                  updateProfile({ notifyByTelegram: checked }, token).then(() => refetch()).catch(() => {});
+                }}
+                color="primary"
+              />
+            }
+            label={t('notifyByTelegram')}
+          />
+        </Box>
         <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
           {profile?.telegramConnected ? t('telegramConnected') : t('connectTelegramHint')}
         </Typography>

@@ -107,6 +107,8 @@
     "country": "Страна",
     "selectCountry": "Выберите страну",
     "notifications": "Уведомления",
+    "notifyByEmail": "Уведомлять по email",
+    "notifyByTelegram": "Уведомлять в Telegram",
     "connectTelegram": "Подключить уведомления Telegram",
     "connectTelegramHint": "Откройте ссылку на бота и нажмите Start в Telegram. Мы будем присылать уведомления туда.",
     "telegramConnected": "Telegram подключён",
@@ -404,6 +406,7 @@
   "OrderDetail": {
     "orderChat": "Чат заказа",
     "orderChatBadge": "Продажа · Заказ",
+    "isTyping": "{name} печатает...",
     "loginToChat": "Войдите, чтобы открыть чат.",
     "loginToChatHint": "Войдите, чтобы просмотреть чат заказа и продолжить общение с покупателем или продавцом.",
     "loginToOpenChat": "Войти и открыть чат",

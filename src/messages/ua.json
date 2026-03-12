@@ -108,6 +108,8 @@
     "country": "Країна",
     "selectCountry": "Оберіть країну",
     "notifications": "Сповіщення",
+    "notifyByEmail": "Сповіщати по email",
+    "notifyByTelegram": "Сповіщати в Telegram",
     "connectTelegram": "Підключити сповіщення Telegram",
     "connectTelegramHint": "Відкрийте посилання на бота та натисніть Start у Telegram. Ми надсилатимемо сповіщення туди.",
     "telegramConnected": "Telegram підключено",
@@ -349,6 +351,7 @@
   "OrderDetail": {
     "orderChat": "Чат замовлення",
     "orderChatBadge": "Продаж · Замовлення",
+    "isTyping": "{name} друкує...",
     "loginToChat": "Увійдіть, щоб відкрити чат.",
     "loginToChatHint": "Увійдіть, щоб переглянути чат замовлення та продовжити спілкування з покупцем або продавцем.",
     "loginToOpenChat": "Увійти та відкрити чат",

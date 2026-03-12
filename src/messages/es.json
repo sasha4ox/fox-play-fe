@@ -107,6 +107,8 @@
     "country": "País",
     "selectCountry": "Seleccionar país",
     "notifications": "Notificaciones",
+    "notifyByEmail": "Notificar por email",
+    "notifyByTelegram": "Notificar por Telegram",
     "connectTelegram": "Conectar notificaciones de Telegram",
     "connectTelegramHint": "Abre el enlace del bot y pulsa Start en Telegram. Te enviaremos las notificaciones allí.",
     "telegramConnected": "Telegram conectado",
@@ -397,6 +399,7 @@
   "OrderDetail": {
     "orderChat": "Order chat",
     "orderChatBadge": "Sale · Order",
+    "isTyping": "{name} está escribiendo...",
     "loginToChat": "Log in to open chat.",
     "loginToChatHint": "Log in to view this order chat and continue your conversation with the buyer or seller.",
     "loginToOpenChat": "Log in to open chat",
