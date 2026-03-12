@@ -11,6 +11,7 @@ import ConditionalAnalytics from '@/components/ConditionalAnalytics/ConditionalA
 import ScrollToTop from '@/components/ScrollToTop/ScrollToTop';
 import Providers from '@/components/Providers/Providers';
 import GoogleAuthReturnHandler from '@/components/GoogleAuthReturnHandler';
+import SyncPreferredLocale from '@/components/SyncPreferredLocale/SyncPreferredLocale';
 import CompleteProfileGate from '@/components/CompleteProfileGate/CompleteProfileGate';
 import RecentServersBar from '@/components/RecentServersBar/RecentServersBar';
 import GlobalErrorHandler from '@/components/GlobalErrorHandler/GlobalErrorHandler';
@@ -69,6 +70,7 @@ export default async function RootLayout({ children, params }) {
           <NextIntlClientProvider>
             <Suspense fallback={null}>
               <GoogleAuthReturnHandler />
+              <SyncPreferredLocale />
             </Suspense>
             <CompleteProfileGate />
             <div style={{ width: '100%', minWidth: '100%', maxWidth: '100vw', overflowX: 'hidden', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>

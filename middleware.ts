@@ -7,9 +7,19 @@ const intlMiddleware = createMiddleware({
   alternateLinks: false, // hreflang set in [locale]/layout.js with BCP 47 "uk" for Ukrainian
 });
 
+const DEFAULT_LOCALE = 'en';
+
 /** Fix bad redirects like /ua/en/dashboard/... -> /ua/dashboard/... */
 export default function middleware(request) {
   const pathname = request.nextUrl.pathname;
+
+  // Redirect locale-less dashboard URLs (e.g. from Telegram) to default locale
+  if (pathname === '/dashboard' || pathname.startsWith('/dashboard/')) {
+    const url = new URL(request.url);
+    url.pathname = `/${DEFAULT_LOCALE}${pathname}`;
+    return NextResponse.redirect(url);
+  }
+
   const badMatch = pathname.match(/^\/(en|ua|ru|es)\/(en|ua|ru|es)(\/.*|$)/);
   if (badMatch) {
     const locale = badMatch[1];
@@ -30,6 +40,8 @@ export default function middleware(request) {
 export const config = {
   matcher: [
     '/',                    // root
+    '/dashboard',           // locale-less dashboard
+    '/dashboard/:path*',    // locale-less dashboard sub-routes
     '/(en|ua|ru|es)',       // locale root
     '/(en|ua|ru|es)/:path*' // locale sub-routes
   ]
