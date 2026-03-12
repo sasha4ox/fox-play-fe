@@ -111,10 +111,19 @@ export default function OrderChatPage() {
   const setOrderRef = useRef(setOrder);
   setOrderRef.current = setOrder;
   const currentUserIdRef = useRef(null);
+  const pendingMessageIdRef = useRef(null);
   const { connected, onlineUserIds, typingUserIds, emitTyping, emitTypingStop } = useOrderSocket(orderId, token, {
     onMessage: (msg) => {
       const senderId = msg.senderId ?? msg.sender?.id;
       const isFromOther = senderId !== currentUserIdRef.current;
+      const pendingId = pendingMessageIdRef.current;
+      if (!isFromOther && pendingId) {
+        pendingMessageIdRef.current = null;
+        setMessagesRef.current((prev) =>
+          prev.map((m) => (m.id === pendingId ? msg : m))
+        );
+        return;
+      }
       setMessagesRef.current((prev) => {
         if (prev.some((m) => m.id === msg.id)) return prev;
         if (isFromOther) playNewMessageSound();
@@ -224,19 +233,47 @@ export default function OrderChatPage() {
     if (typingStopRef.current) clearTimeout(typingStopRef.current);
     typingDebounceRef.current = null;
     typingStopRef.current = null;
+    const textToSend = text.trim() || ' ';
+    const filesToSend = [...files];
     const formData = new FormData();
-    formData.append('text', text.trim() || ' ');
-    files.forEach((file) => formData.append('files', file));
+    formData.append('text', textToSend);
+    filesToSend.forEach((file) => formData.append('files', file));
     setText('');
     setFiles([]);
     if (fileInputRef.current) fileInputRef.current.value = '';
     setSending(true);
     setSendError(null);
+    const currentUserIdForSend = user?.id ?? user?.userId;
+    const pendingId = `pending-${Date.now()}`;
+    const optimisticMessage = {
+      id: pendingId,
+      text: textToSend,
+      createdAt: new Date().toISOString(),
+      senderId: currentUserIdForSend,
+      sender: user ?? undefined,
+      attachments: [],
+    };
+    setMessages((prev) => [...prev, optimisticMessage]);
+    pendingMessageIdRef.current = pendingId;
     try {
       const created = await sendOrderMessage(orderId, formData, token);
       const normalized = normalizeMessage(created);
-      if (normalized) setMessages((prev) => [...prev, normalized]);
+      if (normalized) {
+        const stillPending = pendingMessageIdRef.current;
+        if (stillPending) {
+          setMessages((prev) =>
+            prev.map((m) => (m.id === stillPending ? normalized : m))
+          );
+          pendingMessageIdRef.current = null;
+        } else {
+          setMessages((prev) =>
+            prev.some((m) => m.id === normalized.id) ? prev : [...prev, normalized]
+          );
+        }
+      }
     } catch (err) {
+      setMessages((prev) => prev.filter((m) => m.id !== pendingId));
+      pendingMessageIdRef.current = null;
       setSendError(err.message);
     } finally {
       setSending(false);
@@ -1254,19 +1291,19 @@ export default function OrderChatPage() {
         )}
         {/* Input area – fixed at bottom of chat panel, always visible on mobile */}
         <Box
-        sx={{
-          flexShrink: 0,
-          display: 'flex',
-          alignItems: 'flex-end',
-          gap: 1,
-          p: { xs: 1.5, md: 2 },
-          pb: { xs: 'max(12px, env(safe-area-inset-bottom))', md: 2 },
-          bgcolor: 'background.paper',
-          borderTop: '1px solid',
-          borderColor: 'divider',
-          boxShadow: '0 -2px 8px rgba(0,0,0,0.06)',
-        }}
-      >
+          sx={{
+            flexShrink: 0,
+            display: 'flex',
+            alignItems: 'flex-end',
+            gap: 1,
+            p: { xs: 1.5, md: 2 },
+            pb: { xs: 'max(12px, env(safe-area-inset-bottom))', md: 2 },
+            bgcolor: 'background.paper',
+            borderTop: '1px solid',
+            borderColor: 'divider',
+            boxShadow: '0 -2px 8px rgba(0,0,0,0.06)',
+          }}
+        >
           <input
             type="file"
             ref={fileInputRef}
