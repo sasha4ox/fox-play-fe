@@ -41,6 +41,8 @@ export default function EditOfferPage() {
   const [priceAdena, setPriceAdena] = useState('1');
   const [quantityError, setQuantityError] = useState(null);
   const [priceError, setPriceError] = useState(null);
+  const [minSellQuantityAdena, setMinSellQuantityAdena] = useState('');
+  const [minSellQuantityError, setMinSellQuantityError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
   const [platformFeePercent, setPlatformFeePercent] = useState(20);
@@ -71,6 +73,10 @@ export default function EditOfferPage() {
           const unitKk = getEffectiveUnitKk(rawUnit);
           setQuantityAdena(String(rawUnit === 0 ? (q / 1000 || 1) : (q / 1_000_000 || 1)));
           setPriceAdena(String(p * unitKk || 1)); // backend: price per 1kk → display: price per unit
+          if (data.minSellQuantity != null) {
+            const msq = Number(data.minSellQuantity);
+            setMinSellQuantityAdena(String(rawUnit === 0 ? msq / 1000 : msq / 1_000_000));
+          }
         } else {
           setQuantity(Number(data.quantity ?? 1));
           setPrice(String(data.price ?? ''));
@@ -131,7 +137,17 @@ export default function EditOfferPage() {
     const pOk = Number.isFinite(priceVal) && priceVal >= minPricePerUnit;
     setQuantityError(qOk ? null : (adenaPriceUnitKk === 0 ? tNew('min1k') : tNew('min1kk')));
     setPriceError(pOk ? null : (adenaPriceUnitKk === 0 ? tNew('minPriceFor1k') : tNew('minPriceFor100kk')));
-    return qOk && pOk;
+    let valid = qOk && pOk;
+    if (minSellQuantityAdena.trim() !== '') {
+      const minQty = parseQuantityAdena(minSellQuantityAdena);
+      const totalQty = qtyAdena ?? 0;
+      const minQtyOk = minQty != null && minQty >= minQuantityAdena && minQty <= totalQty;
+      setMinSellQuantityError(minQtyOk ? null : t('minSellQuantityError'));
+      if (!minQtyOk) valid = false;
+    } else {
+      setMinSellQuantityError(null);
+    }
+    return valid;
   };
 
   const handleSubmit = async (e) => {
@@ -145,12 +161,16 @@ export default function EditOfferPage() {
     setSubmitting(true);
     setSubmitError(null);
     try {
+      const minSellQtyNum = isAdena && minSellQuantityAdena.trim() !== ''
+        ? (parseQuantityAdena(minSellQuantityAdena) ?? null)
+        : null;
       const payload = isAdena
         ? {
             title,
             description,
             quantity: Math.floor(parseQuantityAdena(quantityAdena) ?? minQuantityAdena),
             price: parsePricePerUnit(priceAdena) / effectiveUnitKk,
+            minSellQuantity: minSellQtyNum,
           }
         : {
             title,
@@ -225,6 +245,27 @@ export default function EditOfferPage() {
                 helperText={quantityError}
                 error={!!quantityError}
                 required
+                fullWidth
+                sx={{
+                  mb: 2,
+                  '& input': { MozAppearance: 'textfield' },
+                  '& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button': { WebkitAppearance: 'none', margin: 0 },
+                }}
+                InputProps={{
+                  endAdornment: <InputAdornment position="end">{adenaPriceUnitKk === 0 ? 'k' : 'kk'}</InputAdornment>,
+                }}
+              />
+              <TextField
+                label={t('minSellQuantity')}
+                type="text"
+                inputMode="decimal"
+                value={minSellQuantityAdena}
+                onChange={(e) => {
+                  setMinSellQuantityAdena(e.target.value);
+                  setMinSellQuantityError(null);
+                }}
+                helperText={minSellQuantityError || t('minSellQuantityHint')}
+                error={!!minSellQuantityError}
                 fullWidth
                 sx={{
                   mb: 2,

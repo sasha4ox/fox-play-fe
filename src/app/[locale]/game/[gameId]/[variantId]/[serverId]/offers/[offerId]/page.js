@@ -148,8 +148,19 @@ export default function OfferPDPPage() {
       return;
     }
     setBuyQuantity(1);
-    setBuyQuantityKk(1);
+    const initKk = offer?.minSellQuantity != null
+      ? Number(offer.minSellQuantity) / 1_000_000
+      : 1;
+    setBuyQuantityKk(initKk);
     setBuyDialogOpen(true);
+  };
+
+  const calcBuyQty = () => {
+    const isAdena = offer?.offerType === 'ADENA';
+    const minSellQty = isAdena && offer?.minSellQuantity != null ? Number(offer.minSellQuantity) : 1;
+    return isAdena
+      ? Math.min(Number(offer.quantity), Math.max(minSellQty, Math.floor(buyQuantityKk * 1_000_000)))
+      : Math.min(Math.max(1, Math.floor(buyQuantity)), Number(offer.quantity));
   };
 
   const handleBuySubmit = async () => {
@@ -159,10 +170,7 @@ export default function OfferPDPPage() {
       setBuyError(t('inGameNickRequired'));
       return;
     }
-    const isAdena = offer.offerType === 'ADENA';
-    const qty = isAdena
-      ? Math.min(offer.quantity, Math.max(1, Math.floor(buyQuantityKk * 1_000_000)))
-      : Math.min(Math.max(1, Math.floor(buyQuantity)), offer.quantity);
+    const qty = calcBuyQty();
     setBuySubmitting(true);
     setBuyError(null);
     try {
@@ -185,10 +193,7 @@ export default function OfferPDPPage() {
       setBuyError(t('inGameNickRequired'));
       return;
     }
-    const isAdena = offer.offerType === 'ADENA';
-    const qty = isAdena
-      ? Math.min(offer.quantity, Math.max(1, Math.floor(buyQuantityKk * 1_000_000)))
-      : Math.min(Math.max(1, Math.floor(buyQuantity)), offer.quantity);
+    const qty = calcBuyQty();
     setBuySubmitting(true);
     setBuyError(null);
     try {
@@ -212,10 +217,7 @@ export default function OfferPDPPage() {
       setBuyError(t('inGameNickRequired'));
       return;
     }
-    const isAdena = offer.offerType === 'ADENA';
-    const qty = isAdena
-      ? Math.min(offer.quantity, Math.max(1, Math.floor(buyQuantityKk * 1_000_000)))
-      : Math.min(Math.max(1, Math.floor(buyQuantity)), offer.quantity);
+    const qty = calcBuyQty();
     setBuySubmitting(true);
     setBuyError(null);
     try {
@@ -239,10 +241,7 @@ export default function OfferPDPPage() {
       setBuyError(t('inGameNickRequired'));
       return;
     }
-    const isAdena = offer.offerType === 'ADENA';
-    const qty = isAdena
-      ? Math.min(offer.quantity, Math.max(1, Math.floor(buyQuantityKk * 1_000_000)))
-      : Math.min(Math.max(1, Math.floor(buyQuantity)), offer.quantity);
+    const qty = calcBuyQty();
     setBuySubmitting(true);
     setBuyError(null);
     try {
@@ -503,6 +502,12 @@ export default function OfferPDPPage() {
                         {totalIfBuyFull.toFixed(2)} {currency}
                       </Typography>
                     </Box>
+                    {offer.minSellQuantity != null && (
+                      <Box>
+                        <Typography variant="overline" color="text.secondary">{t('minPurchase')}</Typography>
+                        <Typography variant="h6" fontWeight={600}>{formatAdena(Number(offer.minSellQuantity))}</Typography>
+                      </Box>
+                    )}
                   </Box>
                 </CardContent>
               </Card>
@@ -696,37 +701,49 @@ export default function OfferPDPPage() {
           />
           {isAdenaOffer ? (
             <>
-              <TextField
-                type="number"
-                inputMode="decimal"
-                label={t('toBeReceived')}
-                value={buyQuantityKk}
-                onChange={(e) => {
-                  const inputValue = e.target.value;
-                  // Allow empty input while typing
-                  if (inputValue === '') {
-                    setBuyQuantityKk(0);
-                    return;
-                  }
-                  const value = Number(inputValue);
-                  if (!Number.isFinite(value) || value < 0) return;
-                  const maxKk = (offer?.quantity ?? 0) / 1_000_000;
-                  setBuyQuantityKk(Math.min(maxKk, value));
-                }}
-                InputProps={{
-                  endAdornment: <InputAdornment position="end">kk</InputAdornment>,
-                }}
-                inputProps={{ 
-                  min: 0.001, 
-                  max: (offer?.quantity ?? 0) / 1_000_000
-                }}
-                placeholder="10"
-                fullWidth
-                sx={{ mb: 1 }}
-              />
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 2, fontSize: '0.75rem' }}>
-                Max available: {formatAdena(offer?.quantity ?? 0)}
-              </Typography>
+              {(() => {
+                const maxKk = (offer?.quantity ?? 0) / 1_000_000;
+                const minKk = offer?.minSellQuantity != null
+                  ? Number(offer.minSellQuantity) / 1_000_000
+                  : 0.001;
+                return (
+                  <>
+                    <TextField
+                      type="number"
+                      inputMode="decimal"
+                      label={t('toBeReceived')}
+                      value={buyQuantityKk}
+                      onChange={(e) => {
+                        const inputValue = e.target.value;
+                        if (inputValue === '') {
+                          setBuyQuantityKk(0);
+                          return;
+                        }
+                        const value = Number(inputValue);
+                        if (!Number.isFinite(value) || value < 0) return;
+                        setBuyQuantityKk(Math.min(maxKk, value));
+                      }}
+                      InputProps={{
+                        endAdornment: <InputAdornment position="end">kk</InputAdornment>,
+                      }}
+                      inputProps={{
+                        min: minKk,
+                        max: maxKk,
+                        step: 'any',
+                      }}
+                      placeholder={String(minKk)}
+                      fullWidth
+                      sx={{ mb: 1 }}
+                    />
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2, fontSize: '0.75rem' }}>
+                      {offer?.minSellQuantity != null && (
+                        <>{t('minPurchase')}: {formatAdena(Number(offer.minSellQuantity))}{' · '}</>
+                      )}
+                      Max available: {formatAdena(offer?.quantity ?? 0)}
+                    </Typography>
+                  </>
+                );
+              })()}
             </>
           ) : (
             <TextField

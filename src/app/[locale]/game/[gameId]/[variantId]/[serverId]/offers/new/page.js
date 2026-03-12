@@ -70,6 +70,8 @@ export default function NewOfferPage() {
   const [priceError, setPriceError] = useState(null);
   const [price, setPrice] = useState('');
   const [priceErrorNonAdena, setPriceErrorNonAdena] = useState(null);
+  const [minSellQuantityAdena, setMinSellQuantityAdena] = useState('');
+  const [minSellQuantityError, setMinSellQuantityError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
   const [platformFeePercent, setPlatformFeePercent] = useState(20);
@@ -131,6 +133,16 @@ export default function NewOfferPage() {
       setQuantityError(qOk ? null : (adenaPriceUnitKk === 0 ? t('min1k') : t('min1kk')));
       setPriceError(pOk ? null : (adenaPriceUnitKk === 0 ? t('minPriceFor1k') : t('minPriceFor100kk')));
       if (!qOk || !pOk) valid = false;
+      // Validate optional minSellQuantity
+      if (minSellQuantityAdena.trim() !== '') {
+        const minQty = parseQuantityAdena(minSellQuantityAdena);
+        const totalQty = qtyAdena ?? 0;
+        const minQtyOk = minQty != null && minQty >= minQuantityAdena && minQty <= totalQty;
+        setMinSellQuantityError(minQtyOk ? null : t('minSellQuantityError'));
+        if (!minQtyOk) valid = false;
+      } else {
+        setMinSellQuantityError(null);
+      }
     }
     return valid;
   };
@@ -158,6 +170,9 @@ export default function NewOfferPage() {
     const quantityNum = isAdena ? (parseQuantityAdena(quantityAdena) ?? minQuantityAdena) : 1;
     const priceForUnit = isAdena ? parsePricePerUnit(priceAdena) : 0;
     const priceNum = isAdena ? (Number.isFinite(priceForUnit) ? priceForUnit / effectiveUnitKk : 0) : parseDecimalPrice(price) || 0;
+    const minSellQtyNum = isAdena && minSellQuantityAdena.trim() !== ''
+      ? (parseQuantityAdena(minSellQuantityAdena) ?? null)
+      : null;
     const payload = {
       offerType,
       serverId,
@@ -167,6 +182,7 @@ export default function NewOfferPage() {
       quantity: quantityNum,
       price: priceNum,
       ...(customCategoryId && { customCategoryId }),
+      ...(isAdena && minSellQtyNum != null && { minSellQuantity: minSellQtyNum }),
     };
     try {
       await createOffer(payload, token);
@@ -247,6 +263,27 @@ export default function NewOfferPage() {
                 helperText={quantityError}
                 error={!!quantityError}
                 required
+                sx={{
+                  mb: 2,
+                  width: '100%',
+                  '& input': { MozAppearance: 'textfield' },
+                  '& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button': { WebkitAppearance: 'none', margin: 0 },
+                }}
+                InputProps={{
+                  endAdornment: <InputAdornment position="end">{adenaPriceUnitKk === 0 ? 'k' : 'kk'}</InputAdornment>,
+                }}
+              />
+              <TextField
+                label={t('minSellQuantity')}
+                type="text"
+                inputMode="decimal"
+                value={minSellQuantityAdena}
+                onChange={(e) => {
+                  setMinSellQuantityAdena(e.target.value);
+                  setMinSellQuantityError(null);
+                }}
+                helperText={minSellQuantityError || t('minSellQuantityHint')}
+                error={!!minSellQuantityError}
                 sx={{
                   mb: 2,
                   width: '100%',

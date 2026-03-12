@@ -660,7 +660,10 @@
     "priceBelowMinCannotBuy": "This offer's price is below the minimum (60 UAH / 1 EUR / 1.5 USD per 100kk). It cannot be purchased until the seller updates the price.",
     "deleteOffer": "Delete offer",
     "deleteOfferConfirm": "Are you sure you want to delete this offer? This cannot be undone.",
-    "editOffer": "Edit offer"
+    "editOffer": "Edit offer",
+    "minPurchase": "Minimum purchase",
+    "minPurchaseKk": "Min: {amount} kk",
+    "minPurchaseK": "Min: {amount} k"
   },
   "NewOffer": {
     "createOffer": "Create offer",
@@ -704,7 +707,10 @@
     "invalidAdenaFormat": "Use kk (million) or kkk (billion), e.g. 1kk, 2.5kk, 1kkk",
     "creating": "Creating…",
     "createOfferButton": "Create offer",
-    "failedCreate": "Failed to create offer"
+    "failedCreate": "Failed to create offer",
+    "minSellQuantity": "Minimum amount to sell at once",
+    "minSellQuantityHint": "Optional. The smallest amount a buyer can purchase in one order. Leave empty for no minimum.",
+    "minSellQuantityError": "Must be at least 1kk and not greater than the total amount"
   },
   "EditOffer": {
     "editOffer": "Edit offer",
@@ -718,7 +724,10 @@
     "description": "Description",
     "quantity": "Quantity",
     "price": "Price",
-    "editingAsAdmin": "You are editing this offer as a moderator."
+    "editingAsAdmin": "You are editing this offer as a moderator.",
+    "minSellQuantity": "Minimum amount to sell at once",
+    "minSellQuantityHint": "Optional. The smallest amount a buyer can purchase in one order.",
+    "minSellQuantityError": "Must be at least 1kk and not greater than the total amount"
   },
   "Admin": {
     "overview": "Overview",
