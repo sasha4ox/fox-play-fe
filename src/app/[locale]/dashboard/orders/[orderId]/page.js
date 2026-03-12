@@ -286,6 +286,12 @@ export default function OrderChatPage() {
   const isModerator = role === 'ADMIN' || role === 'MODERATOR';
   const isSeller = order && currentUserId && (order.sellerId === currentUserId || order.seller?.id === currentUserId);
   const isBuyer = order && currentUserId && (order.buyerId === currentUserId || order.buyer?.id === currentUserId);
+  const getPaymentPageHref = (method) => {
+    if (method === 'CRYPTO_MANUAL') return `/${locale}/pay-crypto/${orderId}`;
+    if (method === 'IBAN_MANUAL') return `/${locale}/dashboard/orders/${orderId}/iban-payment`;
+    return `/${locale}/dashboard/orders/${orderId}/card-payment`;
+  };
+
   const buyerPendingAdminConfirm = isBuyer && (order?.paymentMethod === 'CARD_MANUAL' || order?.paymentMethod === 'CRYPTO_MANUAL' || order?.paymentMethod === 'IBAN_MANUAL') && order?.status === 'CREATED';
   const sellerPendingAdminConfirm = isSeller && (order?.paymentMethod === 'CARD_MANUAL' || order?.paymentMethod === 'CRYPTO_MANUAL' || order?.paymentMethod === 'IBAN_MANUAL') && order?.status === 'CREATED';
   const pendingAdminConfirm = buyerPendingAdminConfirm || sellerPendingAdminConfirm;
@@ -620,30 +626,6 @@ export default function OrderChatPage() {
       {showPaymentSuccess && (
         <Alert severity="success" onClose={() => setPaymentSuccessShown(true)} sx={{ mx: { xs: 1, md: 2 }, mt: 1 }}>
           {t('paymentSuccessMessage')}
-        </Alert>
-      )}
-      {isBuyer && order?.paymentMethod === 'CARD_MANUAL' && order?.status === 'CREATED' && order?.orderCardPayment && !order?.orderCardPayment?.buyerMarkedSentAt && (
-        <Alert severity="warning" sx={{ mx: { xs: 1, md: 2 }, mt: 1 }}>
-          {t('cardPaymentBanner')}{' '}
-          <Button component={Link} href={`/${locale}/dashboard/orders/${orderId}/card-payment`} size="small" variant="outlined" sx={{ mt: 0.5 }}>
-            {t('openPaymentPage')}
-          </Button>
-        </Alert>
-      )}
-      {isBuyer && order?.paymentMethod === 'CRYPTO_MANUAL' && order?.status === 'CREATED' && order?.orderCryptoPayment && !order?.orderCryptoPayment?.buyerMarkedSentAt && (
-        <Alert severity="warning" sx={{ mx: { xs: 1, md: 2 }, mt: 1 }}>
-          {t('cryptoPaymentBanner')}{' '}
-          <Button component={Link} href={`/${locale}/pay-crypto/${orderId}`} size="small" variant="outlined" sx={{ mt: 0.5 }}>
-            {t('openPaymentPage')}
-          </Button>
-        </Alert>
-      )}
-      {isBuyer && order?.paymentMethod === 'IBAN_MANUAL' && order?.status === 'CREATED' && order?.orderIbanPayment && !order?.orderIbanPayment?.buyerMarkedSentAt && (
-        <Alert severity="warning" sx={{ mx: { xs: 1, md: 2 }, mt: 1 }}>
-          {t('ibanPaymentBanner')}{' '}
-          <Button component={Link} href={`/${locale}/dashboard/orders/${orderId}/iban-payment`} size="small" variant="outlined" sx={{ mt: 0.5 }}>
-            {t('openPaymentPage')}
-          </Button>
         </Alert>
       )}
       {actionInfo && <Alert severity="info" sx={{ mx: { xs: 1, md: 2 }, mt: 1 }} onClose={() => setActionInfo(null)}>{actionInfo}</Alert>}
@@ -1042,7 +1024,7 @@ export default function OrderChatPage() {
             {buyerPendingAdminConfirm && (
               <Button
                 component={Link}
-                href={`/${locale}/dashboard/orders/${orderId}/card-payment`}
+                href={getPaymentPageHref(order?.paymentMethod)}
                 size="small"
                 variant="outlined"
                 sx={{
@@ -1056,6 +1038,30 @@ export default function OrderChatPage() {
               </Button>
             )}
           </Box>
+        )}
+        {isBuyer && order?.paymentMethod === 'CARD_MANUAL' && order?.status === 'CREATED' && order?.orderCardPayment && !order?.orderCardPayment?.buyerMarkedSentAt && (
+          <Alert severity="warning" sx={{ mx: { xs: 1.5, md: 2 }, mt: 1, flexShrink: 0 }}>
+            {t('cardPaymentBanner')}{' '}
+            <Button component={Link} href={getPaymentPageHref(order?.paymentMethod)} size="small" variant="outlined" sx={{ mt: 0.5 }}>
+              {t('openPaymentPage')}
+            </Button>
+          </Alert>
+        )}
+        {isBuyer && order?.paymentMethod === 'CRYPTO_MANUAL' && order?.status === 'CREATED' && order?.orderCryptoPayment && !order?.orderCryptoPayment?.buyerMarkedSentAt && (
+          <Alert severity="warning" sx={{ mx: { xs: 1.5, md: 2 }, mt: 1, flexShrink: 0 }}>
+            {t('cryptoPaymentBanner')}{' '}
+            <Button component={Link} href={getPaymentPageHref(order?.paymentMethod)} size="small" variant="outlined" sx={{ mt: 0.5 }}>
+              {t('openPaymentPage')}
+            </Button>
+          </Alert>
+        )}
+        {isBuyer && order?.paymentMethod === 'IBAN_MANUAL' && order?.status === 'CREATED' && order?.orderIbanPayment && !order?.orderIbanPayment?.buyerMarkedSentAt && (
+          <Alert severity="warning" sx={{ mx: { xs: 1.5, md: 2 }, mt: 1, flexShrink: 0 }}>
+            {t('ibanPaymentBanner')}{' '}
+            <Button component={Link} href={getPaymentPageHref(order?.paymentMethod)} size="small" variant="outlined" sx={{ mt: 0.5 }}>
+              {t('openPaymentPage')}
+            </Button>
+          </Alert>
         )}
         {!pendingAdminConfirm && isSeller && order?.status === 'PAID' && (
           <Box

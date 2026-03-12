@@ -266,6 +266,21 @@ export async function markOrderIbanPaymentSent(orderId, token) {
   return apiPost(`/orders/${orderId}/iban-payment/sent`, {}, token)
 }
 
+/** Extend the card payment deadline by another 10 minutes (buyer only). */
+export async function extendOrderCardPaymentDeadline(orderId, token) {
+  return apiPost(`/orders/${orderId}/card-payment/extend-deadline`, {}, token)
+}
+
+/** Extend the crypto payment deadline by another 10 minutes (buyer only). */
+export async function extendOrderCryptoPaymentDeadline(orderId, token) {
+  return apiPost(`/orders/${orderId}/crypto-payment/extend-deadline`, {}, token)
+}
+
+/** Extend the IBAN payment deadline by another 10 minutes (buyer only). */
+export async function extendOrderIbanPaymentDeadline(orderId, token) {
+  return apiPost(`/orders/${orderId}/iban-payment/extend-deadline`, {}, token)
+}
+
 /** Profile: user + balances in preferred currency (auth required) */
 export async function getProfile(token) {
   return apiGet('/me', token)

@@ -17,7 +17,7 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
 import TextField from '@mui/material/TextField';
 import { useAuthStore } from '@/store/authStore';
-import { getOrderCardPayment, markOrderCardPaymentSent, getCardPaymentOrderNumberMessage } from '@/lib/api';
+import { getOrderCardPayment, markOrderCardPaymentSent, extendOrderCardPaymentDeadline, getCardPaymentOrderNumberMessage } from '@/lib/api';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Checkbox from '@mui/material/Checkbox';
 
@@ -70,6 +70,7 @@ export default function OrderCardPaymentPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [sending, setSending] = useState(false);
+  const [extending, setExtending] = useState(false);
   const [last4DialogOpen, setLast4DialogOpen] = useState(false);
   const [last4, setLast4] = useState('');
   const [orderNumberConfig, setOrderNumberConfig] = useState({ visible: false, text: '' });
@@ -97,6 +98,17 @@ export default function OrderCardPaymentPage() {
       .then(setOrderNumberConfig)
       .catch(() => setOrderNumberConfig({ visible: false, text: '' }));
   }, []);
+
+  const handleExtendDeadline = () => {
+    if (!orderId || !token) return;
+    setExtending(true);
+    setError(null);
+    extendOrderCardPaymentDeadline(orderId, token)
+      .then(() => getOrderCardPayment(orderId, token))
+      .then((updated) => setData(updated))
+      .catch((err) => setError(err.message || t('extendFailed')))
+      .finally(() => setExtending(false));
+  };
 
   const handleConfirmSentClick = () => {
     setLast4('');
@@ -345,10 +357,22 @@ export default function OrderCardPaymentPage() {
           >
             {remaining !== null ? formatTime(remaining) : '—'}
           </Typography>
-          {expired && (
-            <Typography variant="body2" color="error.main" sx={{ mt: 1 }} fontWeight={600}>
-              {t('deadlinePassed')}
-            </Typography>
+          {expired && status !== 'confirmed' && (
+            <Box sx={{ mt: 2 }}>
+              <Typography variant="body2" color="error.main" fontWeight={600} sx={{ mb: 1.5 }}>
+                {t('deadlinePassed')}
+              </Typography>
+              <Button
+                variant="contained"
+                color="warning"
+                size="large"
+                onClick={handleExtendDeadline}
+                disabled={extending}
+                sx={{ minHeight: 44 }}
+              >
+                {extending ? '…' : t('stillWantToPay')}
+              </Button>
+            </Box>
           )}
         </Box>
       )}

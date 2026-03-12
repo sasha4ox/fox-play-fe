@@ -502,7 +502,9 @@
     "failed": "Something went wrong. Please try again.",
     "orderNumberTitle": "Include this 'Add a note' in your transfer",
     "orderNumberConfirmLabel": "I have included this note in my transfer",
-    "amountFeeNotice": "This is the exact amount we need to receive. Your bank or payment provider may charge transfer fees that we cannot see — please ensure the full amount arrives on our side."
+    "amountFeeNotice": "This is the exact amount we need to receive. Your bank or payment provider may charge transfer fees that we cannot see — please ensure the full amount arrives on our side.",
+    "stillWantToPay": "Still want to pay? Extend time",
+    "extendFailed": "Failed to extend payment time. Please try again."
   },
   "CryptoPayment": {
     "title": "Pay with Crypto",
@@ -524,7 +526,9 @@
     "orderNumberTitle": "Include this in your transfer memo",
     "orderNumberConfirmLabel": "I have included this in my transfer memo",
     "amountFeeNotice": "This is the exact amount we need to receive in USDT (TRC20).",
-    "amountInUsdNotice": "Payment is in USD (dollars equivalent to USDT)."
+    "amountInUsdNotice": "Payment is in USD (dollars equivalent to USDT).",
+    "stillWantToPay": "Still want to pay? Extend time",
+    "extendFailed": "Failed to extend payment time. Please try again."
   },
   "IbanPayment": {
     "title": "Pay via IBAN (EUR)",
@@ -551,7 +555,9 @@
     "iSentMoney": "I sent money",
     "backToOrder": "Back to order",
     "openOrderChat": "Open order chat",
-    "failed": "Something went wrong. Please try again."
+    "failed": "Something went wrong. Please try again.",
+    "stillWantToPay": "Still want to pay? Extend time",
+    "extendFailed": "Failed to extend payment time. Please try again."
   },
   "Offers": {
     "myOffers": "My offers",

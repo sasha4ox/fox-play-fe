@@ -13,7 +13,7 @@ import CircularProgress from '@mui/material/CircularProgress';
 import Alert from '@mui/material/Alert';
 import IconButton from '@mui/material/IconButton';
 import { useAuthStore } from '@/store/authStore';
-import { getOrderIbanPayment, markOrderIbanPaymentSent } from '@/lib/api';
+import { getOrderIbanPayment, markOrderIbanPaymentSent, extendOrderIbanPaymentDeadline } from '@/lib/api';
 import ContentCopy from '@mui/icons-material/ContentCopy';
 
 function useCountdown(deadlineAt) {
@@ -95,6 +95,7 @@ export default function OrderIbanPaymentPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [sending, setSending] = useState(false);
+  const [extending, setExtending] = useState(false);
 
   const deadlineAt = data?.paymentDeadlineAt;
   const remaining = useCountdown(deadlineAt);
@@ -112,6 +113,17 @@ export default function OrderIbanPaymentPage() {
       })
       .finally(() => setLoading(false));
   }, [orderId, token]);
+
+  const handleExtendDeadline = () => {
+    if (!orderId || !token) return;
+    setExtending(true);
+    setError(null);
+    extendOrderIbanPaymentDeadline(orderId, token)
+      .then(() => getOrderIbanPayment(orderId, token))
+      .then((updated) => setData(updated))
+      .catch((err) => setError(err.message || t('extendFailed')))
+      .finally(() => setExtending(false));
+  };
 
   const handleMarkSent = () => {
     if (!orderId || !token) return;
@@ -242,10 +254,22 @@ export default function OrderIbanPaymentPage() {
           >
             {remaining !== null ? formatTime(remaining) : '—'}
           </Typography>
-          {expired && (
-            <Typography variant="body2" color="error.main" sx={{ mt: 1 }} fontWeight={600}>
-              {t('deadlinePassed')}
-            </Typography>
+          {expired && status !== 'confirmed' && (
+            <Box sx={{ mt: 2 }}>
+              <Typography variant="body2" color="error.main" fontWeight={600} sx={{ mb: 1.5 }}>
+                {t('deadlinePassed')}
+              </Typography>
+              <Button
+                variant="contained"
+                color="warning"
+                size="large"
+                onClick={handleExtendDeadline}
+                disabled={extending}
+                sx={{ minHeight: 44 }}
+              >
+                {extending ? '…' : t('stillWantToPay')}
+              </Button>
+            </Box>
           )}
         </Box>
       )}
