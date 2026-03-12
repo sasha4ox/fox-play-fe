@@ -105,7 +105,12 @@
     "addWallet": "Add wallet",
     "cardHolderName": "Cardholder name",
     "country": "País",
-    "selectCountry": "Seleccionar país"
+    "selectCountry": "Seleccionar país",
+    "notifications": "Notificaciones",
+    "connectTelegram": "Conectar notificaciones de Telegram",
+    "connectTelegramHint": "Abre el enlace del bot y pulsa Start en Telegram. Te enviaremos las notificaciones allí.",
+    "telegramConnected": "Telegram conectado",
+    "disconnectTelegram": "Desconectar"
   },
   "LoginModal": {
     "title": "Log in or sign up"

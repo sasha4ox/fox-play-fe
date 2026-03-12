@@ -105,7 +105,12 @@
     "addWallet": "Добавить кошелёк",
     "cardHolderName": "Имя владельца карты",
     "country": "Страна",
-    "selectCountry": "Выберите страну"
+    "selectCountry": "Выберите страну",
+    "notifications": "Уведомления",
+    "connectTelegram": "Подключить уведомления Telegram",
+    "connectTelegramHint": "Откройте ссылку на бота и нажмите Start в Telegram. Мы будем присылать уведомления туда.",
+    "telegramConnected": "Telegram подключён",
+    "disconnectTelegram": "Отключить"
   },
 
   "LoginModal": {

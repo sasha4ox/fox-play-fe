@@ -106,7 +106,12 @@
     "addWallet": "Додати гаманець",
     "cardHolderName": "Ім'я на картці",
     "country": "Країна",
-    "selectCountry": "Оберіть країну"
+    "selectCountry": "Оберіть країну",
+    "notifications": "Сповіщення",
+    "connectTelegram": "Підключити сповіщення Telegram",
+    "connectTelegramHint": "Відкрийте посилання на бота та натисніть Start у Telegram. Ми надсилатимемо сповіщення туди.",
+    "telegramConnected": "Telegram підключено",
+    "disconnectTelegram": "Відключити"
   },
   "LoginModal": {
     "title": "Увійти або зареєструватися"

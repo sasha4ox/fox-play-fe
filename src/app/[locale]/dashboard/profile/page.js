@@ -20,7 +20,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useAuthStore, useIsAuthenticated } from '@/store/authStore';
 import { useProfile } from '@/hooks/useProfile';
-import { uploadAvatar, disable2FA, requestPasswordReset, getSavedCards, getSavedWallets, addSavedCard, addSavedWallet, deleteSavedCard, deleteSavedWallet, updateProfile } from '@/lib/api';
+import { uploadAvatar, disable2FA, requestPasswordReset, getSavedCards, getSavedWallets, addSavedCard, addSavedWallet, deleteSavedCard, deleteSavedWallet, updateProfile, disconnectTelegram } from '@/lib/api';
 import { useLoginModalStore } from '@/store/loginModalStore';
 import Enable2FAModal from '@/components/Enable2FAModal/Enable2FAModal';
 import CountrySelect from '@/components/CountrySelect/CountrySelect';
@@ -61,6 +61,7 @@ export default function ProfilePage() {
   const [addWalletLabel, setAddWalletLabel] = useState('');
   const [addWalletLoading, setAddWalletLoading] = useState(false);
   const [addWalletError, setAddWalletError] = useState(null);
+  const [telegramDisconnectLoading, setTelegramDisconnectLoading] = useState(false);
 
   const loadSavedMethods = () => {
     if (!token) return;
@@ -303,6 +304,49 @@ export default function ProfilePage() {
         >
           {t('sendResetLink')}
         </Button>
+
+        <Typography variant="subtitle1" fontWeight={600} sx={{ mt: 4, mb: 1 }}>
+          {t('notifications')}
+        </Typography>
+        <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
+          {profile?.telegramConnected ? t('telegramConnected') : t('connectTelegramHint')}
+        </Typography>
+        {profile?.telegramConnected ? (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+            <Typography variant="body2" color="text.secondary">
+              {t('telegramConnected')}
+            </Typography>
+            <Button
+              variant="outlined"
+              color="secondary"
+              size="small"
+              disabled={telegramDisconnectLoading}
+              onClick={() => {
+                if (!token) return;
+                setTelegramDisconnectLoading(true);
+                disconnectTelegram(token)
+                  .then(() => refetch())
+                  .catch(() => {})
+                  .finally(() => setTelegramDisconnectLoading(false));
+              }}
+              sx={{ textTransform: 'none' }}
+            >
+              {telegramDisconnectLoading ? '…' : t('disconnectTelegram')}
+            </Button>
+          </Box>
+        ) : profile?.telegramBotUsername ? (
+          <Button
+            variant="contained"
+            color="primary"
+            component="a"
+            href={`https://t.me/${profile.telegramBotUsername}?start=${profile?.id ?? ''}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            sx={{ textTransform: 'none', mb: 2 }}
+          >
+            {t('connectTelegram')}
+          </Button>
+        ) : null}
 
         <Typography variant="subtitle1" fontWeight={600} sx={{ mt: 3, mb: 1 }}>
           {t('savedPaymentMethods')}

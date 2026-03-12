@@ -363,6 +363,11 @@ export async function disable2FA(code, token) {
   return apiPost('/me/2fa/disable', { code }, token)
 }
 
+/** Disconnect Telegram notifications (clears telegramChatId). */
+export async function disconnectTelegram(token) {
+  return apiPost('/me/telegram/disconnect', {}, token)
+}
+
 /** Request password reset email. No auth. Body: { email }. */
 export async function requestPasswordReset(email) {
   return apiPost('/auth/forgot-password', { email }, null)
