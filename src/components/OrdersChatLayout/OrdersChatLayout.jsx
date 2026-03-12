@@ -160,7 +160,7 @@ export default function OrdersChatLayout({ children }) {
     <Box
       sx={{
         display: 'flex',
-        height: { xs: 'calc(100vh - 56px)', md: 'calc(100vh - 114px)' },
+        height: { xs: 'calc(100vh - 147px)', md: 'calc(100vh - 114px)' },
         minHeight: { xs: 400, md: 500 },
         bgcolor: 'var(--background)',
         borderRadius: 0,
