@@ -21,11 +21,29 @@ import { getMyOrderChats } from '@/lib/api';
 import { getOrderStatusTextColor } from '@/lib/orderStatusColors';
 import Button from '@mui/material/Button';
 
+/** Cache TTL for chat list (show stale data immediately on revisit, then revalidate) */
+const CHAT_LIST_CACHE_MS = 30 * 1000;
+
 /** Dark green used for sender bubbles (matches reference) */
 const SENDER_BUBBLE = '#1B4332';
 const HIGHLIGHT_BG = 'rgba(27, 67, 50, 0.18)';
 
 const CHAT_ITEM_BG = 'var(--background)';
+
+/** Module-level cache: token -> { orders, unreadTotal, timestamp } for stale-while-revalidate */
+const chatListCache = { current: null };
+
+function getCachedChatList(token) {
+  if (!token || !chatListCache.current) return null;
+  const entry = chatListCache.current;
+  if (entry.token !== token) return null;
+  if (Date.now() - entry.timestamp > CHAT_LIST_CACHE_MS) return null;
+  return { orders: entry.orders, unreadTotal: entry.unreadTotal };
+}
+
+function setCachedChatList(token, orders, unreadTotal) {
+  chatListCache.current = { token, orders, unreadTotal, timestamp: Date.now() };
+}
 
 export default function OrdersChatLayout({ children }) {
   const locale = useLocale();
@@ -72,6 +90,7 @@ export default function OrdersChatLayout({ children }) {
       .then((data) => {
         const orders = Array.isArray(data) ? data : (data?.orders ?? []);
         const unreadTotal = typeof data?.unreadTotal === 'number' ? data.unreadTotal : 0;
+        setCachedChatList(token, orders, unreadTotal);
         setChatSummary({ orders, unreadTotal });
       })
       .catch(() => setChatSummary({ orders: [], unreadTotal: 0 }));
@@ -82,11 +101,16 @@ export default function OrdersChatLayout({ children }) {
       setLoading(false);
       return;
     }
-    setLoading(true);
+    const cached = getCachedChatList(token);
+    if (cached) {
+      setChatSummary({ orders: cached.orders, unreadTotal: cached.unreadTotal });
+      setLoading(false);
+    }
     getMyOrderChats(token)
       .then((data) => {
         const orders = Array.isArray(data) ? data : (data?.orders ?? []);
         const unreadTotal = typeof data?.unreadTotal === 'number' ? data.unreadTotal : 0;
+        setCachedChatList(token, orders, unreadTotal);
         setChatSummary({ orders, unreadTotal });
       })
       .catch(() => setChatSummary({ orders: [], unreadTotal: 0 }))
