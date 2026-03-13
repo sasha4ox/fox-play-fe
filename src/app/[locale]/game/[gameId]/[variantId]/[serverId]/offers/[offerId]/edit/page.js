@@ -232,7 +232,7 @@ export default function EditOfferPage() {
 
         <form onSubmit={handleSubmit}>
           {isAdena ? (
-            <Box sx={{ maxWidth: 360 }}>
+            <Box sx={{ maxWidth: 400, mx: 'auto' }}>
               <TextField
                 label={tNew('amountOfAdena')}
                 type="text"
@@ -248,27 +248,7 @@ export default function EditOfferPage() {
                 fullWidth
                 sx={{
                   mb: 2,
-                  '& input': { MozAppearance: 'textfield' },
-                  '& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button': { WebkitAppearance: 'none', margin: 0 },
-                }}
-                InputProps={{
-                  endAdornment: <InputAdornment position="end">{adenaPriceUnitKk === 0 ? 'k' : 'kk'}</InputAdornment>,
-                }}
-              />
-              <TextField
-                label={t('minSellQuantity')}
-                type="text"
-                inputMode="decimal"
-                value={minSellQuantityAdena}
-                onChange={(e) => {
-                  setMinSellQuantityAdena(e.target.value);
-                  setMinSellQuantityError(null);
-                }}
-                helperText={minSellQuantityError || t('minSellQuantityHint')}
-                error={!!minSellQuantityError}
-                fullWidth
-                sx={{
-                  mb: 2,
+                  '& .MuiInputBase-input': { py: 1.5, fontSize: '1rem' },
                   '& input': { MozAppearance: 'textfield' },
                   '& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button': { WebkitAppearance: 'none', margin: 0 },
                 }}
@@ -292,6 +272,7 @@ export default function EditOfferPage() {
                 fullWidth
                 sx={{
                   mb: 0.5,
+                  '& .MuiInputBase-input': { py: 1.5, fontSize: '1rem' },
                   '& input': { MozAppearance: 'textfield' },
                   '& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button': { WebkitAppearance: 'none', margin: 0 },
                 }}
@@ -400,10 +381,45 @@ export default function EditOfferPage() {
                   </>
                 );
               })()}
+              <TextField
+                label={t('minSellQuantity')}
+                type="text"
+                inputMode="decimal"
+                value={minSellQuantityAdena}
+                onChange={(e) => {
+                  setMinSellQuantityAdena(e.target.value);
+                  setMinSellQuantityError(null);
+                }}
+                helperText={minSellQuantityError || t('minSellQuantityHint')}
+                error={!!minSellQuantityError}
+                fullWidth
+                sx={{
+                  mt: 2,
+                  mb: 2,
+                  '& .MuiInputBase-input': { py: 1.5, fontSize: '1rem' },
+                  '& input': { MozAppearance: 'textfield' },
+                  '& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button': { WebkitAppearance: 'none', margin: 0 },
+                }}
+                InputProps={{
+                  endAdornment: <InputAdornment position="end">{adenaPriceUnitKk === 0 ? 'k' : 'kk'}</InputAdornment>,
+                }}
+              />
             </Box>
           ) : (
-            <>
-              <TextField type="number" label={t('quantity')} value={quantity} onChange={(e) => setQuantity(e.target.value)} inputProps={{ min: 1 }} fullWidth sx={{ mb: 2 }} required />
+            <Box sx={{ maxWidth: 400, mx: 'auto' }}>
+              <TextField
+                type="number"
+                label={t('quantity')}
+                value={quantity}
+                onChange={(e) => setQuantity(e.target.value)}
+                inputProps={{ min: 1 }}
+                fullWidth
+                sx={{
+                  mb: 2,
+                  '& .MuiInputBase-input': { py: 1.5, fontSize: '1rem' },
+                }}
+                required
+              />
               <TextField
                 type="text"
                 inputMode="decimal"
@@ -414,30 +430,55 @@ export default function EditOfferPage() {
                 fullWidth
                 sx={{
                   mb: 2,
+                  '& .MuiInputBase-input': { py: 1.5, fontSize: '1rem' },
                   '& input': { MozAppearance: 'textfield' },
                   '& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button': { WebkitAppearance: 'none', margin: 0 },
                 }}
                 required
               />
-            </>
+            </Box>
           )}
 
-          <TextField label={t('title')} value={title} onChange={(e) => setTitle(e.target.value)} fullWidth sx={{ mb: 2 }} required />
-          <TextField label={t('description')} value={description} onChange={(e) => setDescription(e.target.value)} multiline rows={4} fullWidth sx={{ mb: 2 }} required />
+          <Box sx={{ maxWidth: 400, mx: 'auto' }}>
+            <TextField
+              label={t('title')}
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              fullWidth
+              sx={{
+                mb: 2,
+                '& .MuiInputBase-input': { py: 1.5, fontSize: '1rem' },
+              }}
+              required
+            />
+            <TextField
+              label={t('description')}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              multiline
+              rows={4}
+              fullWidth
+              sx={{
+                mb: 2,
+                '& .MuiInputBase-input': { py: 1.5, fontSize: '1rem' },
+              }}
+              required
+            />
 
           {submitError && <Alert severity="error" sx={{ mb: 2 }}>{submitError}</Alert>}
-          <Button
-            type="submit"
-            variant="contained"
-            color="secondary"
-            disabled={
-              submitting ||
-              (isAdena &&
-                (!Number.isFinite(parsePricePerUnit(priceAdena)) || parsePricePerUnit(priceAdena) < minPricePerUnit))
-            }
-          >
-            {submitting ? t('saving') : tCommon('save')}
-          </Button>
+            <Button
+              type="submit"
+              variant="contained"
+              color="secondary"
+              disabled={
+                submitting ||
+                (isAdena &&
+                  (!Number.isFinite(parsePricePerUnit(priceAdena)) || parsePricePerUnit(priceAdena) < minPricePerUnit))
+              }
+            >
+              {submitting ? t('saving') : tCommon('save')}
+            </Button>
+          </Box>
         </form>
       </Container>
     </Box>

@@ -250,7 +250,7 @@ export default function NewOfferPage() {
 
         <form onSubmit={handleSubmit}>
           {isAdena && (
-            <Box sx={{ maxWidth: 260 }}>
+            <Box sx={{ maxWidth: 400, mx: 'auto' }}>
               <TextField
                 label={t('amountOfAdena')}
                 type="text"
@@ -263,30 +263,10 @@ export default function NewOfferPage() {
                 helperText={quantityError}
                 error={!!quantityError}
                 required
+                fullWidth
                 sx={{
                   mb: 2,
-                  width: '100%',
-                  '& input': { MozAppearance: 'textfield' },
-                  '& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button': { WebkitAppearance: 'none', margin: 0 },
-                }}
-                InputProps={{
-                  endAdornment: <InputAdornment position="end">{adenaPriceUnitKk === 0 ? 'k' : 'kk'}</InputAdornment>,
-                }}
-              />
-              <TextField
-                label={t('minSellQuantity')}
-                type="text"
-                inputMode="decimal"
-                value={minSellQuantityAdena}
-                onChange={(e) => {
-                  setMinSellQuantityAdena(e.target.value);
-                  setMinSellQuantityError(null);
-                }}
-                helperText={minSellQuantityError || t('minSellQuantityHint')}
-                error={!!minSellQuantityError}
-                sx={{
-                  mb: 2,
-                  width: '100%',
+                  '& .MuiInputBase-input': { py: 1.5, fontSize: '1rem' },
                   '& input': { MozAppearance: 'textfield' },
                   '& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button': { WebkitAppearance: 'none', margin: 0 },
                 }}
@@ -307,9 +287,10 @@ export default function NewOfferPage() {
                 helperText={priceError}
                 error={!!priceError}
                 required
+                fullWidth
                 sx={{
                   mb: 0.5,
-                  width: '100%',
+                  '& .MuiInputBase-input': { py: 1.5, fontSize: '1rem' },
                   '& input': { MozAppearance: 'textfield' },
                   '& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button': { WebkitAppearance: 'none', margin: 0 },
                 }}
@@ -418,16 +399,42 @@ export default function NewOfferPage() {
                   </>
                 );
               })()}
+              <TextField
+                label={t('minSellQuantity')}
+                type="text"
+                inputMode="decimal"
+                value={minSellQuantityAdena}
+                onChange={(e) => {
+                  setMinSellQuantityAdena(e.target.value);
+                  setMinSellQuantityError(null);
+                }}
+                helperText={minSellQuantityError || t('minSellQuantityHint')}
+                error={!!minSellQuantityError}
+                fullWidth
+                sx={{
+                  mt: 2,
+                  mb: 2,
+                  '& .MuiInputBase-input': { py: 1.5, fontSize: '1rem' },
+                  '& input': { MozAppearance: 'textfield' },
+                  '& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button': { WebkitAppearance: 'none', margin: 0 },
+                }}
+                InputProps={{
+                  endAdornment: <InputAdornment position="end">{adenaPriceUnitKk === 0 ? 'k' : 'kk'}</InputAdornment>,
+                }}
+              />
             </Box>
           )}
           {!isAdena && (
-            <>
+            <Box sx={{ maxWidth: 400, mx: 'auto' }}>
               <TextField
                 label={t('title')}
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 fullWidth
-                sx={{ mb: 2 }}
+                sx={{
+                  mb: 2,
+                  '& .MuiInputBase-input': { py: 1.5, fontSize: '1rem' },
+                }}
                 required
               />
               <TextField
@@ -437,7 +444,10 @@ export default function NewOfferPage() {
                 multiline
                 rows={4}
                 fullWidth
-                sx={{ mb: 2 }}
+                sx={{
+                  mb: 2,
+                  '& .MuiInputBase-input': { py: 1.5, fontSize: '1rem' },
+                }}
                 required
               />
               <TextField
@@ -455,12 +465,13 @@ export default function NewOfferPage() {
                 fullWidth
                 sx={{
                   mb: 2,
+                  '& .MuiInputBase-input': { py: 1.5, fontSize: '1rem' },
                   '& input': { MozAppearance: 'textfield' },
                   '& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button': { WebkitAppearance: 'none', margin: 0 },
                 }}
                 required
               />
-            </>
+            </Box>
           )}
           {submitError && <Alert severity="error" sx={{ mb: 2 }}>{submitError}</Alert>}
           <Button
