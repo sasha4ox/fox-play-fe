@@ -250,7 +250,7 @@ export default function NewOfferPage() {
 
         <form onSubmit={handleSubmit}>
           {isAdena && (
-            <Box sx={{ maxWidth: 400, mx: 'auto' }}>
+            <Box sx={{ mx: 'auto' }}>
               <TextField
                 label={t('amountOfAdena')}
                 type="text"
