@@ -519,11 +519,23 @@ export default function OrderChatPage() {
 
   const isMe = (senderId) => currentUserId && senderId === currentUserId;
 
+  /** Returns { labelKey: 'buyer'|'seller'|'adminBadge', isAdmin: boolean } for message sender. */
+  const getMessageSenderLabel = (msg) => {
+    const senderId = msg.senderId ?? msg.sender?.id;
+    if (senderId === order?.buyerId) return { labelKey: 'buyer', isAdmin: false };
+    if (senderId === order?.sellerId) return { labelKey: 'seller', isAdmin: false };
+    if (msg.sender?.role === 'ADMIN' || msg.sender?.role === 'MODERATOR') return { labelKey: 'adminBadge', isAdmin: true };
+    return { labelKey: null, isAdmin: false };
+  };
+
   const otherParty = order?.buyerId === currentUserId ? order?.seller : order?.buyer;
   const otherName = otherParty?.nickname ?? (isBuyer ? t('seller') : t('buyer'));
   const otherUserId = order?.buyerId === currentUserId ? order?.sellerId : order?.buyerId;
   const isOtherTyping = otherUserId && typingUserIds?.includes(otherUserId);
+  const typingBuyerId = order?.buyerId && typingUserIds?.includes(order.buyerId);
+  const typingSellerId = order?.sellerId && typingUserIds?.includes(order.sellerId);
   const SENDER_BUBBLE = '#1B4332';
+  const ADMIN_BUBBLE_TINT = 'rgba(255, 193, 7, 0.25)';
 
   return (
     <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', bgcolor: '#f5f5f5' }}>
@@ -546,38 +558,77 @@ export default function OrderChatPage() {
             <ArrowBackIcon />
           </IconButton>
         )}
-        <Link href={otherParty?.id ? `/${locale}/user/${otherParty.id}` : '#'} style={{ textDecoration: 'none', color: 'inherit' }}>
-          <Avatar
-            src={otherParty?.avatarUrl}
-            alt={otherParty?.nickname || otherParty?.email || ''}
-            sx={{ width: { xs: 36, md: 44 }, height: { xs: 36, md: 44 }, bgcolor: SENDER_BUBBLE }}
-          >
-            {(otherName || '?').charAt(0).toUpperCase()}
-          </Avatar>
-        </Link>
-        <Box sx={{ flex: 1, minWidth: 0 }}>
-          {otherParty?.id ? (
-            <Typography variant="subtitle1" fontWeight={600} noWrap component={Link} href={`/${locale}/user/${otherParty.id}`} sx={{ color: 'text.primary', textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}>
-              {otherName}
-            </Typography>
-          ) : (
-            <Typography variant="subtitle1" fontWeight={600} noWrap sx={{ color: 'text.primary' }}>
-              {otherName}
-            </Typography>
-          )}
-          <Typography variant="caption" color="success.main" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-            <Box component="span" sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: 'success.main' }} />
-            {connected ? t('online') : t('live')}
-          </Typography>
-          {order.buyerCharacterNick && (
-            <Typography variant="caption" color="text.secondary" sx={{ mt: 0.25 }} noWrap>
-              {t('buyerInGameNick')}:{' '}
-              <Typography component="span" sx={{ color: 'primary.main', fontWeight: 600 }}>
-                {order.buyerCharacterNick}
+        {isModerator ? (
+          <>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexShrink: 0 }}>
+              <Link href={order?.buyer?.id ? `/${locale}/user/${order.buyer.id}` : '#'} style={{ textDecoration: 'none', color: 'inherit' }}>
+                <Avatar
+                  src={order?.buyer?.avatarUrl}
+                  alt={order?.buyer?.nickname || ''}
+                  sx={{ width: { xs: 32, md: 40 }, height: { xs: 32, md: 40 }, bgcolor: SENDER_BUBBLE }}
+                >
+                  {(order?.buyer?.nickname || '?').charAt(0).toUpperCase()}
+                </Avatar>
+              </Link>
+              <Box sx={{ minWidth: 0 }}>
+                <Typography variant="caption" color="text.secondary" display="block">{t('buyer')}</Typography>
+                <Typography variant="body2" fontWeight={600} noWrap>{order?.buyer?.nickname ?? '—'}</Typography>
+              </Box>
+            </Box>
+            <Typography variant="body2" color="text.secondary" sx={{ flexShrink: 0 }}>·</Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexShrink: 0 }}>
+              <Link href={order?.seller?.id ? `/${locale}/user/${order.seller.id}` : '#'} style={{ textDecoration: 'none', color: 'inherit' }}>
+                <Avatar
+                  src={order?.seller?.avatarUrl}
+                  alt={order?.seller?.nickname || ''}
+                  sx={{ width: { xs: 32, md: 40 }, height: { xs: 32, md: 40 }, bgcolor: SENDER_BUBBLE }}
+                >
+                  {(order?.seller?.nickname || '?').charAt(0).toUpperCase()}
+                </Avatar>
+              </Link>
+              <Box sx={{ minWidth: 0 }}>
+                <Typography variant="caption" color="text.secondary" display="block">{t('seller')}</Typography>
+                <Typography variant="body2" fontWeight={600} noWrap>{order?.seller?.nickname ?? '—'}</Typography>
+              </Box>
+            </Box>
+            <Box sx={{ flex: 1, minWidth: 0 }} />
+          </>
+        ) : (
+          <>
+            <Link href={otherParty?.id ? `/${locale}/user/${otherParty.id}` : '#'} style={{ textDecoration: 'none', color: 'inherit' }}>
+              <Avatar
+                src={otherParty?.avatarUrl}
+                alt={otherParty?.nickname || otherParty?.email || ''}
+                sx={{ width: { xs: 36, md: 44 }, height: { xs: 36, md: 44 }, bgcolor: SENDER_BUBBLE }}
+              >
+                {(otherName || '?').charAt(0).toUpperCase()}
+              </Avatar>
+            </Link>
+            <Box sx={{ flex: 1, minWidth: 0 }}>
+              {otherParty?.id ? (
+                <Typography variant="subtitle1" fontWeight={600} noWrap component={Link} href={`/${locale}/user/${otherParty.id}`} sx={{ color: 'text.primary', textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}>
+                  {otherName}
+                </Typography>
+              ) : (
+                <Typography variant="subtitle1" fontWeight={600} noWrap sx={{ color: 'text.primary' }}>
+                  {otherName}
+                </Typography>
+              )}
+              <Typography variant="caption" color="success.main" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                <Box component="span" sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: 'success.main' }} />
+                {connected ? t('online') : t('live')}
               </Typography>
-            </Typography>
-          )}
-        </Box>
+              {order.buyerCharacterNick && (
+                <Typography variant="caption" color="text.secondary" sx={{ mt: 0.25 }} noWrap>
+                  {t('buyerInGameNick')}:{' '}
+                  <Typography component="span" sx={{ color: 'primary.main', fontWeight: 600 }}>
+                    {order.buyerCharacterNick}
+                  </Typography>
+                </Typography>
+              )}
+            </Box>
+          </>
+        )}
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', minWidth: 0 }}>
           <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }} noWrap>
             {order.offer?.title || tOrders('offer')}
@@ -668,10 +719,10 @@ export default function OrderChatPage() {
           <Box sx={{ p: { xs: isMobile ? 2 : 1.5, md: 2 }, pt: isMobile ? 0 : undefined, display: isMobile && !infoExpandedOnMobile ? 'none' : 'block' }}>
           {order.offer && (
           <>
-            {/* Block 1: Offer & what you're buying (buyer) / selling (seller) */}
+            {/* Block 1: Offer & what you're buying (buyer) / selling (seller) / deal (moderator) */}
             <Box sx={{ mb: 2, p: 2, border: '1px solid', borderColor: 'divider', borderRadius: 1, bgcolor: 'action.hover' }}>
               <Typography variant="overline" color="text.secondary" fontWeight={600} display="block" sx={{ mb: 1 }}>
-                {isBuyer ? t('block1TitleBuyer') : t('block1TitleSeller')}
+                {isModerator ? t('block1TitleModerator') : (isBuyer ? t('block1TitleBuyer') : t('block1TitleSeller'))}
               </Typography>
               {order.offer?.server?.gameVariant?.game?.name && order.offer?.server?.gameVariant?.name && order.offer?.server?.name && order.offer?.server?.gameVariant?.game?.id && order.offer?.server?.gameVariant?.id && order.offer?.server?.id && (
                 <MuiLink
@@ -700,7 +751,7 @@ export default function OrderChatPage() {
                 </Typography>
               )}
               <Typography variant="body2" color="text.secondary" gutterBottom>
-                {isBuyer ? t('youAreBuying') : t('youAreSelling')}
+                {isModerator ? t('sellerSellsToBuyer', { seller: order.seller?.nickname ?? '—', buyer: order.buyer?.nickname ?? '—' }) : (isBuyer ? t('youAreBuying') : t('youAreSelling'))}
               </Typography>
               <Typography variant="h6" fontWeight={600} sx={{ mb: 0.5 }}>
                 {order.offer.title}
@@ -729,12 +780,33 @@ export default function OrderChatPage() {
               )}
             </Box>
 
-            {/* Block 2: Amount you pay (buyer) / receive (seller) + adena/items give or get */}
+            {/* Block 2: Amount you pay (buyer) / receive (seller) / both (moderator) + adena/items give or get */}
             <Box sx={{ mb: 2, p: 2, border: '1px solid', borderColor: 'primary.main', borderRadius: 1, bgcolor: (theme) => `${theme.palette.primary.main}08` }}>
               <Typography variant="overline" color="primary.main" fontWeight={600} display="block" sx={{ mb: 1 }}>
-                {isBuyer ? t('block2TitleBuyer') : t('block2TitleSeller')}
+                {isModerator ? t('block2TitleModerator') : (isBuyer ? t('block2TitleBuyer') : t('block2TitleSeller'))}
               </Typography>
-              {isSeller && order.sellerAmount != null && (
+              {isModerator && (
+                <>
+                  {order.buyerAmount != null && (
+                    <Typography variant="body1" color="primary.main" fontWeight={700} sx={{ mb: 0.5 }}>
+                      {t('buyer')}: {t('youPay')} {Number(order.buyerAmount).toFixed(2)} {order.buyerCurrency}
+                      {' — '}
+                      {order.transaction?.externalId ? t('fromCard') : t('fromBalance')}
+                    </Typography>
+                  )}
+                  {order.sellerAmount != null && (
+                    <Typography variant="body1" color="primary.main" fontWeight={700} sx={{ mb: 0.5 }}>
+                      {t('seller')}: {t('youReceive')} {Number(order.sellerAmount).toFixed(2)} {order.sellerCurrency}
+                      {' — '}
+                      {order.transaction?.externalId ? t('toCard') : t('toBalance')}
+                    </Typography>
+                  )}
+                  <Typography variant="body2" color="text.primary" fontWeight={600} sx={{ mt: 0.5 }}>
+                    {t('seller')} {t('youGiveToBuyer')}: {order.offer?.offerType === 'ADENA' ? formatAdena(Number(order.quantity ?? 0)) : order.quantity} {order.offer?.offerType === 'ADENA' ? 'adena' : (order.offer?.title ?? '')}
+                  </Typography>
+                </>
+              )}
+              {!isModerator && isSeller && order.sellerAmount != null && (
                 <>
                   <Typography variant="body1" color="primary.main" fontWeight={700}>
                     {t('youReceive')}: {Number(order.sellerAmount).toFixed(2)} {order.sellerCurrency}
@@ -746,7 +818,7 @@ export default function OrderChatPage() {
                   </Typography>
                 </>
               )}
-              {isBuyer && order.buyerAmount != null && (
+              {!isModerator && isBuyer && order.buyerAmount != null && (
                 <>
                   <Typography variant="body1" color="primary.main" fontWeight={700}>
                     {t('youPay')}: {Number(order.buyerAmount).toFixed(2)} {order.buyerCurrency}
@@ -1234,6 +1306,8 @@ export default function OrderChatPage() {
             const otherUserId = order?.buyerId === currentUserId ? order?.sellerId : order?.buyerId;
             const otherRead = order?.orderReads?.find((r) => r.userId === otherUserId);
             const seen = myMessage && otherRead && msg.createdAt && new Date(otherRead.lastReadAt) >= new Date(msg.createdAt);
+            const { labelKey: senderLabelKey, isAdmin: senderIsAdmin } = getMessageSenderLabel(msg);
+            const bubbleIsAdmin = senderIsAdmin;
             return (
               <Box
                 key={msg.id}
@@ -1243,19 +1317,26 @@ export default function OrderChatPage() {
                   mb: 1.5,
                 }}
               >
-                <Box
-                  sx={{
-                    maxWidth: '75%',
-                    px: 2,
-                    py: 1.25,
-                    borderRadius: 2,
-                    borderTopRightRadius: myMessage ? 4 : 12,
-                    borderTopLeftRadius: myMessage ? 12 : 4,
-                    bgcolor: myMessage ? '#E8E8E8' : SENDER_BUBBLE,
-                    color: myMessage ? '#1f1f1f' : '#fff',
-                    boxShadow: '0 1px 2px rgba(0,0,0,0.08)',
-                  }}
-                >
+                <Box sx={{ maxWidth: '75%', display: 'flex', flexDirection: 'column', alignItems: myMessage ? 'flex-end' : 'flex-start' }}>
+                  {senderLabelKey && (
+                    <Typography variant="caption" color="text.secondary" sx={{ mb: 0.25, px: 0.5, fontWeight: 600 }}>
+                      {t(senderLabelKey)}
+                    </Typography>
+                  )}
+                  <Box
+                    sx={{
+                      px: 2,
+                      py: 1.25,
+                      borderRadius: 2,
+                      borderTopRightRadius: myMessage ? 4 : 12,
+                      borderTopLeftRadius: myMessage ? 12 : 4,
+                      bgcolor: bubbleIsAdmin ? ADMIN_BUBBLE_TINT : (myMessage ? '#E8E8E8' : SENDER_BUBBLE),
+                      color: myMessage ? '#1f1f1f' : (bubbleIsAdmin ? 'text.primary' : '#fff'),
+                      boxShadow: bubbleIsAdmin ? '0 1px 2px rgba(255,193,7,0.4)' : '0 1px 2px rgba(0,0,0,0.08)',
+                      border: bubbleIsAdmin ? '1px solid' : 'none',
+                      borderColor: bubbleIsAdmin ? 'warning.main' : 'transparent',
+                    }}
+                  >
                   <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
                     {msg.text}
                   </Typography>
@@ -1286,15 +1367,22 @@ export default function OrderChatPage() {
                     )}
                   </Box>
                 </Box>
+                </Box>
               </Box>
             );
           })}
         </Box>
 
         {sendError && <Alert severity="error" sx={{ mx: { xs: 1, md: 2 }, mb: 1 }}>{sendError}</Alert>}
-        {isOtherTyping && (
+        {(isOtherTyping || (isModerator && (typingBuyerId || typingSellerId))) && (
           <Typography variant="caption" color="text.secondary" sx={{ px: { xs: 1.5, md: 2 }, py: 0.5 }}>
-            {t('isTyping', { name: otherName })}
+            {isModerator && typingBuyerId && !typingSellerId
+              ? t('isTyping', { name: t('buyer') })
+              : isModerator && typingSellerId && !typingBuyerId
+                ? t('isTyping', { name: t('seller') })
+                : isModerator && typingBuyerId && typingSellerId
+                  ? t('isTyping', { name: `${t('buyer')} / ${t('seller')}` })
+                  : t('isTyping', { name: otherName })}
           </Typography>
         )}
         {/* Input area – fixed at bottom of chat panel, always visible on mobile */}
