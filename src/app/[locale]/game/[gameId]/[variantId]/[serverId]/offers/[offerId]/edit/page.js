@@ -43,6 +43,8 @@ export default function EditOfferPage() {
   const [priceError, setPriceError] = useState(null);
   const [minSellQuantityAdena, setMinSellQuantityAdena] = useState('');
   const [minSellQuantityError, setMinSellQuantityError] = useState(null);
+  const [minSellQuantityCoins, setMinSellQuantityCoins] = useState('');
+  const [minSellQuantityCoinsError, setMinSellQuantityCoinsError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
   const [platformFeePercent, setPlatformFeePercent] = useState(20);
@@ -52,6 +54,7 @@ export default function EditOfferPage() {
   const { preferredCurrency, profile } = useProfile();
   const currency = offer?.displayCurrency ?? offer?.currency ?? preferredCurrency ?? 'EUR';
   const isAdena = offer?.offerType === 'ADENA';
+  const isCoins = offer?.offerType === 'COINS';
   const adenaPriceUnitKk = offer?.server?.adenaPriceUnitKk ?? offer?.server?.gameVariant?.game?.adenaPriceUnitKk ?? 100;
   const effectiveUnitKk = getEffectiveUnitKk(adenaPriceUnitKk);
   const unitLabel = adenaPriceUnitKk === 0 ? tNew('pricePer1k') : tNew('pricePerNkk', { n: adenaPriceUnitKk, currency });
@@ -77,6 +80,10 @@ export default function EditOfferPage() {
             const msq = Number(data.minSellQuantity);
             setMinSellQuantityAdena(String(rawUnit === 0 ? msq / 1000 : msq / 1_000_000));
           }
+        } else if (data.offerType === 'COINS') {
+          setQuantity(Number(data.quantity ?? 1));
+          setPrice(String(data.displayPrice ?? data.price ?? ''));
+          setMinSellQuantityCoins(data.minSellQuantity != null ? String(data.minSellQuantity) : '');
         } else {
           setQuantity(Number(data.quantity ?? 1));
           setPrice(String(data.price ?? ''));
@@ -94,15 +101,15 @@ export default function EditOfferPage() {
   }, []);
 
   useEffect(() => {
-    if (!serverId || !isAdena) return;
+    if (!serverId || (!isAdena && !isCoins)) return;
     fetchOfferRecentPrices({
       serverId,
-      offerType: 'ADENA',
+      offerType: isAdena ? 'ADENA' : 'COINS',
       displayCurrency: currency,
     })
       .then((data) => setRecentPrices(data?.prices ?? []))
       .catch(() => setRecentPrices([]));
-  }, [serverId, isAdena, currency]);
+  }, [serverId, isAdena, isCoins, currency]);
 
   const isCreator = user?.id && offer?.seller?.id && user.id === offer.seller.id;
 
@@ -154,15 +161,23 @@ export default function EditOfferPage() {
     e.preventDefault();
     if (!offer || !token || (!isCreator && !isAdminOrMod)) return;
     if (isAdena && !validateAdenaInputs()) return;
-    if (!isAdena) {
+    if (isCoins) {
+      const q = parseInt(String(quantity).trim(), 10);
+      const p = parseFloat(String(price).trim().replace(',', '.'));
+      if (!Number.isInteger(q) || q < 1 || !Number.isFinite(p) || p < 0) return;
+    }
+    if (!isAdena && !isCoins) {
       const parsedPrice = parseFloat(String(price).trim().replace(',', '.'));
       if (!Number.isFinite(parsedPrice) || parsedPrice < 0) return;
     }
     setSubmitting(true);
     setSubmitError(null);
     try {
-      const minSellQtyNum = isAdena && minSellQuantityAdena.trim() !== ''
+      const minSellQtyNumAdena = isAdena && minSellQuantityAdena.trim() !== ''
         ? (parseQuantityAdena(minSellQuantityAdena) ?? null)
+        : null;
+      const minSellQtyNumCoins = isCoins && minSellQuantityCoins.trim() !== ''
+        ? (parseInt(String(minSellQuantityCoins).trim(), 10) || null)
         : null;
       const payload = isAdena
         ? {
@@ -170,14 +185,22 @@ export default function EditOfferPage() {
             description,
             quantity: Math.floor(parseQuantityAdena(quantityAdena) ?? minQuantityAdena),
             price: parsePricePerUnit(priceAdena) / effectiveUnitKk,
-            minSellQuantity: minSellQtyNum,
+            minSellQuantity: minSellQtyNumAdena,
           }
-        : {
-            title,
-            description,
-            quantity: Number(quantity) || 1,
-            price: parseFloat(String(price).trim().replace(',', '.')) || 0,
-          };
+        : isCoins
+          ? {
+              title: 'Coins',
+              description: `Selling ${Number(quantity) || 1} coins`,
+              quantity: Number(quantity) || 1,
+              price: parseFloat(String(price).trim().replace(',', '.')) || 0,
+              minSellQuantity: minSellQtyNumCoins,
+            }
+          : {
+              title,
+              description,
+              quantity: Number(quantity) || 1,
+              price: parseFloat(String(price).trim().replace(',', '.')) || 0,
+            };
       await updateOffer(offer.id, payload, token);
       router.push(`/${locale}/game/${gameId}/${variantId}/${serverId}/offers/${offerId}`);
     } catch (err) {
@@ -232,7 +255,7 @@ export default function EditOfferPage() {
 
         <form onSubmit={handleSubmit}>
           {isAdena ? (
-            <Box sx={{ maxWidth: 400, mx: 'auto' }}>
+            <Box sx={{ mx: 'auto' }}>
               <TextField
                 label={tNew('amountOfAdena')}
                 type="text"
@@ -405,8 +428,60 @@ export default function EditOfferPage() {
                 }}
               />
             </Box>
+          ) : isCoins ? (
+            <Box sx={{ mx: 'auto' }}>
+              <TextField
+                type="number"
+                label={tNew('amountOfCoins')}
+                value={quantity}
+                onChange={(e) => setQuantity(e.target.value)}
+                inputProps={{ min: 1, step: 1 }}
+                fullWidth
+                sx={{
+                  mb: 2,
+                  '& .MuiInputBase-input': { py: 1.5, fontSize: '1rem' },
+                  '& input': { MozAppearance: 'textfield' },
+                  '& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button': { WebkitAppearance: 'none', margin: 0 },
+                }}
+                required
+              />
+              <TextField
+                type="text"
+                inputMode="decimal"
+                label={tNew('pricePer1Coin', { currency })}
+                value={price}
+                onChange={(e) => setPrice(e.target.value)}
+                fullWidth
+                sx={{
+                  mb: 2,
+                  '& .MuiInputBase-input': { py: 1.5, fontSize: '1rem' },
+                }}
+                InputProps={{
+                  endAdornment: <InputAdornment position="end">{currency}</InputAdornment>,
+                }}
+                required
+              />
+              <TextField
+                label={t('minSellQuantity')}
+                type="number"
+                inputMode="numeric"
+                value={minSellQuantityCoins}
+                onChange={(e) => {
+                  setMinSellQuantityCoins(e.target.value);
+                  setMinSellQuantityCoinsError(null);
+                }}
+                helperText={minSellQuantityCoinsError || t('minSellQuantityHint')}
+                error={!!minSellQuantityCoinsError}
+                fullWidth
+                sx={{
+                  mb: 2,
+                  '& .MuiInputBase-input': { py: 1.5, fontSize: '1rem' },
+                }}
+                inputProps={{ min: 1, step: 1 }}
+              />
+            </Box>
           ) : (
-            <Box sx={{ maxWidth: 400, mx: 'auto' }}>
+            <Box sx={{ mx: 'auto' }}>
               <TextField
                 type="number"
                 label={t('quantity')}

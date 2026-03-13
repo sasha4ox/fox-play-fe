@@ -42,8 +42,8 @@ import DialogActions from '@mui/material/DialogActions';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 
-const ALL_OFFER_TYPES = ['ADENA', 'ITEMS', 'ACCOUNTS', 'BOOSTING', 'OTHER'];
-const STANDARD_CATEGORY_NAMES = new Set(['adena', 'items', 'accounts', 'boosting', 'other']);
+const ALL_OFFER_TYPES = ['ADENA', 'COINS', 'ITEMS', 'ACCOUNTS', 'BOOSTING', 'OTHER'];
+const STANDARD_CATEGORY_NAMES = new Set(['adena', 'coins', 'items', 'accounts', 'boosting', 'other']);
 
 export default function GameOffersPage() {
   const params = useParams();

@@ -404,6 +404,7 @@
   },
 
   "OrderDetail": {
+    "coins": "монеты",
     "orderChat": "Чат заказа",
     "orderChatBadge": "Продажа · Заказ",
     "isTyping": "{name} печатает...",
@@ -487,7 +488,15 @@
     "paymentConfirmedByAdmin": "Оплату подтвердил администратор",
     "viewOnTronscan": "Смотреть в Tronscan",
     "ibanPaymentBanner": "Оплата IBAN: отправьте сумму в EUR на счёт ниже и подтвердите.",
-    "openPaymentPage": "Открыть страницу оплаты"
+    "openPaymentPage": "Открыть страницу оплаты",
+    "flowBannerSellerDeliverTitle": "Ваша очередь: отправить адена и загрузить подтверждение",
+    "flowBannerSellerDeliverDescription": "Передайте адена покупателю в игре и сделайте скриншот. Загрузите подтверждение в деталях заказа слева и подтвердите доставку.",
+    "flowBannerBuyerConfirmTitle": "Ваша очередь: подтвердить получение",
+    "flowBannerBuyerConfirmDescription": "Вы получили адена от продавца? Подтвердите получение в деталях заказа слева, чтобы завершить заказ.",
+    "flowBannerSellerWaitingBuyerConfirmTitle": "Следующий шаг: ожидание покупателя",
+    "flowBannerSellerWaitingBuyerConfirmDescription": "Покупатель должен подтвердить получение товара. Вы получите оплату после его подтверждения.",
+    "flowBannerFeedbackTitle": "Оставьте отзыв",
+    "flowBannerFeedbackDescription": "Заказ завершён. Оставьте комментарий и оценку в деталях заказа слева."
   },
   "CardPayment": {
     "title": "Оплата картой",
@@ -580,6 +589,7 @@
     "noOffers": "Пока нет предложений. Создайте одно на странице сервера игры.",
     "qty": "Кол-во",
     "adena": "Adena",
+    "coins": "Монеты",
     "items": "Предметы",
     "accounts": "Аккаунты",
     "boosting": "Бустинг",
@@ -642,6 +652,8 @@
     "availability": "Продаётся",
     "availabilityKk": "В продаже (kk)",
     "availabilityKkHint": "1 kk = 1 миллион адены",
+    "availabilityCoins": "Доступно (монет)",
+    "pricePer1Coin": "Цена за 1 монету",
     "priceFor100kk": "Цена за 100kk",
     "pricePerNkk": "Цена за {n}kk",
     "pricePer1k": "Цена за 1k",
@@ -687,6 +699,8 @@
     "availability": "В продаже",
     "availabilityKk": "В продаже (kk)",
     "availabilityKkHint": "1 kk = 1 миллион адены",
+    "availabilityCoins": "Доступно (монет)",
+    "pricePer1Coin": "Цена за 1 монету",
     "priceFor100kk": "Цена за 100kk",
     "pricePerNkk": "Цена за {n}kk",
     "pricePer1k": "Цена за 1k",
@@ -772,7 +786,10 @@
     "failedCreate": "Не удалось создать предложение",
     "minSellQuantity": "Минимальная сумма для продажи за раз",
     "minSellQuantityHint": "Необязательно. Минимальная сумма, которую покупатель может купить за один заказ.",
-    "minSellQuantityError": "Должно быть не менее 1kk и не больше общего количества"
+    "minSellQuantityError": "Должно быть не менее 1kk и не больше общего количества",
+    "amountOfCoins": "Количество монет",
+    "pricePer1Coin": "Цена за 1 монету ({currency})",
+    "minQuantityCoins": "Минимум 1 монета"
   },
 
   "EditOffer": {

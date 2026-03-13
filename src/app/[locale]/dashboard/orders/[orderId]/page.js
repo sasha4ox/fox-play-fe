@@ -802,7 +802,7 @@ export default function OrderChatPage() {
                     </Typography>
                   )}
                   <Typography variant="body2" color="text.primary" fontWeight={600} sx={{ mt: 0.5 }}>
-                    {t('seller')} {t('youGiveToBuyer')}: {order.offer?.offerType === 'ADENA' ? formatAdena(Number(order.quantity ?? 0)) : order.quantity} {order.offer?.offerType === 'ADENA' ? 'adena' : (order.offer?.title ?? '')}
+                    {t('seller')} {t('youGiveToBuyer')}: {order.offer?.offerType === 'ADENA' ? formatAdena(Number(order.quantity ?? 0)) : order.quantity} {order.offer?.offerType === 'ADENA' ? 'adena' : order.offer?.offerType === 'COINS' ? t('coins') : (order.offer?.title ?? '')}
                   </Typography>
                 </>
               )}
@@ -814,7 +814,7 @@ export default function OrderChatPage() {
                     {order.transaction?.externalId ? t('toCard') : t('toBalance')}
                   </Typography>
                   <Typography variant="body2" color="text.primary" fontWeight={600} sx={{ mt: 0.5 }}>
-                    {t('youGiveToBuyer')}: {order.offer?.offerType === 'ADENA' ? formatAdena(Number(order.quantity ?? 0)) : order.quantity} {order.offer?.offerType === 'ADENA' ? 'adena' : (order.offer?.title ?? '')}
+                    {t('youGiveToBuyer')}: {order.offer?.offerType === 'ADENA' ? formatAdena(Number(order.quantity ?? 0)) : order.quantity} {order.offer?.offerType === 'ADENA' ? 'adena' : order.offer?.offerType === 'COINS' ? t('coins') : (order.offer?.title ?? '')}
                   </Typography>
                 </>
               )}
@@ -826,7 +826,7 @@ export default function OrderChatPage() {
                     {order.transaction?.externalId ? t('fromCard') : t('fromBalance')}
                   </Typography>
                   <Typography variant="body2" color="text.primary" fontWeight={600} sx={{ mt: 0.5 }}>
-                    {t('youGetFromSeller')}: {order.offer?.offerType === 'ADENA' ? formatAdena(Number(order.quantity ?? 0)) : order.quantity} {order.offer?.offerType === 'ADENA' ? 'adena' : (order.offer?.title ?? '')}
+                    {t('youGetFromSeller')}: {order.offer?.offerType === 'ADENA' ? formatAdena(Number(order.quantity ?? 0)) : order.quantity} {order.offer?.offerType === 'ADENA' ? 'adena' : order.offer?.offerType === 'COINS' ? t('coins') : (order.offer?.title ?? '')}
                   </Typography>
                 </>
               )}
@@ -1153,6 +1153,31 @@ export default function OrderChatPage() {
               </Typography>
               <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.9)', display: 'block', mt: 0.25 }}>
                 {t('flowBannerSellerDeliverDescription')}
+              </Typography>
+            </Box>
+          </Box>
+        )}
+        {!pendingAdminConfirm && isSeller && order?.status === 'DELIVERED' && (
+          <Box
+            sx={{
+              flexShrink: 0,
+              px: { xs: 1.5, md: 2 },
+              py: 1.25,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1.5,
+              background: 'linear-gradient(135deg, #b45309 0%, #92400e 100%)',
+              color: '#fff',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.12)',
+            }}
+          >
+            <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: 'rgba(255,255,255,0.9)', flexShrink: 0 }} />
+            <Box>
+              <Typography variant="subtitle2" fontWeight={600} sx={{ color: 'inherit', lineHeight: 1.3 }}>
+                {t('flowBannerSellerWaitingBuyerConfirmTitle')}
+              </Typography>
+              <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.9)', display: 'block', mt: 0.25 }}>
+                {t('flowBannerSellerWaitingBuyerConfirmDescription')}
               </Typography>
             </Box>
           </Box>

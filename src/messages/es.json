@@ -397,6 +397,7 @@
     "unreadMessages": "New messages"
   },
   "OrderDetail": {
+    "coins": "monedas",
     "orderChat": "Order chat",
     "orderChatBadge": "Sale · Order",
     "isTyping": "{name} está escribiendo...",
@@ -526,6 +527,8 @@
     "flowBannerSellerDeliverDescription": "Trade the adena to the buyer in-game and take a screenshot. Upload your proof in the order details on the left, then confirm delivery. You can chat with the buyer below.",
     "flowBannerBuyerConfirmTitle": "Your turn: confirm receipt",
     "flowBannerBuyerConfirmDescription": "Have you received the adena from the seller? Confirm receipt in the order details on the left to complete the order. You can chat below if you have questions.",
+    "flowBannerSellerWaitingBuyerConfirmTitle": "Next step: waiting for buyer",
+    "flowBannerSellerWaitingBuyerConfirmDescription": "The buyer should confirm that they received the item. You will be paid after they confirm.",
     "flowBannerFeedbackTitle": "Leave a review",
     "flowBannerFeedbackDescription": "This order is complete. Please leave a comment and rating in the order details on the left. Your feedback helps other users."
   },
@@ -619,6 +622,7 @@
     "noOffers": "No offers yet. Create one from a game server.",
     "qty": "Qty",
     "adena": "Adena",
+    "coins": "Monedas",
     "items": "Items",
     "accounts": "Accounts",
     "boosting": "Boosting",
@@ -678,6 +682,8 @@
     "availability": "Selling",
     "availabilityKk": "Selling (kk)",
     "availabilityKkHint": "1 kk = 1 million adena",
+    "availabilityCoins": "Disponibilidad (monedas)",
+    "pricePer1Coin": "Precio por 1 moneda",
     "priceFor100kk": "Price for 100kk",
     "pricePerNkk": "Price per {n}kk",
     "pricePer1k": "Precio por 1k",
@@ -763,7 +769,10 @@
     "failedCreate": "Failed to create offer",
     "minSellQuantity": "Cantidad mínima para vender a la vez",
     "minSellQuantityHint": "Opcional. La cantidad mínima que un comprador puede comprar en un pedido.",
-    "minSellQuantityError": "Debe ser al menos 1kk y no mayor que la cantidad total"
+    "minSellQuantityError": "Debe ser al menos 1kk y no mayor que la cantidad total",
+    "amountOfCoins": "Cantidad de monedas",
+    "pricePer1Coin": "Precio por 1 moneda ({currency})",
+    "minQuantityCoins": "Mínimo 1 moneda"
   },
   "EditOffer": {
     "editOffer": "Edit offer",

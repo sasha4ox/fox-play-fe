@@ -349,6 +349,7 @@
     "badgeHint": "The number on \"My sales\" in the menu ({count} now) is how many sold orders you haven't opened yet. Click an order and open the chat to clear it."
   },
   "OrderDetail": {
+    "coins": "coins",
     "orderChat": "Order chat",
     "orderChatBadge": "Sale · Order",
     "isTyping": "{name} is typing...",
@@ -478,6 +479,8 @@
     "flowBannerSellerDeliverDescription": "Trade the adena to the buyer in-game and take a screenshot. Upload your proof in the order details on the left, then confirm delivery. You can chat with the buyer below.",
     "flowBannerBuyerConfirmTitle": "Your turn: confirm receipt",
     "flowBannerBuyerConfirmDescription": "Have you received the adena from the seller? Confirm receipt in the order details on the left to complete the order. You can chat below if you have questions.",
+    "flowBannerSellerWaitingBuyerConfirmTitle": "Next step: waiting for buyer",
+    "flowBannerSellerWaitingBuyerConfirmDescription": "The buyer should confirm that they received the item. You will be paid after they confirm.",
     "flowBannerFeedbackTitle": "Leave a review",
     "flowBannerFeedbackDescription": "This order is complete. Please leave a comment and rating in the order details on the left. Your feedback helps other users."
   },
@@ -571,6 +574,7 @@
     "noOffers": "No offers yet. Create one from a game server.",
     "qty": "Qty",
     "adena": "Adena",
+    "coins": "Coins",
     "items": "Items",
     "accounts": "Accounts",
     "boosting": "Boosting",
@@ -630,6 +634,8 @@
     "availability": "Selling",
     "availabilityKk": "Selling (kk)",
     "availabilityKkHint": "1 kk = 1 million adena",
+    "availabilityCoins": "Availability (coins)",
+    "pricePer1Coin": "Price per 1 coin",
     "priceFor100kk": "Price for 100kk",
     "pricePerNkk": "Price per {n}kk",
     "pricePer1k": "Price per 1k",
@@ -715,7 +721,10 @@
     "failedCreate": "Failed to create offer",
     "minSellQuantity": "Minimum amount to sell at once",
     "minSellQuantityHint": "Optional. The smallest amount a buyer can purchase in one order. Leave empty for no minimum.",
-    "minSellQuantityError": "Must be at least 1kk and not greater than the total amount"
+    "minSellQuantityError": "Must be at least 1kk and not greater than the total amount",
+    "amountOfCoins": "Amount of coins",
+    "pricePer1Coin": "Price per 1 coin ({currency})",
+    "minQuantityCoins": "Minimum is 1 coin"
   },
   "EditOffer": {
     "editOffer": "Edit offer",

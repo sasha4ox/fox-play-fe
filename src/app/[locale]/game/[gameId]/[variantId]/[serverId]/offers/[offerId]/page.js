@@ -48,7 +48,7 @@ export default function OfferPDPPage() {
   const gameId = params?.gameId;
   const variantId = params?.variantId;
   const serverId = params?.serverId;
-  const OFFER_TYPE_LABELS = { ADENA: tOffers('adena'), ITEMS: tOffers('items'), ACCOUNTS: tOffers('accounts'), BOOSTING: tOffers('boosting'), OTHER: tOffers('other') };
+  const OFFER_TYPE_LABELS = { ADENA: tOffers('adena'), COINS: tOffers('coins'), ITEMS: tOffers('items'), ACCOUNTS: tOffers('accounts'), BOOSTING: tOffers('boosting'), OTHER: tOffers('other') };
   const [offer, setOffer] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -147,7 +147,13 @@ export default function OfferPDPPage() {
       openLoginModal(() => setBuyDialogOpen(true));
       return;
     }
-    setBuyQuantity(1);
+    const isCoins = offer?.offerType === 'COINS';
+    if (isCoins) {
+      const initCoins = (offer?.minSellQuantity != null ? Number(offer.minSellQuantity) : 1);
+      setBuyQuantity(Math.max(1, Math.min(initCoins, Number(offer.quantity) || 1)));
+    } else {
+      setBuyQuantity(1);
+    }
     const initKk = offer?.minSellQuantity != null
       ? Number(offer.minSellQuantity) / 1_000_000
       : 1;
@@ -157,10 +163,11 @@ export default function OfferPDPPage() {
 
   const calcBuyQty = () => {
     const isAdena = offer?.offerType === 'ADENA';
-    const minSellQty = isAdena && offer?.minSellQuantity != null ? Number(offer.minSellQuantity) : 1;
+    const isCoins = offer?.offerType === 'COINS';
+    const minSellQty = (isAdena || isCoins) && offer?.minSellQuantity != null ? Number(offer.minSellQuantity) : 1;
     return isAdena
       ? Math.min(Number(offer.quantity), Math.max(minSellQty, Math.floor(buyQuantityKk * 1_000_000)))
-      : Math.min(Math.max(1, Math.floor(buyQuantity)), Number(offer.quantity));
+      : Math.min(Math.max(minSellQty, Math.floor(buyQuantity)), Number(offer.quantity));
   };
 
   const handleBuySubmit = async () => {
@@ -342,6 +349,7 @@ export default function OfferPDPPage() {
 
   const maxQty = Math.max(1, offer.quantity);
   const isAdenaOffer = offer.offerType === 'ADENA';
+  const isCoinsOffer = offer.offerType === 'COINS';
   const maxKk = isAdenaOffer ? offer.quantity : null;
   const offerCurrency = offer.displayCurrency ?? offer.currency ?? '';
   const adenaPriceUnitKk = offer?.server?.adenaPriceUnitKk ?? offer?.server?.gameVariant?.game?.adenaPriceUnitKk ?? 100;
@@ -520,7 +528,47 @@ export default function OfferPDPPage() {
           );
         })()}
 
-        {!isAdenaOffer && (
+        {isCoinsOffer && (() => {
+          const q = Number(offer.quantity) || 0;
+          const priceRaw = offer.displayPrice ?? offer.price;
+          const p = typeof priceRaw === 'object' && priceRaw != null && typeof priceRaw.toString === 'function'
+            ? Number(priceRaw.toString())
+            : Number(priceRaw) || 0;
+          const currency = offer.displayCurrency ?? offer.currency ?? '';
+          const totalIfBuyFull = q * p;
+          return (
+            <Card variant="outlined" sx={{ mb: 2 }}>
+              <CardContent sx={{ py: 2, px: 2, '&:last-child': { pb: 2 } }}>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                  <Box>
+                    <Typography variant="overline" color="text.secondary">{t('availabilityCoins')}</Typography>
+                    <Typography variant="h6" fontWeight={600}>{q.toLocaleString()} {tOffers('coins')}</Typography>
+                  </Box>
+                  <Box>
+                    <Typography variant="overline" color="text.secondary">{t('pricePer1Coin')}</Typography>
+                    <Typography variant="h6" fontWeight={600} color="primary.main">
+                      {p.toFixed(2)} {currency}
+                    </Typography>
+                  </Box>
+                  <Box>
+                    <Typography variant="overline" color="text.secondary">{t('priceIfBuyFull')}</Typography>
+                    <Typography variant="h6" fontWeight={600}>
+                      {totalIfBuyFull.toFixed(2)} {currency}
+                    </Typography>
+                  </Box>
+                  {offer.minSellQuantity != null && (
+                    <Box>
+                      <Typography variant="overline" color="text.secondary">{t('minPurchase')}</Typography>
+                      <Typography variant="h6" fontWeight={600}>{Number(offer.minSellQuantity).toLocaleString()} {tOffers('coins')}</Typography>
+                    </Box>
+                  )}
+                </Box>
+              </CardContent>
+            </Card>
+          );
+        })()}
+
+        {!isAdenaOffer && !isCoinsOffer && (
           <Card variant="outlined" sx={{ mb: 2 }}>
             <CardContent sx={{ py: 2, px: 2, '&:last-child': { pb: 2 } }}>
               <Typography variant="body2" color="text.secondary">
@@ -533,7 +581,7 @@ export default function OfferPDPPage() {
           </Card>
         )}
 
-        {!isAdenaOffer && (
+        {!isAdenaOffer && !isCoinsOffer && (
           <Typography variant="body1" sx={{ mb: 2 }}>
             {offer.description}
           </Typography>

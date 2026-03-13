@@ -32,12 +32,13 @@ export default function NewOfferPage() {
   const gameId = params?.gameId;
   const ALL_OFFER_TYPES = [
     { value: 'ADENA', label: tOffers('adena') },
+    { value: 'COINS', label: tOffers('coins') },
     { value: 'ITEMS', label: tOffers('items') },
     { value: 'ACCOUNTS', label: tOffers('accounts') },
     { value: 'BOOSTING', label: tOffers('boosting') },
     { value: 'OTHER', label: tOffers('other') },
   ];
-  const STANDARD_CATEGORY_NAMES = new Set(['adena', 'items', 'accounts', 'boosting', 'other']);
+  const STANDARD_CATEGORY_NAMES = new Set(['adena', 'coins', 'items', 'accounts', 'boosting', 'other']);
   const variantId = params?.variantId;
   const serverId = params?.serverId;
   const { tree, loading: gamesLoading, error: gamesError } = useGames();
@@ -72,6 +73,12 @@ export default function NewOfferPage() {
   const [priceErrorNonAdena, setPriceErrorNonAdena] = useState(null);
   const [minSellQuantityAdena, setMinSellQuantityAdena] = useState('');
   const [minSellQuantityError, setMinSellQuantityError] = useState(null);
+  const [quantityCoins, setQuantityCoins] = useState('1');
+  const [priceCoins, setPriceCoins] = useState('1');
+  const [quantityCoinsError, setQuantityCoinsError] = useState(null);
+  const [priceCoinsError, setPriceCoinsError] = useState(null);
+  const [minSellQuantityCoins, setMinSellQuantityCoins] = useState('');
+  const [minSellQuantityCoinsError, setMinSellQuantityCoinsError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
   const [platformFeePercent, setPlatformFeePercent] = useState(20);
@@ -99,6 +106,7 @@ export default function NewOfferPage() {
   const offerType = selectedTab?.custom ? 'OTHER' : (selectedTab?.value ?? 'OTHER');
   const customCategoryId = selectedTab?.custom ? selectedTab.value : null;
   const isAdena = !selectedTab?.custom && selectedTab?.value === 'ADENA';
+  const isCoins = !selectedTab?.custom && selectedTab?.value === 'COINS';
 
   const minQuantityAdena = adenaPriceUnitKk === 0 ? 1000 : 1_000_000;
   const minPricePerUnit = getMinPriceForUnit(currency, adenaPriceUnitKk);
@@ -147,6 +155,29 @@ export default function NewOfferPage() {
     return valid;
   };
 
+  const validateCoinsInputs = () => {
+    let valid = true;
+    if (isCoins) {
+      const qty = parseInt(String(quantityCoins).trim(), 10);
+      const qOk = Number.isInteger(qty) && qty >= 1;
+      const priceVal = parsePricePerUnit(priceCoins);
+      const pOk = Number.isFinite(priceVal) && priceVal >= 0;
+      setQuantityCoinsError(qOk ? null : t('minQuantityCoins'));
+      setPriceCoinsError(pOk ? null : t('invalidPrice'));
+      if (!qOk || !pOk) valid = false;
+      if (minSellQuantityCoins.trim() !== '') {
+        const minQty = parseInt(String(minSellQuantityCoins).trim(), 10);
+        const totalQty = qOk ? parseInt(String(quantityCoins).trim(), 10) : 0;
+        const minQtyOk = Number.isInteger(minQty) && minQty >= 1 && minQty <= totalQty;
+        setMinSellQuantityCoinsError(minQtyOk ? null : t('minSellQuantityError'));
+        if (!minQtyOk) valid = false;
+      } else {
+        setMinSellQuantityCoinsError(null);
+      }
+    }
+    return valid;
+  };
+
   const parseDecimalPrice = (value) => {
     if (value == null || String(value).trim() === '') return NaN;
     const normalized = String(value).trim().replace(',', '.');
@@ -159,7 +190,8 @@ export default function NewOfferPage() {
     setSubmitError(null);
     setPriceErrorNonAdena(null);
     if (isAdena && !validateAdenaInputs()) return;
-    if (!isAdena) {
+    if (isCoins && !validateCoinsInputs()) return;
+    if (!isAdena && !isCoins) {
       const parsedPrice = parseDecimalPrice(price);
       if (!Number.isFinite(parsedPrice) || parsedPrice < 0) {
         setPriceErrorNonAdena(t('invalidPrice'));
@@ -167,22 +199,22 @@ export default function NewOfferPage() {
       }
     }
     setSubmitting(true);
-    const quantityNum = isAdena ? (parseQuantityAdena(quantityAdena) ?? minQuantityAdena) : 1;
-    const priceForUnit = isAdena ? parsePricePerUnit(priceAdena) : 0;
-    const priceNum = isAdena ? (Number.isFinite(priceForUnit) ? priceForUnit / effectiveUnitKk : 0) : parseDecimalPrice(price) || 0;
+    const quantityNum = isAdena ? (parseQuantityAdena(quantityAdena) ?? minQuantityAdena) : (isCoins ? Math.max(1, parseInt(String(quantityCoins).trim(), 10) || 1) : 1);
+    const priceForUnit = isAdena ? parsePricePerUnit(priceAdena) : (isCoins ? parsePricePerUnit(priceCoins) : 0);
+    const priceNum = isAdena ? (Number.isFinite(priceForUnit) ? priceForUnit / effectiveUnitKk : 0) : (isCoins ? (Number.isFinite(priceForUnit) ? priceForUnit : 0) : parseDecimalPrice(price) || 0);
     const minSellQtyNum = isAdena && minSellQuantityAdena.trim() !== ''
       ? (parseQuantityAdena(minSellQuantityAdena) ?? null)
-      : null;
+      : (isCoins && minSellQuantityCoins.trim() !== '' ? (parseInt(String(minSellQuantityCoins).trim(), 10) || null) : null);
     const payload = {
       offerType,
       serverId,
       currency,
-      title: isAdena ? 'Adena' : title,
-      description: isAdena ? `Selling ${formatAdena(quantityNum)} adena` : description,
+      title: isAdena ? 'Adena' : (isCoins ? 'Coins' : title),
+      description: isAdena ? `Selling ${formatAdena(quantityNum)} adena` : (isCoins ? `Selling ${quantityNum} coins` : description),
       quantity: quantityNum,
       price: priceNum,
       ...(customCategoryId && { customCategoryId }),
-      ...(isAdena && minSellQtyNum != null && { minSellQuantity: minSellQtyNum }),
+      ...((isAdena || isCoins) && minSellQtyNum != null && { minSellQuantity: minSellQtyNum }),
     };
     try {
       await createOffer(payload, token);
@@ -424,8 +456,81 @@ export default function NewOfferPage() {
               />
             </Box>
           )}
-          {!isAdena && (
-            <Box sx={{ maxWidth: 400, mx: 'auto' }}>
+          {isCoins && (
+            <Box sx={{ mx: 'auto' }}>
+              <TextField
+                label={t('amountOfCoins')}
+                type="number"
+                inputMode="numeric"
+                value={quantityCoins}
+                onChange={(e) => {
+                  setQuantityCoins(e.target.value);
+                  setQuantityCoinsError(null);
+                }}
+                helperText={quantityCoinsError}
+                error={!!quantityCoinsError}
+                required
+                fullWidth
+                sx={{
+                  mb: 2,
+                  '& .MuiInputBase-input': { py: 1.5, fontSize: '1rem' },
+                  '& input': { MozAppearance: 'textfield' },
+                  '& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button': { WebkitAppearance: 'none', margin: 0 },
+                }}
+                inputProps={{ min: 1, step: 1 }}
+              />
+              <TextField
+                label={t('pricePer1Coin', { currency })}
+                type="text"
+                inputMode="decimal"
+                inputProps={{ step: '0.01', min: 0 }}
+                value={priceCoins}
+                onChange={(e) => {
+                  setPriceCoins(e.target.value);
+                  setPriceCoinsError(null);
+                }}
+                helperText={priceCoinsError}
+                error={!!priceCoinsError}
+                required
+                fullWidth
+                sx={{
+                  mb: 0.5,
+                  '& .MuiInputBase-input': { py: 1.5, fontSize: '1rem' },
+                  '& input': { MozAppearance: 'textfield' },
+                  '& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button': { WebkitAppearance: 'none', margin: 0 },
+                }}
+                InputProps={{
+                  endAdornment: <InputAdornment position="end">{currency}</InputAdornment>,
+                }}
+              />
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                {t('buyerWillPay')}: <strong>{((parseInt(String(quantityCoins).trim(), 10) || 0) * (parsePricePerUnit(priceCoins) || 0) * (1 + platformFeePercent / 100)).toFixed(2)} {currency}</strong> ({t('includesPlatformFee', { percent: platformFeePercent })})
+              </Typography>
+              <TextField
+                label={t('minSellQuantity')}
+                type="number"
+                inputMode="numeric"
+                value={minSellQuantityCoins}
+                onChange={(e) => {
+                  setMinSellQuantityCoins(e.target.value);
+                  setMinSellQuantityCoinsError(null);
+                }}
+                helperText={minSellQuantityCoinsError || t('minSellQuantityHint')}
+                error={!!minSellQuantityCoinsError}
+                fullWidth
+                sx={{
+                  mt: 2,
+                  mb: 2,
+                  '& .MuiInputBase-input': { py: 1.5, fontSize: '1rem' },
+                  '& input': { MozAppearance: 'textfield' },
+                  '& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button': { WebkitAppearance: 'none', margin: 0 },
+                }}
+                inputProps={{ min: 1, step: 1 }}
+              />
+            </Box>
+          )}
+          {!isAdena && !isCoins && (
+            <Box sx={{ mx: 'auto' }}>
               <TextField
                 label={t('title')}
                 value={title}
@@ -481,7 +586,9 @@ export default function NewOfferPage() {
             disabled={
               submitting ||
               (isAdena &&
-                (!Number.isFinite(parsePricePerUnit(priceAdena)) || parsePricePerUnit(priceAdena) < minPricePerUnit))
+                (!Number.isFinite(parsePricePerUnit(priceAdena)) || parsePricePerUnit(priceAdena) < minPricePerUnit)) ||
+              (isCoins &&
+                (!Number.isInteger(parseInt(String(quantityCoins).trim(), 10)) || parseInt(String(quantityCoins).trim(), 10) < 1 || !Number.isFinite(parsePricePerUnit(priceCoins)) || parsePricePerUnit(priceCoins) < 0))
             }
             sx={{ mt: 2, mb: 3 }}
           >
