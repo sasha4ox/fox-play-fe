@@ -510,7 +510,7 @@ export async function getOrderById(orderId, token) {
   return apiGet(`/orders/${orderId}`, token)
 }
 
-/** Seller: mark order as delivered with proof image(s) (auth required). body: FormData with 'files' (required) */
+/** Seller: mark order as delivered with optional proof image(s) (auth required). body: FormData with optional 'files' */
 export async function markOrderDelivered(orderId, formData, token) {
   const base = getApiBase()
   const res = await fetch(`${base}/orders/${orderId}/deliver`, {
