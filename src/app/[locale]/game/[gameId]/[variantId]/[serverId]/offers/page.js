@@ -105,7 +105,7 @@ export default function GameOffersPage() {
     setOffersError(null);
     const params = {
       offerType: categoryFilter || undefined, // can be standard type or custom category UUID
-      displayCurrency: token ? undefined : 'USD',
+      displayCurrency: preferredCurrency ?? 'USD',
     };
     fetchOffersByServer(serverId, token, params)
       .then((data) => {
