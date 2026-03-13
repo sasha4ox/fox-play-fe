@@ -805,11 +805,19 @@ export default function OfferPDPPage() {
             const availableBalance = balanceForCurrency ? Number(balanceForCurrency.available) : 0;
             const hasEnoughBalance = offerCurrency && totalToPay > 0 && availableBalance >= totalToPay;
             const dialogSubmitDisabled = buySubmitting || isPriceBelowMin || (isAdenaOffer ? buyQuantityKk <= 0 : buyQuantity < 1);
-            return hasEnoughBalance ? (
-              <Button variant="contained" onClick={handleBuySubmit} disabled={dialogSubmitDisabled}>
-                {buySubmitting ? 'Creating…' : t('payWithBalance')}
-              </Button>
-            ) : null;
+            return (
+              <Tooltip title={!hasEnoughBalance ? (t('insufficientBalance') || 'Insufficient balance') : ''}>
+                <span>
+                  <Button
+                    variant="contained"
+                    onClick={handleBuySubmit}
+                    disabled={dialogSubmitDisabled || !hasEnoughBalance}
+                  >
+                    {buySubmitting ? 'Creating…' : t('payWithBalance')}
+                  </Button>
+                </span>
+              </Tooltip>
+            );
           })()}
           {cardPaymentEnabled && (
             <Button variant="contained" onClick={handleManuauCardBuySubmit} disabled={buySubmitting || isPriceBelowMin || (isAdenaOffer ? buyQuantityKk <= 0 : buyQuantity < 1)}>

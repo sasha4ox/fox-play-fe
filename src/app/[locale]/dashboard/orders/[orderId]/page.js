@@ -312,10 +312,7 @@ export default function OrderChatPage() {
     ['CREATED', 'PAID', 'DELIVERED'].includes(order.status);
 
   const handleMarkDelivered = async () => {
-    if (!orderId || !token || deliverProofFiles.length === 0) {
-      setActionError(t('attachProofError'));
-      return;
-    }
+    if (!orderId || !token) return;
     setDeliverSubmitting(true);
     setActionError(null);
     const formData = new FormData();
@@ -797,7 +794,7 @@ export default function OrderChatPage() {
                 variant="contained"
                 color="secondary"
                 onClick={handleMarkDelivered}
-                disabled={deliverSubmitting || deliverProofFiles.length === 0}
+                disabled={deliverSubmitting}
               >
                 {deliverSubmitting ? t('submitting') : t('confirmDelivered')}
               </Button>
@@ -1220,6 +1217,11 @@ export default function OrderChatPage() {
             flexDirection: 'column',
           }}
         >
+          {order?.status === 'PAID' && ['CARD_MANUAL', 'CRYPTO_MANUAL', 'IBAN_MANUAL'].includes(order?.paymentMethod) && (
+            <Alert severity="error" sx={{ mb: 1.5, flexShrink: 0 }}>
+              {t('proofInChatHint')}
+            </Alert>
+          )}
           {messages.length === 0 && (
             <Typography color="text.secondary" variant="body2" sx={{ alignSelf: 'center', mt: 4 }}>
               {t('noMessages')}
