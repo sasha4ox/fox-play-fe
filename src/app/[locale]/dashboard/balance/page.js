@@ -16,7 +16,7 @@ import Link from 'next/link';
 import { useAuthStore, useIsAuthenticated } from '@/store/authStore';
 import { useProfile } from '@/hooks/useProfile';
 import TextField from '@mui/material/TextField';
-import { getDepositInfo, simulateDeposit, addTestCredit, createDepositOrder, createWithdraw, createCardPayoutRequest, createCryptoPayoutRequest, createIbanPayoutRequest, getAvailablePaymentMethods, getBalanceHistory } from '@/lib/api';
+import { getDepositInfo, simulateDeposit, addTestCredit, createDepositOrder, createWithdraw, createCardPayoutRequest, createCryptoPayoutRequest, createIbanPayoutRequest, getAvailablePaymentMethods, getBalanceHistory, updatePreferredCurrency } from '@/lib/api';
 import { useLoginModalStore } from '@/store/loginModalStore';
 import { useTranslations } from 'next-intl';
 import useMediaQuery from '@mui/material/useMediaQuery';
@@ -96,6 +96,7 @@ export default function BalancePage() {
   const [pendingSectionAfter2FA, setPendingSectionAfter2FA] = useState(null);
   const [verifyTOTPError, setVerifyTOTPError] = useState(null);
   const [verifyTOTPSubmitting, setVerifyTOTPSubmitting] = useState(false);
+  const [isSettingCurrencyForCard, setIsSettingCurrencyForCard] = useState(false);
 
   useEffect(() => {
     if (!token) return;
@@ -290,7 +291,7 @@ export default function BalancePage() {
     setCardPayoutSuccess(null);
     requestWithdraw2FA({
       type: 'card',
-      body: { amount, currency: cardPayoutCurr, cardNumber, cardHolderName: cardHolder },
+      body: { amount, currency: 'UAH', cardNumber, cardHolderName: cardHolder },
     });
   };
 
@@ -757,12 +758,28 @@ export default function BalancePage() {
                     <Button
                       variant={withdrawSection === 'card' ? 'contained' : 'outlined'}
                       color="primary"
-                      onClick={() => {
+                      disabled={isSettingCurrencyForCard}
+                      onClick={async () => {
+                        if (withdrawSection === 'card') {
+                          setWithdrawSection(null);
+                          return;
+                        }
+                        if (preferredCurrency !== 'UAH' && token) {
+                          setIsSettingCurrencyForCard(true);
+                          try {
+                            await updatePreferredCurrency('UAH', token);
+                            await refetch();
+                          } catch (err) {
+                            console.error(err);
+                          } finally {
+                            setIsSettingCurrencyForCard(false);
+                          }
+                        }
                         if (!profile?.twoFactorEnabled) {
                           setPendingSectionAfter2FA('card');
                           setEnable2FAModalOpen(true);
                         } else {
-                          setWithdrawSection(withdrawSection === 'card' ? null : 'card');
+                          setWithdrawSection('card');
                         }
                       }}
                       sx={{ textTransform: 'none', minHeight: 44 }}
