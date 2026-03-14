@@ -276,6 +276,8 @@
     "balanceHistoryType_deposit": "Пополнение",
     "balanceHistoryType_card_payout_refund": "Возврат вывода на карту",
     "balanceHistoryType_purchase": "Покупка",
+    "balanceHistoryType_withdrawal": "Вывод",
+    "balanceHistoryType_payout_lock": "Вывод (ожидание)",
 
     "order": "Заказ",
 

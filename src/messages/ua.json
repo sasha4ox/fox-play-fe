@@ -238,6 +238,8 @@
     "balanceHistoryType_deposit": "Поповнення",
     "balanceHistoryType_card_payout_refund": "Повернення виведення на картку",
     "balanceHistoryType_purchase": "Покупка",
+    "balanceHistoryType_withdrawal": "Виведення",
+    "balanceHistoryType_payout_lock": "Виведення (очікування)",
     "order": "Замовлення",
     "twoFactorRequired": "Для виведення коштів потрібна двофакторна автентифікація.",
     "twoFactorRequiredHint": "Для виведення коштів потрібна двофакторна автентифікація. Її буде запропоновано увімкнути при відправці.",

@@ -64,7 +64,7 @@ export default function OfferPDPPage() {
   const [messageError, setMessageError] = useState(null);
   const user = useAuthStore((s) => s.user);
   const token = useAuthStore((s) => s.token);
-  const { profile, balances } = useProfile();
+  const { profile, balances, primaryBalance } = useProfile();
   const isAuthenticated = !!token;
   const openLoginModal = useLoginModalStore((s) => s.openModal);
   const currentUserId = user?.id ?? user?.userId;
@@ -849,8 +849,8 @@ export default function OfferPDPPage() {
             const pricePer1kk = Number(offer?.displayPrice ?? offer?.price) || 0;
             const unitPrice = Number(offer?.displayPrice ?? offer?.price) || 0;
             const totalToPay = isAdenaOffer ? buyQuantityKk * pricePer1kk : buyQuantity * unitPrice;
-            const balanceForCurrency = (balances ?? []).find((b) => b.currency === offerCurrency);
-            const availableBalance = balanceForCurrency ? Number(balanceForCurrency.available) : 0;
+            // Use total available in preferred currency so user can pay with balance in any wallet (backend converts)
+            const availableBalance = Number(primaryBalance?.available ?? 0);
             const hasEnoughBalance = offerCurrency && totalToPay > 0 && availableBalance >= totalToPay;
             const dialogSubmitDisabled = buySubmitting || isPriceBelowMin || (isAdenaOffer ? buyQuantityKk <= 0 : buyQuantity < 1);
             return (

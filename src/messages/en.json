@@ -238,6 +238,8 @@
     "balanceHistoryType_deposit": "Deposit",
     "balanceHistoryType_card_payout_refund": "Card payout refund",
     "balanceHistoryType_purchase": "Purchase",
+    "balanceHistoryType_withdrawal": "Withdrawal",
+    "balanceHistoryType_payout_lock": "Withdrawal (pending)",
     "order": "Order",
     "twoFactorRequired": "Two-factor authentication is required for withdrawals.",
     "twoFactorRequiredHint": "Two-factor authentication is required for withdrawals. You'll be asked to enable it when you submit.",

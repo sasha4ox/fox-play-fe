@@ -31,6 +31,8 @@ const TYPE_LABELS = {
   card_payout_refund: 'Card payout refund',
   crypto_payout_refund: 'Crypto payout refund',
   iban_payout_refund: 'IBAN payout refund',
+  withdrawal: 'Withdrawal',
+  payout_lock: 'Withdrawal (locked)',
 };
 
 export default function AdminUserFinancialHistoryPage() {
@@ -75,6 +77,9 @@ export default function AdminUserFinancialHistoryPage() {
         <Box sx={{ mb: 2 }}>
           <Typography variant="subtitle2" color="text.secondary" gutterBottom>
             Balances
+          </Typography>
+          <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 0.5 }}>
+            Available = spendable/withdrawable now. Frozen = locked in orders or pending payouts.
           </Typography>
           <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
             {data.balances.map((b) => (
@@ -132,7 +137,7 @@ export default function AdminUserFinancialHistoryPage() {
                   </TableCell>
                   <TableCell>{TYPE_LABELS[item.type] ?? item.type}</TableCell>
                   <TableCell>
-                    {item.type === 'purchase' ? '−' : '+'}
+                    {(item.type === 'purchase' || item.type === 'withdrawal' || item.type === 'payout_lock') ? '−' : '+'}
                     {item.amount} {item.currency}
                   </TableCell>
                   <TableCell>{item.currency}</TableCell>

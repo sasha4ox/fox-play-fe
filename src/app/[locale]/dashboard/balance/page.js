@@ -499,8 +499,8 @@ export default function BalancePage() {
                       <Typography variant="body2" color="text.secondary" sx={{ minWidth: { xs: '100%', sm: 100 } }}>
                         {new Date(item.date).toLocaleString(locale)}
                       </Typography>
-                      <Typography variant="body2" fontWeight={600} sx={{ color: item.type === 'sale' ? 'success.main' : item.type === 'refund' ? 'info.main' : item.type === 'purchase' ? 'warning.main' : 'text.primary' }}>
-                        {item.type === 'purchase' ? '−' : '+'}{item.amount} {item.currency}
+                      <Typography variant="body2" fontWeight={600} sx={{ color: item.type === 'sale' ? 'success.main' : item.type === 'refund' ? 'info.main' : (item.type === 'purchase' || item.type === 'withdrawal' || item.type === 'payout_lock') ? 'warning.main' : 'text.primary' }}>
+                        {(item.type === 'purchase' || item.type === 'withdrawal' || item.type === 'payout_lock') ? '−' : '+'}{item.amount} {item.currency}
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
                         {t(`balanceHistoryType_${item.type}`)}
