@@ -3,13 +3,10 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { usePathname } from "next/navigation";
 
-/** Same key for list and detail within orders/support so the layout (e.g. left column) does not exit/enter when opening a chat. */
+/** Same key for all dashboard routes so switching Sales/Balance/Orders etc. does not trigger transition—only entering or leaving dashboard does. */
 function getTransitionKey(pathname) {
   if (!pathname || typeof pathname !== "string") return pathname;
-  return pathname.replace(
-    /^(\/(?:en|ua|ru|es)\/dashboard\/(?:orders|support))\/[^/]+/,
-    "$1"
-  );
+  return pathname.replace(/^(\/(?:en|ua|ru|es)\/dashboard)(?:\/.*)?$/, "$1");
 }
 
 export default function Template({ children }) {
