@@ -771,6 +771,7 @@
     "usersBanReason": "Reason",
     "ban": "Ban",
     "unban": "Unban",
+    "financialHistory": "Financial history",
     "banReason": "Reason (optional)",
     "banReasonPlaceholder": "e.g. Violation of rules",
     "noUsers": "No users.",

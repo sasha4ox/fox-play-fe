@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
+import Link from 'next/link';
+import { useParams } from 'next/navigation';
 import Container from '@mui/material/Container';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
@@ -30,6 +32,7 @@ import { getAdminUsers, adminBanUser, adminUnbanUser } from '@/lib/api';
 export default function AdminUsersPage() {
   const t = useTranslations('Admin');
   const tCommon = useTranslations('Common');
+  const { locale } = useParams();
   const token = useAuthStore((s) => s.token);
   const [data, setData] = useState({ users: [], total: 0 });
   const [bannedFilter, setBannedFilter] = useState('');
@@ -149,27 +152,37 @@ export default function AdminUsersPage() {
                   )}
                 </TableCell>
                 <TableCell align="right">
-                  {user.bannedAt ? (
+                  <Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
                     <Button
                       size="small"
                       variant="outlined"
-                      color="success"
-                      onClick={() => handleUnban(user.id)}
-                      disabled={actionUserId === user.id}
+                      component={Link}
+                      href={`/${locale}/dashboard/admin/users/${user.id}/financial-history`}
                     >
-                      {actionUserId === user.id ? '…' : t('unban')}
+                      {t('financialHistory')}
                     </Button>
-                  ) : (
-                    <Button
-                      size="small"
-                      variant="outlined"
-                      color="error"
-                      onClick={() => openBanDialog(user)}
-                      disabled={actionUserId === user.id}
-                    >
-                      {t('ban')}
-                    </Button>
-                  )}
+                    {user.bannedAt ? (
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        color="success"
+                        onClick={() => handleUnban(user.id)}
+                        disabled={actionUserId === user.id}
+                      >
+                        {actionUserId === user.id ? '…' : t('unban')}
+                      </Button>
+                    ) : (
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        color="error"
+                        onClick={() => openBanDialog(user)}
+                        disabled={actionUserId === user.id}
+                      >
+                        {t('ban')}
+                      </Button>
+                    )}
+                  </Box>
                 </TableCell>
               </TableRow>
             ))}

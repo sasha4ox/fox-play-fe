@@ -473,11 +473,12 @@ export async function getMyCardPayoutRequests(token, params = {}) {
   return apiGet(`/me/card-payout-requests${s ? `?${s}` : ''}`, token)
 }
 
-/** List balance history (positive transfers: sales, refunds, deposits, card payout refunds). */
+/** List balance history (sales, refunds, deposits, payout refunds, purchases). Optional currency filters by that currency. */
 export async function getBalanceHistory(token, params = {}) {
   const q = new URLSearchParams()
   if (params.skip != null) q.set('skip', String(params.skip))
   if (params.take != null) q.set('take', String(params.take))
+  if (params.currency) q.set('currency', params.currency)
   const s = q.toString()
   return apiGet(`/me/balance-history${s ? `?${s}` : ''}`, token)
 }
@@ -683,6 +684,16 @@ export async function adminBanUser(userId, body, token) {
 /** Unban user. */
 export async function adminUnbanUser(userId, token) {
   return apiPost(`/admin/users/${userId}/unban`, {}, token)
+}
+
+/** Admin: user financial history (deposits, purchases, sales, refunds, payouts). params: { skip, take, currency } */
+export async function getAdminUserFinancialHistory(userId, token, params = {}) {
+  const q = new URLSearchParams()
+  if (params.skip != null) q.set('skip', String(params.skip))
+  if (params.take != null) q.set('take', String(params.take))
+  if (params.currency) q.set('currency', params.currency)
+  const s = q.toString()
+  return apiGet(`/admin/users/${userId}/financial-history${s ? `?${s}` : ''}`, token)
 }
 
 // ——— Admin: Card payment & money flow ———

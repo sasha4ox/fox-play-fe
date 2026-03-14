@@ -115,7 +115,7 @@ export default function BalancePage() {
   useEffect(() => {
     if (!token) return;
     let cancelled = false;
-    getBalanceHistory(token, { take: 50 })
+    getBalanceHistory(token, { take: 50, currency: preferredCurrency ?? undefined })
       .then((data) => {
         if (!cancelled) setBalanceHistory({ items: data?.items ?? [], total: data?.total ?? 0, status: 'success' });
       })
@@ -123,7 +123,7 @@ export default function BalancePage() {
         if (!cancelled) setBalanceHistory({ items: [], total: 0, status: 'error' });
       });
     return () => { cancelled = true; };
-  }, [token]);
+  }, [token, preferredCurrency]);
 
   const handleLoadDepositInfo = () => {
     if (!token) return;
