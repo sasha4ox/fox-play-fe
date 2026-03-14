@@ -696,6 +696,17 @@ export async function getAdminUserFinancialHistory(userId, token, params = {}) {
   return apiGet(`/admin/users/${userId}/financial-history${s ? `?${s}` : ''}`, token)
 }
 
+/** Admin: unified transaction log (orders, deposits, withdrawals). Params: skip, take, userId, search. */
+export async function getAdminTransactionLog(token, { skip, take, userId, search } = {}) {
+  const params = new URLSearchParams()
+  if (skip != null) params.set('skip', String(skip))
+  if (take != null) params.set('take', String(take))
+  if (userId) params.set('userId', userId)
+  if (search) params.set('search', search)
+  const q = params.toString()
+  return apiGet(`/admin/transaction-log${q ? `?${q}` : ''}`, token)
+}
+
 // ——— Admin: Card payment & money flow ———
 export async function getAdminCardPaymentEnabled(token) {
   const data = await apiGet('/admin/settings/card-payment-enabled', token)
