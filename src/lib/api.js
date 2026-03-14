@@ -707,6 +707,11 @@ export async function getAdminTransactionLog(token, { skip, take, userId, search
   return apiGet(`/admin/transaction-log${q ? `?${q}` : ''}`, token)
 }
 
+/** Admin: single transaction log entry detail with full payment details (card, crypto, IBAN). */
+export async function getAdminTransactionLogEntryDetail(token, entryId) {
+  return apiGet(`/admin/transaction-log/${encodeURIComponent(entryId)}`, token)
+}
+
 // ——— Admin: Card payment & money flow ———
 export async function getAdminCardPaymentEnabled(token) {
   const data = await apiGet('/admin/settings/card-payment-enabled', token)

@@ -139,7 +139,14 @@ export default function AdminTransactionLogPage() {
               <TableBody>
                 {data.items.map((item) => (
                   <TableRow key={item.id} hover>
-                    <TableCell>{formatDate(item.date)}</TableCell>
+                    <TableCell>
+                      <Link
+                        href={`/${locale}/dashboard/admin/transaction-log/${encodeURIComponent(item.id)}`}
+                        style={{ color: 'inherit', textDecoration: 'underline' }}
+                      >
+                        {formatDate(item.date)}
+                      </Link>
+                    </TableCell>
                     <TableCell>{t(TYPE_KEYS[item.type] ?? 'typeOrder')}</TableCell>
                     <TableCell sx={{ maxWidth: 320 }} title={item.description}>
                       <Typography variant="body2" noWrap>
