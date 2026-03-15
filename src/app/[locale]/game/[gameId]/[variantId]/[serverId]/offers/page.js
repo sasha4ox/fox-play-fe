@@ -46,6 +46,26 @@ import DeleteIcon from '@mui/icons-material/Delete';
 const ALL_OFFER_TYPES = ['ADENA', 'COINS', 'ITEMS', 'ACCOUNTS', 'BOOSTING', 'OTHER'];
 const STANDARD_CATEGORY_NAMES = new Set(['adena', 'coins', 'items', 'accounts', 'boosting', 'other']);
 
+/** Show first sentence (or first line / 120 chars); if there is more, append " ...". */
+function truncateDescription(desc) {
+  if (!desc || typeof desc !== 'string') return '';
+  const s = desc.trim();
+  if (!s) return '';
+  const periodMatch = s.match(/\.(\s|$)/);
+  const periodEndIdx = periodMatch ? periodMatch.index + 1 : -1;
+  const newlineIdx = s.indexOf('\n');
+  let cutIdx = -1;
+  if (periodEndIdx >= 0 && (newlineIdx < 0 || periodEndIdx <= newlineIdx)) cutIdx = periodEndIdx;
+  else if (newlineIdx >= 0) cutIdx = newlineIdx;
+  if (cutIdx >= 0) {
+    const first = s.slice(0, cutIdx).trim();
+    const rest = s.slice(cutIdx).trim();
+    return rest ? `${first} ...` : first;
+  }
+  if (s.length > 120) return s.slice(0, 120).trim() + ' ...';
+  return s;
+}
+
 export default function GameOffersPage() {
   const params = useParams();
   const router = useRouter();
@@ -593,6 +613,11 @@ export default function GameOffersPage() {
                                 {getOfferCategoryLabel(offer)}
                                 {seller && ` · ${t('byCreator')} ${sellerName}`}
                               </Typography>
+                              {offer.description && truncateDescription(offer.description) && (
+                                <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }} component="p">
+                                  {truncateDescription(offer.description)}
+                                </Typography>
+                              )}
                               <Typography variant="body2" color="primary.main" fontWeight={600} sx={{ mt: 1 }}>
                                 {displayPrice}
                               </Typography>

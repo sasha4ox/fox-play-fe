@@ -577,13 +577,16 @@ export default function NewOfferPage() {
                 error={!!priceErrorNonAdena}
                 fullWidth
                 sx={{
-                  mb: 2,
+                  mb: 0.5,
                   '& .MuiInputBase-input': { py: 1.5, fontSize: '1rem' },
                   '& input': { MozAppearance: 'textfield' },
                   '& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button': { WebkitAppearance: 'none', margin: 0 },
                 }}
                 required
               />
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                {t('buyerWillPay')}: <strong>{((parseDecimalPrice(price) || 0) * (1 + platformFeePercent / 100)).toFixed(2)} {currency}</strong>
+              </Typography>
             </Box>
           )}
           {submitError && <Alert severity="error" sx={{ mb: 2 }}>{submitError}</Alert>}

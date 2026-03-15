@@ -503,13 +503,16 @@ export default function EditOfferPage() {
                 onChange={(e) => setPrice(e.target.value)}
                 fullWidth
                 sx={{
-                  mb: 2,
+                  mb: 0.5,
                   '& .MuiInputBase-input': { py: 1.5, fontSize: '1rem' },
                   '& input': { MozAppearance: 'textfield' },
                   '& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button': { WebkitAppearance: 'none', margin: 0 },
                 }}
                 required
               />
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                {tNew('buyerWillPay')}: <strong>{((parseFloat(String(price).trim().replace(',', '.')) || 0) * (1 + platformFeePercent / 100)).toFixed(2)} {currency}</strong>
+              </Typography>
             </Box>
           )}
 
