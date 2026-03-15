@@ -624,7 +624,9 @@
     "sortAsc": "За зростанням",
     "sortDesc": "За спаданням",
     "byCreator": "від",
-    "priceBelowMinimum": "Ціна нижча за мінімум"
+    "priceBelowMinimum": "Ціна нижча за мінімум",
+    "searchByTitleDescription": "Пошук за назвою або описом",
+    "noSearchResults": "Немає оголошень за вашим пошуком."
   },
   "OfferDetail": {
     "offerNotFound": "Оголошення не знайдено.",

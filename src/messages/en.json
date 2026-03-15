@@ -624,7 +624,9 @@
     "sortAsc": "Ascending",
     "sortDesc": "Descending",
     "byCreator": "by",
-    "priceBelowMinimum": "Price below minimum"
+    "priceBelowMinimum": "Price below minimum",
+    "searchByTitleDescription": "Search by title or description",
+    "noSearchResults": "No offers match your search."
   },
   "OfferDetail": {
     "offerNotFound": "Offer not found.",

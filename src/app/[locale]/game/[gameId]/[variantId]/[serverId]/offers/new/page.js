@@ -1,6 +1,6 @@
 'use client';
 
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useLocale, useTranslations } from 'next-intl';
 import { useState, useEffect } from 'react';
@@ -62,6 +62,9 @@ export default function NewOfferPage() {
   const customTabs = customCategoriesOnly.map((c) => ({ value: c.id, label: c.name, custom: true }));
   const OFFER_TYPES = [...standardTabs, ...customTabs];
 
+  const searchParams = useSearchParams();
+  const categoryFromUrl = searchParams.get('category');
+
   const [tab, setTab] = useState(0);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -87,6 +90,12 @@ export default function NewOfferPage() {
   useEffect(() => {
     getPlatformFeePercent().then(setPlatformFeePercent).catch(() => {});
   }, []);
+
+  useEffect(() => {
+    if (!categoryFromUrl || OFFER_TYPES.length === 0) return;
+    const index = OFFER_TYPES.findIndex((t) => t.value === categoryFromUrl);
+    if (index >= 0) setTab(index);
+  }, [categoryFromUrl, OFFER_TYPES.length]);
 
   useEffect(() => {
     if (!serverId) return;

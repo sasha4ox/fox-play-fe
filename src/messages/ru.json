@@ -683,7 +683,9 @@
     "sortAsc": "По возрастанию",
     "sortDesc": "По убыванию",
     "byCreator": "от",
-    "priceBelowMinimum": "Цена ниже минимальной"
+    "priceBelowMinimum": "Цена ниже минимальной",
+    "searchByTitleDescription": "Поиск по названию или описанию",
+    "noSearchResults": "Нет предложений по вашему запросу."
   },
   "OfferDetail": {
     "offerNotFound": "Предложение не найдено.",

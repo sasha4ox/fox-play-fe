@@ -34,6 +34,7 @@ import { fetchOffersByServer, addRecentServer, deleteOffer } from '@/lib/api';
 import { formatAdena } from '@/lib/adenaFormat';
 import { getMinPriceForUnit, getEffectiveUnitKk, formatPriceForUnit } from '@/lib/offerMinPrice';
 import { logClientError } from '@/lib/clientLogger';
+import TextField from '@mui/material/TextField';
 import IconButton from '@mui/material/IconButton';
 import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
@@ -86,6 +87,7 @@ export default function GameOffersPage() {
   const [deleteDialogOfferId, setDeleteDialogOfferId] = useState(null);
   const [deleteInProgress, setDeleteInProgress] = useState(false);
   const [deleteError, setDeleteError] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     if (serverId && token) {
@@ -119,11 +121,13 @@ export default function GameOffersPage() {
   }, [serverId, token, preferredCurrency, categoryFilter]);
 
   const handleSellItems = () => {
+    const categoryParam = categoryFilter ? `?category=${encodeURIComponent(categoryFilter)}` : '';
+    const newOfferPath = `/${locale}/game/${gameId}/${variantId}/${serverId}/offers/new${categoryParam}`;
     if (!isAuthenticated) {
-      openLoginModal(() => router.push(`/${locale}/game/${gameId}/${variantId}/${serverId}/offers/new`));
+      openLoginModal(() => router.push(newOfferPath));
       return;
     }
-    router.push(`/${locale}/game/${gameId}/${variantId}/${serverId}/offers/new`);
+    router.push(newOfferPath);
   };
 
   const refetchOffers = () => {
@@ -230,6 +234,17 @@ export default function GameOffersPage() {
         })
       : offers;
 
+  const showSearch = categoryFilter !== 'ADENA' && categoryFilter !== 'COINS';
+  const searchTerm = searchQuery.trim().toLowerCase();
+  const filteredOffers =
+    showSearch && searchTerm
+      ? offers.filter((offer) => {
+          const title = (offer.title || '').toLowerCase();
+          const description = (offer.description || '').toLowerCase();
+          return title.includes(searchTerm) || description.includes(searchTerm);
+        })
+      : offers;
+
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', py: 4, px: 2 }}>
       <Container>
@@ -296,6 +311,16 @@ export default function GameOffersPage() {
             ))}
           </Box>
         </Box>
+
+        {showSearch && (
+          <TextField
+            size="small"
+            placeholder={t('searchByTitleDescription')}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            sx={{ mb: 2, minWidth: 280 }}
+          />
+        )}
 
         {offersLoading && (
           <Box sx={{ display: 'flex', justifyContent: 'center', py: 2 }}>
@@ -519,7 +544,12 @@ export default function GameOffersPage() {
               )
             ) : (
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-                {offers.map((offer) => {
+                {filteredOffers.length === 0 ? (
+                  <Typography color="text.secondary">
+                    {searchTerm ? t('noSearchResults') : t('noOffers')}
+                  </Typography>
+                ) : null}
+                {filteredOffers.map((offer) => {
                   const displayPrice = offer.displayPrice != null && offer.displayCurrency
                     ? `${Number(offer.displayPrice).toFixed(2)} ${offer.displayCurrency}`
                     : `${offer.price} ${offer.currency}`;
