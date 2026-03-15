@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { useLocale } from 'next-intl';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
@@ -39,6 +40,8 @@ function formatUser(user) {
 export default function AdminTransactionLogPage() {
   const locale = useLocale();
   const t = useTranslations('Admin');
+  const searchParams = useSearchParams();
+  const userIdFromUrl = searchParams.get('userId') || undefined;
   const token = useAuthStore((s) => s.token);
   const [data, setData] = useState({ items: [], total: 0 });
   const [loading, setLoading] = useState(true);
@@ -55,11 +58,12 @@ export default function AdminTransactionLogPage() {
       skip: page * PAGE_SIZE,
       take: PAGE_SIZE,
       search: search || undefined,
+      userId: userIdFromUrl,
     })
       .then(setData)
       .catch((e) => setError(e.message || 'Failed to load'))
       .finally(() => setLoading(false));
-  }, [token, page, search]);
+  }, [token, page, search, userIdFromUrl]);
 
   useEffect(() => {
     load();
@@ -73,6 +77,20 @@ export default function AdminTransactionLogPage() {
   const totalPages = Math.max(1, Math.ceil(data.total / PAGE_SIZE));
   const formatDate = (d) => (d ? new Date(d).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' }) : '—');
 
+  const userFilterDisplayName = userIdFromUrl && data.items.length > 0
+    ? (() => {
+        const first = data.items[0];
+        if (first.type === 'order') {
+          if (first.buyer?.id === userIdFromUrl) return formatUser(first.buyer);
+          if (first.seller?.id === userIdFromUrl) return formatUser(first.seller);
+        }
+        if (first.user?.id === userIdFromUrl) return formatUser(first.user);
+        return userIdFromUrl.slice(0, 8) + '…';
+      })()
+    : userIdFromUrl
+      ? userIdFromUrl.slice(0, 8) + '…'
+      : null;
+
   return (
     <Box>
       <Typography variant="h5" sx={{ mb: 2 }}>
@@ -81,6 +99,25 @@ export default function AdminTransactionLogPage() {
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
         {t('transactionLogDescription')}
       </Typography>
+
+      {userIdFromUrl && (
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2, flexWrap: 'wrap' }}>
+          <Typography variant="body2" color="text.secondary">
+            {t('viewingTransactionsForUser', { name: userFilterDisplayName })}
+          </Typography>
+          <Button component={Link} href={`/${locale}/dashboard/admin/transaction-log`} size="small" variant="outlined">
+            {t('showAllTransactions')}
+          </Button>
+          <Button
+            component={Link}
+            href={`/${locale}/dashboard/admin/users/${encodeURIComponent(userIdFromUrl)}/financial-history`}
+            size="small"
+            variant="text"
+          >
+            {t('userFinancialHistory')}
+          </Button>
+        </Box>
+      )}
 
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2, flexWrap: 'wrap' }}>
         <TextField
@@ -154,9 +191,40 @@ export default function AdminTransactionLogPage() {
                       </Typography>
                     </TableCell>
                     <TableCell>
-                      {item.type === 'order'
-                        ? `${formatUser(item.buyer)} → ${formatUser(item.seller)}`
-                        : formatUser(item.user)}
+                      {item.type === 'order' ? (
+                        <>
+                          {item.buyer?.id ? (
+                            <Link
+                              href={`/${locale}/dashboard/admin/transaction-log?userId=${encodeURIComponent(item.buyer.id)}`}
+                              style={{ color: 'inherit', textDecoration: 'underline' }}
+                            >
+                              {formatUser(item.buyer)}
+                            </Link>
+                          ) : (
+                            formatUser(item.buyer)
+                          )}
+                          {' → '}
+                          {item.seller?.id ? (
+                            <Link
+                              href={`/${locale}/dashboard/admin/transaction-log?userId=${encodeURIComponent(item.seller.id)}`}
+                              style={{ color: 'inherit', textDecoration: 'underline' }}
+                            >
+                              {formatUser(item.seller)}
+                            </Link>
+                          ) : (
+                            formatUser(item.seller)
+                          )}
+                        </>
+                      ) : item.user?.id ? (
+                        <Link
+                          href={`/${locale}/dashboard/admin/transaction-log?userId=${encodeURIComponent(item.user.id)}`}
+                          style={{ color: 'inherit', textDecoration: 'underline' }}
+                        >
+                          {formatUser(item.user)}
+                        </Link>
+                      ) : (
+                        formatUser(item.user)
+                      )}
                     </TableCell>
                     <TableCell>{item.amount}</TableCell>
                     <TableCell>{item.currency}</TableCell>
