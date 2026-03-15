@@ -33,7 +33,7 @@ import { useProfile } from '@/hooks/useProfile';
 import { fetchOfferById, createOrder, getAvailablePaymentMethods, getOfferMessages, sendOfferMessage, startOfferChat, getOfferInquiryOrderId, getFeedbacksByUserId, deleteOffer } from '@/lib/api';
 import { logClientError } from '@/lib/clientLogger';
 import { formatAdena } from '@/lib/adenaFormat';
-import { getMinPriceForUnit, getEffectiveUnitKk } from '@/lib/offerMinPrice';
+import { getMinPriceForUnit, getEffectiveUnitKk, formatPriceForUnit } from '@/lib/offerMinPrice';
 
 export default function OfferPDPPage() {
   const params = useParams();
@@ -501,7 +501,7 @@ export default function OfferPDPPage() {
                     <Box>
                       <Typography variant="overline" color="text.secondary">{unitLabel}</Typography>
                       <Typography variant="h6" fontWeight={600} color="primary.main">
-                        {priceForDisplay.toFixed(2)} {currency}
+                        {formatPriceForUnit(priceForDisplay)} {currency}
                       </Typography>
                     </Box>
                     <Box>

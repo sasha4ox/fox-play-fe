@@ -37,35 +37,15 @@ import {
   updateAdminCard,
   setAdminCardActive,
   deleteAdminCard,
-  getAdminPendingReceipts,
-  adminConfirmReceipt,
-  adminDeclineReceipt,
-  getAdminCardPayouts,
-  adminCardPayoutComplete,
-  adminCardPayoutFail,
   getAdminCardPaymentOrderNumberMessage,
   setAdminCardPaymentOrderNumberMessage,
   getAdminCryptoPaymentWallet,
   setAdminCryptoPaymentWallet,
-  getAdminPendingCryptoReceipts,
-  adminConfirmCryptoReceipt,
-  adminDeclineCryptoReceipt,
-  getAdminCryptoPayoutRequests,
-  adminCryptoPayoutComplete,
-  adminCryptoPayoutFail,
   getAdminIbanPaymentEnabled,
   setAdminIbanPaymentEnabled,
   getAdminIbanPaymentConfig,
   setAdminIbanPaymentConfig,
-  getAdminPendingIbanReceipts,
-  getAdminPendingIbanReceiptsCount,
-  adminConfirmIbanReceipt,
-  adminDeclineIbanReceipt,
-  adminGetOrCreateContactBuyer,
-  adminSendContactBuyerMessage,
 } from '@/lib/api';
-import Link from 'next/link';
-import { useLocale } from 'next-intl';
 
 function maskCardNumber(num) {
   if (!num || num.length < 8) return '****';
@@ -74,7 +54,6 @@ function maskCardNumber(num) {
 
 export default function AdminMoneyFlowPage() {
   const t = useTranslations('Admin');
-  const locale = useLocale();
   const token = useAuthStore((s) => s.token);
   const [cardPaymentEnabled, setCardPaymentEnabled] = useState(false);
   const [loadingFlag, setLoadingFlag] = useState(true);
@@ -90,8 +69,6 @@ export default function AdminMoneyFlowPage() {
   const [loadingProfit, setLoadingProfit] = useState(true);
   const [cards, setCards] = useState([]);
   const [loadingCards, setLoadingCards] = useState(true);
-  const [receipts, setReceipts] = useState([]);
-  const [loadingReceipts, setLoadingReceipts] = useState(true);
   const [addCardOpen, setAddCardOpen] = useState(false);
   const [newCardNumber, setNewCardNumber] = useState('');
   const [newCardHolder, setNewCardHolder] = useState('');
@@ -102,37 +79,16 @@ export default function AdminMoneyFlowPage() {
   const [editCardId, setEditCardId] = useState(null);
   const [editPaymentComment, setEditPaymentComment] = useState('');
   const [savingEditCard, setSavingEditCard] = useState(false);
-  const [confirmingReceipt, setConfirmingReceipt] = useState(null);
-  const [decliningReceipt, setDecliningReceipt] = useState(null);
-  const [cardPayouts, setCardPayouts] = useState([]);
-  const [loadingCardPayouts, setLoadingCardPayouts] = useState(true);
-  const [cardPayoutStatusFilter, setCardPayoutStatusFilter] = useState('');
-  const [confirmingCardPayoutComplete, setConfirmingCardPayoutComplete] = useState(null);
-  const [confirmingCardPayoutFail, setConfirmingCardPayoutFail] = useState(null);
   const [error, setError] = useState(null);
   const [orderNumberVisible, setOrderNumberVisible] = useState(false);
   const [orderNumberText, setOrderNumberText] = useState('');
   const [orderNumberTextInput, setOrderNumberTextInput] = useState('');
   const [loadingOrderNumberConfig, setLoadingOrderNumberConfig] = useState(true);
   const [savingOrderNumberConfig, setSavingOrderNumberConfig] = useState(false);
-  const [contactBuyerOrderId, setContactBuyerOrderId] = useState(null);
-  const [contactBuyerConvo, setContactBuyerConvo] = useState(null);
-  const [contactBuyerMessage, setContactBuyerMessage] = useState('');
-  const [contactBuyerLoading, setContactBuyerLoading] = useState(false);
-  const [contactBuyerSending, setContactBuyerSending] = useState(false);
   const [cryptoWallet, setCryptoWallet] = useState('');
   const [cryptoWalletInput, setCryptoWalletInput] = useState('');
   const [loadingCryptoWallet, setLoadingCryptoWallet] = useState(true);
   const [savingCryptoWallet, setSavingCryptoWallet] = useState(false);
-  const [cryptoReceipts, setCryptoReceipts] = useState([]);
-  const [loadingCryptoReceipts, setLoadingCryptoReceipts] = useState(true);
-  const [cryptoPayoutRequests, setCryptoPayoutRequests] = useState([]);
-  const [loadingCryptoPayoutRequests, setLoadingCryptoPayoutRequests] = useState(true);
-  const [cryptoPayoutStatusFilter, setCryptoPayoutStatusFilter] = useState('');
-  const [confirmingCryptoReceipt, setConfirmingCryptoReceipt] = useState(null);
-  const [decliningCryptoReceipt, setDecliningCryptoReceipt] = useState(null);
-  const [confirmingCryptoPayoutComplete, setConfirmingCryptoPayoutComplete] = useState(null);
-  const [confirmingCryptoPayoutFail, setConfirmingCryptoPayoutFail] = useState(null);
   const [ibanPaymentEnabled, setIbanPaymentEnabled] = useState(false);
   const [loadingIbanFlag, setLoadingIbanFlag] = useState(true);
   const [savingIbanFlag, setSavingIbanFlag] = useState(false);
@@ -148,10 +104,6 @@ export default function AdminMoneyFlowPage() {
   });
   const [loadingIbanConfig, setLoadingIbanConfig] = useState(true);
   const [savingIbanConfig, setSavingIbanConfig] = useState(false);
-  const [ibanReceipts, setIbanReceipts] = useState([]);
-  const [loadingIbanReceipts, setLoadingIbanReceipts] = useState(true);
-  const [confirmingIbanReceipt, setConfirmingIbanReceipt] = useState(null);
-  const [decliningIbanReceipt, setDecliningIbanReceipt] = useState(null);
 
   const loadFlag = () => {
     if (!token) return;
@@ -231,27 +183,6 @@ export default function AdminMoneyFlowPage() {
       .finally(() => setSavingOrderNumberConfig(false));
   };
 
-  const loadReceipts = () => {
-    if (!token) return;
-    setLoadingReceipts(true);
-    getAdminPendingReceipts(token)
-      .then((data) => setReceipts(data?.items ?? []))
-      .catch(() => setReceipts([]))
-      .finally(() => setLoadingReceipts(false));
-  };
-
-  const loadCardPayouts = () => {
-    if (!token) return;
-    setLoadingCardPayouts(true);
-    getAdminCardPayouts(token, {
-      status: cardPayoutStatusFilter || undefined,
-      take: 100,
-    })
-      .then((data) => setCardPayouts(data?.items ?? []))
-      .catch(() => setCardPayouts([]))
-      .finally(() => setLoadingCardPayouts(false));
-  };
-
   useEffect(() => {
     loadFlag();
     loadWhitebitFlag();
@@ -266,12 +197,6 @@ export default function AdminMoneyFlowPage() {
   useEffect(() => {
     loadOrderNumberConfig();
   }, [token]);
-  useEffect(() => {
-    loadReceipts();
-  }, [token]);
-  useEffect(() => {
-    loadCardPayouts();
-  }, [token, cardPayoutStatusFilter]);
 
   const loadCryptoWallet = () => {
     if (!token) return;
@@ -284,32 +209,9 @@ export default function AdminMoneyFlowPage() {
       .catch(() => setCryptoWallet(''))
       .finally(() => setLoadingCryptoWallet(false));
   };
-  const loadCryptoReceipts = () => {
-    if (!token) return;
-    setLoadingCryptoReceipts(true);
-    getAdminPendingCryptoReceipts(token)
-      .then((data) => setCryptoReceipts(data?.items ?? []))
-      .catch(() => setCryptoReceipts([]))
-      .finally(() => setLoadingCryptoReceipts(false));
-  };
-  const loadCryptoPayoutRequests = () => {
-    if (!token) return;
-    setLoadingCryptoPayoutRequests(true);
-    getAdminCryptoPayoutRequests(token, { status: cryptoPayoutStatusFilter || undefined, take: 100 })
-      .then((data) => setCryptoPayoutRequests(data?.items ?? []))
-      .catch(() => setCryptoPayoutRequests([]))
-      .finally(() => setLoadingCryptoPayoutRequests(false));
-  };
-
   useEffect(() => {
     loadCryptoWallet();
   }, [token]);
-  useEffect(() => {
-    loadCryptoReceipts();
-  }, [token]);
-  useEffect(() => {
-    loadCryptoPayoutRequests();
-  }, [token, cryptoPayoutStatusFilter]);
 
   const loadIbanFlag = () => {
     if (!token) return;
@@ -341,20 +243,9 @@ export default function AdminMoneyFlowPage() {
       .catch(() => {})
       .finally(() => setLoadingIbanConfig(false));
   };
-  const loadIbanReceipts = () => {
-    if (!token) return;
-    setLoadingIbanReceipts(true);
-    getAdminPendingIbanReceipts(token)
-      .then((data) => setIbanReceipts(data?.items ?? []))
-      .catch(() => setIbanReceipts([]))
-      .finally(() => setLoadingIbanReceipts(false));
-  };
   useEffect(() => {
     loadIbanFlag();
     loadIbanConfig();
-  }, [token]);
-  useEffect(() => {
-    loadIbanReceipts();
   }, [token]);
   const handleSaveIbanFlag = () => {
     if (!token) return;
@@ -398,22 +289,6 @@ export default function AdminMoneyFlowPage() {
       .catch((err) => setError(err?.message || 'Failed to save'))
       .finally(() => setSavingIbanConfig(false));
   };
-  const handleConfirmIbanReceipt = (orderId) => {
-    setConfirmingIbanReceipt(orderId);
-    setError(null);
-    adminConfirmIbanReceipt(orderId, token)
-      .then(() => { loadIbanReceipts(); loadReceipts(); })
-      .catch((err) => setError(err?.message || 'Failed'))
-      .finally(() => setConfirmingIbanReceipt(null));
-  };
-  const handleDeclineIbanReceipt = (orderId) => {
-    setDecliningIbanReceipt(orderId);
-    setError(null);
-    adminDeclineIbanReceipt(orderId, token)
-      .then(() => { loadIbanReceipts(); loadReceipts(); })
-      .catch((err) => setError(err?.message || 'Failed'))
-      .finally(() => setDecliningIbanReceipt(null));
-  };
   const handleSaveCryptoWallet = () => {
     setSavingCryptoWallet(true);
     setError(null);
@@ -425,39 +300,6 @@ export default function AdminMoneyFlowPage() {
       .catch((err) => setError(err?.message || 'Failed to save'))
       .finally(() => setSavingCryptoWallet(false));
   };
-  const handleConfirmCryptoReceipt = (orderId) => {
-    setConfirmingCryptoReceipt(orderId);
-    setError(null);
-    adminConfirmCryptoReceipt(orderId, token)
-      .then(() => { loadCryptoReceipts(); loadReceipts(); })
-      .catch((err) => setError(err?.message || 'Failed'))
-      .finally(() => setConfirmingCryptoReceipt(null));
-  };
-  const handleDeclineCryptoReceipt = (orderId) => {
-    setDecliningCryptoReceipt(orderId);
-    setError(null);
-    adminDeclineCryptoReceipt(orderId, token)
-      .then(() => { loadCryptoReceipts(); loadReceipts(); })
-      .catch((err) => setError(err?.message || 'Failed'))
-      .finally(() => setDecliningCryptoReceipt(null));
-  };
-  const handleCryptoPayoutComplete = (id) => {
-    setConfirmingCryptoPayoutComplete(id);
-    setError(null);
-    adminCryptoPayoutComplete(id, token)
-      .then(() => loadCryptoPayoutRequests())
-      .catch((err) => setError(err?.message || 'Failed'))
-      .finally(() => setConfirmingCryptoPayoutComplete(null));
-  };
-  const handleCryptoPayoutFail = (id) => {
-    setConfirmingCryptoPayoutFail(id);
-    setError(null);
-    adminCryptoPayoutFail(id, token)
-      .then(() => loadCryptoPayoutRequests())
-      .catch((err) => setError(err?.message || 'Failed'))
-      .finally(() => setConfirmingCryptoPayoutFail(null));
-  };
-
   const handleToggleCardPayment = (e) => {
     const checked = e.target.checked;
     setSavingFlag(true);
@@ -556,80 +398,6 @@ export default function AdminMoneyFlowPage() {
       })
       .catch((err) => setError(err.message || 'Failed to update'))
       .finally(() => setSavingEditCard(false));
-  };
-
-  const handleConfirmReceipt = (orderId) => {
-    setConfirmingReceipt(orderId);
-    setError(null);
-    adminConfirmReceipt(orderId, token)
-      .then(() => {
-        loadReceipts();
-        loadPayouts();
-      })
-      .catch((err) => setError(err.message || 'Failed'))
-      .finally(() => setConfirmingReceipt(null));
-  };
-
-  const handleDeclineReceipt = (orderId) => {
-    if (!confirm(t('declineReceiptConfirm'))) return;
-    setDecliningReceipt(orderId);
-    setError(null);
-    adminDeclineReceipt(orderId, token)
-      .then(() => loadReceipts())
-      .catch((err) => setError(err.message || 'Failed'))
-      .finally(() => setDecliningReceipt(null));
-  };
-
-  const handleOpenContactBuyer = (orderId) => {
-    setContactBuyerOrderId(orderId);
-    setContactBuyerConvo(null);
-    setContactBuyerMessage('');
-    setContactBuyerLoading(true);
-    setError(null);
-    adminGetOrCreateContactBuyer(orderId, {}, token)
-      .then((convo) => setContactBuyerConvo(convo))
-      .catch((err) => setError(err.message || 'Failed'))
-      .finally(() => setContactBuyerLoading(false));
-  };
-
-  const handleSendContactBuyerMessage = () => {
-    const text = (contactBuyerMessage || '').trim();
-    if (!text || !contactBuyerOrderId || !token) return;
-    setContactBuyerSending(true);
-    setError(null);
-    adminSendContactBuyerMessage(contactBuyerOrderId, { text }, token)
-      .then((msg) => {
-        setContactBuyerConvo((prev) =>
-          prev ? { ...prev, messages: [...(prev.messages || []), { ...msg, sender: { role: 'ADMIN' } }] } : prev
-        );
-        setContactBuyerMessage('');
-      })
-      .catch((err) => setError(err.message || 'Failed'))
-      .finally(() => setContactBuyerSending(false));
-  };
-
-  const handleCloseContactBuyerModal = () => {
-    setContactBuyerOrderId(null);
-    setContactBuyerConvo(null);
-    setContactBuyerMessage('');
-  };
-
-  const handleCardPayoutComplete = (id) => {
-    setConfirmingCardPayoutComplete(id);
-    setError(null);
-    adminCardPayoutComplete(id, token)
-      .then(() => loadCardPayouts())
-      .catch((err) => setError(err.message || 'Failed'))
-      .finally(() => setConfirmingCardPayoutComplete(null));
-  };
-
-  const handleCardPayoutFail = (id) => {
-    setConfirmingCardPayoutFail(id);
-    setError(null);
-    adminCardPayoutFail(id, token)
-      .then(() => loadCardPayouts())
-      .catch((err) => setError(err.message || 'Failed'))
-      .finally(() => setConfirmingCardPayoutFail(null));
   };
 
   return (
@@ -1017,373 +785,6 @@ export default function AdminMoneyFlowPage() {
         </CardContent>
       </Card>
 
-      <Card sx={{ mb: 3 }}>
-        <CardContent sx={{ px: { xs: 1.5, sm: 2 } }}>
-          <Typography variant="subtitle1" fontWeight={600} gutterBottom>
-            {t('pendingReceipts')}
-          </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            {t('pendingReceiptsHint')}
-          </Typography>
-          {loadingReceipts ? (
-            <Skeleton height={60} />
-          ) : receipts.length === 0 ? (
-            <Typography color="text.secondary">{t('noPendingReceipts')}</Typography>
-          ) : (
-            <TableContainer sx={{ overflowX: 'auto' }}>
-              <Table size="small" sx={{ minWidth: 480 }}>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Order</TableCell>
-                    <TableCell>Buyer</TableCell>
-                    <TableCell>{t('buyerCardLast4')}</TableCell>
-                    <TableCell>Amount</TableCell>
-                    <TableCell>Marked sent</TableCell>
-                    <TableCell align="right">{t('actions')}</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {receipts.map((r) => (
-                    <TableRow key={r.orderId}>
-                      <TableCell>
-                        <Link href={`/${locale}/dashboard/orders/${r.orderId}`} target="_blank" rel="noopener">
-                          {r.orderNumber ?? `${r.orderId.slice(0, 8)}…`}
-                        </Link>
-                      </TableCell>
-                      <TableCell>{r.buyer?.email ?? r.buyer?.nickname ?? r.buyer?.id}</TableCell>
-                      <TableCell>{r.buyerCardLast4 ?? '—'}</TableCell>
-                      <TableCell>
-                        {r.buyerAmount != null ? Number(r.buyerAmount).toFixed(2) : '—'} {r.buyerCurrency}
-                      </TableCell>
-                      <TableCell>{r.buyerMarkedSentAt ? new Date(r.buyerMarkedSentAt).toLocaleString() : '—'}</TableCell>
-                      <TableCell align="right">
-                        <Box
-                          sx={{
-                            display: 'flex',
-                            flexWrap: 'wrap',
-                            gap: 1,
-                            justifyContent: 'flex-end',
-                            '& .MuiButton-root': { minHeight: 44 },
-                          }}
-                        >
-                          <Button
-                            size="small"
-                            variant="outlined"
-                            onClick={() => handleOpenContactBuyer(r.orderId)}
-                          >
-                            {t('messageUser')}
-                          </Button>
-                          <Button
-                            size="small"
-                            variant="outlined"
-                            color="error"
-                            onClick={() => handleDeclineReceipt(r.orderId)}
-                            disabled={decliningReceipt === r.orderId || confirmingReceipt === r.orderId}
-                          >
-                            {decliningReceipt === r.orderId ? '…' : t('declineReceipt')}
-                          </Button>
-                          <Button
-                            size="small"
-                            variant="contained"
-                            onClick={() => handleConfirmReceipt(r.orderId)}
-                            disabled={confirmingReceipt === r.orderId}
-                          >
-                            {confirmingReceipt === r.orderId ? '…' : t('confirmReceipt')}
-                          </Button>
-                        </Box>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          )}
-        </CardContent>
-      </Card>
-
-      <Card sx={{ mb: 3 }}>
-        <CardContent sx={{ px: { xs: 1.5, sm: 2 } }}>
-          <Typography variant="subtitle1" fontWeight={600} gutterBottom>
-            {t('pendingCryptoReceipts')}
-          </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            {t('pendingCryptoReceiptsHint')}
-          </Typography>
-          {loadingCryptoReceipts ? (
-            <Skeleton height={60} />
-          ) : cryptoReceipts.length === 0 ? (
-            <Typography color="text.secondary">{t('noPendingCryptoReceipts')}</Typography>
-          ) : (
-            <TableContainer sx={{ overflowX: 'auto' }}>
-              <Table size="small" sx={{ minWidth: 480 }}>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Order</TableCell>
-                    <TableCell>Buyer</TableCell>
-                    <TableCell>Amount</TableCell>
-                    <TableCell>Wallet</TableCell>
-                    <TableCell>Marked sent</TableCell>
-                    <TableCell align="right">{t('actions')}</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {cryptoReceipts.map((r) => (
-                    <TableRow key={r.orderId}>
-                      <TableCell>
-                        <Link href={`/${locale}/dashboard/orders/${r.orderId}`} target="_blank" rel="noopener">
-                          {r.orderNumber ?? `${r.orderId.slice(0, 8)}…`}
-                        </Link>
-                      </TableCell>
-                      <TableCell>{r.buyer?.email ?? r.buyer?.nickname ?? r.buyer?.id}</TableCell>
-                      <TableCell>{r.buyerAmount != null ? Number(r.buyerAmount).toFixed(2) : '—'} {r.buyerCurrency}</TableCell>
-                      <TableCell sx={{ fontFamily: 'monospace', fontSize: '0.75rem', maxWidth: 140 }}>{r.cryptoWalletAddress ? `${r.cryptoWalletAddress.slice(0, 8)}…${r.cryptoWalletAddress.slice(-6)}` : '—'}</TableCell>
-                      <TableCell>{r.buyerMarkedSentAt ? new Date(r.buyerMarkedSentAt).toLocaleString() : '—'}</TableCell>
-                      <TableCell align="right">
-                        <Box
-                          sx={{
-                            display: 'flex',
-                            flexWrap: 'wrap',
-                            gap: 1,
-                            justifyContent: 'flex-end',
-                            '& .MuiButton-root': { minHeight: 44 },
-                          }}
-                        >
-                          <Button size="small" variant="outlined" color="error" onClick={() => handleDeclineCryptoReceipt(r.orderId)} disabled={decliningCryptoReceipt === r.orderId || confirmingCryptoReceipt === r.orderId}>
-                            {decliningCryptoReceipt === r.orderId ? '…' : t('declineReceipt')}
-                          </Button>
-                          <Button size="small" variant="contained" onClick={() => handleConfirmCryptoReceipt(r.orderId)} disabled={confirmingCryptoReceipt === r.orderId}>
-                            {confirmingCryptoReceipt === r.orderId ? '…' : t('confirmReceipt')}
-                          </Button>
-                        </Box>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          )}
-        </CardContent>
-      </Card>
-
-      <Card sx={{ mb: 3 }}>
-        <CardContent sx={{ px: { xs: 1.5, sm: 2 } }}>
-          <Typography variant="subtitle1" fontWeight={600} gutterBottom>
-            {t('pendingIbanReceipts')}
-          </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            {t('pendingIbanReceiptsHint')}
-          </Typography>
-          {loadingIbanReceipts ? (
-            <Skeleton height={60} />
-          ) : ibanReceipts.length === 0 ? (
-            <Typography color="text.secondary">{t('noPendingIbanReceipts')}</Typography>
-          ) : (
-            <TableContainer sx={{ overflowX: 'auto' }}>
-              <Table size="small" sx={{ minWidth: 480 }}>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Order</TableCell>
-                    <TableCell>Buyer</TableCell>
-                    <TableCell>Amount</TableCell>
-                    <TableCell>Marked sent</TableCell>
-                    <TableCell align="right">{t('actions')}</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {ibanReceipts.map((r) => (
-                    <TableRow key={r.orderId}>
-                      <TableCell>
-                        <Link href={`/${locale}/dashboard/orders/${r.orderId}`} target="_blank" rel="noopener">
-                          {r.orderNumber ?? `${r.orderId.slice(0, 8)}…`}
-                        </Link>
-                      </TableCell>
-                      <TableCell>{r.buyer?.email ?? r.buyer?.nickname ?? r.buyer?.id}</TableCell>
-                      <TableCell>{r.buyerAmount != null ? Number(r.buyerAmount).toFixed(2) : '—'} {r.buyerCurrency}</TableCell>
-                      <TableCell>{r.buyerMarkedSentAt ? new Date(r.buyerMarkedSentAt).toLocaleString() : '—'}</TableCell>
-                      <TableCell align="right">
-                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, justifyContent: 'flex-end', '& .MuiButton-root': { minHeight: 44 } }}>
-                          <Button size="small" variant="outlined" color="error" onClick={() => handleDeclineIbanReceipt(r.orderId)} disabled={decliningIbanReceipt === r.orderId || confirmingIbanReceipt === r.orderId}>
-                            {decliningIbanReceipt === r.orderId ? '…' : t('declineReceipt')}
-                          </Button>
-                          <Button size="small" variant="contained" onClick={() => handleConfirmIbanReceipt(r.orderId)} disabled={confirmingIbanReceipt === r.orderId}>
-                            {confirmingIbanReceipt === r.orderId ? '…' : t('confirmReceipt')}
-                          </Button>
-                        </Box>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          )}
-        </CardContent>
-      </Card>
-
-      <Card sx={{ mb: 3 }}>
-        <CardContent sx={{ px: { xs: 1.5, sm: 2 } }}>
-          <Typography variant="subtitle1" fontWeight={600} gutterBottom>
-            {t('cardPayoutRequests')}
-          </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            {t('cardPayoutRequestsHint')}
-          </Typography>
-          <Box sx={{ mb: 2 }}>
-            <TextField
-              select
-              size="small"
-              label={t('filterByStatus')}
-              value={cardPayoutStatusFilter}
-              onChange={(e) => setCardPayoutStatusFilter(e.target.value)}
-              sx={{ minWidth: { xs: '100%', sm: 160 } }}
-              SelectProps={{ native: true }}
-              fullWidth
-            >
-              <option value="">{t('statusAll')}</option>
-              <option value="PENDING">PENDING</option>
-              <option value="COMPLETED">COMPLETED</option>
-              <option value="FAILED">FAILED</option>
-            </TextField>
-          </Box>
-          {loadingCardPayouts ? (
-            <Skeleton height={60} />
-          ) : cardPayouts.length === 0 ? (
-            <Typography color="text.secondary">{t('noCardPayoutRequests')}</Typography>
-          ) : (
-            <TableContainer sx={{ overflowX: 'auto' }}>
-              <Table size="small" sx={{ minWidth: 640 }}>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>{t('user')}</TableCell>
-                    <TableCell>{t('amount')}</TableCell>
-                    <TableCell>{t('cardNumber')}</TableCell>
-                    <TableCell>{t('cardHolderName')}</TableCell>
-                    <TableCell>{t('status')}</TableCell>
-                    <TableCell>{t('date')}</TableCell>
-                    <TableCell align="right">{t('actions')}</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {cardPayouts.map((r) => (
-                    <TableRow key={r.id}>
-                      <TableCell>{r.user?.email ?? r.user?.nickname ?? r.user?.id ?? r.userId}</TableCell>
-                      <TableCell>{r.amount} {r.currency}</TableCell>
-                      <TableCell>{maskCardNumber(r.cardNumber)}</TableCell>
-                      <TableCell>{r.cardHolderName ?? '—'}</TableCell>
-                      <TableCell>{r.status}</TableCell>
-                      <TableCell>{r.createdAt ? new Date(r.createdAt).toLocaleString() : '—'}</TableCell>
-                      <TableCell align="right">
-                        {r.status === 'PENDING' && (
-                          <Box
-                            component="span"
-                            sx={{
-                              display: 'flex',
-                              flexWrap: 'wrap',
-                              gap: 1,
-                              justifyContent: 'flex-end',
-                              '& .MuiButton-root': { minHeight: 44 },
-                            }}
-                          >
-                            <Button
-                              size="small"
-                              variant="contained"
-                              color="primary"
-                              onClick={() => handleCardPayoutComplete(r.id)}
-                              disabled={confirmingCardPayoutComplete === r.id}
-                            >
-                              {confirmingCardPayoutComplete === r.id ? '…' : t('markCompleted')}
-                            </Button>
-                            <Button
-                              size="small"
-                              variant="outlined"
-                              color="error"
-                              onClick={() => handleCardPayoutFail(r.id)}
-                              disabled={confirmingCardPayoutFail === r.id}
-                            >
-                              {confirmingCardPayoutFail === r.id ? '…' : t('markFailed')}
-                            </Button>
-                          </Box>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          )}
-        </CardContent>
-      </Card>
-
-      <Card sx={{ mb: 3 }}>
-        <CardContent sx={{ px: { xs: 1.5, sm: 2 } }}>
-          <Typography variant="subtitle1" fontWeight={600} gutterBottom>
-            {t('cryptoPayoutRequests')}
-          </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            {t('cryptoPayoutRequestsHint')}
-          </Typography>
-          <Box sx={{ mb: 2 }}>
-            <TextField select size="small" label={t('filterByStatus')} value={cryptoPayoutStatusFilter} onChange={(e) => setCryptoPayoutStatusFilter(e.target.value)} sx={{ minWidth: { xs: '100%', sm: 160 } }} SelectProps={{ native: true }} fullWidth>
-              <option value="">{t('statusAll')}</option>
-              <option value="PENDING">PENDING</option>
-              <option value="COMPLETED">COMPLETED</option>
-              <option value="FAILED">FAILED</option>
-            </TextField>
-          </Box>
-          {loadingCryptoPayoutRequests ? (
-            <Skeleton height={60} />
-          ) : cryptoPayoutRequests.length === 0 ? (
-            <Typography color="text.secondary">{t('noCryptoPayoutRequests')}</Typography>
-          ) : (
-            <TableContainer sx={{ overflowX: 'auto' }}>
-              <Table size="small" sx={{ minWidth: 560 }}>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>{t('user')}</TableCell>
-                    <TableCell>{t('amount')}</TableCell>
-                    <TableCell>{t('cryptoWalletLabel')}</TableCell>
-                    <TableCell>{t('status')}</TableCell>
-                    <TableCell>{t('date')}</TableCell>
-                    <TableCell align="right">{t('actions')}</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {cryptoPayoutRequests.map((r) => (
-                    <TableRow key={r.id}>
-                      <TableCell>{r.user?.email ?? r.user?.nickname ?? r.user?.id ?? r.userId}</TableCell>
-                      <TableCell>{r.amount} {r.currency}</TableCell>
-                      <TableCell sx={{ fontFamily: 'monospace', fontSize: '0.75rem', maxWidth: 160 }}>{r.walletAddress ? `${r.walletAddress.slice(0, 10)}…${r.walletAddress.slice(-8)}` : '—'}</TableCell>
-                      <TableCell>{r.status}</TableCell>
-                      <TableCell>{r.createdAt ? new Date(r.createdAt).toLocaleString() : '—'}</TableCell>
-                      <TableCell align="right">
-                        {r.status === 'PENDING' && (
-                          <Box
-                            component="span"
-                            sx={{
-                              display: 'flex',
-                              flexWrap: 'wrap',
-                              gap: 1,
-                              justifyContent: 'flex-end',
-                              '& .MuiButton-root': { minHeight: 44 },
-                            }}
-                          >
-                            <Button size="small" variant="contained" color="primary" onClick={() => handleCryptoPayoutComplete(r.id)} disabled={confirmingCryptoPayoutComplete === r.id}>
-                              {confirmingCryptoPayoutComplete === r.id ? '…' : t('markCompleted')}
-                            </Button>
-                            <Button size="small" variant="outlined" color="error" onClick={() => handleCryptoPayoutFail(r.id)} disabled={confirmingCryptoPayoutFail === r.id}>
-                              {confirmingCryptoPayoutFail === r.id ? '…' : t('markFailed')}
-                            </Button>
-                          </Box>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          )}
-        </CardContent>
-      </Card>
-
       <Dialog open={addCardOpen} onClose={() => !submittingCard && setAddCardOpen(false)}>
         <DialogTitle>{t('addCard')}</DialogTitle>
         <DialogContent>
@@ -1463,51 +864,6 @@ export default function AdminMoneyFlowPage() {
         </DialogActions>
       </Dialog>
 
-      <Dialog open={!!contactBuyerOrderId} onClose={handleCloseContactBuyerModal} maxWidth="sm" fullWidth>
-        <DialogTitle>{t('messageUser')} — Order {contactBuyerOrderId?.slice(0, 8)}…</DialogTitle>
-        <DialogContent>
-          {contactBuyerLoading ? (
-            <Box sx={{ py: 3, textAlign: 'center' }}><Typography color="text.secondary">Loading…</Typography></Box>
-          ) : contactBuyerConvo ? (
-            <>
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                {t('contactBuyerIntro')} <Link href={contactBuyerConvo.orderLink} target="_blank" rel="noopener">{contactBuyerConvo.orderLink}</Link>
-              </Typography>
-              <Box sx={{ maxHeight: 320, overflow: 'auto', mb: 2, border: '1px solid', borderColor: 'divider', borderRadius: 1, p: 1.5 }}>
-                {(contactBuyerConvo.messages || []).map((m) => (
-                  <Box key={m.id} sx={{ mb: 1.5 }}>
-                    <Typography variant="caption" color="text.secondary">
-                      {m.sender?.role === 'ADMIN' || m.sender?.role === 'MODERATOR' ? 'Support' : (m.sender?.nickname || m.sender?.email || 'User')} · {new Date(m.createdAt).toLocaleString()}
-                    </Typography>
-                    <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>{m.text}</Typography>
-                  </Box>
-                ))}
-              </Box>
-              <TextField
-                fullWidth
-                multiline
-                minRows={2}
-                placeholder={t('contactBuyerPlaceholder')}
-                value={contactBuyerMessage}
-                onChange={(e) => setContactBuyerMessage(e.target.value)}
-                disabled={contactBuyerSending}
-              />
-            </>
-          ) : null}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseContactBuyerModal}>{t('close')}</Button>
-          {contactBuyerConvo && (
-            <Button
-              variant="contained"
-              onClick={handleSendContactBuyerMessage}
-              disabled={contactBuyerSending || !(contactBuyerMessage || '').trim()}
-            >
-              {contactBuyerSending ? '…' : t('send')}
-            </Button>
-          )}
-        </DialogActions>
-      </Dialog>
     </Box>
   );
 }

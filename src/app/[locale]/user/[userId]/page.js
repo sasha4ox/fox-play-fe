@@ -13,6 +13,10 @@ import CardContent from '@mui/material/CardContent';
 import Skeleton from '@mui/material/Skeleton';
 import Rating from '@mui/material/Rating';
 import Chip from '@mui/material/Chip';
+import Collapse from '@mui/material/Collapse';
+import IconButton from '@mui/material/IconButton';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import { useLocale, useTranslations } from 'next-intl';
 import { getPublicProfile, getOffersBySeller, getFeedbacksByUserId } from '@/lib/api';
 
@@ -25,6 +29,7 @@ export default function UserProfilePage() {
   const [offers, setOffers] = useState([]);
   const [feedbacks, setFeedbacks] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [offersExpanded, setOffersExpanded] = useState(false);
 
   useEffect(() => {
     if (!userId) return;
@@ -77,35 +82,54 @@ export default function UserProfilePage() {
         </Box>
       </Box>
 
-      <Typography variant="h6" fontWeight={600} sx={{ mb: 1 }}>
-        {t('offers')}
-      </Typography>
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-        {t('offersHint')}
-      </Typography>
-      {offers.length === 0 ? (
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>{t('noOffers')}</Typography>
-      ) : (
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mb: 3 }}>
-          {offers.map((offer) => (
-            <Link key={offer.id} href={`${base}/game/${offer.server?.gameVariant?.game?.id ?? ''}/${offer.server?.gameVariant?.id ?? ''}/${offer.server?.id ?? ''}/offers/${offer.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-              <Card variant="outlined" sx={{ '&:hover': { bgcolor: 'action.hover' } }}>
-                <CardContent sx={{ py: 1.5, '&:last-child': { pb: 1.5 } }}>
-                  <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 1 }}>
-                    <Typography variant="subtitle2">{offer.title}</Typography>
-                    {offer.server?.gameVariant?.game?.name && (
-                      <Chip size="small" label={`${offer.server.gameVariant.game.name} → ${offer.server?.gameVariant?.name || ''} → ${offer.server?.name || ''}`} variant="outlined" />
-                    )}
-                    <Typography variant="body2" color="primary">
-                      {offer.displayPrice != null ? `${offer.displayPrice} ${offer.currency}` : `${offer.price} ${offer.currency}`}
-                    </Typography>
-                  </Box>
-                </CardContent>
-              </Card>
-            </Link>
-          ))}
-        </Box>
-      )}
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 0.5,
+          mb: 1,
+          cursor: 'pointer',
+          '&:hover': { opacity: 0.85 },
+        }}
+        onClick={() => setOffersExpanded((v) => !v)}
+        role="button"
+        aria-expanded={offersExpanded}
+      >
+        <Typography variant="h6" fontWeight={600}>
+          {t('offers')}{offers.length > 0 ? ` (${offers.length})` : ''}
+        </Typography>
+        <IconButton size="small" aria-label={offersExpanded ? t('hideOffers') : t('showOffers')} sx={{ p: 0.25 }}>
+          {offersExpanded ? <ExpandLessIcon fontSize="small" /> : <ExpandMoreIcon fontSize="small" />}
+        </IconButton>
+      </Box>
+      <Collapse in={offersExpanded}>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          {t('offersHint')}
+        </Typography>
+        {offers.length === 0 ? (
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>{t('noOffers')}</Typography>
+        ) : (
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mb: 3 }}>
+            {offers.map((offer) => (
+              <Link key={offer.id} href={`${base}/game/${offer.server?.gameVariant?.game?.id ?? ''}/${offer.server?.gameVariant?.id ?? ''}/${offer.server?.id ?? ''}/offers/${offer.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                <Card variant="outlined" sx={{ '&:hover': { bgcolor: 'action.hover' } }}>
+                  <CardContent sx={{ py: 1.5, '&:last-child': { pb: 1.5 } }}>
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 1 }}>
+                      <Typography variant="subtitle2">{offer.title}</Typography>
+                      {offer.server?.gameVariant?.game?.name && (
+                        <Chip size="small" label={`${offer.server.gameVariant.game.name} → ${offer.server?.gameVariant?.name || ''} → ${offer.server?.name || ''}`} variant="outlined" />
+                      )}
+                      <Typography variant="body2" color="primary">
+                        {offer.displayPrice != null ? `${offer.displayPrice} ${offer.currency}` : `${offer.price} ${offer.currency}`}
+                      </Typography>
+                    </Box>
+                  </CardContent>
+                </Card>
+              </Link>
+            ))}
+          </Box>
+        )}
+      </Collapse>
 
       <Typography variant="h6" fontWeight={600} sx={{ mb: 1 }}>
         {t('reviews')}
@@ -122,9 +146,21 @@ export default function UserProfilePage() {
               <CardContent sx={{ py: 1.5, px: 2, '&:last-child': { pb: 1.5 } }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap', mb: 1 }}>
                   <Rating value={f.rating} readOnly size="small" />
-                  <Typography component="span" variant="subtitle2" fontWeight={700} sx={{ color: 'text.primary' }}>
-                    {f.fromUser?.nickname || f.fromUser?.id?.slice(0, 8)}
-                  </Typography>
+                  {f.fromUser?.id ? (
+                    <MuiLink
+                      component={Link}
+                      href={`/${locale}/user/${f.fromUser.id}`}
+                      variant="subtitle2"
+                      fontWeight={700}
+                      sx={{ color: 'text.primary', textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}
+                    >
+                      {f.fromUser?.nickname || f.fromUser.id.slice(0, 8)}
+                    </MuiLink>
+                  ) : (
+                    <Typography component="span" variant="subtitle2" fontWeight={700} sx={{ color: 'text.primary' }}>
+                      {f.fromUser?.nickname || f.fromUser?.id?.slice(0, 8)}
+                    </Typography>
+                  )}
                   <Typography component="span" variant="caption" color="text.secondary">
                     · {new Date(f.createdAt).toLocaleDateString(locale)}
                   </Typography>

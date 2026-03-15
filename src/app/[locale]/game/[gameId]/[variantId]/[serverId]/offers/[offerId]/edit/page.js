@@ -17,7 +17,7 @@ import { useAuthStore } from '@/store/authStore';
 import { useProfile } from '@/hooks/useProfile';
 import { fetchOfferById, updateOffer, getPlatformFeePercent, fetchOfferRecentPrices } from '@/lib/api';
 import { parseAdenaInput } from '@/lib/adenaFormat';
-import { getMinPriceForUnit, getEffectiveUnitKk } from '@/lib/offerMinPrice';
+import { getMinPriceForUnit, getEffectiveUnitKk, formatPriceForUnit } from '@/lib/offerMinPrice';
 
 export default function EditOfferPage() {
   const params = useParams();
@@ -325,7 +325,7 @@ export default function EditOfferPage() {
                         fontWeight: 500,
                       }}
                     >
-                      {tNew('buyerWillPay')}: <strong>{buyerWillPaySum} {currency}</strong> ({tNew('includesPlatformFee', { percent: platformFeePercent })})
+                      {tNew('buyerWillPay')}: <strong>{buyerWillPaySum} {currency}</strong>
                     </Typography>
                     <Box sx={{ mt: 0, mb: 2, p: 1.5, bgcolor: 'action.hover', borderRadius: 1 }}>
                       <Typography variant="body2" color="text.primary" sx={{ mb: 0.5 }}>
@@ -334,7 +334,6 @@ export default function EditOfferPage() {
                       <Typography variant="body2" color="text.primary" sx={{ mb: 0.5 }}>
                         <strong>2)</strong> {tNew('buyerWillPay')}:{' '}
                         <Box component="span" sx={{ fontWeight: 700, color: isLowestPrice ? 'success.main' : 'inherit' }}>{buyerWillPaySum} {currency}</Box>
-                        {' '}({tNew('includesPlatformFee', { percent: platformFeePercent })})
                         {isLowestPrice && (
                           <Box component="span" sx={{ display: 'block', mt: 0.5, fontStyle: 'italic', color: 'success.main', fontSize: '0.875rem' }}>
                             {tNew('lowerPriceGoodJob')}
@@ -386,12 +385,12 @@ export default function EditOfferPage() {
                                 {(p.adenaPriceUnitKk ?? adenaPriceUnitKk) === 0
                                 ? tNew('sellingPricePer1kSuffixWithK', {
                                     quantityK: p.quantityKk * 1000,
-                                    price: (p.pricePerUnitKk ?? p.pricePer100kk) != null ? Number(p.pricePerUnitKk ?? p.pricePer100kk).toFixed(2) : String(p.pricePerUnit ?? '—'),
+                                    price: (p.pricePerUnitKk ?? p.pricePer100kk) != null ? formatPriceForUnit(Number(p.pricePerUnitKk ?? p.pricePer100kk)) : String(p.pricePerUnit ?? '—'),
                                     currency: p.currency,
                                   })
                                 : tNew('sellingPricePerNkkSuffix', {
                                     quantityKk: p.quantityKk,
-                                    price: (p.pricePerUnitKk ?? p.pricePer100kk) != null ? Number(p.pricePerUnitKk ?? p.pricePer100kk).toFixed(2) : String(p.pricePerUnit ?? '—'),
+                                    price: (p.pricePerUnitKk ?? p.pricePer100kk) != null ? formatPriceForUnit(Number(p.pricePerUnitKk ?? p.pricePer100kk)) : String(p.pricePerUnit ?? '—'),
                                     currency: p.currency,
                                     n: p.adenaPriceUnitKk ?? adenaPriceUnitKk,
                                   })}

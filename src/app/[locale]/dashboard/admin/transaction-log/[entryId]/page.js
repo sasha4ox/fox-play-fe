@@ -97,9 +97,40 @@ export default function AdminTransactionLogDetailPage() {
         <Typography variant="subtitle2" color="text.secondary" gutterBottom>
           {t('description')}
         </Typography>
-        <Typography variant="body1" sx={{ mb: 2 }}>
-          {detail.description}
-        </Typography>
+        {detail.type === 'order' && detail.sellerAmount != null && detail.sellerCurrency && detail.exchangeRate ? (
+          <Box sx={{ mb: 2 }}>
+            <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 0.5 }}>
+              {t('paymentSummary')}
+            </Typography>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.75, mt: 1 }}>
+              <Typography variant="body1">
+                <Box component="span" sx={{ color: 'text.secondary' }}>{t('paid')} </Box>
+                <Box component="span" sx={{ fontWeight: 600, color: 'primary.main' }}>{detail.amount} {detail.currency}</Box>
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                {t('offerWasIn')} <Box component="span" sx={{ color: 'text.primary', fontWeight: 500 }}>{detail.sellerCurrency}</Box>
+              </Typography>
+              <Typography variant="body2" sx={{ fontFamily: 'monospace', wordBreak: 'break-all' }}>
+                <Box component="span" color="text.secondary">1 {detail.sellerCurrency} = </Box>
+                <Box component="span" sx={{ color: 'text.primary' }}>{detail.exchangeRate}</Box>
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                {t('amountInCurrency', { currency: detail.sellerCurrency })} <Box component="span" sx={{ color: 'text.primary', fontFamily: 'monospace' }}>{detail.sellerAmount}</Box>
+              </Typography>
+              <Typography variant="body2" sx={{ fontFamily: 'monospace', wordBreak: 'break-all' }}>
+                <Box component="span" color="text.secondary">{detail.sellerAmount} × {detail.exchangeRate} = </Box>
+                <Box component="span" sx={{ color: 'success.main', fontWeight: 600 }}>{detail.amount}</Box>
+              </Typography>
+            </Box>
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 1.5 }}>
+              {detail.method}{detail.orderNumber ? ` · ${t('orderRef')} #${detail.orderNumber}` : ''}
+            </Typography>
+          </Box>
+        ) : (
+          <Typography variant="body1" sx={{ mb: 2 }}>
+            {detail.description}
+          </Typography>
+        )}
         <Typography variant="subtitle2" color="text.secondary" gutterBottom>
           {detail.type === 'order' ? t('buyerNickname') + ' / ' + t('sellerNickname') : t('user')}
         </Typography>

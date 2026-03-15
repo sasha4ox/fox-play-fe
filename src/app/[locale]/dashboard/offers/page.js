@@ -17,6 +17,7 @@ import FormControlLabel from '@mui/material/FormControlLabel';
 import { useAuthStore } from '@/store/authStore';
 import { getMyOffers, updateOffer } from '@/lib/api';
 import { formatAdena, formatPricePer1Adena } from '@/lib/adenaFormat';
+import { formatPriceForUnit } from '@/lib/offerMinPrice';
 import { logClientError } from '@/lib/clientLogger';
 
 const OFFER_TYPE_LABELS = { ADENA: 'Adena', ITEMS: 'Items', ACCOUNTS: 'Accounts', BOOSTING: 'Boosting', OTHER: 'Other' };
@@ -151,7 +152,7 @@ export default function MyOffersPage() {
                     </Typography>
                     {isAdena && pricePer1kk > 0 && (
                       <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                        {t('per100kk')}: {(pricePer1kk * 100).toFixed(2)} {currency} · {t('per1kkk')}: {(pricePer1kk * 1000).toFixed(2)} {currency} · {t('per1Adena')}: {formatPricePer1Adena(pricePer1kk)} {currency}
+                        {t('per100kk')}: {formatPriceForUnit(pricePer1kk * 100)} {currency} · {t('per1kkk')}: {formatPriceForUnit(pricePer1kk * 1000)} {currency} · {t('per1Adena')}: {formatPricePer1Adena(pricePer1kk)} {currency}
                       </Typography>
                     )}
                     <Box sx={{ mt: 1, display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 2 }}>

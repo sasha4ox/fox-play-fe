@@ -21,7 +21,7 @@ import { useAuthStore } from '@/store/authStore';
 import { useProfile } from '@/hooks/useProfile';
 import { createOffer, getPlatformFeePercent, fetchOfferRecentPrices } from '@/lib/api';
 import { formatAdena, parseAdenaInput } from '@/lib/adenaFormat';
-import { getMinPriceForUnit, getEffectiveUnitKk } from '@/lib/offerMinPrice';
+import { getMinPriceForUnit, getEffectiveUnitKk, formatPriceForUnit } from '@/lib/offerMinPrice';
 
 export default function NewOfferPage() {
   const params = useParams();
@@ -352,7 +352,7 @@ export default function NewOfferPage() {
                         fontWeight: 500,
                       }}
                     >
-                      {t('buyerWillPay')}: <strong>{buyerWillPaySum} {currency}</strong> ({t('includesPlatformFee', { percent: platformFeePercent })})
+                      {t('buyerWillPay')}: <strong>{buyerWillPaySum} {currency}</strong>
                     </Typography>
                     <Box sx={{ mt: 0, mb: 2, p: 1.5, bgcolor: 'action.hover', borderRadius: 1 }}>
                       <Typography variant="body2" color="text.primary" sx={{ mb: 0.5 }}>
@@ -361,7 +361,6 @@ export default function NewOfferPage() {
                       <Typography variant="body2" color="text.primary" sx={{ mb: 0.5 }}>
                         <strong>2)</strong> {t('buyerWillPay')}:{' '}
                         <Box component="span" sx={{ fontWeight: 700, color: isLowestPrice ? 'success.main' : 'inherit' }}>{buyerWillPaySum} {currency}</Box>
-                        {' '}({t('includesPlatformFee', { percent: platformFeePercent })})
                         {isLowestPrice && (
                           <Box component="span" sx={{ display: 'block', mt: 0.5, fontStyle: 'italic', color: 'success.main', fontSize: '0.875rem' }}>
                             {t('lowerPriceGoodJob')}
@@ -413,12 +412,12 @@ export default function NewOfferPage() {
                                 {(p.adenaPriceUnitKk ?? adenaPriceUnitKk) === 0
                                 ? t('sellingPricePer1kSuffixWithK', {
                                     quantityK: p.quantityKk * 1000,
-                                    price: (p.pricePerUnitKk ?? p.pricePer100kk) != null ? Number(p.pricePerUnitKk ?? p.pricePer100kk).toFixed(2) : String(p.pricePerUnit ?? '—'),
+                                    price: (p.pricePerUnitKk ?? p.pricePer100kk) != null ? formatPriceForUnit(Number(p.pricePerUnitKk ?? p.pricePer100kk)) : String(p.pricePerUnit ?? '—'),
                                     currency: p.currency,
                                   })
                                 : t('sellingPricePerNkkSuffix', {
                                     quantityKk: p.quantityKk,
-                                    price: (p.pricePerUnitKk ?? p.pricePer100kk) != null ? Number(p.pricePerUnitKk ?? p.pricePer100kk).toFixed(2) : String(p.pricePerUnit ?? '—'),
+                                    price: (p.pricePerUnitKk ?? p.pricePer100kk) != null ? formatPriceForUnit(Number(p.pricePerUnitKk ?? p.pricePer100kk)) : String(p.pricePerUnit ?? '—'),
                                     currency: p.currency,
                                     n: p.adenaPriceUnitKk ?? adenaPriceUnitKk,
                                   })}
@@ -504,7 +503,7 @@ export default function NewOfferPage() {
                 }}
               />
               <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                {t('buyerWillPay')}: <strong>{((parseInt(String(quantityCoins).trim(), 10) || 0) * (parsePricePerUnit(priceCoins) || 0) * (1 + platformFeePercent / 100)).toFixed(2)} {currency}</strong> ({t('includesPlatformFee', { percent: platformFeePercent })})
+                {t('buyerWillPay')}: <strong>{((parseInt(String(quantityCoins).trim(), 10) || 0) * (parsePricePerUnit(priceCoins) || 0) * (1 + platformFeePercent / 100)).toFixed(2)} {currency}</strong>
               </Typography>
               <TextField
                 label={t('minSellQuantity')}

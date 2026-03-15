@@ -32,7 +32,7 @@ import { useLoginModalStore } from '@/store/loginModalStore';
 import { useProfile } from '@/hooks/useProfile';
 import { fetchOffersByServer, addRecentServer, deleteOffer } from '@/lib/api';
 import { formatAdena } from '@/lib/adenaFormat';
-import { getMinPriceForUnit, getEffectiveUnitKk } from '@/lib/offerMinPrice';
+import { getMinPriceForUnit, getEffectiveUnitKk, formatPriceForUnit } from '@/lib/offerMinPrice';
 import { logClientError } from '@/lib/clientLogger';
 import IconButton from '@mui/material/IconButton';
 import Dialog from '@mui/material/Dialog';
@@ -378,7 +378,7 @@ export default function GameOffersPage() {
                                 {t('availability')}: <strong>{availabilityKk}</strong>
                               </Typography>
                               <Typography variant="body2" color="primary.main" fontWeight={600}>
-                                {unitLabel}: {priceForDisplay.toFixed(2)} {currency}
+                                {unitLabel}: {formatPriceForUnit(priceForDisplay)} {currency}
                               </Typography>
                               {isPriceBelowMin && (
                                 <Typography variant="caption" color="warning.main" fontWeight={600}>
@@ -491,7 +491,7 @@ export default function GameOffersPage() {
                           <TableCell sx={{ width: '170px' }} align="right">
                             <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 0.25 }}>
                               <Typography variant="body2" fontWeight={600}>
-                                {priceForDisplay.toFixed(2)} {currency}
+                                {formatPriceForUnit(priceForDisplay)} {currency}
                               </Typography>
                               {isPriceBelowMin && (
                                 <Typography variant="caption" color="warning.main" fontWeight={600}>

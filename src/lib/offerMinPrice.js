@@ -1,12 +1,12 @@
 /**
- * Minimum price per 100kk adena by currency.
- * Used to validate offer creation/update and to block buying when price is below minimum.
+ * Minimum price per 100kk adena by currency. Set to 0 so any non-negative price is allowed.
+ * Used for validation (price >= 0) and for "below minimum" UI (when min was > 0).
  */
 export const MIN_PRICE_PER_100KK = {
-  UAH: 60,
-  EUR: 1,
-  USD: 1.5,
-  RUB: 100
+  UAH: 0,
+  EUR: 0,
+  USD: 0,
+  RUB: 0,
 };
 
 /**
@@ -38,4 +38,23 @@ export function getMinPriceForUnit(currency, adenaPriceUnitKk = 100) {
  */
 export function getMinPriceFor100kk(currency) {
   return getMinPriceForUnit(currency, 100);
+}
+
+/**
+ * Format price per unit for display so small values (e.g. 0.005) are shown correctly.
+ * Uses 2 decimals when >= 0.01, 3 when >= 0.001, 4 when >= 0.0001, etc.
+ * @param {number} value - Price (e.g. price per 100kk or per 1kk)
+ * @returns {string} Formatted string (e.g. "0.005", "0.50", "1.23")
+ */
+export function formatPriceForUnit(value) {
+  if (value == null || !Number.isFinite(value) || value < 0) return '0.00';
+  if (value >= 100) return value.toFixed(2);
+  if (value >= 10) return value.toFixed(2);
+  if (value >= 1) return value.toFixed(2);
+  if (value >= 0.01) return value.toFixed(2);
+  if (value >= 0.001) return value.toFixed(3);
+  if (value >= 0.0001) return value.toFixed(4);
+  if (value >= 0.00001) return value.toFixed(5);
+  if (value >= 0.000001) return value.toFixed(6);
+  return value.toExponential(2);
 }
