@@ -41,17 +41,19 @@ export function getMinPriceFor100kk(currency) {
 }
 
 /**
- * Format price per unit for display so small values (e.g. 0.005) are shown correctly.
- * Uses 2 decimals when >= 0.01, 3 when >= 0.001, 4 when >= 0.0001, etc.
+ * Format price per unit for display so small values (e.g. 0.005, 0.018) are shown correctly.
+ * Uses 2 decimals when >= 0.1, 3 when 0.01–0.1 (e.g. 0.018 for 100kk), then 3–6 for smaller values.
+ * Strips trailing zeros in the 0.01–0.1 range so 0.05 displays as "0.05" not "0.050".
  * @param {number} value - Price (e.g. price per 100kk or per 1kk)
- * @returns {string} Formatted string (e.g. "0.005", "0.50", "1.23")
+ * @returns {string} Formatted string (e.g. "0.018", "0.05", "0.50", "1.23")
  */
 export function formatPriceForUnit(value) {
   if (value == null || !Number.isFinite(value) || value < 0) return '0.00';
   if (value >= 100) return value.toFixed(2);
   if (value >= 10) return value.toFixed(2);
   if (value >= 1) return value.toFixed(2);
-  if (value >= 0.01) return value.toFixed(2);
+  if (value >= 0.1) return value.toFixed(2);
+  if (value >= 0.01) return value.toFixed(3).replace(/\.?0+$/, '');
   if (value >= 0.001) return value.toFixed(3);
   if (value >= 0.0001) return value.toFixed(4);
   if (value >= 0.00001) return value.toFixed(5);
