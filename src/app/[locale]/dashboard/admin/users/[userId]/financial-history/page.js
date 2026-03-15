@@ -8,6 +8,8 @@ import Container from '@mui/material/Container';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
@@ -20,6 +22,8 @@ import FormControl from '@mui/material/FormControl';
 import InputLabel from '@mui/material/InputLabel';
 import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
+import { useTheme } from '@mui/material/styles';
+import useMediaQuery from '@mui/material/useMediaQuery';
 import { useAuthStore } from '@/store/authStore';
 import { getAdminUserFinancialHistory } from '@/lib/api';
 
@@ -37,6 +41,8 @@ const TYPE_LABELS = {
 
 export default function AdminUserFinancialHistoryPage() {
   const t = useTranslations('Admin');
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const { locale, userId } = useParams();
   const token = useAuthStore((s) => s.token);
   const [data, setData] = useState({ items: [], total: 0, balances: [] });
@@ -92,7 +98,7 @@ export default function AdminUserFinancialHistoryPage() {
         </Box>
       )}
 
-      <FormControl size="small" sx={{ minWidth: 120, mb: 2 }}>
+      <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 120 }, mb: 2 }}>
         <InputLabel>Currency</InputLabel>
         <Select
           value={currencyFilter}
@@ -117,6 +123,30 @@ export default function AdminUserFinancialHistoryPage() {
         <Skeleton variant="rectangular" height={300} sx={{ borderRadius: 1 }} />
       ) : data.items.length === 0 ? (
         <Typography color="text.secondary">No transactions.</Typography>
+      ) : isMobile ? (
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+          {data.items.map((item, i) => (
+            <Card key={i} variant="outlined" sx={{ overflow: 'visible' }}>
+              <CardContent sx={{ '&:last-child': { pb: 1.5 }, pt: 1.5, px: 1.5, py: 1 }}>
+                <Typography variant="subtitle2">
+                  {item.date ? new Date(item.date).toLocaleString() : '—'}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">{TYPE_LABELS[item.type] ?? item.type}</Typography>
+                <Typography
+                  variant="body2"
+                  sx={{
+                    fontWeight: 600,
+                    color: (item.type === 'purchase' || item.type === 'withdrawal' || item.type === 'payout_lock') ? 'error.main' : 'success.main',
+                  }}
+                >
+                  {(item.type === 'purchase' || item.type === 'withdrawal' || item.type === 'payout_lock') ? '−' : '+'}
+                  {item.amount} {item.currency}
+                </Typography>
+                <Typography variant="body2" sx={{ mt: 0.5, wordBreak: 'break-word' }}>{item.description ?? '—'}</Typography>
+              </CardContent>
+            </Card>
+          ))}
+        </Box>
       ) : (
         <TableContainer sx={{ overflowX: 'auto' }}>
           <Table size="small" sx={{ minWidth: 520 }}>
