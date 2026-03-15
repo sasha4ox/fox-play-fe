@@ -359,7 +359,7 @@ export default function OfferPDPPage() {
   const pNum = typeof priceRaw === 'object' && priceRaw != null && typeof priceRaw.toString === 'function'
     ? Number(priceRaw.toString())
     : Number(priceRaw) || 0;
-  const pricePer1kkForMin = pNum < 0.001 && pNum > 0 ? pNum * 1_000_000 : pNum;
+  const pricePer1kkForMin = pNum;
   const priceForUnitForMin = pricePer1kkForMin * effectiveUnitKk;
   const isPriceBelowMin = isAdenaOffer && priceForUnitForMin < getMinPriceForUnit(offerCurrency, adenaPriceUnitKk);
 
@@ -484,7 +484,7 @@ export default function OfferPDPPage() {
             : Number(priceRaw) || 0;
           const quantityKk = q / 1_000_000;
           const currency = offer.displayCurrency ?? offer.currency ?? '';
-          const pricePer1kk = p < 0.001 && p > 0 ? p * 1_000_000 : p;
+          const pricePer1kk = p;
           const priceForDisplay = pricePer1kk * effectiveUnitKk;
           const totalIfBuyFull = quantityKk * pricePer1kk;
           const isPriceBelowMinLocal = priceForDisplay < getMinPriceForUnit(currency, adenaPriceUnitKk);
