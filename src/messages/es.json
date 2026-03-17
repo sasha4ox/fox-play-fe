@@ -134,7 +134,13 @@
     "noSearchResults": "No games match your search.",
     "recentServers": "Your recent servers",
     "recentServersHint": "Quick access to servers where you viewed offers",
-    "recentServersEmpty": "Visit a server's offers page to see it here."
+    "recentServersEmpty": "Visit a server's offers page to see it here.",
+    "heroBannerCarouselLabel": "Banners promocionales",
+    "heroBannerPrevious": "Banner anterior",
+    "heroBannerNext": "Banner siguiente",
+    "heroBannerPause": "Pausar reproducción automática",
+    "heroBannerPlay": "Iniciar reproducción automática",
+    "heroBannerGoToSlide": "Ir al banner {n}"
   },
   "Balance": {
     "loading": "Загрузка…",
@@ -237,8 +243,13 @@
     "cryptoWithdrawNetworkLabel": "Сеть",
     "cryptoWithdrawCaution": "ВНИМАНИЕ: только адрес TRC20. Неверная сеть — потеря средств. Проверьте адрес.",
     "cryptoWithdrawStepAmount": "Сумма вывода",
-    "cryptoWithdrawAmountPlaceholder": "Мин. 0.01",
+    "cryptoWithdrawAmountPlaceholder": "Минимум 11",
     "cryptoWithdrawTestAdvice": "Для нового адреса сначала сделайте небольшой тестовый вывод.",
+    "cryptoWithdrawMinAmount": "Минимум к получению — 11 USDT.",
+    "cryptoWithdrawNeedMoreBalance": "Недостаточно средств с учётом комиссии 2%.",
+    "cryptoWithdrawSummaryReceive": "Получите",
+    "cryptoWithdrawSummaryFee": "Комиссия (2%)",
+    "cryptoWithdrawSummaryTotal": "Списано с баланса",
 
     "withdrawToCardSubmit": "Запросить вывод на карту",
 
@@ -253,7 +264,7 @@
     "withdrawAll": "Вывести всё",
 
     "withdrawCryptoHint": "Отправьте запрос на вывод USDT (TRC20) на ваш кошелёк. Администратор обработает его вручную.",
-    "withdrawCryptoUsdOnly": "Криптовывод доступен только в USD. Средства будут отправлены в USDT (TRC20).",
+    "withdrawCryptoUsdOnly": "Только USDT (TRC20). Минимум 11 USDT к получению. Комиссия 2% добавляется к списанию.",
 
     "withdrawCryptoWalletLabel": "Адрес кошелька USDT TRC20",
     "withdrawCryptoSubmit": "Запросить криптовывод",
@@ -1008,7 +1019,8 @@
     "pendingIbanPayoutsHint": "Order completed. Process payout to seller, then confirm here.",
     "noPendingIbanPayouts": "No pending IBAN payouts.",
     "cryptoPayoutRequests": "Crypto payout requests",
-    "cryptoPayoutRequestsHint": "Users requested withdrawal in USDT. Send to their wallet, then mark completed or failed.",
+    "cryptoPayoutRequestsHint": "Min 11 USDT payout, 2% fee. Send the amount shown, then mark status.",
+    "cryptoPayoutFeeLocked": "+{fee} fee (locked)",
     "noCryptoPayoutRequests": "No crypto payout requests.",
     "filterByStatus": "Filter by status",
     "statusAll": "All",

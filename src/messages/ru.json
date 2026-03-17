@@ -138,7 +138,13 @@
     "noSearchResults": "По вашему запросу ничего не найдено.",
     "recentServers": "Недавние серверы",
     "recentServersHint": "Быстрый доступ к серверам, где вы смотрели предложения",
-    "recentServersEmpty": "Откройте страницу предложений сервера, чтобы он появился здесь."
+    "recentServersEmpty": "Откройте страницу предложений сервера, чтобы он появился здесь.",
+    "heroBannerCarouselLabel": "Рекламные баннеры",
+    "heroBannerPrevious": "Предыдущий баннер",
+    "heroBannerNext": "Следующий баннер",
+    "heroBannerPause": "Пауза автопрокрутки",
+    "heroBannerPlay": "Запустить автопрокрутку",
+    "heroBannerGoToSlide": "Перейти к баннеру {n}"
   },
 
  "Balance": {
@@ -242,8 +248,13 @@
     "cryptoWithdrawNetworkLabel": "Сеть",
     "cryptoWithdrawCaution": "ВНИМАНИЕ: используйте только адрес сети TRC20. Неверная сеть приведёт к потере средств. Проверьте адрес.",
     "cryptoWithdrawStepAmount": "Сумма вывода",
-    "cryptoWithdrawAmountPlaceholder": "Мин. 0.01",
+    "cryptoWithdrawAmountPlaceholder": "Минимум 11",
     "cryptoWithdrawTestAdvice": "Для нового адреса рекомендуем сначала небольшой тестовый вывод.",
+    "cryptoWithdrawMinAmount": "Минимум к получению — 11 USDT.",
+    "cryptoWithdrawNeedMoreBalance": "Недостаточно средств с учётом комиссии 2%.",
+    "cryptoWithdrawSummaryReceive": "Получите",
+    "cryptoWithdrawSummaryFee": "Комиссия (2%)",
+    "cryptoWithdrawSummaryTotal": "Списано с баланса",
 
     "withdrawToCardSubmit": "Запросить вывод на карту",
 
@@ -258,7 +269,7 @@
     "withdrawAll": "Вывести всё",
 
     "withdrawCryptoHint": "Отправьте запрос на вывод USDT (TRC20) на ваш кошелёк. Администратор обработает его вручную.",
-    "withdrawCryptoUsdOnly": "Криптовывод доступен только в USD. Средства будут отправлены в USDT (TRC20).",
+    "withdrawCryptoUsdOnly": "Только USDT (TRC20). Минимум 11 USDT к получению. Комиссия 2% добавляется к списанию с баланса.",
 
     "withdrawCryptoWalletLabel": "Адрес кошелька USDT TRC20",
     "withdrawCryptoSubmit": "Запросить криптовывод",
@@ -1044,7 +1055,8 @@
     "noPendingIbanPayouts": "Нет ожидающих выплат IBAN.",
 
     "cryptoPayoutRequests": "Запросы на вывод криптовалюты",
-    "cryptoPayoutRequestsHint": "Пользователи запросили вывод USDT. Отправьте средства и отметьте статус.",
+    "cryptoPayoutRequestsHint": "Мин. 11 USDT к получению, 2% комиссия. Отправьте сумму из столбца, отметьте статус.",
+    "cryptoPayoutFeeLocked": "+{fee} комиссия (заблокировано)",
     "noCryptoPayoutRequests": "Нет криптозапросов на вывод.",
 
     "filterByStatus": "Фильтр по статусу",

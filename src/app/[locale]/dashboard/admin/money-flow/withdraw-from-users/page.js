@@ -264,7 +264,16 @@ export default function AdminWithdrawFromUsersPage() {
                   {cryptoPayoutRequests.map((r) => (
                     <TableRow key={r.id}>
                       <TableCell>{r.user?.email ?? r.user?.nickname ?? r.user?.id ?? r.userId}</TableCell>
-                      <TableCell>{r.amount} {r.currency}</TableCell>
+                      <TableCell>
+                        <Typography variant="body2" component="span">
+                          {r.amount} {r.currency}
+                        </Typography>
+                        {Number(r.feeAmount) > 0 && (
+                          <Typography variant="caption" display="block" color="text.secondary">
+                            {t('cryptoPayoutFeeLocked', { fee: r.feeAmount })}
+                          </Typography>
+                        )}
+                      </TableCell>
                       <TableCell sx={{ fontFamily: 'monospace', fontSize: '0.75rem', maxWidth: 160 }}>{r.walletAddress ? `${r.walletAddress.slice(0, 10)}…${r.walletAddress.slice(-8)}` : '—'}</TableCell>
                       <TableCell>{r.status}</TableCell>
                       <TableCell>{r.createdAt ? new Date(r.createdAt).toLocaleString() : '—'}</TableCell>

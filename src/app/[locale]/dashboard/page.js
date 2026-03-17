@@ -18,6 +18,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { useGames } from '@/hooks/useGames';
 import SelectCard from '@/components/SelectCard/SelectCard';
 import { getDirectOfferTarget, getGameImageCandidateUrls } from '@/lib/games';
+import DashboardHeroBanner from '@/components/DashboardHeroBanner/DashboardHeroBanner';
 
 const LETTERS = ['#', ...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')];
 const INITIAL_VISIBLE = 24;
@@ -136,6 +137,7 @@ export default function DashboardPage() {
       }}
     >
       <Container>
+        <DashboardHeroBanner />
         <Typography component="h1" variant="h4" fontWeight={600} color="text.primary" gutterBottom>
           {t('chooseGame')}
         </Typography>
