@@ -86,6 +86,16 @@ const shared = {
         },
       },
     },
+    MuiContainer: {
+      styleOverrides: {
+        root: ({ theme }) => ({
+          [theme.breakpoints.down('sm')]: {
+            paddingLeft: 12,
+            paddingRight: 12,
+          },
+        }),
+      },
+    },
   },
 };
 

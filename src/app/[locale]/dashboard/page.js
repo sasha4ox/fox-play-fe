@@ -132,12 +132,12 @@ export default function DashboardPage() {
       sx={{
         minHeight: '100vh',
         bgcolor: 'background.default',
-        py: 4,
-        px: 2,
+        py: { xs: 2, sm: 4 },
+        px: { xs: 0, sm: 2 },
       }}
     >
+      <DashboardHeroBanner />
       <Container>
-        <DashboardHeroBanner />
         <Typography component="h1" variant="h4" fontWeight={600} color="text.primary" gutterBottom>
           {t('chooseGame')}
         </Typography>
