@@ -15,6 +15,9 @@ import useMediaQuery from '@mui/material/useMediaQuery';
 import { useTheme } from '@mui/material/styles';
 import SearchIcon from '@mui/icons-material/Search';
 import MarkEmailUnreadOutlinedIcon from '@mui/icons-material/MarkEmailUnreadOutlined';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+import IconButton from '@mui/material/IconButton';
 import { useAuthStore } from '@/store/authStore';
 import { useProfile } from '@/hooks/useProfile';
 import { getMyOrderChats } from '@/lib/api';
@@ -60,6 +63,7 @@ export default function OrdersChatLayout({ children }) {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [adminOrderId, setAdminOrderId] = useState('');
+  const [expandedUserIds, setExpandedUserIds] = useState(() => new Set());
 
   const orderIdFromPath = pathname?.match(/\/orders\/([a-f0-9-]+)/i)?.[1];
   const isCardPaymentPage = pathname?.includes('/card-payment');
@@ -83,6 +87,36 @@ export default function OrdersChatLayout({ children }) {
         return nick.includes(searchQuery) || offerName.includes(searchQuery) || chatText.includes(searchQuery);
       })
     : sortedOrders;
+
+  const UNKNOWN_USER = { id: 'unknown', nickname: 'Unknown user', email: '', avatarUrl: null };
+  const groupsByUser = useMemo(() => {
+    const byKey = new Map();
+    for (const order of filteredOrders) {
+      const groupKey = order.otherParty?.id ?? 'unknown';
+      if (!byKey.has(groupKey)) {
+        byKey.set(groupKey, {
+          user: order.otherParty ?? UNKNOWN_USER,
+          orders: [],
+          unreadTotal: 0,
+        });
+      }
+      const group = byKey.get(groupKey);
+      group.orders.push(order);
+      group.unreadTotal += order.unreadCount ?? 0;
+    }
+    const getLatestActivity = (o) => new Date(o.lastMessage?.createdAt ?? o.createdAt ?? 0).getTime();
+    for (const group of byKey.values()) {
+      group.orders.sort((a, b) => getLatestActivity(b) - getLatestActivity(a));
+    }
+    const list = Array.from(byKey.values());
+    list.sort((a, b) => {
+      if (b.unreadTotal !== a.unreadTotal) return b.unreadTotal - a.unreadTotal;
+      const aLatest = Math.max(...a.orders.map(getLatestActivity));
+      const bLatest = Math.max(...b.orders.map(getLatestActivity));
+      return bLatest - aLatest;
+    });
+    return list;
+  }, [filteredOrders]);
 
   const refetchChatList = useCallback(() => {
     if (!token) return;
@@ -124,6 +158,27 @@ export default function OrdersChatLayout({ children }) {
     const timeoutId = setTimeout(refetchChatList, delayMs);
     return () => clearTimeout(timeoutId);
   }, [orderIdFromPath, refetchChatList]);
+
+  // Auto-expand the user group that contains the currently selected order
+  useEffect(() => {
+    if (!orderIdFromPath || groupsByUser.length === 0) return;
+    for (const group of groupsByUser) {
+      if (group.orders.some((o) => o.id === orderIdFromPath)) {
+        const userId = group.user?.id ?? 'unknown';
+        setExpandedUserIds((prev) => (prev.has(userId) ? prev : new Set(prev).add(userId)));
+        break;
+      }
+    }
+  }, [orderIdFromPath, groupsByUser]);
+
+  const toggleUserExpanded = useCallback((userId) => {
+    setExpandedUserIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(userId)) next.delete(userId);
+      else next.add(userId);
+      return next;
+    });
+  }, []);
 
   const isOrdersRoot = pathname?.endsWith('/orders') || pathname?.match(/\/orders\/?$/);
   useEffect(() => {
@@ -269,95 +324,142 @@ export default function OrdersChatLayout({ children }) {
               </Typography>
             )}
           {!loading &&
-            filteredOrders.map((order) => {
-              const other = order.otherParty;
-              const displayName = other?.nickname ?? (order.isSeller ? t('buyer') : t('seller'));
-              const lastText = order.lastMessage?.text ?? '';
-              const lastDate = order.lastMessage?.createdAt ?? order.createdAt;
-              const isSelected = order.id === orderIdFromPath;
-              const formatDate = (d) => {
-                if (!d) return '';
-                const date = new Date(d);
-                const now = new Date();
-                const isToday = date.toDateString() === now.toDateString();
-                if (isToday) return date.toLocaleTimeString(locale, { hour: 'numeric', minute: '2-digit' });
-                const isThisYear = date.getFullYear() === now.getFullYear();
-                return isThisYear
-                  ? date.toLocaleDateString(locale, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
-                  : date.toLocaleDateString(locale, { month: 'short', day: 'numeric', year: 'numeric' });
-              };
+            groupsByUser.map((group) => {
+              const userId = group.user?.id ?? 'unknown';
+              const isExpanded = expandedUserIds.has(userId);
+              const displayName = group.user?.nickname ?? group.user?.email ?? 'Unknown user';
               return (
-                <Link
-                  key={order.id}
-                  href={`/${locale}/dashboard/orders/${order.id}`}
-                  style={{ textDecoration: 'none', color: 'inherit' }}
-                >
+                <Box key={userId}>
                   <Box
+                    onClick={() => toggleUserExpanded(userId)}
                     sx={{
                       display: 'flex',
-                      alignItems: 'flex-start',
-                      gap: { xs: 1.5, md: 2 },
+                      alignItems: 'center',
+                      gap: 1.5,
                       px: { xs: 1.5, md: 2 },
-                      py: { xs: 1.5, md: 1.75 },
+                      py: 1.25,
                       cursor: 'pointer',
-                      bgcolor: isSelected
-                        ? theme.palette.action.selected
-                        : order.isUnopened
-                          ? 'rgba(25, 118, 210, 0.06)'
-                          : CHAT_ITEM_BG,
+                      bgcolor: 'var(--background)',
                       color: 'var(--third-color)',
-                      '&:hover': { filter: 'brightness(0.97)' },
-                      borderLeft: isSelected ? '4px solid' : order.isUnopened ? '4px solid' : '4px solid transparent',
-                      borderColor: order.isUnopened ? 'primary.main' : SENDER_BUBBLE,
-                      boxShadow: isSelected ? 'inset 0 0 0 1px rgba(0,0,0,0.08)' : 'none',
+                      '&:hover': { bgcolor: 'var(--second-color)' },
+                      borderBottom: '1px solid',
+                      borderColor: 'var(--second-color)',
                     }}
                   >
                     <Badge
-                      badgeContent={order.unreadCount > 0 ? order.unreadCount : 0}
+                      badgeContent={group.unreadTotal > 0 ? group.unreadTotal : 0}
                       color="error"
-                      invisible={order.unreadCount === 0}
+                      invisible={group.unreadTotal === 0}
                     >
                       <Avatar
-                        src={other?.avatarUrl}
-                        alt={other?.nickname || other?.email || t('chats')}
-                        sx={{ width: 48, height: 48, flexShrink: 0, bgcolor: order.isSeller ? 'primary.main' : 'grey.600' }}
+                        src={group.user?.avatarUrl}
+                        alt={group.user?.nickname || group.user?.email || t('chats')}
+                        sx={{ width: 40, height: 40, flexShrink: 0, bgcolor: 'grey.600' }}
                       >
                         {(displayName || '?').charAt(0).toUpperCase()}
                       </Avatar>
                     </Badge>
-                    <Box sx={{ flex: 1, minWidth: 0 }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1, mb: 0.25 }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, minWidth: 0 }}>
-                          {order.isUnopened && (
-                            <MarkEmailUnreadOutlinedIcon sx={{ fontSize: 18, color: 'primary.main', flexShrink: 0 }} titleAccess={tSales('newOrder')} />
-                          )}
-                          <Typography variant="subtitle1" fontWeight={600} noWrap sx={{ color: 'var(--chat-color)' }}>
-                            {displayName}
-                          </Typography>
-                        </Box>
-                        <Typography variant="caption" sx={{ flexShrink: 0, fontSize: '0.7rem', color: 'var(--text-second-color)' }}>
-                          {formatDate(lastDate)}
-                        </Typography>
-                      </Box>
-                      <Typography variant="body2" noWrap sx={{ fontSize: '0.8rem', color: 'var(--text-second-color)' }}>
-                        {order.offer?.title || t('offer')}
-                      </Typography>
-                      <Divider sx={{ my: 0.75, borderColor: 'var(--second-color)' }} />
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, flexWrap: 'wrap' }}>
-                        {order.status && (
-                          <Typography variant="body2" sx={{ fontSize: '0.875rem', fontWeight: 700, color: getOrderStatusTextColor(order.status, order.paymentMethod) }}>
-                            {tSales(`status_${order.status}`)}
-                          </Typography>
-                        )}
-                        {lastText && (
-                          <Typography variant="caption" noWrap sx={{ fontSize: '0.7rem', maxWidth: 140, color: 'var(--text-second-color)' }}>
-                            {lastText}
-                          </Typography>
-                        )}
-                      </Box>
-                    </Box>
+                    <Typography variant="subtitle2" fontWeight={600} noWrap sx={{ flex: 1, color: 'var(--chat-color)' }}>
+                      {displayName}
+                    </Typography>
+                    <Typography variant="caption" sx={{ color: 'var(--text-second-color)' }}>
+                      {group.orders.length} {group.orders.length === 1 ? t('chat') : t('chats')}
+                    </Typography>
+                    <IconButton size="small" sx={{ color: 'var(--text-second-color)', p: 0.5 }} aria-label={isExpanded ? 'Collapse' : 'Expand'}>
+                      {isExpanded ? <ExpandLessIcon fontSize="small" /> : <ExpandMoreIcon fontSize="small" />}
+                    </IconButton>
                   </Box>
-                </Link>
+                  {isExpanded &&
+                    group.orders.map((order) => {
+                      const other = order.otherParty;
+                      const orderDisplayName = other?.nickname ?? (order.isSeller ? t('buyer') : t('seller'));
+                      const lastText = order.lastMessage?.text ?? '';
+                      const lastDate = order.lastMessage?.createdAt ?? order.createdAt;
+                      const isSelected = order.id === orderIdFromPath;
+                      const formatDate = (d) => {
+                        if (!d) return '';
+                        const date = new Date(d);
+                        const now = new Date();
+                        const isToday = date.toDateString() === now.toDateString();
+                        if (isToday) return date.toLocaleTimeString(locale, { hour: 'numeric', minute: '2-digit' });
+                        const isThisYear = date.getFullYear() === now.getFullYear();
+                        return isThisYear
+                          ? date.toLocaleDateString(locale, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
+                          : date.toLocaleDateString(locale, { month: 'short', day: 'numeric', year: 'numeric' });
+                      };
+                      return (
+                        <Link
+                          key={order.id}
+                          href={`/${locale}/dashboard/orders/${order.id}`}
+                          style={{ textDecoration: 'none', color: 'inherit' }}
+                        >
+                          <Box
+                            sx={{
+                              display: 'flex',
+                              alignItems: 'flex-start',
+                              gap: { xs: 1.5, md: 2 },
+                              px: { xs: 1.5, md: 2 },
+                              py: { xs: 1.5, md: 1.75 },
+                              pl: { xs: 3, md: 3.5 },
+                              cursor: 'pointer',
+                              bgcolor: isSelected
+                                ? theme.palette.action.selected
+                                : order.isUnopened
+                                  ? 'rgba(25, 118, 210, 0.06)'
+                                  : CHAT_ITEM_BG,
+                              color: 'var(--third-color)',
+                              '&:hover': { filter: 'brightness(0.97)' },
+                              borderLeft: isSelected ? '4px solid' : order.isUnopened ? '4px solid' : '4px solid transparent',
+                              borderColor: order.isUnopened ? 'primary.main' : SENDER_BUBBLE,
+                              boxShadow: isSelected ? 'inset 0 0 0 1px rgba(0,0,0,0.08)' : 'none',
+                            }}
+                          >
+                            <Badge
+                              badgeContent={order.unreadCount > 0 ? order.unreadCount : 0}
+                              color="error"
+                              invisible={order.unreadCount === 0}
+                            >
+                              <Avatar
+                                src={other?.avatarUrl}
+                                alt={other?.nickname || other?.email || t('chats')}
+                                sx={{ width: 48, height: 48, flexShrink: 0, bgcolor: order.isSeller ? 'primary.main' : 'grey.600' }}
+                              >
+                                {(orderDisplayName || '?').charAt(0).toUpperCase()}
+                              </Avatar>
+                            </Badge>
+                            <Box sx={{ flex: 1, minWidth: 0 }}>
+                              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1, mb: 0.25 }}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, minWidth: 0 }}>
+                                  {order.isUnopened && (
+                                    <MarkEmailUnreadOutlinedIcon sx={{ fontSize: 18, color: 'primary.main', flexShrink: 0 }} titleAccess={tSales('newOrder')} />
+                                  )}
+                                  <Typography variant="subtitle1" fontWeight={600} noWrap sx={{ color: 'var(--chat-color)' }}>
+                                    {order.offer?.title || t('offer')}
+                                  </Typography>
+                                </Box>
+                                <Typography variant="caption" sx={{ flexShrink: 0, fontSize: '0.7rem', color: 'var(--text-second-color)' }}>
+                                  {formatDate(lastDate)}
+                                </Typography>
+                              </Box>
+                              <Divider sx={{ my: 0.75, borderColor: 'var(--second-color)' }} />
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, flexWrap: 'wrap' }}>
+                                {order.status && (
+                                  <Typography variant="body2" sx={{ fontSize: '0.875rem', fontWeight: 700, color: getOrderStatusTextColor(order.status, order.paymentMethod) }}>
+                                    {tSales(`status_${order.status}`)}
+                                  </Typography>
+                                )}
+                                {lastText && (
+                                  <Typography variant="caption" noWrap sx={{ fontSize: '0.7rem', maxWidth: 140, color: 'var(--text-second-color)' }}>
+                                    {lastText}
+                                  </Typography>
+                                )}
+                              </Box>
+                            </Box>
+                          </Box>
+                        </Link>
+                      );
+                    })}
+                </Box>
               );
             })}
           </Box>
