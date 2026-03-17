@@ -22,6 +22,7 @@ import { useAuthStore } from '@/store/authStore';
 import { useProfile } from '@/hooks/useProfile';
 import { getMyOrderChats } from '@/lib/api';
 import { getOrderStatusTextColor } from '@/lib/orderStatusColors';
+import { useSellerNewOrder } from '@/hooks/useSellerNewOrder';
 import Button from '@mui/material/Button';
 
 /** Cache TTL for chat list (show stale data immediately on revisit, then revalidate) */
@@ -129,6 +130,11 @@ export default function OrdersChatLayout({ children }) {
       })
       .catch(() => setChatSummary({ orders: [], unreadTotal: 0 }));
   }, [token]);
+
+  useSellerNewOrder(token ?? null, {
+    onOrderActivity: refetchChatList,
+    onNewMessage: refetchChatList,
+  });
 
   useEffect(() => {
     if (!token) {
@@ -331,7 +337,13 @@ export default function OrdersChatLayout({ children }) {
               return (
                 <Box key={userId}>
                   <Box
-                    onClick={() => toggleUserExpanded(userId)}
+                    onClick={() => {
+                      toggleUserExpanded(userId);
+                      if (group.orders.length > 0) {
+                        const lastOrder = group.orders[0];
+                        router.push(`/${locale}/dashboard/orders/${lastOrder.id}`);
+                      }
+                    }}
                     sx={{
                       display: 'flex',
                       alignItems: 'center',
@@ -365,7 +377,15 @@ export default function OrdersChatLayout({ children }) {
                     <Typography variant="caption" sx={{ color: 'var(--text-second-color)' }}>
                       {group.orders.length} {group.orders.length === 1 ? t('chat') : t('chats')}
                     </Typography>
-                    <IconButton size="small" sx={{ color: 'var(--text-second-color)', p: 0.5 }} aria-label={isExpanded ? 'Collapse' : 'Expand'}>
+                    <IconButton
+                      size="small"
+                      sx={{ color: 'var(--text-second-color)', p: 0.5 }}
+                      aria-label={isExpanded ? 'Collapse' : 'Expand'}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleUserExpanded(userId);
+                      }}
+                    >
                       {isExpanded ? <ExpandLessIcon fontSize="small" /> : <ExpandMoreIcon fontSize="small" />}
                     </IconButton>
                   </Box>

@@ -17,6 +17,7 @@ import MenuItem from '@mui/material/MenuItem';
 import IconButton from '@mui/material/IconButton';
 import Avatar from '@mui/material/Avatar';
 import Alert from '@mui/material/Alert';
+import Snackbar from '@mui/material/Snackbar';
 import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
@@ -101,6 +102,7 @@ export default function OrderChatPage() {
   const [declineDialogOpen, setDeclineDialogOpen] = useState(false);
   const [paymentSuccessShown, setPaymentSuccessShown] = useState(false);
   const [infoExpandedOnMobile, setInfoExpandedOnMobile] = useState(false);
+  const [newMessageNotification, setNewMessageNotification] = useState(null);
   const tAdmin = useTranslations('Admin');
 
   const paymentFromUrl = searchParams.get('payment');
@@ -124,9 +126,13 @@ export default function OrderChatPage() {
         );
         return;
       }
+      if (isFromOther) {
+        playNewMessageSound();
+        const senderName = msg.sender?.nickname ?? msg.sender?.email ?? tCommon('user');
+        setNewMessageNotification(senderName);
+      }
       setMessagesRef.current((prev) => {
         if (prev.some((m) => m.id === msg.id)) return prev;
-        if (isFromOther) playNewMessageSound();
         return [...prev, msg];
       });
     },
@@ -678,6 +684,14 @@ export default function OrderChatPage() {
       )}
       {actionInfo && <Alert severity="info" sx={{ mx: { xs: 1, md: 2 }, mt: 1 }} onClose={() => setActionInfo(null)}>{actionInfo}</Alert>}
       {actionError && <Alert severity="error" sx={{ mx: { xs: 1, md: 2 }, mt: 1 }}>{actionError}</Alert>}
+      <Snackbar
+        open={!!newMessageNotification}
+        autoHideDuration={4000}
+        onClose={() => setNewMessageNotification(null)}
+        message={newMessageNotification ? `${t('newMessageFrom', { defaultValue: 'New message from' })} ${newMessageNotification}` : ''}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+        sx={{ mt: 6 }}
+      />
       <>
       {/* Two-panel layout: info + chat. Desktop: both panels fill height; info scrolls internally, chat fills remaining. Mobile: info collapsible on top. */}
       <Box
