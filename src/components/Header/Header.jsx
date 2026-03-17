@@ -50,6 +50,7 @@ import LogoutIcon from '@mui/icons-material/Logout';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 import LightModeIcon from '@mui/icons-material/LightMode';
 import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
+import RateReviewIcon from '@mui/icons-material/RateReview';
 
 const CURRENCIES = ['USD', 'EUR', 'UAH', 'RUB'];
 
@@ -431,6 +432,12 @@ export default function Header() {
             <ListItemIcon sx={{ minWidth: 36 }}>💰</ListItemIcon>
             <ListItemText>{t('balance')}</ListItemText>
           </MenuItem>
+          {(profile?.id ?? user?.id) && (
+            <MenuItem component={Link} href={`${base}/user/${profile?.id ?? user?.id}`} onClick={() => setAnchorEl(null)}>
+              <ListItemIcon><RateReviewIcon fontSize="small" /></ListItemIcon>
+              <ListItemText>{t('myReviews')}</ListItemText>
+            </MenuItem>
+          )}
           <Divider />
           <Box sx={{ px: 2, py: 0.5 }}>
             <Typography variant="caption" color="text.secondary">{t('sounds')}</Typography>
