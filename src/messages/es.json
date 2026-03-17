@@ -222,6 +222,23 @@
 
     "cardPayoutCardNumber": "Номер карты",
     "cardPayoutCardHolder": "Имя владельца карты",
+    "cardPayoutPreviewName": "Имя",
+    "cardPayoutPreviewCurrency": "Валюта",
+    "cardPayoutPlaceholderHolder": "Имя владельца карты",
+    "cardPayoutPlaceholderNumber": "Номер карты",
+    "cardPayoutPlaceholderAmount": "Сумма ({currency})",
+    "withdrawMax": "MAX",
+    "cryptoWithdrawStepCoin": "Выберите монету",
+    "cryptoWithdrawStepAddress": "Вывод на",
+    "cryptoWithdrawTabAddress": "Адрес",
+    "cryptoWithdrawAddressPlaceholder": "Адрес кошелька TRC20",
+    "cryptoWithdrawCopy": "Копировать адрес",
+    "cryptoWithdrawCopied": "Скопировано",
+    "cryptoWithdrawNetworkLabel": "Сеть",
+    "cryptoWithdrawCaution": "ВНИМАНИЕ: только адрес TRC20. Неверная сеть — потеря средств. Проверьте адрес.",
+    "cryptoWithdrawStepAmount": "Сумма вывода",
+    "cryptoWithdrawAmountPlaceholder": "Мин. 0.01",
+    "cryptoWithdrawTestAdvice": "Для нового адреса сначала сделайте небольшой тестовый вывод.",
 
     "withdrawToCardSubmit": "Запросить вывод на карту",
 
