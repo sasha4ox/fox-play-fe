@@ -8,6 +8,8 @@ import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import Button from '@mui/material/Button';
 import Switch from '@mui/material/Switch';
+import Radio from '@mui/material/Radio';
+import RadioGroup from '@mui/material/RadioGroup';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import TextField from '@mui/material/TextField';
 import Table from '@mui/material/Table';
@@ -39,6 +41,8 @@ import {
   deleteAdminCard,
   getAdminCardPaymentOrderNumberMessage,
   setAdminCardPaymentOrderNumberMessage,
+  getAdminOperatorWordingMode,
+  setAdminOperatorWordingMode,
   getAdminCryptoPaymentWallet,
   setAdminCryptoPaymentWallet,
   getAdminIbanPaymentEnabled,
@@ -85,6 +89,9 @@ export default function AdminMoneyFlowPage() {
   const [orderNumberTextInput, setOrderNumberTextInput] = useState('');
   const [loadingOrderNumberConfig, setLoadingOrderNumberConfig] = useState(true);
   const [savingOrderNumberConfig, setSavingOrderNumberConfig] = useState(false);
+  const [operatorWordingMode, setOperatorWordingMode] = useState('INDIVIDUAL');
+  const [loadingOperatorWordingMode, setLoadingOperatorWordingMode] = useState(true);
+  const [savingOperatorWordingMode, setSavingOperatorWordingMode] = useState(false);
   const [cryptoWallet, setCryptoWallet] = useState('');
   const [cryptoWalletInput, setCryptoWalletInput] = useState('');
   const [loadingCryptoWallet, setLoadingCryptoWallet] = useState(true);
@@ -183,6 +190,26 @@ export default function AdminMoneyFlowPage() {
       .finally(() => setSavingOrderNumberConfig(false));
   };
 
+  const loadOperatorWordingMode = () => {
+    if (!token) return;
+    setLoadingOperatorWordingMode(true);
+    getAdminOperatorWordingMode(token)
+      .then(setOperatorWordingMode)
+      .catch(() => setOperatorWordingMode('INDIVIDUAL'))
+      .finally(() => setLoadingOperatorWordingMode(false));
+  };
+
+  const handleOperatorWordingModeChange = (nextMode) => {
+    if (!token) return;
+    const mode = nextMode === 'COMPANY' ? 'COMPANY' : 'INDIVIDUAL';
+    setSavingOperatorWordingMode(true);
+    setError(null);
+    setAdminOperatorWordingMode(mode, token)
+      .then((updated) => setOperatorWordingMode(updated))
+      .catch((err) => setError(err?.message || 'Failed to save'))
+      .finally(() => setSavingOperatorWordingMode(false));
+  };
+
   useEffect(() => {
     loadFlag();
     loadWhitebitFlag();
@@ -196,6 +223,10 @@ export default function AdminMoneyFlowPage() {
   }, [token]);
   useEffect(() => {
     loadOrderNumberConfig();
+  }, [token]);
+
+  useEffect(() => {
+    loadOperatorWordingMode();
   }, [token]);
 
   const loadCryptoWallet = () => {
@@ -566,6 +597,38 @@ export default function AdminMoneyFlowPage() {
                 {savingOrderNumberConfig ? '…' : t('save')}
               </Button>
             </>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card sx={{ mb: 3 }}>
+        <CardContent sx={{ px: { xs: 1.5, sm: 2 } }}>
+          <Typography variant="subtitle1" fontWeight={600} gutterBottom>
+            {t('operatorWordingModeTitle')}
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            {t('operatorWordingModeHint')}
+          </Typography>
+          {loadingOperatorWordingMode ? (
+            <Skeleton width={320} height={40} />
+          ) : (
+            <RadioGroup
+              row
+              value={operatorWordingMode}
+              onChange={(e) => handleOperatorWordingModeChange(e.target.value)}
+              aria-label={t('operatorWordingModeTitle')}
+            >
+              <FormControlLabel
+                value="INDIVIDUAL"
+                control={<Radio disabled={savingOperatorWordingMode} />}
+                label={t('operatorWordingModeIndividual')}
+              />
+              <FormControlLabel
+                value="COMPANY"
+                control={<Radio disabled={savingOperatorWordingMode} />}
+                label={t('operatorWordingModeCompany')}
+              />
+            </RadioGroup>
           )}
         </CardContent>
       </Card>

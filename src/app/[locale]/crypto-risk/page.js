@@ -5,6 +5,7 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
 import Container from '@mui/material/Container';
+import { getPublicOperatorWordingMode } from '@/lib/publicOperatorWording';
 
 export async function generateMetadata({ params }) {
   const { locale } = await params;
@@ -16,6 +17,13 @@ export default async function CryptoRiskPage({ params }) {
   const { locale } = await params;
   setRequestLocale(locale);
   const t = await getTranslations('CryptoRisk');
+  const operatorWordingMode = await getPublicOperatorWordingMode();
+
+  const operatorBlock = operatorWordingMode === 'COMPANY' ? t('operatorBlockCompany') : t('operatorBlockIndividual');
+  const operatorContactBlock =
+    operatorWordingMode === 'COMPANY'
+      ? t('operatorContactBlockCompany')
+      : t('operatorContactBlockIndividual');
   const base = `/${locale}`;
 
   const sections = [
@@ -67,12 +75,12 @@ export default async function CryptoRiskPage({ params }) {
                 {t('contactLinkText')}
               </Link>
               <Typography variant="body1" component="div" sx={{ whiteSpace: 'pre-line', mt: 1 }}>
-                {t(contentKey)}
+                {t(contentKey, { operatorContactBlock })}
               </Typography>
             </>
           ) : (
             <Typography variant="body1" component="div" sx={{ whiteSpace: 'pre-line' }}>
-              {t(contentKey)}
+              {t(contentKey, { operatorBlock })}
             </Typography>
           )}
         </Box>

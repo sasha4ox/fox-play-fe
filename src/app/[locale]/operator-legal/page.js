@@ -5,6 +5,7 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
 import Container from '@mui/material/Container';
+import { getPublicOperatorWordingMode } from '@/lib/publicOperatorWording';
 
 export async function generateMetadata({ params }) {
   const { locale } = await params;
@@ -16,6 +17,12 @@ export default async function OperatorLegalPage({ params }) {
   const { locale } = await params;
   setRequestLocale(locale);
   const t = await getTranslations('OperatorLegal');
+  const operatorWordingMode = await getPublicOperatorWordingMode();
+
+  const operatorIntroBlock =
+    operatorWordingMode === 'COMPANY' ? t('operatorIntroBlockCompany') : t('operatorIntroBlockIndividual');
+  const operatorContactBlock =
+    operatorWordingMode === 'COMPANY' ? t('operatorContactBlockCompany') : t('operatorContactBlockIndividual');
   const base = `/${locale}`;
 
   const sections = [
@@ -43,7 +50,7 @@ export default async function OperatorLegalPage({ params }) {
         {t('subtitle')}
       </Typography>
       <Typography variant="body1" component="div" sx={{ whiteSpace: 'pre-line', mb: 4 }}>
-        {t('intro')}
+        {t('intro', { operatorIntroBlock })}
       </Typography>
 
       {sections.map(({ titleKey, contentKey }, idx) => (
@@ -52,7 +59,7 @@ export default async function OperatorLegalPage({ params }) {
             {idx + 1}. {t(titleKey)}
           </Typography>
           <Typography variant="body1" component="div" sx={{ whiteSpace: 'pre-line' }}>
-            {t(contentKey)}
+            {t(contentKey, contentKey === 's4Content' ? { operatorContactBlock } : {})}
           </Typography>
         </Box>
       ))}

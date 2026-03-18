@@ -745,6 +745,22 @@ export async function setAdminPlatformFeePercent(platformFeePercent, token) {
   return data?.platformFeePercent
 }
 
+/** Admin: get operator wording mode (INDIVIDUAL | COMPANY). */
+export async function getAdminOperatorWordingMode(token) {
+  const data = await apiGet('/admin/settings/operator-wording-mode', token)
+  const raw = data?.operatorWordingMode
+  return raw === 'COMPANY' ? 'COMPANY' : 'INDIVIDUAL'
+}
+
+/** Admin: set operator wording mode (INDIVIDUAL | COMPANY). */
+export async function setAdminOperatorWordingMode(operatorWordingMode, token) {
+  const raw = typeof operatorWordingMode === 'string' ? operatorWordingMode.toUpperCase().trim() : ''
+  const mode = raw === 'COMPANY' ? 'COMPANY' : 'INDIVIDUAL'
+  const data = await apiPatch('/admin/settings/operator-wording-mode', { operatorWordingMode: mode }, token)
+  const updated = data?.operatorWordingMode
+  return updated === 'COMPANY' ? 'COMPANY' : 'INDIVIDUAL'
+}
+
 /** Admin: get currency rates and source (Frankfurter, ExchangeRate-API, OpenExchangeRates, fallback, manual). */
 export async function getAdminCurrencyRates(token) {
   return apiGet('/admin/settings/currency-rates', token)

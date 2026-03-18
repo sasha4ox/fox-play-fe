@@ -957,6 +957,10 @@
     "orderNumberMessageVisible": "Show order number message",
     "orderNumberMessageText": "Message text",
     "orderNumberMessagePlaceholder": "e.g. Include order number {{orderId}} in your transfer so we can identify your payment.",
+    "operatorWordingModeTitle": "Nombre del operador/empresa",
+    "operatorWordingModeHint": "Elige qué nombre (operador o empresa) se muestra en las páginas con información legal.",
+    "operatorWordingModeIndividual": "Oleksandr Lysytsia",
+    "operatorWordingModeCompany": "Foxyplay",
     "confirmReceiptNotification": "Confirm receipt",
     "confirmReceiptBadge": "Confirm receipt ({count})",
     "platformFeePercent": "Platform fee (%)",
@@ -1132,7 +1136,11 @@
     "title": "OPERATOR & LEGAL INFORMATION",
     "subtitle": "FoxyPlay Operator Details",
     "backToHome": "← Back to home",
-    "intro": "FoxyPlay is operated by:\n\nSole Proprietor (Individual Entrepreneur)\nOleksandr Lysytsia\nCountry of registration: Ukraine\n\n(\"Operator\")",
+    "operatorIntroBlockIndividual": "Sole Proprietor (Individual Entrepreneur)\nOleksandr Lysytsia\nCountry of registration: Ukraine\n\n(\"Operator\")",
+    "operatorIntroBlockCompany": "Foxyplay",
+    "operatorContactBlockIndividual": "Operator: Sole Proprietor Oleksandr Lysytsia\nCountry: Ukraine",
+    "operatorContactBlockCompany": "Foxyplay",
+    "intro": "FoxyPlay is operated by:\n\n{operatorIntroBlock}",
     "s1Title": "Role of the Operator",
     "s1Content": "The Operator acts as the provider of the FoxyPlay online marketplace infrastructure.\n\nThe Operator:\n\noperates and maintains the Platform;\nprovides technical marketplace services;\nmaintains internal transaction accounting;\nperforms compliance and risk controls;\nfacilitates payouts from user balances.\n\nThe Operator does not act as a seller, buyer, broker, or financial institution.",
     "s2Title": "Nature of Services",
@@ -1140,7 +1148,7 @@
     "s3Title": "Jurisdiction",
     "s3Content": "The Platform is operated from Ukraine.\n\nAll services are provided under Ukrainian law, unless otherwise required by applicable regulations.",
     "s4Title": "Contact Information",
-    "s4Content": "Operator: Sole Proprietor Oleksandr Lysytsia\nCountry: Ukraine\n\nSupport: support@foxyplay.app\n\nLegal: legal@foxyplay.app\n\nCompliance: compliance@foxyplay.app",
+    "s4Content": "{operatorContactBlock}\n\nSupport: support@foxyplay.app\n\nLegal: legal@foxyplay.app\n\nCompliance: compliance@foxyplay.app",
     "s5Title": "Legal Documents",
     "s5Content": "Use of FoxyPlay is governed by:\n\nTerms of Service\nMarketplace Disclaimer\nPrivacy Policy\nAML & Compliance Policy\nCrypto Risk Disclosure\n\nAll documents are available on the Platform."
   },
@@ -1169,8 +1177,12 @@
     "effectiveDate": "Effective date",
     "backToHome": "← Back to home",
     "contactLinkText": "Contact us",
+    "operatorBlockIndividual": "Individual entrepreneur\nOleksandr Lysytsia\nCountry of registration: Ukraine\n(the \"Operator\")",
+    "operatorBlockCompany": "Foxyplay",
+    "operatorContactBlockIndividual": "Operator: Sole proprietor O. Lysytsia\nCountry: Ukraine",
+    "operatorContactBlockCompany": "Foxyplay",
     "s1Title": "General provisions",
-    "s1Content": "These Terms of Use (the \"Terms\") govern access to and use of the FoxyPlay online platform (the \"Platform\").\n\nThe Platform Operator:\n\nIndividual entrepreneur\nOleksandr Lysytsia\nCountry of registration: Ukraine\n(the \"Operator\")\n\nThe Platform provides information and technical services to enable interaction between users.\n\nUse of the Platform constitutes the User's full and unconditional acceptance of these Terms, the Marketplace Disclaimer, and other Platform policies.",
+    "s1Content": "These Terms of Use (the \"Terms\") govern access to and use of the FoxyPlay online platform (the \"Platform\").\n\nThe Platform Operator:\n\n{operatorBlock}\n\nThe Platform provides information and technical services to enable interaction between users.\n\nUse of the Platform constitutes the User's full and unconditional acceptance of these Terms, the Marketplace Disclaimer, and other Platform policies.",
     "s2Title": "Nature of the Platform's activity",
     "s2Content": "The Platform is a technological online service that enables posting of information and interaction between users for the purpose of concluding agreements on digital assets.\n\nThe Operator:\n\nis not a seller or buyer of assets;\nis not a party to agreements between users;\nis not a financial institution or payment organization;\ndoes not provide banking or payment services;\ndoes not professionally hold users' funds or crypto assets;\ndoes not manage users' assets.\n\nThe Platform provides solely the technical infrastructure for the performance of agreements between users.",
     "s3Title": "Subject of transactions",
@@ -1201,7 +1213,7 @@
     "s15Content": "These Terms are governed by the law of Ukraine.",
     "s16Title": "Contacts",
     "s16ContactLabel": "For questions about the Platform:",
-    "s16Content": "Operator: Sole proprietor O. Lysytsia\nCountry: Ukraine"
+    "s16Content": "{operatorContactBlock}"
   },
   "AmlCompliance": {
     "title": "AML & COMPLIANCE POLICY",
@@ -1209,8 +1221,12 @@
     "effectiveDate": "Effective date",
     "backToHome": "← Back to home",
     "contactLinkText": "Contact us",
+    "operatorBlockIndividual": "Individual entrepreneur\nOleksandr Lysytsia\nCountry: Ukraine\n(the \"Operator\")",
+    "operatorBlockCompany": "Foxyplay",
+    "operatorContactBlockIndividual": "Operator: Sole proprietor O. Lysytsia\nCountry: Ukraine",
+    "operatorContactBlockCompany": "Foxyplay",
     "s1Title": "General provisions",
-    "s1Content": "This Policy sets out measures to combat money laundering (AML), counter the financing of terrorism (CTF), and other illicit financial operations on the FoxyPlay online platform (the \"Platform\").\n\nThe Platform Operator:\n\nIndividual entrepreneur\nOleksandr Lysytsia\nCountry: Ukraine\n(the \"Operator\")\n\nThe Platform applies a risk-based approach to managing financial and compliance risks.",
+    "s1Content": "This Policy sets out measures to combat money laundering (AML), counter the financing of terrorism (CTF), and other illicit financial operations on the FoxyPlay online platform (the \"Platform\").\n\nThe Platform Operator:\n\n{operatorBlock}\n\nThe Platform applies a risk-based approach to managing financial and compliance risks.",
     "s2Title": "Regulatory framework and standards",
     "s2Content": "The Platform complies with:\n\nUkrainian legislation in the field of financial monitoring;\ninternational AML/CTF standards;\nrequirements of banks, payment providers, and partners;\nsanctions regimes and export restrictions (where applicable).",
     "s3Title": "Risk management approach",
@@ -1237,7 +1253,7 @@
     "s13Content": "The Operator may update this Policy.\n\nAn updated version is published on the Platform.\n\nUse of the Platform constitutes acceptance of the changes.",
     "s14Title": "Compliance contacts",
     "s14ContactLabel": "For compliance questions:",
-    "s14Content": "Operator: Sole proprietor O. Lysytsia\nCountry: Ukraine"
+    "s14Content": "{operatorContactBlock}"
   },
   "Privacy": {
     "title": "PRIVACY POLICY",
@@ -1245,8 +1261,12 @@
     "effectiveDate": "Effective date",
     "backToHome": "← Back to home",
     "contactLinkText": "Contact us",
+    "operatorBlockIndividual": "Individual entrepreneur\nOleksandr Lysytsia\nCountry: Ukraine\n(the \"Operator\")",
+    "operatorBlockCompany": "Foxyplay",
+    "operatorContactBlockIndividual": "Operator: Sole proprietor O. Lysytsia\nCountry: Ukraine",
+    "operatorContactBlockCompany": "Foxyplay",
     "s1Title": "General provisions",
-    "s1Content": "This Privacy Policy describes how we collect, use, process, and protect the personal data of users of the FoxyPlay online platform (the \"Platform\").\n\nThe owner and controller of personal data is:\n\nIndividual entrepreneur\nOleksandr Lysytsia\nCountry: Ukraine\n(the \"Operator\")\n\nThe Operator processes personal data in accordance with:\n\nEU Regulation 2016/679 (GDPR);\nUkrainian legislation on the protection of personal data;\nAML/KYC and financial monitoring requirements (where applicable).\n\nBy using the Platform, the User agrees to this Policy.",
+    "s1Content": "This Privacy Policy describes how we collect, use, process, and protect the personal data of users of the FoxyPlay online platform (the \"Platform\").\n\nThe owner and controller of personal data is:\n\n{operatorBlock}\n\nThe Operator processes personal data in accordance with:\n\nEU Regulation 2016/679 (GDPR);\nUkrainian legislation on the protection of personal data;\nAML/KYC and financial monitoring requirements (where applicable).\n\nBy using the Platform, the User agrees to this Policy.",
     "s2Title": "What data we collect",
     "s2Content": "We may collect and process the following categories of data:\n\nRegistration data\n• email\n• login\n• password (in secured form)\n\nContact data\n• email\n• messengers (if provided)\n\nTransaction data\n• transaction history\n• amounts\n• statuses\n• transaction IDs\n• crypto addresses (if applicable)\n\nTechnical data\n• IP address\n• device\n• browser\n• cookies\n• access logs\n\nVerification data (KYC)\n• full name\n• date of birth\n• identity document\n• photo/selfie\n• address\n• other data required for verification",
     "s3Title": "Purpose of data processing",
@@ -1271,7 +1291,7 @@
     "s12Content": "The Operator may change this Policy.\n\nAn updated version is published on the Platform.\n\nContinued use constitutes acceptance of the changes.",
     "s13Title": "Contacts",
     "s13ContactLabel": "For questions about personal data protection:",
-    "s13Content": "Operator: Sole proprietor O. Lysytsia\nCountry: Ukraine"
+    "s13Content": "{operatorContactBlock}"
   },
   "CryptoRisk": {
     "title": "CRYPTO RISK DISCLOSURE",
@@ -1279,6 +1299,8 @@
     "effectiveDate": "Effective date",
     "backToHome": "← Back to home",
     "contactLinkText": "Contact us",
+    "operatorContactBlockIndividual": "Operator: Sole proprietor O. Lysytsia\nCountry: Ukraine",
+    "operatorContactBlockCompany": "Foxyplay",
     "s1Title": "General warning",
     "s1Content": "Crypto assets are high-risk digital assets with the potential for significant financial loss.\n\nBy using the FoxyPlay Platform, the User confirms that they are aware of and accept all risks associated with the use of crypto assets.",
     "s2Title": "Volatility and financial risks",
@@ -1303,7 +1325,7 @@
     "s11Content": "By using the Platform, the User confirms that:\n\nthey understand the risks of crypto assets;\nthey accept the possibility of total loss;\nthey act at their own risk;\nthey do not rely on the Platform as a financial intermediary.",
     "s12Title": "Contacts",
     "s12ContactLabel": "For questions:",
-    "s12Content": "Operator: Sole proprietor O. Lysytsia\nCountry: Ukraine"
+    "s12Content": "{operatorContactBlock}"
   },
   "UserProfile": {
     "offers": "Offers",
