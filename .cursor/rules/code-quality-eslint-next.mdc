@@ -1,0 +1,26 @@
+---
+description: ESLint + Next — run before commit; matches CI
+globs: "**/*.{ts,tsx,js,jsx,mjs}"
+alwaysApply: false
+---
+
+# Frontend code quality (ESLint + Next)
+
+CI runs `npm run lint` then `npm run build` on PRs. Fix lint locally first.
+
+## Commands
+
+| Command | Use |
+|---------|-----|
+| `npm run lint` | ESLint (same as CI) |
+| `npm run lint:fix` | Auto-fix what ESLint can |
+| `npm run check` | Lint + production build (closest to full gate) |
+
+## Conventions
+
+- Follow **eslint-config-next** / core-web-vitals rules.
+- Prefer explicit types over `any`; handle `catch` errors properly.
+- Remove unused imports/vars or prefix with `_` if intentional.
+- Run `npm run lint:fix` after bulk edits, then fix remaining issues by hand.
+
+Before opening a PR: `npm run check` (or at least `npm run lint`).
