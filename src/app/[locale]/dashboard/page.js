@@ -136,8 +136,8 @@ export default function DashboardPage() {
         px: { xs: 0, sm: 2 },
       }}
     >
-      <DashboardHeroBanner />
       <Container>
+        <DashboardHeroBanner />
         <Typography component="h1" variant="h4" fontWeight={600} color="text.primary" gutterBottom>
           {t('chooseGame')}
         </Typography>
