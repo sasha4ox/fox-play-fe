@@ -16,7 +16,7 @@ import Link from 'next/link';
 import { useAuthStore, useIsAuthenticated } from '@/store/authStore';
 import { useProfile } from '@/hooks/useProfile';
 import TextField from '@mui/material/TextField';
-import { getDepositInfo, simulateDeposit, addTestCredit, createDepositOrder, createWithdraw, createCardPayoutRequest, createCryptoPayoutRequest, createIbanPayoutRequest, getAvailablePaymentMethods, getBalanceHistory, updatePreferredCurrency } from '@/lib/api';
+import { getDepositInfo, simulateDeposit, addTestCredit, createDepositOrder, createWithdraw, createCardPayoutRequest, createCryptoPayoutRequest, createIbanPayoutRequest, getAvailablePaymentMethods, getBalanceHistory, getSavedCards, getSavedWallets, updatePreferredCurrency } from '@/lib/api';
 import { useLoginModalStore } from '@/store/loginModalStore';
 import { useTranslations } from 'next-intl';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
@@ -76,6 +76,11 @@ export default function BalancePage() {
   const [ibanPaymentEnabled, setIbanPaymentEnabled] = useState(false);
   const [cryptoPaymentEnabled, setCryptoPaymentEnabled] = useState(false);
   const [withdrawSection, setWithdrawSection] = useState(null);
+  const [savedCards, setSavedCards] = useState([]);
+  const [savedWallets, setSavedWallets] = useState([]);
+  const [savedMethodsLoading, setSavedMethodsLoading] = useState(false);
+  const [selectedSavedCardId, setSelectedSavedCardId] = useState('');
+  const [selectedSavedWalletId, setSelectedSavedWalletId] = useState('');
   const [cryptoPayoutAmount, setCryptoPayoutAmount] = useState('');
   const [cryptoPayoutCurrency, setCryptoPayoutCurrency] = useState('');
   const [cryptoPayoutWallet, setCryptoPayoutWallet] = useState('');
@@ -126,6 +131,21 @@ export default function BalancePage() {
       setIbanPaymentEnabled(false);
       setCryptoPaymentEnabled(false);
     });
+  }, [token]);
+
+  useEffect(() => {
+    if (!token) return;
+    setSavedMethodsLoading(true);
+    Promise.all([getSavedCards(token), getSavedWallets(token)])
+      .then(([cardsRes, walletsRes]) => {
+        setSavedCards(cardsRes?.items ?? []);
+        setSavedWallets(walletsRes?.items ?? []);
+      })
+      .catch(() => {
+        setSavedCards([]);
+        setSavedWallets([]);
+      })
+      .finally(() => setSavedMethodsLoading(false));
   }, [token]);
 
   const balanceHistoryLoading = !!token && balanceHistory.status === 'idle';
@@ -325,6 +345,23 @@ export default function BalancePage() {
       setCryptoCopiedHint(true);
       window.setTimeout(() => setCryptoCopiedHint(false), 2500);
     }).catch(() => {});
+  };
+
+  const handleSavedCardSelect = (id) => {
+    setSelectedSavedCardId(id);
+    if (!id) return;
+    const card = savedCards.find((c) => c.id === id);
+    if (!card) return;
+    setCardPayoutCardHolder(card.cardHolderName || '');
+    setCardPayoutCardNumber(card.last4 ? `**** **** **** ${card.last4}` : '');
+  };
+
+  const handleSavedWalletSelect = (id) => {
+    setSelectedSavedWalletId(id);
+    if (!id) return;
+    const wallet = savedWallets.find((w) => w.id === id);
+    if (!wallet) return;
+    setCryptoPayoutWallet(wallet.walletAddress || '');
   };
 
   const handleCardPayoutRequest = () => {
@@ -1035,6 +1072,26 @@ export default function BalancePage() {
 
                   <Box sx={{ mt: 3, display: 'flex', flexDirection: 'column', gap: 2 }}>
                     <TextField
+                      select
+                      label={t('useSavedCard')}
+                      value={selectedSavedCardId}
+                      onChange={(e) => handleSavedCardSelect(e.target.value)}
+                      SelectProps={{ native: true }}
+                      disabled={savedMethodsLoading || savedCards.length === 0}
+                      helperText={savedCards.length === 0 ? t('noSavedCards') : t('savedCardAutofillHint')}
+                      variant="outlined"
+                      size="medium"
+                      fullWidth
+                      sx={inputOutlineSx}
+                    >
+                      <option value="">{t('manualEntry')}</option>
+                      {savedCards.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {`**** ${c.last4} - ${c.cardHolderName}${c.label ? ` (${c.label})` : ''}`}
+                        </option>
+                      ))}
+                    </TextField>
+                    <TextField
                       placeholder={t('cardPayoutPlaceholderHolder')}
                       value={cardPayoutCardHolder}
                       onChange={(e) => setCardPayoutCardHolder(e.target.value.toUpperCase())}
@@ -1263,6 +1320,26 @@ export default function BalancePage() {
                             {t('cryptoWithdrawTabAddress')}
                           </Typography>
                         </Box>
+                        <TextField
+                          select
+                          label={t('useSavedCryptoWallet')}
+                          value={selectedSavedWalletId}
+                          onChange={(e) => handleSavedWalletSelect(e.target.value)}
+                          SelectProps={{ native: true }}
+                          disabled={savedMethodsLoading || savedWallets.length === 0}
+                          variant="outlined"
+                          size="small"
+                          helperText={savedWallets.length === 0 ? t('noSavedCryptoWallets') : t('savedWalletAutofillHint')}
+                          fullWidth
+                          sx={{ mt: 1 }}
+                        >
+                          <option value="">{t('manualEntry')}</option>
+                          {savedWallets.map((w) => (
+                            <option key={w.id} value={w.id}>
+                              {`${w.walletAddress.length > 16 ? `${w.walletAddress.slice(0, 8)}...${w.walletAddress.slice(-6)}` : w.walletAddress}${w.label ? ` (${w.label})` : ''}`}
+                            </option>
+                          ))}
+                        </TextField>
                         <TextField
                           value={cryptoPayoutWallet}
                           onChange={(e) => setCryptoPayoutWallet(e.target.value)}

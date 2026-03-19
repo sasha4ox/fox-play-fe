@@ -20,9 +20,10 @@ import Switch from '@mui/material/Switch';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import CloseIcon from '@mui/icons-material/Close';
 import DeleteIcon from '@mui/icons-material/Delete';
+import EditIcon from '@mui/icons-material/Edit';
 import { useAuthStore, useIsAuthenticated } from '@/store/authStore';
 import { useProfile } from '@/hooks/useProfile';
-import { uploadAvatar, disable2FA, requestPasswordReset, getSavedCards, getSavedWallets, addSavedCard, addSavedWallet, deleteSavedCard, deleteSavedWallet, updateProfile, disconnectTelegram } from '@/lib/api';
+import { uploadAvatar, disable2FA, requestPasswordReset, getSavedCards, getSavedWallets, addSavedCard, addSavedWallet, updateSavedCard, updateSavedWallet, deleteSavedCard, deleteSavedWallet, updateProfile, disconnectTelegram } from '@/lib/api';
 import { useLoginModalStore } from '@/store/loginModalStore';
 import Enable2FAModal from '@/components/Enable2FAModal/Enable2FAModal';
 import CountrySelect from '@/components/CountrySelect/CountrySelect';
@@ -54,6 +55,8 @@ export default function ProfilePage() {
   const [savedMethodsLoading, setSavedMethodsLoading] = useState(false);
   const [addCardModalOpen, setAddCardModalOpen] = useState(false);
   const [addWalletModalOpen, setAddWalletModalOpen] = useState(false);
+  const [editCardId, setEditCardId] = useState(null);
+  const [editWalletId, setEditWalletId] = useState(null);
   const [addCardLast4, setAddCardLast4] = useState('');
   const [addCardHolder, setAddCardHolder] = useState('');
   const [addCardLabel, setAddCardLabel] = useState('');
@@ -389,11 +392,11 @@ export default function ProfilePage() {
         ) : (
           <Box sx={{ mb: 2 }}>
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 1 }}>
-              <Button variant="outlined" size="small" onClick={() => { setAddCardLast4(''); setAddCardHolder(''); setAddCardLabel(''); setAddCardError(null); setAddCardModalOpen(true); }} sx={{ textTransform: 'none' }}>
+              <Button variant="outlined" size="small" onClick={() => { setEditCardId(null); setAddCardLast4(''); setAddCardHolder(''); setAddCardLabel(''); setAddCardError(null); setAddCardModalOpen(true); }} sx={{ textTransform: 'none' }}>
                 {t('addCard')}
               </Button>
-              <Button variant="outlined" size="small" onClick={() => { setAddWalletAddress(''); setAddWalletLabel(''); setAddWalletError(null); setAddWalletModalOpen(true); }} sx={{ textTransform: 'none' }}>
-                {t('addWallet')}
+              <Button variant="outlined" size="small" onClick={() => { setEditWalletId(null); setAddWalletAddress(''); setAddWalletLabel(''); setAddWalletError(null); setAddWalletModalOpen(true); }} sx={{ textTransform: 'none' }}>
+                {t('addCryptoWallet')}
               </Button>
             </Box>
             {savedCards.length === 0 && savedWallets.length === 0 ? (
@@ -403,9 +406,25 @@ export default function ProfilePage() {
                 {savedCards.map((c) => (
                   <Box key={c.id} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', py: 1, px: 1.5, bgcolor: 'action.hover', borderRadius: 1 }}>
                     <Typography variant="body2">•••• {c.last4} – {c.cardHolderName}{c.label ? ` (${c.label})` : ''}</Typography>
-                    <IconButton size="small" aria-label="Delete card" onClick={() => deleteSavedCard(c.id, token).then(loadSavedMethods).catch(() => {})}>
-                      <DeleteIcon fontSize="small" />
-                    </IconButton>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                      <IconButton
+                        size="small"
+                        aria-label="Edit card"
+                        onClick={() => {
+                          setEditCardId(c.id);
+                          setAddCardLast4(c.last4 || '');
+                          setAddCardHolder(c.cardHolderName || '');
+                          setAddCardLabel(c.label || '');
+                          setAddCardError(null);
+                          setAddCardModalOpen(true);
+                        }}
+                      >
+                        <EditIcon fontSize="small" />
+                      </IconButton>
+                      <IconButton size="small" aria-label="Delete card" onClick={() => deleteSavedCard(c.id, token).then(loadSavedMethods).catch(() => {})}>
+                        <DeleteIcon fontSize="small" />
+                      </IconButton>
+                    </Box>
                   </Box>
                 ))}
                 {savedWallets.map((w) => (
@@ -414,9 +433,24 @@ export default function ProfilePage() {
                       {w.walletAddress.length > 16 ? `${w.walletAddress.slice(0, 8)}…${w.walletAddress.slice(-6)}` : w.walletAddress}
                       {w.label ? ` (${w.label})` : ''}
                     </Typography>
-                    <IconButton size="small" aria-label="Delete wallet" onClick={() => deleteSavedWallet(w.id, token).then(loadSavedMethods).catch(() => {})}>
-                      <DeleteIcon fontSize="small" />
-                    </IconButton>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                      <IconButton
+                        size="small"
+                        aria-label="Edit wallet"
+                        onClick={() => {
+                          setEditWalletId(w.id);
+                          setAddWalletAddress(w.walletAddress || '');
+                          setAddWalletLabel(w.label || '');
+                          setAddWalletError(null);
+                          setAddWalletModalOpen(true);
+                        }}
+                      >
+                        <EditIcon fontSize="small" />
+                      </IconButton>
+                      <IconButton size="small" aria-label="Delete wallet" onClick={() => deleteSavedWallet(w.id, token).then(loadSavedMethods).catch(() => {})}>
+                        <DeleteIcon fontSize="small" />
+                      </IconButton>
+                    </Box>
                   </Box>
                 ))}
               </Box>
@@ -519,7 +553,7 @@ export default function ProfilePage() {
 
       <Dialog open={addCardModalOpen} onClose={() => !addCardLoading && setAddCardModalOpen(false)} maxWidth="xs" fullWidth>
         <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', pr: 1 }}>
-          {t('addCard')}
+          {editCardId ? t('editSavedCard') : t('addCard')}
           <IconButton aria-label="close" onClick={() => !addCardLoading && setAddCardModalOpen(false)} size="small">
             <CloseIcon />
           </IconButton>
@@ -535,20 +569,22 @@ export default function ProfilePage() {
             onClick={() => {
               setAddCardError(null);
               setAddCardLoading(true);
-              addSavedCard({ last4: addCardLast4, cardHolderName: addCardHolder.trim(), label: addCardLabel.trim() || undefined }, token)
-                .then(() => { setAddCardModalOpen(false); loadSavedMethods(); })
-                .catch((e) => setAddCardError(e?.message || 'Failed to add card'))
+              const payload = { last4: addCardLast4, cardHolderName: addCardHolder.trim(), label: addCardLabel.trim() || undefined };
+              const req = editCardId ? updateSavedCard(editCardId, payload, token) : addSavedCard(payload, token);
+              req
+                .then(() => { setAddCardModalOpen(false); setEditCardId(null); loadSavedMethods(); })
+                .catch((e) => setAddCardError(e?.message || (editCardId ? 'Failed to update card' : 'Failed to add card')))
                 .finally(() => setAddCardLoading(false));
             }}
           >
-            {addCardLoading ? '…' : t('addCard')}
+            {addCardLoading ? '…' : (editCardId ? t('saveMethodChanges') : t('addCard'))}
           </Button>
         </DialogContent>
       </Dialog>
 
       <Dialog open={addWalletModalOpen} onClose={() => !addWalletLoading && setAddWalletModalOpen(false)} maxWidth="xs" fullWidth>
         <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', pr: 1 }}>
-          {t('addWallet')}
+          {editWalletId ? t('editSavedCryptoWallet') : t('addCryptoWallet')}
           <IconButton aria-label="close" onClick={() => !addWalletLoading && setAddWalletModalOpen(false)} size="small">
             <CloseIcon />
           </IconButton>
@@ -563,13 +599,15 @@ export default function ProfilePage() {
             onClick={() => {
               setAddWalletError(null);
               setAddWalletLoading(true);
-              addSavedWallet({ walletAddress: addWalletAddress.trim(), label: addWalletLabel.trim() || undefined }, token)
-                .then(() => { setAddWalletModalOpen(false); loadSavedMethods(); })
-                .catch((e) => setAddWalletError(e?.message || 'Failed to add wallet'))
+              const payload = { walletAddress: addWalletAddress.trim(), label: addWalletLabel.trim() || undefined };
+              const req = editWalletId ? updateSavedWallet(editWalletId, payload, token) : addSavedWallet(payload, token);
+              req
+                .then(() => { setAddWalletModalOpen(false); setEditWalletId(null); loadSavedMethods(); })
+                .catch((e) => setAddWalletError(e?.message || (editWalletId ? 'Failed to update wallet' : 'Failed to add wallet')))
                 .finally(() => setAddWalletLoading(false));
             }}
           >
-            {addWalletLoading ? '…' : t('addWallet')}
+            {addWalletLoading ? '…' : (editWalletId ? t('saveMethodChanges') : t('addCryptoWallet'))}
           </Button>
         </DialogContent>
       </Dialog>

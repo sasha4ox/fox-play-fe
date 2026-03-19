@@ -408,6 +408,11 @@ export async function deleteSavedCard(id, token) {
   return apiDelete(`/me/saved-cards/${id}`, token)
 }
 
+/** Update saved card by id. Body: { last4?, cardHolderName?, label? }. */
+export async function updateSavedCard(id, body, token) {
+  return apiPatch(`/me/saved-cards/${id}`, body, token)
+}
+
 /** List saved wallets (auth required). Returns { items: [{ id, walletAddress, label, createdAt }] }. */
 export async function getSavedWallets(token) {
   return apiGet('/me/saved-wallets', token)
@@ -421,6 +426,11 @@ export async function addSavedWallet(body, token) {
 /** Delete saved wallet by id. */
 export async function deleteSavedWallet(id, token) {
   return apiDelete(`/me/saved-wallets/${id}`, token)
+}
+
+/** Update saved wallet by id. Body: { walletAddress?, label? }. */
+export async function updateSavedWallet(id, body, token) {
+  return apiPatch(`/me/saved-wallets/${id}`, body, token)
 }
 
 /** Withdraw UAH to bank via WhiteBIT. body: { amount, currency: 'UAH', iban, provider: 'whitebit', firstName, lastName, tin }. Optional totpCode for 2FA. */
