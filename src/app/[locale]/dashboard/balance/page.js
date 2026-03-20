@@ -349,11 +349,17 @@ export default function BalancePage() {
 
   const handleSavedCardSelect = (id) => {
     setSelectedSavedCardId(id);
-    if (!id) return;
+    if (!id) {
+      setCardPayoutCardHolder('');
+      setCardPayoutCardNumber('');
+      return;
+    }
     const card = savedCards.find((c) => c.id === id);
     if (!card) return;
     setCardPayoutCardHolder(card.cardHolderName || '');
-    setCardPayoutCardNumber(card.last4 ? `**** **** **** ${card.last4}` : '');
+    const digits = (card.cardNumber || '').toString().replace(/\D/g, '');
+    const grouped = digits.match(/.{1,4}/g) || [];
+    setCardPayoutCardNumber(grouped.join(' '));
   };
 
   const handleSavedWalletSelect = (id) => {

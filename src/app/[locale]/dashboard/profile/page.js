@@ -57,7 +57,7 @@ export default function ProfilePage() {
   const [addWalletModalOpen, setAddWalletModalOpen] = useState(false);
   const [editCardId, setEditCardId] = useState(null);
   const [editWalletId, setEditWalletId] = useState(null);
-  const [addCardLast4, setAddCardLast4] = useState('');
+  const [addCardNumber, setAddCardNumber] = useState('');
   const [addCardHolder, setAddCardHolder] = useState('');
   const [addCardLabel, setAddCardLabel] = useState('');
   const [addCardLoading, setAddCardLoading] = useState(false);
@@ -82,14 +82,28 @@ export default function ProfilePage() {
 
   useEffect(() => {
     if (!token) return;
-    setSavedMethodsLoading(true);
+    let cancelled = false;
+    Promise.resolve().then(() => {
+      if (!cancelled) setSavedMethodsLoading(true);
+    });
     Promise.all([getSavedCards(token), getSavedWallets(token)])
       .then(([cardsRes, walletsRes]) => {
+        if (cancelled) return;
         setSavedCards(cardsRes?.items ?? []);
         setSavedWallets(walletsRes?.items ?? []);
       })
-      .catch(() => { setSavedCards([]); setSavedWallets([]); })
-      .finally(() => setSavedMethodsLoading(false));
+      .catch(() => {
+        if (cancelled) return;
+        setSavedCards([]);
+        setSavedWallets([]);
+      })
+      .finally(() => {
+        if (cancelled) return;
+        setSavedMethodsLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [token]);
 
   const displayNickname = profile?.nickname ?? '';
@@ -392,7 +406,7 @@ export default function ProfilePage() {
         ) : (
           <Box sx={{ mb: 2 }}>
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 1 }}>
-              <Button variant="outlined" size="small" onClick={() => { setEditCardId(null); setAddCardLast4(''); setAddCardHolder(''); setAddCardLabel(''); setAddCardError(null); setAddCardModalOpen(true); }} sx={{ textTransform: 'none' }}>
+              <Button variant="outlined" size="small" onClick={() => { setEditCardId(null); setAddCardNumber(''); setAddCardHolder(''); setAddCardLabel(''); setAddCardError(null); setAddCardModalOpen(true); }} sx={{ textTransform: 'none' }}>
                 {t('addCard')}
               </Button>
               <Button variant="outlined" size="small" onClick={() => { setEditWalletId(null); setAddWalletAddress(''); setAddWalletLabel(''); setAddWalletError(null); setAddWalletModalOpen(true); }} sx={{ textTransform: 'none' }}>
@@ -405,14 +419,19 @@ export default function ProfilePage() {
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                 {savedCards.map((c) => (
                   <Box key={c.id} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', py: 1, px: 1.5, bgcolor: 'action.hover', borderRadius: 1 }}>
-                    <Typography variant="body2">•••• {c.last4} – {c.cardHolderName}{c.label ? ` (${c.label})` : ''}</Typography>
+                    <Typography variant="body2">
+                      {t('cardType')}: •••• {c.last4} – {c.cardHolderName}
+                      {c.label ? ` (${c.label})` : ''}
+                    </Typography>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                       <IconButton
                         size="small"
                         aria-label="Edit card"
                         onClick={() => {
                           setEditCardId(c.id);
-                          setAddCardLast4(c.last4 || '');
+                          const digits = (c.cardNumber || '').toString().replace(/\D/g, '');
+                          const grouped = digits.match(/.{1,4}/g) || [];
+                          setAddCardNumber(grouped.join(' '));
                           setAddCardHolder(c.cardHolderName || '');
                           setAddCardLabel(c.label || '');
                           setAddCardError(null);
@@ -430,6 +449,7 @@ export default function ProfilePage() {
                 {savedWallets.map((w) => (
                   <Box key={w.id} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', py: 1, px: 1.5, bgcolor: 'action.hover', borderRadius: 1 }}>
                     <Typography variant="body2" sx={{ wordBreak: 'break-all' }}>
+                      {t('cryptoWalletType')}: 
                       {w.walletAddress.length > 16 ? `${w.walletAddress.slice(0, 8)}…${w.walletAddress.slice(-6)}` : w.walletAddress}
                       {w.label ? ` (${w.label})` : ''}
                     </Typography>
@@ -562,14 +582,35 @@ export default function ProfilePage() {
           {addCardError && (
             <Alert severity="error" sx={{ mb: 2 }} onClose={() => setAddCardError(null)}>{addCardError}</Alert>
           )}
-          <TextField fullWidth label="Last 4 digits" value={addCardLast4} onChange={(e) => setAddCardLast4(e.target.value.replace(/\D/g, '').slice(0, 4))} inputProps={{ maxLength: 4, inputMode: 'numeric' }} size="small" sx={{ mb: 2 }} />
+          <TextField
+            fullWidth
+            label="Card number"
+            value={addCardNumber}
+            onChange={(e) => {
+              const digits = e.target.value.replace(/\D/g, '').slice(0, 19);
+              const grouped = digits.match(/.{1,4}/g) || [];
+              setAddCardNumber(grouped.join(' '));
+            }}
+            inputProps={{ maxLength: 23, inputMode: 'numeric' }}
+            size="small"
+            sx={{ mb: 2 }}
+          />
           <TextField fullWidth label={t('cardHolderName')} value={addCardHolder} onChange={(e) => setAddCardHolder(e.target.value)} size="small" sx={{ mb: 2 }} />
           <TextField fullWidth label="Label (optional)" value={addCardLabel} onChange={(e) => setAddCardLabel(e.target.value)} size="small" sx={{ mb: 2 }} placeholder="e.g. Main card" />
-          <Button fullWidth variant="contained" color="primary" disabled={addCardLoading || addCardLast4.length !== 4 || !addCardHolder.trim()} sx={{ textTransform: 'none' }}
+          <Button
+            fullWidth
+            variant="contained"
+            color="primary"
+            disabled={addCardLoading || addCardNumber.replace(/\D/g, '').length < 12 || !addCardHolder.trim()}
+            sx={{ textTransform: 'none' }}
             onClick={() => {
               setAddCardError(null);
               setAddCardLoading(true);
-              const payload = { last4: addCardLast4, cardHolderName: addCardHolder.trim(), label: addCardLabel.trim() || undefined };
+              const payload = {
+                cardNumber: addCardNumber.replace(/\D/g, ''),
+                cardHolderName: addCardHolder.trim(),
+                label: addCardLabel.trim() || undefined,
+              };
               const req = editCardId ? updateSavedCard(editCardId, payload, token) : addSavedCard(payload, token);
               req
                 .then(() => { setAddCardModalOpen(false); setEditCardId(null); loadSavedMethods(); })

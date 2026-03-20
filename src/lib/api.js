@@ -393,12 +393,12 @@ export async function resetPasswordWithToken(token, newPassword) {
   return apiPost('/auth/reset-password', { token, newPassword }, null)
 }
 
-/** List saved cards (auth required). Returns { items: [{ id, last4, cardHolderName, label, createdAt }] }. */
+/** List saved cards (auth required). Returns { items: [{ id, last4, cardHolderName, label, createdAt, cardNumber? }] }. */
 export async function getSavedCards(token) {
   return apiGet('/me/saved-cards', token)
 }
 
-/** Add saved card. Body: { last4, cardHolderName, label? }. */
+/** Add saved card. Body: { cardNumber, cardHolderName, label? }. */
 export async function addSavedCard(body, token) {
   return apiPost('/me/saved-cards', body, token)
 }
@@ -408,7 +408,7 @@ export async function deleteSavedCard(id, token) {
   return apiDelete(`/me/saved-cards/${id}`, token)
 }
 
-/** Update saved card by id. Body: { last4?, cardHolderName?, label? }. */
+/** Update saved card by id. Body: { cardNumber?, cardHolderName?, label? }. */
 export async function updateSavedCard(id, body, token) {
   return apiPatch(`/me/saved-cards/${id}`, body, token)
 }
