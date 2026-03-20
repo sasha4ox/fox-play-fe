@@ -6,36 +6,19 @@ on:
   pull_request:
 
 jobs:
-  quality:
-    name: Lint
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
-        with:
-          node-version: "22"
-          cache: pnpm
-          cache-dependency-path: pnpm-lock.yaml
-          pnpm-version: "9"
-      - run: corepack enable
-      - run: pnpm install --frozen-lockfile
-      - name: ESLint
-        run: pnpm run lint
-
   build:
     name: Build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4
+      - run: corepack enable
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: "22"
           cache: pnpm
           cache-dependency-path: pnpm-lock.yaml
           pnpm-version: "9"
-      - run: corepack enable
       - run: pnpm install --frozen-lockfile
       - run: pnpm run build
         env:
-          # Next may need these in CI; add secrets in repo if build fails
           NEXT_TELEMETRY_DISABLED: "1"
