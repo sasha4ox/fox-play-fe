@@ -270,10 +270,12 @@
     "cryptoWithdrawTabAddress": "Адрес",
     "cryptoWithdrawAddressPlaceholder": "Адрес кошелька TRC20",
     "cryptoWithdrawCopy": "Копировать адрес",
+    "cryptoWithdrawPaste": "Вставить из буфера",
     "cryptoWithdrawCopied": "Скопировано",
     "cryptoWithdrawNetworkLabel": "Сеть",
-    "cryptoWithdrawCaution": "ВНИМАНИЕ: используйте только адрес сети TRC20. Неверная сеть приведёт к потере средств. Проверьте адрес.",
+    "cryptoWithdrawCaution": "Используйте только адрес TRC20. Отправка в другую сеть приведёт к потере средств.",
     "cryptoWithdrawStepAmount": "Сумма вывода",
+    "cryptoWithdrawMinPlaceholder": "Мин. {minGross}",
     "cryptoWithdrawAmountPlaceholder": "Всего с баланса (мин. {minGross} USD)",
     "cryptoWithdrawTestAdvice": "Для нового адреса рекомендуем сначала небольшой тестовый вывод.",
     "cryptoWithdrawMinAmount": "Укажите не меньше {minGross} USD с баланса, чтобы после комиссии 3% вы получили минимум 11 USDT.",
@@ -293,6 +295,7 @@
     "cardPayoutInsufficient": "Недостаточно средств в выбранной валюте.",
 
     "youHaveInCurrency": "Доступно {amount} {currency} (общая сумма в этой валюте с учётом конвертации)",
+    "youHaveInCurrencyRich": "Доступно <bold>{amountCurrency}</bold> (общая сумма в этой валюте с учётом конвертации)",
     "withdrawAll": "Вывести всё",
 
     "withdrawCryptoHint": "Отправьте запрос на вывод USDT (TRC20) на ваш кошелёк. Администратор обработает его вручную.",

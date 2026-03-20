@@ -381,7 +381,7 @@ export default function ProfilePage() {
                       <Avatar variant="rounded" sx={{ width: 26, height: 26, bgcolor: 'action.hover', color: 'text.secondary', fontSize: 14 }}>◉</Avatar>
                       <Box>
                         <Typography variant="body2" fontWeight={600}>TRC20 wallet</Typography>
-                        <Typography variant="caption" color="text.secondary" sx={{ wordBreak: 'break-all' }}>{w.walletAddress.length > 20 ? `${w.walletAddress.slice(0, 10)}…${w.walletAddress.slice(-8)}` : w.walletAddress}{w.label ? ` - ${w.label}` : ''}</Typography>
+                        <Typography variant="caption" color="text.secondary" sx={{ wordBreak: 'break-all' }}>{w.walletAddress.length > 34 ? `${w.walletAddress.slice(0, 10)}…${w.walletAddress.slice(-8)}` : w.walletAddress}{w.label ? ` - ${w.label}` : ''}</Typography>
                       </Box>
                     </Box>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
@@ -551,9 +551,9 @@ export default function ProfilePage() {
           {addWalletError && (
             <Alert severity="error" sx={{ mb: 2 }} onClose={() => setAddWalletError(null)}>{addWalletError}</Alert>
           )}
-          <TextField fullWidth label="USDT TRC20 address" value={addWalletAddress} onChange={(e) => setAddWalletAddress(e.target.value)} size="small" sx={{ mb: 2 }} placeholder="T..." inputProps={{ maxLength: 64 }} />
+          <TextField fullWidth label="USDT TRC20 address" value={addWalletAddress} onChange={(e) => setAddWalletAddress(e.target.value)} size="small" sx={{ mb: 2 }} placeholder="T..." inputProps={{ maxLength: 34 }} />
           <TextField fullWidth label="Label (optional)" value={addWalletLabel} onChange={(e) => setAddWalletLabel(e.target.value)} size="small" sx={{ mb: 2 }} placeholder="e.g. Main wallet" />
-          <Button fullWidth variant="contained" color="primary" disabled={addWalletLoading || addWalletAddress.trim().length < 20} sx={{ textTransform: 'none' }}
+          <Button fullWidth variant="contained" color="primary" disabled={addWalletLoading || addWalletAddress.trim().length !== 34} sx={{ textTransform: 'none' }}
             onClick={() => {
               setAddWalletError(null);
               setAddWalletLoading(true);

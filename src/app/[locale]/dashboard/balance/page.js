@@ -20,6 +20,8 @@ import { getDepositInfo, simulateDeposit, addTestCredit, createDepositOrder, cre
 import { useLoginModalStore } from '@/store/loginModalStore';
 import { useTranslations } from 'next-intl';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import ContentPasteIcon from '@mui/icons-material/ContentPaste';
+import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import IconButton from '@mui/material/IconButton';
 import InputAdornment from '@mui/material/InputAdornment';
 import Enable2FAModal from '@/components/Enable2FAModal/Enable2FAModal';
@@ -280,12 +282,27 @@ export default function BalancePage() {
     '& .MuiOutlinedInput-root': {
       bgcolor: 'grey.800',
       color: 'grey.100',
-      boxShadow: (theme) => `0 0 0 1px ${theme.palette.warning.main}40`,
-      '& fieldset': { borderColor: 'warning.main', borderWidth: 2 },
-      '&:hover fieldset': { borderColor: 'warning.light' },
-      '&.Mui-focused fieldset': { borderColor: 'warning.main' },
+      '& fieldset': { borderColor: 'grey.700', borderWidth: 1 },
+      '&:hover fieldset': { borderColor: 'grey.600' },
+      '&.Mui-focused fieldset': { borderColor: 'grey.500' },
     },
   };
+
+  const cryptoWalletFieldSx = {
+    mt: 1,
+    '& .MuiOutlinedInput-root': {
+      bgcolor: 'grey.800',
+      color: 'grey.100',
+      fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+      fontSize: '0.8125rem',
+      '& fieldset': { borderColor: 'grey.700', borderWidth: 1 },
+      '&:hover fieldset': { borderColor: 'grey.600' },
+      '&.Mui-focused fieldset': { borderColor: 'grey.500' },
+    },
+  };
+
+  const cryptoSummaryValid =
+    cryptoTotalDebitDisplay > 0 && Number.isFinite(cryptoGrossNum) && cryptoGrossNum > 0;
 
   /** Opens Enable 2FA or Verify TOTP modal and sets pending withdraw action. */
   const requestWithdraw2FA = (action) => {
@@ -363,8 +380,8 @@ export default function BalancePage() {
       return;
     }
     const wallet = (cryptoPayoutWallet || '').trim();
-    if (!wallet || wallet.length < 20) {
-      setCryptoPayoutError(t('withdrawCryptoWalletLabel') + ' is required (min 20 characters).');
+    if (!wallet || wallet.length !== 34) {
+      setCryptoPayoutError(t('withdrawCryptoWalletLabel') + ' is required (34 characters, TRC20).');
       return;
     }
     if (totalAvailableForCrypto < gross - 1e-8) {
@@ -382,6 +399,14 @@ export default function BalancePage() {
     navigator.clipboard.writeText(w).then(() => {
       setCryptoCopiedHint(true);
       window.setTimeout(() => setCryptoCopiedHint(false), 2500);
+    }).catch(() => {});
+  };
+
+  const pasteCryptoAddress = () => {
+    if (typeof navigator === 'undefined' || !navigator.clipboard?.readText) return;
+    navigator.clipboard.readText().then((text) => {
+      const trimmed = (text || '').trim().slice(0, 34);
+      if (trimmed) setCryptoPayoutWallet(trimmed);
     }).catch(() => {});
   };
 
@@ -1339,12 +1364,12 @@ export default function BalancePage() {
                         sx={{
                           display: 'grid',
                           gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' },
-                          columnGap: { xs: 0, md: 3 },
-                          rowGap: 2.5,
+                          columnGap: 0,
+                          rowGap: { xs: 2.5, md: 2.5 },
                         }}
                       >
                         <Box sx={{ gridColumn: { xs: '1', md: '1 / -1' } }}>
-                          <Typography variant="body2" fontWeight={600} color="grey.300">
+                          <Typography variant="caption" fontWeight={600} color="grey.500" sx={{ letterSpacing: '0.08em', textTransform: 'uppercase', display: 'block' }}>
                             {t('cryptoWithdrawStepCoin')}
                           </Typography>
                           <Box
@@ -1389,177 +1414,248 @@ export default function BalancePage() {
                           </Box>
                         </Box>
 
-                        <Box>
-                          <Typography variant="body2" fontWeight={600} color="grey.300">
-                            {t('cryptoWithdrawStepAddress')}
-                          </Typography>
-                          <Box sx={{ mt: 0.75, borderBottom: 2, borderColor: 'warning.main', alignSelf: 'flex-start', width: 'fit-content', pb: 0.25 }}>
-                            <Typography variant="caption" color="warning.main" fontWeight={600}>
-                              {t('cryptoWithdrawTabAddress')}
-                            </Typography>
-                          </Box>
-                          <TextField
-                          select
-                          label={t('useSavedCryptoWallet')}
-                          value={selectedSavedWalletId}
-                          onChange={(e) => handleSavedWalletSelect(e.target.value)}
-                          InputLabelProps={{ shrink: true }}
-                          SelectProps={{ native: true }}
-                          disabled={savedMethodsLoading || savedWallets.length === 0}
-                          variant="outlined"
-                          size="small"
-                          helperText={savedWallets.length === 0 ? t('noSavedCryptoWallets') : t('savedWalletAutofillHint')}
-                          fullWidth
-                          sx={{ mt: 1 }}
-                        >
-                          <option value="">{t('manualEntry')}</option>
-                          {savedWallets.map((w) => (
-                            <option key={w.id} value={w.id}>
-                              {`${w.walletAddress.length > 16 ? `${w.walletAddress.slice(0, 8)}...${w.walletAddress.slice(-6)}` : w.walletAddress}${w.label ? ` (${w.label})` : ''}`}
-                            </option>
-                          ))}
-                        </TextField>
-                        <TextField
-                          value={cryptoPayoutWallet}
-                          onChange={(e) => setCryptoPayoutWallet(e.target.value)}
-                          placeholder={t('cryptoWithdrawAddressPlaceholder')}
-                          fullWidth
-                          size="small"
-                          inputProps={{ maxLength: 64 }}
-                          sx={{
-                            mt: 1,
-                            '& .MuiOutlinedInput-root': {
-                              bgcolor: 'grey.800',
-                              color: 'grey.100',
-                              fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
-                              fontSize: '0.8125rem',
-                              boxShadow: (theme) => `0 0 0 1px ${theme.palette.warning.main}40`,
-                              '& fieldset': { borderColor: 'warning.main', borderWidth: 2 },
-                              '&:hover fieldset': { borderColor: 'warning.light' },
-                              '&.Mui-focused fieldset': { borderColor: 'warning.main' },
-                            },
-                          }}
-                          InputProps={{
-                            endAdornment: (
-                              <InputAdornment position="end">
-                                <IconButton
-                                  onClick={copyCryptoAddress}
-                                  edge="end"
-                                  size="small"
-                                  aria-label={t('cryptoWithdrawCopy')}
-                                  sx={{ color: 'warning.light' }}
-                                  disabled={!cryptoPayoutWallet.trim()}
-                                >
-                                  <ContentCopyIcon fontSize="small" />
-                                </IconButton>
-                              </InputAdornment>
-                            ),
-                          }}
-                        />
-                        {cryptoCopiedHint && (
-                          <Typography variant="caption" sx={{ color: 'success.light', display: 'block', mt: 0.5 }}>
-                            {t('cryptoWithdrawCopied')}
-                          </Typography>
-                        )}
                         <Box
                           sx={{
-                            mt: 1.5,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'space-between',
-                            py: 1.25,
-                            px: 1.5,
-                            bgcolor: 'grey.800',
-                            borderRadius: 1,
-                            border: '1px solid',
-                            borderColor: 'grey.700',
+                            gridColumn: { xs: '1', md: '1' },
+                            borderRight: { md: '1px solid' },
+                            borderColor: { md: 'grey.700' },
+                            pr: { md: 3 },
+                            pb: { xs: 0, md: 0 },
                           }}
                         >
-                          <Typography variant="body2" color="grey.200">
-                            {t('cryptoWithdrawNetworkLabel')}
+                          <Typography variant="caption" fontWeight={600} color="grey.500" sx={{ letterSpacing: '0.08em', textTransform: 'uppercase', display: 'block' }}>
+                            {t('cryptoWithdrawStepAddress')}
                           </Typography>
-                          <Typography variant="body2" fontWeight={600} color="grey.100">
-                            TRX Tron (TRC20)
+                          <MuiLink
+                            component="button"
+                            type="button"
+                            underline="always"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              document.getElementById('crypto-wallet-address-input')?.focus?.();
+                            }}
+                            sx={{
+                              mt: 0.75,
+                              p: 0,
+                              border: 'none',
+                              background: 'none',
+                              cursor: 'pointer',
+                              font: 'inherit',
+                              fontSize: '0.875rem',
+                              fontWeight: 500,
+                              color: 'primary.main',
+                              textAlign: 'left',
+                              display: 'block',
+                            }}
+                          >
+                            {t('cryptoWithdrawTabAddress')}
+                          </MuiLink>
+                          <Typography variant="caption" color="grey.500" sx={{ display: 'block', mt: 0.5 }}>
+                            {t('useSavedCryptoWallet')}
                           </Typography>
-                        </Box>
-                        <Typography variant="caption" sx={{ color: 'grey.500', display: 'block', mt: 1.5, lineHeight: 1.5 }}>
-                          {t('cryptoWithdrawCaution')}
-                        </Typography>
-                      </Box>
-
-                      <Box>
-                        <Typography variant="body2" fontWeight={600} color="grey.300">
-                          {t('cryptoWithdrawStepAmount')}
-                        </Typography>
-                        <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'stretch', mt: 1.5 }}>
                           <TextField
-                            type="number"
-                            placeholder={t('cryptoWithdrawAmountPlaceholder', { minGross: CRYPTO_MIN_GROSS_USD.toFixed(2) })}
-                            value={cryptoPayoutAmount}
-                            onChange={(e) => setCryptoPayoutAmount(e.target.value)}
-                            inputProps={{ min: CRYPTO_MIN_GROSS_USD, step: 'any' }}
+                            id="crypto-saved-wallet-select"
+                            select
+                            value={selectedSavedWalletId}
+                            onChange={(e) => handleSavedWalletSelect(e.target.value)}
+                            SelectProps={{ native: true }}
+                            disabled={savedMethodsLoading || savedWallets.length === 0}
+                            variant="outlined"
                             size="small"
                             fullWidth
-                            sx={cryptoHighlightFieldSx}
+                            inputProps={{ 'aria-label': t('useSavedCryptoWallet') }}
+                            sx={{
+                              mt: 1,
+                              '& .MuiOutlinedInput-root': {
+                                bgcolor: 'grey.800',
+                                color: 'grey.100',
+                                '& fieldset': { borderColor: 'grey.700' },
+                              },
+                              '& .MuiNativeSelect-select': { py: 1 },
+                            }}
+                          >
+                            <option value="">{t('manualEntry')}</option>
+                            {savedWallets.map((w) => (
+                              <option key={w.id} value={w.id}>
+                                {`${w.walletAddress.length > 16 ? `${w.walletAddress.slice(0, 8)}...${w.walletAddress.slice(-6)}` : w.walletAddress}${w.label ? ` (${w.label})` : ''}`}
+                              </option>
+                            ))}
+                          </TextField>
+                          {savedWallets.length === 0 ? (
+                            <Typography variant="caption" color="grey.600" sx={{ display: 'block', mt: 0.5 }}>
+                              {t('noSavedCryptoWallets')}
+                            </Typography>
+                          ) : (
+                            <Typography variant="caption" color="grey.600" sx={{ display: 'block', mt: 0.5 }}>
+                              {t('savedWalletAutofillHint')}
+                            </Typography>
+                          )}
+                          <TextField
+                            id="crypto-wallet-address-input"
+                            value={cryptoPayoutWallet}
+                            onChange={(e) => setCryptoPayoutWallet(e.target.value)}
+                            placeholder={t('cryptoWithdrawAddressPlaceholder')}
+                            fullWidth
+                            size="small"
+                            inputProps={{ maxLength: 34 }}
+                            sx={cryptoWalletFieldSx}
                             InputProps={{
                               endAdornment: (
-                                <InputAdornment position="end" sx={{ color: 'grey.500', mr: 0 }}>
-                                  USDT
+                                <InputAdornment position="end" sx={{ gap: 0.25 }}>
+                                  <IconButton
+                                    onClick={pasteCryptoAddress}
+                                    edge="end"
+                                    size="small"
+                                    aria-label={t('cryptoWithdrawPaste')}
+                                    sx={{ color: 'grey.400' }}
+                                  >
+                                    <ContentPasteIcon fontSize="small" />
+                                  </IconButton>
+                                  <IconButton
+                                    onClick={copyCryptoAddress}
+                                    edge="end"
+                                    size="small"
+                                    aria-label={t('cryptoWithdrawCopy')}
+                                    sx={{ color: 'grey.400' }}
+                                    disabled={!cryptoPayoutWallet.trim()}
+                                  >
+                                    <ContentCopyIcon fontSize="small" />
+                                  </IconButton>
                                 </InputAdornment>
                               ),
                             }}
                           />
-                          <Button
-                            variant="contained"
-                            onClick={() => maxCryptoPayoutStr && setCryptoPayoutAmount(maxCryptoPayoutStr)}
-                            disabled={
-                              cryptoPayoutLoading || !maxCryptoPayoutStr || totalAvailableForCrypto < minCryptoTotalNeeded
-                            }
+                          {cryptoCopiedHint && (
+                            <Typography variant="caption" sx={{ color: 'success.light', display: 'block', mt: 0.5 }}>
+                              {t('cryptoWithdrawCopied')}
+                            </Typography>
+                          )}
+                          <Box
                             sx={{
-                              textTransform: 'uppercase',
-                              flexShrink: 0,
-                              minWidth: 72,
-                              fontWeight: 700,
-                              bgcolor: 'warning.main',
-                              color: 'grey.900',
-                              '&:hover': { bgcolor: 'warning.dark' },
+                              mt: 1.5,
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'space-between',
+                              py: 1.25,
+                              px: 1.5,
+                              bgcolor: 'grey.800',
+                              borderRadius: 1,
+                              border: '1px solid',
+                              borderColor: 'grey.700',
                             }}
                           >
-                            {t('withdrawMax')}
-                          </Button>
-                        </Box>
-                        {cryptoTotalDebitDisplay > 0 && (
-                          <Box sx={{ mt: 1.5, p: 1.25, bgcolor: 'grey.800', borderRadius: 1, border: '1px solid', borderColor: 'grey.700' }}>
-                            <Typography variant="caption" color="grey.400" display="block">
-                              {t('cryptoWithdrawSummaryReceive')}:{' '}
-                              <Box component="span" color="warning.light" fontWeight={700}>
-                                {cryptoNetReceiveDisplay.toFixed(2)} USDT
-                              </Box>
+                            <Typography variant="body2" color="grey.400">
+                              {t('cryptoWithdrawNetworkLabel')}
                             </Typography>
-                            <Typography variant="caption" color="grey.400" display="block" sx={{ mt: 0.5 }}>
-                              {t('cryptoWithdrawSummaryFee')}: {cryptoFeeDisplay.toFixed(2)} USD
-                            </Typography>
-                            <Typography variant="caption" color="grey.300" display="block" sx={{ mt: 0.5 }} fontWeight={600}>
-                              {t('cryptoWithdrawSummaryTotal')}: {cryptoTotalDebitDisplay.toFixed(2)} USD
+                            <Typography variant="body2" fontWeight={600} color="grey.100">
+                              TRX Tron (TRC20)
                             </Typography>
                           </Box>
-                        )}
-                        {cryptoTotalDebitDisplay > 0 && (
-                          <Typography variant="caption" color="grey.500" sx={{ display: 'block', mt: 0.75, lineHeight: 1.45 }}>
-                            {t('cryptoWithdrawFeeNote')}
-                          </Typography>
-                        )}
-                        <Typography variant="caption" color="grey.500" sx={{ display: 'block', mt: 1 }}>
-                          {t('youHaveInCurrency', { amount: totalAvailableForCrypto.toFixed(2), currency: 'USD' })}
-                        </Typography>
-                        <Typography variant="caption" sx={{ color: 'grey.500', display: 'block', mt: 1.5, lineHeight: 1.5 }}>
-                          {t('cryptoWithdrawTestAdvice')}
-                        </Typography>
-                      </Box>
+                          <Alert
+                            severity="warning"
+                            icon={<WarningAmberIcon fontSize="small" />}
+                            sx={{
+                              mt: 1.5,
+                              py: 0.75,
+                              bgcolor: 'rgba(237, 108, 2, 0.12)',
+                              color: 'warning.light',
+                              border: '1px solid',
+                              borderColor: 'rgba(237, 108, 2, 0.35)',
+                              '& .MuiAlert-message': { width: '100%', fontSize: '0.75rem', lineHeight: 1.5 },
+                            }}
+                          >
+                            {t('cryptoWithdrawCaution')}
+                          </Alert>
+                        </Box>
 
-                        <Box sx={{ gridColumn: { xs: '1', md: '1 / -1' } }}>
+                        <Box sx={{ gridColumn: { xs: '1', md: '2' }, pl: { md: 3 } }}>
+                          <Typography variant="caption" fontWeight={600} color="grey.500" sx={{ letterSpacing: '0.08em', textTransform: 'uppercase', display: 'block' }}>
+                            {t('cryptoWithdrawStepAmount')}
+                          </Typography>
+                          <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'stretch', mt: 1.5 }}>
+                            <TextField
+                              type="number"
+                              placeholder={t('cryptoWithdrawMinPlaceholder', { minGross: CRYPTO_MIN_GROSS_USD.toFixed(2) })}
+                              value={cryptoPayoutAmount}
+                              onChange={(e) => setCryptoPayoutAmount(e.target.value)}
+                              inputProps={{ min: CRYPTO_MIN_GROSS_USD, step: 'any' }}
+                              size="small"
+                              fullWidth
+                              sx={cryptoHighlightFieldSx}
+                              InputProps={{
+                                endAdornment: (
+                                  <InputAdornment position="end" sx={{ color: 'grey.500', mr: 0 }}>
+                                    USDT
+                                  </InputAdornment>
+                                ),
+                              }}
+                            />
+                            <Button
+                              variant="outlined"
+                              onClick={() => maxCryptoPayoutStr && setCryptoPayoutAmount(maxCryptoPayoutStr)}
+                              disabled={
+                                cryptoPayoutLoading || !maxCryptoPayoutStr || totalAvailableForCrypto < minCryptoTotalNeeded
+                              }
+                              sx={{
+                                textTransform: 'uppercase',
+                                flexShrink: 0,
+                                minWidth: 72,
+                                fontWeight: 700,
+                                color: 'grey.100',
+                                borderColor: 'grey.500',
+                                bgcolor: 'transparent',
+                                '&:hover': { borderColor: 'grey.300', bgcolor: 'action.hover' },
+                              }}
+                            >
+                              {t('withdrawMax')}
+                            </Button>
+                          </Box>
+                          <Box sx={{ mt: 1.5, p: 1.25, bgcolor: 'grey.800', borderRadius: 1, border: '1px solid', borderColor: 'grey.700' }}>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 1 }}>
+                              <Typography variant="body2" color="grey.400">
+                                {t('cryptoWithdrawSummaryReceive')}
+                              </Typography>
+                              <Typography variant="body2" fontWeight={600} color={cryptoSummaryValid ? 'grey.100' : 'grey.600'} sx={{ fontVariantNumeric: 'tabular-nums' }}>
+                                {cryptoSummaryValid ? `${cryptoNetReceiveDisplay.toFixed(2)} USDT` : '—'}
+                              </Typography>
+                            </Box>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 1, mt: 1 }}>
+                              <Typography variant="body2" color="grey.400">
+                                {t('cryptoWithdrawSummaryFee')}
+                              </Typography>
+                              <Typography variant="body2" color={cryptoSummaryValid ? 'grey.300' : 'grey.600'} sx={{ fontVariantNumeric: 'tabular-nums' }}>
+                                {cryptoSummaryValid ? `${cryptoFeeDisplay.toFixed(2)} USD` : '—'}
+                              </Typography>
+                            </Box>
+                            <Box sx={{ borderTop: '1px solid', borderColor: 'grey.700', my: 1.25 }} />
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 1 }}>
+                              <Typography variant="body2" color="grey.300" fontWeight={700}>
+                                {t('cryptoWithdrawSummaryTotal')}
+                              </Typography>
+                              <Typography variant="body2" fontWeight={700} color={cryptoSummaryValid ? 'grey.100' : 'grey.600'} sx={{ fontVariantNumeric: 'tabular-nums' }}>
+                                {cryptoSummaryValid ? `${cryptoTotalDebitDisplay.toFixed(2)} USD` : '—'}
+                              </Typography>
+                            </Box>
+                          </Box>
+                          {cryptoSummaryValid && (
+                            <Typography variant="caption" color="grey.500" sx={{ display: 'block', mt: 0.75, lineHeight: 1.45 }}>
+                              {t('cryptoWithdrawFeeNote')}
+                            </Typography>
+                          )}
+                          <Typography variant="caption" color="grey.500" sx={{ display: 'block', mt: 1, lineHeight: 1.5 }}>
+                            {t.rich('youHaveInCurrencyRich', {
+                              amountCurrency: `${totalAvailableForCrypto.toFixed(2)} USD`,
+                              bold: (chunks) => <Box component="strong" sx={{ fontWeight: 700, color: 'grey.200' }}>{chunks}</Box>,
+                            })}
+                          </Typography>
+                          <Typography variant="caption" sx={{ color: 'grey.500', display: 'block', mt: 1.5, lineHeight: 1.5 }}>
+                            {t('cryptoWithdrawTestAdvice')}
+                          </Typography>
+                        </Box>
+
+                        <Box sx={{ gridColumn: { xs: '1', md: '1 / -1' }, pt: 1 }}>
                           <Button
-                            variant="contained"
+                            variant="outlined"
                             fullWidth
                             onClick={handleCryptoPayoutRequest}
                             disabled={
@@ -1572,12 +1668,12 @@ export default function BalancePage() {
                             }
                             sx={{
                               textTransform: 'none',
-                              mt: 0,
                               py: 1.25,
-                              bgcolor: 'warning.main',
-                              color: 'grey.900',
                               fontWeight: 600,
-                              '&:hover': { bgcolor: 'warning.dark' },
+                              color: 'grey.100',
+                              borderColor: 'grey.500',
+                              bgcolor: 'grey.900',
+                              '&:hover': { borderColor: 'grey.300', bgcolor: 'grey.800' },
                             }}
                           >
                             {cryptoPayoutLoading ? t('withdrawSubmitting') : t('withdrawCryptoSubmit')}
