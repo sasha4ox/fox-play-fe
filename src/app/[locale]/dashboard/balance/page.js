@@ -1082,6 +1082,7 @@ export default function BalancePage() {
                       label={t('useSavedCard')}
                       value={selectedSavedCardId}
                       onChange={(e) => handleSavedCardSelect(e.target.value)}
+                      InputLabelProps={{ shrink: true }}
                       SelectProps={{ native: true }}
                       disabled={savedMethodsLoading || savedCards.length === 0}
                       helperText={savedCards.length === 0 ? t('noSavedCards') : t('savedCardAutofillHint')}
@@ -1331,6 +1332,7 @@ export default function BalancePage() {
                           label={t('useSavedCryptoWallet')}
                           value={selectedSavedWalletId}
                           onChange={(e) => handleSavedWalletSelect(e.target.value)}
+                          InputLabelProps={{ shrink: true }}
                           SelectProps={{ native: true }}
                           disabled={savedMethodsLoading || savedWallets.length === 0}
                           variant="outlined"

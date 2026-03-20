@@ -17,7 +17,7 @@ import DialogContent from '@mui/material/DialogContent';
 import TextField from '@mui/material/TextField';
 import IconButton from '@mui/material/IconButton';
 import Switch from '@mui/material/Switch';
-import FormControlLabel from '@mui/material/FormControlLabel';
+import Divider from '@mui/material/Divider';
 import CloseIcon from '@mui/icons-material/Close';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
@@ -183,261 +183,187 @@ export default function ProfilePage() {
     );
   }
 
+  const sectionSx = {
+    border: '1px solid',
+    borderColor: 'divider',
+    borderRadius: 2,
+    p: { xs: 2, sm: 2.5 },
+    mb: 2,
+    bgcolor: 'background.paper',
+  };
+
+  const rowSx = {
+    display: 'flex',
+    alignItems: { xs: 'flex-start', sm: 'center' },
+    justifyContent: 'space-between',
+    gap: 1.5,
+    py: 1.5,
+    flexDirection: { xs: 'column', sm: 'row' },
+  };
+
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', py: 4, px: 2 }}>
-      <Container maxWidth="sm">
+    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', py: { xs: 2, sm: 4 }, px: 2 }}>
+      <Container maxWidth="md">
         <Link href={`${base}/dashboard`} style={{ textDecoration: 'none' }}>
           <MuiLink component="span" color="secondary" sx={{ display: 'inline-block', mb: 2 }}>
             ← {t('dashboard')}
           </MuiLink>
         </Link>
-        <Typography variant="h5" fontWeight={600} sx={{ mb: 2 }}>
+        <Typography variant="h5" fontWeight={700} sx={{ mb: 2.5 }}>
           {t('title')}
         </Typography>
         {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
         {saveError && <Alert severity="error" sx={{ mb: 2 }} onClose={() => setSaveError(null)}>{saveError}</Alert>}
 
-        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
-          <input
-            type="file"
-            ref={avatarInputRef}
-            accept="image/*"
-            style={{ display: 'none' }}
-            onChange={handleAvatarChange}
-          />
-          <Box sx={{ position: 'relative' }}>
-            <Avatar
-              src={avatarUrl}
-              alt={profile?.nickname || profile?.email || tCommon('user')}
-              sx={{
-                width: 120,
-                height: 120,
-                bgcolor: 'secondary.main',
-                fontSize: '3rem',
-              }}
-            >
-              {!avatarUrl ? initial : null}
-            </Avatar>
-            <Button
-              size="small"
-              variant="outlined"
-              sx={{
-                position: 'absolute',
-                bottom: 0,
-                right: 0,
-                minWidth: 36,
-                height: 36,
-                borderRadius: '50%',
-              }}
-              disabled={avatarUploading}
-              onClick={() => avatarInputRef.current?.click()}
-            >
-              {avatarUploading ? '…' : '📷'}
-            </Button>
-          </Box>
-
-          <Box sx={{ width: '100%', maxWidth: 360 }}>
-            <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 0.5 }}>
-              {t('nickname')}
-            </Typography>
-            <Typography variant="body1" fontWeight={500}>
-              {displayNickname || '—'}
-            </Typography>
-          </Box>
-          <Typography variant="body2" color="text.secondary">
-            {profile?.email}
-          </Typography>
-        </Box>
-
-        <Typography variant="subtitle2" color="text.secondary" sx={{ mt: 3, mb: 0.5 }}>
-          {t('country')}
-        </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-          {t('selectCountry')}
-        </Typography>
-        <Box sx={{ maxWidth: 320 }}>
-          <CountrySelect
-            selected={profile?.countryCode ?? ''}
-            onSelect={(code) => {
-              if (!token) return;
-              updateProfile({ countryCode: code }, token).then(() => refetch()).catch(() => {});
-            }}
-            placeholder={t('selectCountry')}
-            fullWidth
-          />
-        </Box>
-
-        <Typography variant="subtitle1" fontWeight={600} sx={{ mt: 4, mb: 1 }}>
-          {t('security')}
-        </Typography>
-        <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
-          {t('twoFactorAuth')}
-        </Typography>
-        {profile?.twoFactorEnabled ? (
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mb: 2 }}>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-              {t('twoFactorEnabled')}
-            </Typography>
-            <Button
-              variant="outlined"
-              color="secondary"
-              onClick={() => {
-                setDisable2FACode('');
-                setDisable2FAError(null);
-                setDisable2FAModalOpen(true);
-              }}
-              sx={{ textTransform: 'none', alignSelf: 'flex-start' }}
-            >
-              {t('disable2FA')}
-            </Button>
-          </Box>
-        ) : (
-          <Box sx={{ mb: 2 }}>
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={() => setEnable2FAModalOpen(true)}
-              sx={{ textTransform: 'none' }}
-            >
-              {t('enable2FA')}
-            </Button>
-          </Box>
-        )}
-
-        <Typography variant="subtitle2" color="text.secondary" sx={{ mt: 2, mb: 1 }}>
-          {t('resetPassword')}
-        </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-          {t('resetPasswordHint')}
-        </Typography>
-        <Button
-          variant="outlined"
-          color="secondary"
-          onClick={() => {
-            setResetPasswordEmail(profile?.email ?? '');
-            setResetPasswordSent(false);
-            setResetPasswordError(null);
-            setResetPasswordModalOpen(true);
-          }}
-          sx={{ textTransform: 'none', mb: 2 }}
-        >
-          {t('sendResetLink')}
-        </Button>
-
-        <Typography variant="subtitle1" fontWeight={600} sx={{ mt: 4, mb: 1 }}>
-          {t('notifications')}
-        </Typography>
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0, mb: 2 }}>
-          <FormControlLabel
-            control={
-              <Switch
-                checked={!!profile?.notifyByEmail}
-                onChange={(_, checked) => {
-                  if (!token) return;
-                  updateProfile({ notifyByEmail: checked }, token).then(() => refetch()).catch(() => {});
-                }}
-                color="primary"
-              />
-            }
-            label={t('notifyByEmail')}
-          />
-          <FormControlLabel
-            control={
-              <Switch
-                checked={!!profile?.notifyByTelegram}
-                onChange={(_, checked) => {
-                  if (!token) return;
-                  updateProfile({ notifyByTelegram: checked }, token).then(() => refetch()).catch(() => {});
-                }}
-                color="primary"
-              />
-            }
-            label={t('notifyByTelegram')}
-          />
-        </Box>
-        <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
-          {profile?.telegramConnected ? t('telegramConnected') : t('connectTelegramHint')}
-        </Typography>
-        {profile?.telegramConnected ? (
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-            <Typography variant="body2" color="text.secondary">
-              {t('telegramConnected')}
-            </Typography>
-            <Button
-              variant="outlined"
-              color="secondary"
-              size="small"
-              disabled={telegramDisconnectLoading}
-              onClick={() => {
-                if (!token) return;
-                setTelegramDisconnectLoading(true);
-                disconnectTelegram(token)
-                  .then(() => refetch())
-                  .catch(() => {})
-                  .finally(() => setTelegramDisconnectLoading(false));
-              }}
-              sx={{ textTransform: 'none' }}
-            >
-              {telegramDisconnectLoading ? '…' : t('disconnectTelegram')}
-            </Button>
-          </Box>
-        ) : profile?.telegramBotUsername ? (
-          <Button
-            variant="contained"
-            color="primary"
-            component="a"
-            href={`https://t.me/${profile.telegramBotUsername}?start=${profile?.id ?? ''}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            sx={{ textTransform: 'none', mb: 2 }}
-          >
-            {t('connectTelegram')}
-          </Button>
-        ) : null}
-
-        <Typography variant="subtitle1" fontWeight={600} sx={{ mt: 3, mb: 1 }}>
-          {t('savedPaymentMethods')}
-        </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-          {t('savedCardsWalletsHint')}
-        </Typography>
-        {savedMethodsLoading ? (
-          <Skeleton height={80} sx={{ mb: 2 }} />
-        ) : (
-          <Box sx={{ mb: 2 }}>
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 1 }}>
-              <Button variant="outlined" size="small" onClick={() => { setEditCardId(null); setAddCardNumber(''); setAddCardHolder(''); setAddCardLabel(''); setAddCardError(null); setAddCardModalOpen(true); }} sx={{ textTransform: 'none' }}>
-                {t('addCard')}
-              </Button>
-              <Button variant="outlined" size="small" onClick={() => { setEditWalletId(null); setAddWalletAddress(''); setAddWalletLabel(''); setAddWalletError(null); setAddWalletModalOpen(true); }} sx={{ textTransform: 'none' }}>
-                {t('addCryptoWallet')}
-              </Button>
+        <Box sx={sectionSx}>
+          <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 700 }}>{t('account')}</Typography>
+          <Box sx={{ ...rowSx, pt: 1 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+              <input type="file" ref={avatarInputRef} accept="image/*" style={{ display: 'none' }} onChange={handleAvatarChange} />
+              <Box sx={{ position: 'relative' }}>
+                <Avatar src={avatarUrl} alt={profile?.nickname || profile?.email || tCommon('user')} sx={{ width: 52, height: 52, bgcolor: 'secondary.main', fontSize: '1.25rem' }}>
+                  {!avatarUrl ? initial : null}
+                </Avatar>
+                <Button size="small" variant="outlined" sx={{ position: 'absolute', bottom: -4, right: -4, minWidth: 24, width: 24, height: 24, borderRadius: '50%', p: 0, fontSize: 12 }} disabled={avatarUploading} onClick={() => avatarInputRef.current?.click()}>
+                  {avatarUploading ? '…' : '✎'}
+                </Button>
+              </Box>
+              <Box>
+                <Typography variant="body1" fontWeight={600}>{displayNickname || '—'}</Typography>
+                <Typography variant="body2" color="text.secondary">{profile?.email}</Typography>
+              </Box>
             </Box>
-            {savedCards.length === 0 && savedWallets.length === 0 ? (
-              <Typography variant="body2" color="text.secondary">No saved cards or wallets yet.</Typography>
+          </Box>
+          <Divider />
+          <Box sx={rowSx}>
+            <Box>
+              <Typography variant="caption" color="text.secondary">{t('nickname')}</Typography>
+              <Typography variant="body2" fontWeight={600}>{displayNickname || '—'}</Typography>
+            </Box>
+            <Button variant="outlined" color="secondary" size="small" sx={{ textTransform: 'none' }}>{t('edit')}</Button>
+          </Box>
+          <Divider />
+          <Box sx={rowSx}>
+            <Box>
+              <Typography variant="caption" color="text.secondary">{t('country')}</Typography>
+              <Typography variant="body2" color="text.secondary">{t('selectCountry')}</Typography>
+            </Box>
+            <Box sx={{ minWidth: { xs: '100%', sm: 220 }, width: { xs: '100%', sm: 'auto' } }}>
+              <CountrySelect
+                selected={profile?.countryCode ?? ''}
+                onSelect={(code) => {
+                  if (!token) return;
+                  updateProfile({ countryCode: code }, token).then(() => refetch()).catch(() => {});
+                }}
+                placeholder={t('selectCountry')}
+                fullWidth
+              />
+            </Box>
+          </Box>
+        </Box>
+
+        <Box sx={sectionSx}>
+          <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 700 }}>{t('security')}</Typography>
+          <Box sx={{ ...rowSx, pt: 1 }}>
+            <Box>
+              <Typography variant="body2" fontWeight={600}>{t('twoFactorAuth')}</Typography>
+              <Typography variant="caption" color={profile?.twoFactorEnabled ? 'success.main' : 'text.secondary'}>{profile?.twoFactorEnabled ? t('enabled') : t('disabled')}</Typography>
+            </Box>
+            {profile?.twoFactorEnabled ? (
+              <Button variant="outlined" color="secondary" onClick={() => { setDisable2FACode(''); setDisable2FAError(null); setDisable2FAModalOpen(true); }} sx={{ textTransform: 'none' }}>
+                {t('disable2FA')}
+              </Button>
             ) : (
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                {savedCards.map((c) => (
-                  <Box key={c.id} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', py: 1, px: 1.5, bgcolor: 'action.hover', borderRadius: 1 }}>
-                    <Typography variant="body2">
-                      {t('cardType')}: •••• {c.last4} – {c.cardHolderName}
-                      {c.label ? ` (${c.label})` : ''}
-                    </Typography>
+              <Button variant="outlined" color="secondary" onClick={() => setEnable2FAModalOpen(true)} sx={{ textTransform: 'none' }}>
+                {t('enable2FA')}
+              </Button>
+            )}
+          </Box>
+          <Divider />
+          <Box sx={rowSx}>
+            <Box>
+              <Typography variant="body2" fontWeight={600}>{t('resetPassword')}</Typography>
+              <Typography variant="caption" color="text.secondary">{t('resetPasswordHint')}</Typography>
+            </Box>
+            <Button
+              variant="outlined"
+              color="secondary"
+              onClick={() => {
+                setResetPasswordEmail(profile?.email ?? '');
+                setResetPasswordSent(false);
+                setResetPasswordError(null);
+                setResetPasswordModalOpen(true);
+              }}
+              sx={{ textTransform: 'none' }}
+            >
+              {t('reset')}
+            </Button>
+          </Box>
+        </Box>
+
+        <Box sx={sectionSx}>
+          <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 700 }}>{t('notifications')}</Typography>
+          <Box sx={{ ...rowSx, pt: 1, alignItems: 'center', flexDirection: 'row' }}>
+            <Box>
+              <Typography variant="body2" fontWeight={600}>{t('email')}</Typography>
+              <Typography variant="caption" color="text.secondary">{t('notifyByEmail')}</Typography>
+            </Box>
+            <Switch checked={!!profile?.notifyByEmail} onChange={(_, checked) => { if (!token) return; updateProfile({ notifyByEmail: checked }, token).then(() => refetch()).catch(() => {}); }} color="primary" />
+          </Box>
+          <Divider />
+          <Box sx={{ ...rowSx, alignItems: 'center', flexDirection: 'row' }}>
+            <Box>
+              <Typography variant="body2" fontWeight={600}>Telegram</Typography>
+              <Typography variant="caption" color="text.secondary">{profile?.telegramConnected ? t('telegramConnected') : t('connectTelegramHint')}</Typography>
+            </Box>
+            <Switch checked={!!profile?.notifyByTelegram} onChange={(_, checked) => { if (!token) return; updateProfile({ notifyByTelegram: checked }, token).then(() => refetch()).catch(() => {}); }} color="primary" />
+          </Box>
+          <Divider />
+          <Box sx={rowSx}>
+            <Typography variant="body2" color="text.secondary">{t('telegramAccount')}</Typography>
+            {profile?.telegramConnected ? (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Typography variant="caption" color="success.main" sx={{ fontWeight: 600 }}>{t('connected')}</Typography>
+                <Button variant="outlined" color="secondary" size="small" disabled={telegramDisconnectLoading} onClick={() => { if (!token) return; setTelegramDisconnectLoading(true); disconnectTelegram(token).then(() => refetch()).catch(() => {}).finally(() => setTelegramDisconnectLoading(false)); }} sx={{ textTransform: 'none' }}>
+                  {telegramDisconnectLoading ? '…' : t('disconnectTelegram')}
+                </Button>
+              </Box>
+            ) : profile?.telegramBotUsername ? (
+              <Button variant="outlined" color="secondary" component="a" href={`https://t.me/${profile.telegramBotUsername}?start=${profile?.id ?? ''}`} target="_blank" rel="noopener noreferrer" sx={{ textTransform: 'none' }}>
+                {t('connectTelegram')}
+              </Button>
+            ) : (
+              <Typography variant="caption" color="text.secondary">{t('notConnected')}</Typography>
+            )}
+          </Box>
+        </Box>
+
+        <Box sx={sectionSx}>
+          <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 700 }}>{t('savedPaymentMethods')}</Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, mb: 1.5 }}>{t('savedCardsWalletsHint')}</Typography>
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 1.5 }}>
+            <Button variant="outlined" size="small" onClick={() => { setEditCardId(null); setAddCardNumber(''); setAddCardHolder(''); setAddCardLabel(''); setAddCardError(null); setAddCardModalOpen(true); }} sx={{ textTransform: 'none' }}>+ {t('addCard')}</Button>
+            <Button variant="outlined" size="small" onClick={() => { setEditWalletId(null); setAddWalletAddress(''); setAddWalletLabel(''); setAddWalletError(null); setAddWalletModalOpen(true); }} sx={{ textTransform: 'none' }}>+ {t('addCryptoWallet')}</Button>
+          </Box>
+          {savedMethodsLoading ? (
+            <Skeleton height={80} />
+          ) : savedCards.length === 0 && savedWallets.length === 0 ? (
+            <Typography variant="body2" color="text.secondary">{t('noSavedMethods')}</Typography>
+          ) : (
+            <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+              {savedCards.map((c, idx) => (
+                <Box key={c.id}>
+                  {idx > 0 && <Divider />}
+                  <Box sx={{ ...rowSx, py: 1.25 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                      <Avatar variant="rounded" sx={{ width: 26, height: 26, bgcolor: 'action.hover', color: 'text.secondary', fontSize: 14 }}>💳</Avatar>
+                      <Box>
+                        <Typography variant="body2" fontWeight={600}>•••• {c.last4}</Typography>
+                        <Typography variant="caption" color="text.secondary">{c.cardHolderName}{c.label ? ` - ${c.label}` : ''}</Typography>
+                      </Box>
+                    </Box>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                      <IconButton
-                        size="small"
-                        aria-label="Edit card"
-                        onClick={() => {
-                          setEditCardId(c.id);
-                          const digits = (c.cardNumber || '').toString().replace(/\D/g, '');
-                          const grouped = digits.match(/.{1,4}/g) || [];
-                          setAddCardNumber(grouped.join(' '));
-                          setAddCardHolder(c.cardHolderName || '');
-                          setAddCardLabel(c.label || '');
-                          setAddCardError(null);
-                          setAddCardModalOpen(true);
-                        }}
-                      >
+                      <IconButton size="small" aria-label="Edit card" onClick={() => { setEditCardId(c.id); const digits = (c.cardNumber || '').toString().replace(/\D/g, ''); const grouped = digits.match(/.{1,4}/g) || []; setAddCardNumber(grouped.join(' ')); setAddCardHolder(c.cardHolderName || ''); setAddCardLabel(c.label || ''); setAddCardError(null); setAddCardModalOpen(true); }}>
                         <EditIcon fontSize="small" />
                       </IconButton>
                       <IconButton size="small" aria-label="Delete card" onClick={() => deleteSavedCard(c.id, token).then(loadSavedMethods).catch(() => {})}>
@@ -445,26 +371,21 @@ export default function ProfilePage() {
                       </IconButton>
                     </Box>
                   </Box>
-                ))}
-                {savedWallets.map((w) => (
-                  <Box key={w.id} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', py: 1, px: 1.5, bgcolor: 'action.hover', borderRadius: 1 }}>
-                    <Typography variant="body2" sx={{ wordBreak: 'break-all' }}>
-                      {t('cryptoWalletType')}: 
-                      {w.walletAddress.length > 16 ? `${w.walletAddress.slice(0, 8)}…${w.walletAddress.slice(-6)}` : w.walletAddress}
-                      {w.label ? ` (${w.label})` : ''}
-                    </Typography>
+                </Box>
+              ))}
+              {savedWallets.map((w) => (
+                <Box key={w.id}>
+                  <Divider />
+                  <Box sx={{ ...rowSx, py: 1.25 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                      <Avatar variant="rounded" sx={{ width: 26, height: 26, bgcolor: 'action.hover', color: 'text.secondary', fontSize: 14 }}>◉</Avatar>
+                      <Box>
+                        <Typography variant="body2" fontWeight={600}>TRC20 wallet</Typography>
+                        <Typography variant="caption" color="text.secondary" sx={{ wordBreak: 'break-all' }}>{w.walletAddress.length > 20 ? `${w.walletAddress.slice(0, 10)}…${w.walletAddress.slice(-8)}` : w.walletAddress}{w.label ? ` - ${w.label}` : ''}</Typography>
+                      </Box>
+                    </Box>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                      <IconButton
-                        size="small"
-                        aria-label="Edit wallet"
-                        onClick={() => {
-                          setEditWalletId(w.id);
-                          setAddWalletAddress(w.walletAddress || '');
-                          setAddWalletLabel(w.label || '');
-                          setAddWalletError(null);
-                          setAddWalletModalOpen(true);
-                        }}
-                      >
+                      <IconButton size="small" aria-label="Edit wallet" onClick={() => { setEditWalletId(w.id); setAddWalletAddress(w.walletAddress || ''); setAddWalletLabel(w.label || ''); setAddWalletError(null); setAddWalletModalOpen(true); }}>
                         <EditIcon fontSize="small" />
                       </IconButton>
                       <IconButton size="small" aria-label="Delete wallet" onClick={() => deleteSavedWallet(w.id, token).then(loadSavedMethods).catch(() => {})}>
@@ -472,15 +393,11 @@ export default function ProfilePage() {
                       </IconButton>
                     </Box>
                   </Box>
-                ))}
-              </Box>
-            )}
-          </Box>
-        )}
-
-        <Typography variant="body2" color="text.secondary" sx={{ mt: 3 }}>
-          {t('moreLater')}
-        </Typography>
+                </Box>
+              ))}
+            </Box>
+          )}
+        </Box>
       </Container>
 
       <Enable2FAModal
