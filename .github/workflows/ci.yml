@@ -16,6 +16,7 @@ jobs:
           node-version: "22"
           cache: pnpm
           cache-dependency-path: pnpm-lock.yaml
+          pnpm-version: "9"
       - run: corepack enable
       - run: pnpm install --frozen-lockfile
       - name: ESLint
@@ -31,6 +32,7 @@ jobs:
           node-version: "22"
           cache: pnpm
           cache-dependency-path: pnpm-lock.yaml
+          pnpm-version: "9"
       - run: corepack enable
       - run: pnpm install --frozen-lockfile
       - run: pnpm run build
