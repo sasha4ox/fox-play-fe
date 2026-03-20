@@ -398,9 +398,19 @@ export async function getSavedCards(token) {
   return apiGet('/me/saved-cards', token)
 }
 
-/** Add saved card. Body: { cardNumber, cardHolderName, label? }. */
+function withSavedCardLast4(body) {
+  if (!body || typeof body !== 'object') return body
+  const payload = { ...body }
+  if (payload.last4 == null && typeof payload.cardNumber === 'string') {
+    const digits = payload.cardNumber.replace(/\D/g, '')
+    if (digits.length >= 4) payload.last4 = digits.slice(-4)
+  }
+  return payload
+}
+
+/** Add saved card. Body: { cardNumber, cardHolderName, label?, last4? }. */
 export async function addSavedCard(body, token) {
-  return apiPost('/me/saved-cards', body, token)
+  return apiPost('/me/saved-cards', withSavedCardLast4(body), token)
 }
 
 /** Delete saved card by id. */
@@ -408,9 +418,9 @@ export async function deleteSavedCard(id, token) {
   return apiDelete(`/me/saved-cards/${id}`, token)
 }
 
-/** Update saved card by id. Body: { cardNumber?, cardHolderName?, label? }. */
+/** Update saved card by id. Body: { cardNumber?, cardHolderName?, label?, last4? }. */
 export async function updateSavedCard(id, body, token) {
-  return apiPatch(`/me/saved-cards/${id}`, body, token)
+  return apiPatch(`/me/saved-cards/${id}`, withSavedCardLast4(body), token)
 }
 
 /** List saved wallets (auth required). Returns { items: [{ id, walletAddress, label, createdAt }] }. */
