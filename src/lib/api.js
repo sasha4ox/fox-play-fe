@@ -455,7 +455,7 @@ export async function createCardPayoutRequest(body, token, totpCode = null) {
   return apiPost('/me/card-payout-request', payload, token)
 }
 
-/** Request payout in crypto (USDT TRC20). body: { amount, currency, walletAddress }. Optional totpCode for 2FA. */
+/** Request payout in crypto (USDT TRC20). body: { amount, currency, walletAddress } — `amount` is total USD debited from balance (gross); a 3% fee is deducted and the rest is sent to the wallet. Optional totpCode for 2FA. */
 export async function createCryptoPayoutRequest(body, token, totpCode = null) {
   const payload = totpCode != null ? { ...body, totpCode } : body
   return apiPost('/me/crypto-payout-request', payload, token)

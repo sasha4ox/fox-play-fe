@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useLocale } from 'next-intl';
 import Container from '@mui/material/Container';
@@ -24,6 +24,24 @@ import IconButton from '@mui/material/IconButton';
 import InputAdornment from '@mui/material/InputAdornment';
 import Enable2FAModal from '@/components/Enable2FAModal/Enable2FAModal';
 import VerifyTOTPModal from '@/components/VerifyTOTPModal/VerifyTOTPModal';
+
+const CRYPTO_FEE_RATE = 0.03;
+const CRYPTO_PAYOUT_MIN_RECEIVE = 11;
+function cryptoFeeOnGross(gross) {
+  return Math.round(Number(gross) * CRYPTO_FEE_RATE * 100) / 100;
+}
+function cryptoNetFromGross(gross) {
+  const g = Number(gross);
+  return Math.round((g - cryptoFeeOnGross(g)) * 100) / 100;
+}
+/** Smallest gross debit (USD) such that net to wallet is at least CRYPTO_PAYOUT_MIN_RECEIVE; must match backend rounding. */
+const CRYPTO_MIN_GROSS_USD = (() => {
+  for (let cents = 100; cents <= 1000000; cents += 1) {
+    const g = cents / 100;
+    if (cryptoNetFromGross(g) >= CRYPTO_PAYOUT_MIN_RECEIVE - 1e-9) return g;
+  }
+  return CRYPTO_PAYOUT_MIN_RECEIVE;
+})();
 
 export default function BalancePage() {
   const router = useRouter();
@@ -102,6 +120,7 @@ export default function BalancePage() {
   const [verifyTOTPSubmitting, setVerifyTOTPSubmitting] = useState(false);
   const [isSettingCurrencyForCard, setIsSettingCurrencyForCard] = useState(false);
   const [cryptoCopiedHint, setCryptoCopiedHint] = useState(false);
+  const didApplyDefaultCryptoWithdraw = useRef(false);
 
   const cardDigitsOnly = cardPayoutCardNumber.replace(/\D/g, '').slice(0, 19);
   const panPreviewLen = Math.max(16, Math.ceil(Math.max(cardDigitsOnly.length, 1) / 4) * 4);
@@ -132,6 +151,14 @@ export default function BalancePage() {
       setCryptoPaymentEnabled(false);
     });
   }, [token]);
+
+  useEffect(() => {
+    if (!cryptoPaymentEnabled || !profile?.twoFactorEnabled) return;
+    if (didApplyDefaultCryptoWithdraw.current) return;
+    didApplyDefaultCryptoWithdraw.current = true;
+    setWithdrawSection('crypto');
+    setCryptoPayoutCurrency('USD');
+  }, [cryptoPaymentEnabled, profile?.twoFactorEnabled]);
 
   useEffect(() => {
     if (!token) return;
@@ -218,21 +245,34 @@ export default function BalancePage() {
     Number(profile?.totalAvailableByCurrency?.[cardPayoutCurr]) ?? 0;
   const totalAvailableForCrypto = Number(profile?.totalAvailableByCurrency?.[cryptoPayoutCurr]) ?? 0;
 
-  const CRYPTO_PAYOUT_MIN = 11;
-  const cryptoPayoutFee = (payout) => Math.round(Number(payout) * 0.02 * 100) / 100;
-  const cryptoPayoutNum = parseFloat(cryptoPayoutAmount);
+  const CARD_PAYOUT_FEE_RATE = 0.06;
+  const cardPayoutFeeFromGross = (gross) => Math.round(Number(gross) * CARD_PAYOUT_FEE_RATE * 100) / 100;
+  const cardPayoutGrossNum = parseFloat(cardPayoutAmount);
+  const cardPayoutFeeDisplay =
+    Number.isFinite(cardPayoutGrossNum) && cardPayoutGrossNum > 0
+      ? cardPayoutFeeFromGross(cardPayoutGrossNum)
+      : 0;
+  const cardPayoutReceiveDisplay =
+    Number.isFinite(cardPayoutGrossNum) && cardPayoutGrossNum > 0
+      ? Math.round((cardPayoutGrossNum - cardPayoutFeeDisplay) * 100) / 100
+      : 0;
+  const cardPayoutSummaryVisible =
+    Number.isFinite(cardPayoutGrossNum) && cardPayoutGrossNum > 0 && cardPayoutReceiveDisplay > 0;
+
+  const cryptoGrossNum = parseFloat(cryptoPayoutAmount);
   const cryptoFeeDisplay =
-    Number.isFinite(cryptoPayoutNum) && cryptoPayoutNum > 0 ? cryptoPayoutFee(cryptoPayoutNum) : 0;
-  const cryptoTotalDebitDisplay =
-    Number.isFinite(cryptoPayoutNum) && cryptoPayoutNum > 0 ? cryptoPayoutNum + cryptoFeeDisplay : 0;
-  const minCryptoTotalNeeded = CRYPTO_PAYOUT_MIN + cryptoPayoutFee(CRYPTO_PAYOUT_MIN);
+    Number.isFinite(cryptoGrossNum) && cryptoGrossNum > 0 ? cryptoFeeOnGross(cryptoGrossNum) : 0;
+  const cryptoNetReceiveDisplay =
+    Number.isFinite(cryptoGrossNum) && cryptoGrossNum > 0 ? cryptoNetFromGross(cryptoGrossNum) : 0;
+  const cryptoTotalDebitDisplay = Number.isFinite(cryptoGrossNum) && cryptoGrossNum > 0 ? cryptoGrossNum : 0;
+  const minCryptoTotalNeeded = CRYPTO_MIN_GROSS_USD;
   const maxCryptoPayoutStr = (() => {
     const avail = totalAvailableForCrypto;
     if (!Number.isFinite(avail) || avail < minCryptoTotalNeeded) return '';
-    let p = Math.floor((avail / 1.02) * 100) / 100;
-    for (let i = 0; i < 2000 && p >= CRYPTO_PAYOUT_MIN; i += 1) {
-      if (p + cryptoPayoutFee(p) <= avail + 1e-8) return p.toFixed(2);
-      p = Math.round((p - 0.01) * 100) / 100;
+    let g = Math.floor(avail * 100) / 100;
+    for (let i = 0; i < 200000 && g >= CRYPTO_MIN_GROSS_USD - 1e-9; i += 1) {
+      if (g <= avail + 1e-8 && cryptoNetFromGross(g) >= CRYPTO_PAYOUT_MIN_RECEIVE - 1e-9) return g.toFixed(2);
+      g = Math.round((g - 0.01) * 100) / 100;
     }
     return '';
   })();
@@ -317,9 +357,9 @@ export default function BalancePage() {
   };
 
   const handleCryptoPayoutRequest = () => {
-    const amount = parseFloat(cryptoPayoutAmount);
-    if (!Number.isFinite(amount) || amount < CRYPTO_PAYOUT_MIN) {
-      setCryptoPayoutError(t('cryptoWithdrawMinAmount'));
+    const gross = parseFloat(cryptoPayoutAmount);
+    if (!Number.isFinite(gross) || gross < CRYPTO_MIN_GROSS_USD - 1e-9 || cryptoNetFromGross(gross) < CRYPTO_PAYOUT_MIN_RECEIVE - 1e-9) {
+      setCryptoPayoutError(t('cryptoWithdrawMinAmount', { minGross: CRYPTO_MIN_GROSS_USD.toFixed(2) }));
       return;
     }
     const wallet = (cryptoPayoutWallet || '').trim();
@@ -327,15 +367,13 @@ export default function BalancePage() {
       setCryptoPayoutError(t('withdrawCryptoWalletLabel') + ' is required (min 20 characters).');
       return;
     }
-    const fee = cryptoPayoutFee(amount);
-    const total = amount + fee;
-    if (totalAvailableForCrypto < total - 1e-8) {
+    if (totalAvailableForCrypto < gross - 1e-8) {
       setCryptoPayoutError(t('cryptoWithdrawNeedMoreBalance'));
       return;
     }
     setCryptoPayoutError(null);
     setCryptoPayoutSuccess(null);
-    requestWithdraw2FA({ type: 'crypto', body: { amount, currency: 'USD', walletAddress: wallet } });
+    requestWithdraw2FA({ type: 'crypto', body: { amount: gross, currency: 'USD', walletAddress: wallet } });
   };
 
   const copyCryptoAddress = () => {
@@ -1151,6 +1189,31 @@ export default function BalancePage() {
                         {t('withdrawMax')}
                       </Button>
                     </Box>
+                    {cardPayoutSummaryVisible && (
+                      <Box
+                        sx={{
+                          mt: 1.5,
+                          p: 1.25,
+                          bgcolor: 'grey.100',
+                          borderRadius: 1,
+                          border: '1px solid',
+                          borderColor: 'divider',
+                        }}
+                      >
+                        <Typography variant="caption" color="text.secondary" display="block">
+                          {t('cardPayoutSummaryReceive')}:{' '}
+                          <Box component="span" color="primary.main" fontWeight={700}>
+                            {cardPayoutReceiveDisplay.toFixed(2)} {cardPayoutCurr}
+                          </Box>
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5 }}>
+                          {t('cardPayoutSummaryFee')}: {cardPayoutFeeDisplay.toFixed(2)} {cardPayoutCurr}
+                        </Typography>
+                        <Typography variant="caption" color="text.primary" display="block" sx={{ mt: 0.5 }} fontWeight={600}>
+                          {t('cardPayoutSummaryTotalFromBalance')}: {cardPayoutGrossNum.toFixed(2)} {cardPayoutCurr}
+                        </Typography>
+                      </Box>
+                    )}
                     <Typography variant="body2" color="text.secondary">
                       {t('youHaveInCurrency', { amount: totalAvailableInSelectedCurrency.toFixed(2), currency: cardPayoutCurr })}
                     </Typography>
@@ -1238,8 +1301,8 @@ export default function BalancePage() {
                 )}
 
                 {withdrawSection === 'crypto' && cryptoPaymentEnabled && (
-                  <Box sx={{ mb: 3, maxWidth: 520, mx: 'auto', width: '100%' }}>
-                    <Typography variant="subtitle1" fontWeight={600} gutterBottom textAlign="center">
+                  <Box sx={{ mb: 3, width: '100%' }}>
+                    <Typography variant="subtitle1" fontWeight={600} gutterBottom textAlign={{ xs: 'center', md: 'left' }}>
                       {t('withdrawWithCrypto')}
                     </Typography>
                     <Alert severity="info" sx={{ mb: 1.5 }} variant="outlined">
@@ -1269,65 +1332,73 @@ export default function BalancePage() {
                         p: { xs: 2, sm: 3 },
                         border: '1px solid',
                         borderColor: 'grey.800',
-                        mx: 'auto',
+                        width: '100%',
                       }}
                     >
-                      <Box sx={{ pb: 2.5 }}>
-                        <Typography variant="body2" fontWeight={600} color="grey.300">
-                          {t('cryptoWithdrawStepCoin')}
-                        </Typography>
-                        <Box
-                          sx={{
-                            mt: 1.5,
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 1.5,
-                            py: 1.25,
-                            px: 1.5,
-                            bgcolor: 'grey.800',
-                            borderRadius: 1,
-                            border: '1px solid',
-                            borderColor: 'grey.700',
-                          }}
-                        >
+                      <Box
+                        sx={{
+                          display: 'grid',
+                          gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' },
+                          columnGap: { xs: 0, md: 3 },
+                          rowGap: 2.5,
+                        }}
+                      >
+                        <Box sx={{ gridColumn: { xs: '1', md: '1 / -1' } }}>
+                          <Typography variant="body2" fontWeight={600} color="grey.300">
+                            {t('cryptoWithdrawStepCoin')}
+                          </Typography>
                           <Box
                             sx={{
-                              width: 40,
-                              height: 40,
-                              borderRadius: '50%',
-                              bgcolor: '#26a17b',
+                              mt: 1.5,
                               display: 'flex',
                               alignItems: 'center',
-                              justifyContent: 'center',
-                              fontWeight: 800,
-                              fontSize: '0.9rem',
-                              color: '#fff',
-                              flexShrink: 0,
+                              gap: 1.5,
+                              py: 1.25,
+                              px: 1.5,
+                              bgcolor: 'grey.800',
+                              borderRadius: 1,
+                              border: '1px solid',
+                              borderColor: 'grey.700',
                             }}
                           >
-                            ₮
-                          </Box>
-                          <Box sx={{ flex: 1 }}>
-                            <Typography fontWeight={700} color="grey.100">
-                              USDT
-                            </Typography>
-                            <Typography variant="caption" color="grey.500">
-                              TetherUS
-                            </Typography>
+                            <Box
+                              sx={{
+                                width: 40,
+                                height: 40,
+                                borderRadius: '50%',
+                                bgcolor: '#26a17b',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                fontWeight: 800,
+                                fontSize: '0.9rem',
+                                color: '#fff',
+                                flexShrink: 0,
+                              }}
+                            >
+                              ₮
+                            </Box>
+                            <Box sx={{ flex: 1 }}>
+                              <Typography fontWeight={700} color="grey.100">
+                                USDT
+                              </Typography>
+                              <Typography variant="caption" color="grey.500">
+                                TetherUS
+                              </Typography>
+                            </Box>
                           </Box>
                         </Box>
-                      </Box>
 
-                      <Box sx={{ pb: 2.5 }}>
-                        <Typography variant="body2" fontWeight={600} color="grey.300">
-                          {t('cryptoWithdrawStepAddress')}
-                        </Typography>
-                        <Box sx={{ mt: 0.75, borderBottom: 2, borderColor: 'warning.main', alignSelf: 'flex-start', width: 'fit-content', pb: 0.25 }}>
-                          <Typography variant="caption" color="warning.main" fontWeight={600}>
-                            {t('cryptoWithdrawTabAddress')}
+                        <Box>
+                          <Typography variant="body2" fontWeight={600} color="grey.300">
+                            {t('cryptoWithdrawStepAddress')}
                           </Typography>
-                        </Box>
-                        <TextField
+                          <Box sx={{ mt: 0.75, borderBottom: 2, borderColor: 'warning.main', alignSelf: 'flex-start', width: 'fit-content', pb: 0.25 }}>
+                            <Typography variant="caption" color="warning.main" fontWeight={600}>
+                              {t('cryptoWithdrawTabAddress')}
+                            </Typography>
+                          </Box>
+                          <TextField
                           select
                           label={t('useSavedCryptoWallet')}
                           value={selectedSavedWalletId}
@@ -1423,10 +1494,10 @@ export default function BalancePage() {
                         <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'stretch', mt: 1.5 }}>
                           <TextField
                             type="number"
-                            placeholder={t('cryptoWithdrawAmountPlaceholder')}
+                            placeholder={t('cryptoWithdrawAmountPlaceholder', { minGross: CRYPTO_MIN_GROSS_USD.toFixed(2) })}
                             value={cryptoPayoutAmount}
                             onChange={(e) => setCryptoPayoutAmount(e.target.value)}
-                            inputProps={{ min: CRYPTO_PAYOUT_MIN, step: 'any' }}
+                            inputProps={{ min: CRYPTO_MIN_GROSS_USD, step: 'any' }}
                             size="small"
                             fullWidth
                             sx={cryptoHighlightFieldSx}
@@ -1462,7 +1533,7 @@ export default function BalancePage() {
                             <Typography variant="caption" color="grey.400" display="block">
                               {t('cryptoWithdrawSummaryReceive')}:{' '}
                               <Box component="span" color="warning.light" fontWeight={700}>
-                                {cryptoPayoutNum.toFixed(2)} USDT
+                                {cryptoNetReceiveDisplay.toFixed(2)} USDT
                               </Box>
                             </Typography>
                             <Typography variant="caption" color="grey.400" display="block" sx={{ mt: 0.5 }}>
@@ -1473,35 +1544,45 @@ export default function BalancePage() {
                             </Typography>
                           </Box>
                         )}
+                        {cryptoTotalDebitDisplay > 0 && (
+                          <Typography variant="caption" color="grey.500" sx={{ display: 'block', mt: 0.75, lineHeight: 1.45 }}>
+                            {t('cryptoWithdrawFeeNote')}
+                          </Typography>
+                        )}
                         <Typography variant="caption" color="grey.500" sx={{ display: 'block', mt: 1 }}>
                           {t('youHaveInCurrency', { amount: totalAvailableForCrypto.toFixed(2), currency: 'USD' })}
                         </Typography>
                         <Typography variant="caption" sx={{ color: 'grey.500', display: 'block', mt: 1.5, lineHeight: 1.5 }}>
                           {t('cryptoWithdrawTestAdvice')}
                         </Typography>
-                        <Button
-                          variant="contained"
-                          fullWidth
-                          onClick={handleCryptoPayoutRequest}
-                          disabled={
-                            cryptoPayoutLoading ||
-                            totalAvailableForCrypto < minCryptoTotalNeeded ||
-                            !Number.isFinite(cryptoPayoutNum) ||
-                            cryptoPayoutNum < CRYPTO_PAYOUT_MIN ||
-                            cryptoPayoutNum + cryptoPayoutFee(cryptoPayoutNum) > totalAvailableForCrypto + 1e-8
-                          }
-                          sx={{
-                            textTransform: 'none',
-                            mt: 2,
-                            py: 1.25,
-                            bgcolor: 'warning.main',
-                            color: 'grey.900',
-                            fontWeight: 600,
-                            '&:hover': { bgcolor: 'warning.dark' },
-                          }}
-                        >
-                          {cryptoPayoutLoading ? t('withdrawSubmitting') : t('withdrawCryptoSubmit')}
-                        </Button>
+                      </Box>
+
+                        <Box sx={{ gridColumn: { xs: '1', md: '1 / -1' } }}>
+                          <Button
+                            variant="contained"
+                            fullWidth
+                            onClick={handleCryptoPayoutRequest}
+                            disabled={
+                              cryptoPayoutLoading ||
+                              totalAvailableForCrypto < minCryptoTotalNeeded ||
+                              !Number.isFinite(cryptoGrossNum) ||
+                              cryptoGrossNum < CRYPTO_MIN_GROSS_USD - 1e-9 ||
+                              cryptoNetFromGross(cryptoGrossNum) < CRYPTO_PAYOUT_MIN_RECEIVE - 1e-9 ||
+                              cryptoGrossNum > totalAvailableForCrypto + 1e-8
+                            }
+                            sx={{
+                              textTransform: 'none',
+                              mt: 0,
+                              py: 1.25,
+                              bgcolor: 'warning.main',
+                              color: 'grey.900',
+                              fontWeight: 600,
+                              '&:hover': { bgcolor: 'warning.dark' },
+                            }}
+                          >
+                            {cryptoPayoutLoading ? t('withdrawSubmitting') : t('withdrawCryptoSubmit')}
+                          </Button>
+                        </Box>
                       </Box>
                     </Box>
                   </Box>

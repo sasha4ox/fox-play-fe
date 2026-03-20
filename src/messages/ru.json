@@ -261,6 +261,9 @@
     "noSavedCryptoWallets": "В профиле нет сохранённых криптокошельков.",
     "manualEntry": "Ввести вручную",
     "cardPayoutPlaceholderAmount": "Сумма ({currency})",
+    "cardPayoutSummaryReceive": "Получите на карту",
+    "cardPayoutSummaryFee": "Комиссия (6%)",
+    "cardPayoutSummaryTotalFromBalance": "Всего с баланса",
     "withdrawMax": "MAX",
     "cryptoWithdrawStepCoin": "Выберите монету",
     "cryptoWithdrawStepAddress": "Вывод на",
@@ -271,13 +274,14 @@
     "cryptoWithdrawNetworkLabel": "Сеть",
     "cryptoWithdrawCaution": "ВНИМАНИЕ: используйте только адрес сети TRC20. Неверная сеть приведёт к потере средств. Проверьте адрес.",
     "cryptoWithdrawStepAmount": "Сумма вывода",
-    "cryptoWithdrawAmountPlaceholder": "Минимум 11",
+    "cryptoWithdrawAmountPlaceholder": "Всего с баланса (мин. {minGross} USD)",
     "cryptoWithdrawTestAdvice": "Для нового адреса рекомендуем сначала небольшой тестовый вывод.",
-    "cryptoWithdrawMinAmount": "Минимум к получению — 11 USDT.",
-    "cryptoWithdrawNeedMoreBalance": "Недостаточно средств с учётом комиссии 2%.",
+    "cryptoWithdrawMinAmount": "Укажите не меньше {minGross} USD с баланса, чтобы после комиссии 3% вы получили минимум 11 USDT.",
+    "cryptoWithdrawNeedMoreBalance": "Недостаточно средств для этой суммы (из неё удерживается комиссия 3%).",
     "cryptoWithdrawSummaryReceive": "Получите",
-    "cryptoWithdrawSummaryFee": "Комиссия (2%)",
+    "cryptoWithdrawSummaryFee": "Комиссия (3%)",
     "cryptoWithdrawSummaryTotal": "Списано с баланса",
+    "cryptoWithdrawFeeNote": "Комиссия составляет 3% от суммы, списываемой с баланса.",
 
     "withdrawToCardSubmit": "Запросить вывод на карту",
 
@@ -292,7 +296,7 @@
     "withdrawAll": "Вывести всё",
 
     "withdrawCryptoHint": "Отправьте запрос на вывод USDT (TRC20) на ваш кошелёк. Администратор обработает его вручную.",
-    "withdrawCryptoUsdOnly": "Только USDT (TRC20). Минимум 11 USDT к получению. Комиссия 2% добавляется к списанию с баланса.",
+    "withdrawCryptoUsdOnly": "Только USDT (TRC20). Вы указываете сумму списания с баланса; удерживается комиссия 3%, остальное вы получаете на кошелёк (минимум 11 USDT).",
 
     "withdrawCryptoWalletLabel": "Адрес кошелька USDT TRC20",
     "withdrawCryptoSubmit": "Запросить криптовывод",
@@ -1082,7 +1086,7 @@
     "noPendingIbanPayouts": "Нет ожидающих выплат IBAN.",
 
     "cryptoPayoutRequests": "Запросы на вывод криптовалюты",
-    "cryptoPayoutRequestsHint": "Мин. 11 USDT к получению, 2% комиссия. Отправьте сумму из столбца, отметьте статус.",
+    "cryptoPayoutRequestsHint": "Пользователь указывает сумму списания с баланса; 3% комиссии зарезервированы. Отправьте нетто USDT из столбца на кошелёк, отметьте статус.",
     "cryptoPayoutFeeLocked": "+{fee} комиссия (заблокировано)",
     "noCryptoPayoutRequests": "Нет криптозапросов на вывод.",
 
