@@ -273,12 +273,12 @@
     "cryptoWithdrawMinPlaceholder": "Mín. {minGross}",
     "cryptoWithdrawAmountPlaceholder": "Total desde el saldo (mín. {minGross} USD)",
     "cryptoWithdrawTestAdvice": "Для нового адреса сначала сделайте небольшой тестовый вывод.",
-    "cryptoWithdrawMinAmount": "Indica al menos {minGross} USD en total desde tu saldo para recibir mínimo 11 USDT tras la comisión del 3%.",
-    "cryptoWithdrawNeedMoreBalance": "Saldo insuficiente para esta cantidad (se retiene una comisión del 3%).",
+    "cryptoWithdrawMinAmount": "Indica al menos {minGross} USD en total desde tu saldo (mínimo para retiro cripto). La comisión es 3% + 1 USD (redondeo hacia arriba); recibes el resto.",
+    "cryptoWithdrawNeedMoreBalance": "Saldo insuficiente para esta cantidad (se retiene comisión 3% + 1 USD, redondeo hacia arriba).",
     "cryptoWithdrawSummaryReceive": "Recibes",
-    "cryptoWithdrawSummaryFee": "Comisión (3%)",
+    "cryptoWithdrawSummaryFee": "Comisión (3% + 1 USD)",
     "cryptoWithdrawSummaryTotal": "Total desde tu saldo",
-    "cryptoWithdrawFeeNote": "La comisión es del 3% del importe retirado de tu saldo.",
+    "cryptoWithdrawFeeNote": "La comisión es el 3% del importe retirado de tu saldo más 1 USD (redondeo hacia arriba a céntimos).",
 
     "withdrawToCardSubmit": "Запросить вывод на карту",
 
@@ -294,7 +294,7 @@
     "withdrawAll": "Вывести всё",
 
     "withdrawCryptoHint": "Отправьте запрос на вывод USDT (TRC20) на ваш кошелёк. Администратор обработает его вручную.",
-    "withdrawCryptoUsdOnly": "Solo USDT (TRC20). Indicas el total a debitar del saldo; se descuenta un 3% de comisión y el resto va a tu wallet (mínimo 11 USDT recibidos).",
+    "withdrawCryptoUsdOnly": "Solo USDT (TRC20). Mínimo 10 USD desde el saldo; la comisión es 3% + 1 USD (redondeo hacia arriba) y el resto a tu wallet (p. ej. 10 USD bruto → unos 8,70 USDT netos).",
 
     "withdrawCryptoWalletLabel": "Адрес кошелька USDT TRC20",
     "withdrawCryptoSubmit": "Запросить криптовывод",
@@ -1053,7 +1053,7 @@
     "pendingIbanPayoutsHint": "Order completed. Process payout to seller, then confirm here.",
     "noPendingIbanPayouts": "No pending IBAN payouts.",
     "cryptoPayoutRequests": "Crypto payout requests",
-    "cryptoPayoutRequestsHint": "El usuario indica el total debitado del saldo; el 3% de comisión queda reservado. Envía el USDT neto mostrado y marca el estado.",
+    "cryptoPayoutRequestsHint": "El usuario indica el total debitado del saldo (mín. 10 USD); la comisión (3% + 1 USD, redondeo hacia arriba) queda reservada. Envía el USDT neto mostrado y marca el estado.",
     "cryptoPayoutFeeLocked": "+{fee} fee (locked)",
     "noCryptoPayoutRequests": "No crypto payout requests.",
     "filterByStatus": "Filter by status",

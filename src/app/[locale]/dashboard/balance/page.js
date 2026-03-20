@@ -27,23 +27,24 @@ import InputAdornment from '@mui/material/InputAdornment';
 import Enable2FAModal from '@/components/Enable2FAModal/Enable2FAModal';
 import VerifyTOTPModal from '@/components/VerifyTOTPModal/VerifyTOTPModal';
 
-const CRYPTO_FEE_RATE = 0.03;
-const CRYPTO_PAYOUT_MIN_RECEIVE = 11;
+const CRYPTO_FEE_PERCENT = 0.03;
+const CRYPTO_FEE_FIXED_USD = 1;
+/** Minimum gross USD from balance (matches backend CRYPTO_PAYOUT_MIN_GROSS_USD). */
+const CRYPTO_MIN_GROSS_USD = 10;
+/** Match backend: fee = ceil2dp(gross * 3% + $1). */
 function cryptoFeeOnGross(gross) {
-  return Math.round(Number(gross) * CRYPTO_FEE_RATE * 100) / 100;
+  const g = Number(gross);
+  if (!Number.isFinite(g)) return 0;
+  return Math.ceil((g * CRYPTO_FEE_PERCENT + CRYPTO_FEE_FIXED_USD) * 100) / 100;
 }
+/** Match backend: net = half-up to cents(gross - fee). */
 function cryptoNetFromGross(gross) {
   const g = Number(gross);
-  return Math.round((g - cryptoFeeOnGross(g)) * 100) / 100;
+  if (!Number.isFinite(g)) return 0;
+  const fee = cryptoFeeOnGross(gross);
+  const net = g - fee;
+  return Math.floor(net * 100 + 0.5 + 1e-9) / 100;
 }
-/** Smallest gross debit (USD) such that net to wallet is at least CRYPTO_PAYOUT_MIN_RECEIVE; must match backend rounding. */
-const CRYPTO_MIN_GROSS_USD = (() => {
-  for (let cents = 100; cents <= 1000000; cents += 1) {
-    const g = cents / 100;
-    if (cryptoNetFromGross(g) >= CRYPTO_PAYOUT_MIN_RECEIVE - 1e-9) return g;
-  }
-  return CRYPTO_PAYOUT_MIN_RECEIVE;
-})();
 
 export default function BalancePage() {
   const router = useRouter();
@@ -273,7 +274,7 @@ export default function BalancePage() {
     if (!Number.isFinite(avail) || avail < minCryptoTotalNeeded) return '';
     let g = Math.floor(avail * 100) / 100;
     for (let i = 0; i < 200000 && g >= CRYPTO_MIN_GROSS_USD - 1e-9; i += 1) {
-      if (g <= avail + 1e-8 && cryptoNetFromGross(g) >= CRYPTO_PAYOUT_MIN_RECEIVE - 1e-9) return g.toFixed(2);
+      if (g <= avail + 1e-8) return g.toFixed(2);
       g = Math.round((g - 0.01) * 100) / 100;
     }
     return '';
@@ -375,7 +376,7 @@ export default function BalancePage() {
 
   const handleCryptoPayoutRequest = () => {
     const gross = parseFloat(cryptoPayoutAmount);
-    if (!Number.isFinite(gross) || gross < CRYPTO_MIN_GROSS_USD - 1e-9 || cryptoNetFromGross(gross) < CRYPTO_PAYOUT_MIN_RECEIVE - 1e-9) {
+    if (!Number.isFinite(gross) || gross < CRYPTO_MIN_GROSS_USD - 1e-9) {
       setCryptoPayoutError(t('cryptoWithdrawMinAmount', { minGross: CRYPTO_MIN_GROSS_USD.toFixed(2) }));
       return;
     }
@@ -1663,7 +1664,6 @@ export default function BalancePage() {
                               totalAvailableForCrypto < minCryptoTotalNeeded ||
                               !Number.isFinite(cryptoGrossNum) ||
                               cryptoGrossNum < CRYPTO_MIN_GROSS_USD - 1e-9 ||
-                              cryptoNetFromGross(cryptoGrossNum) < CRYPTO_PAYOUT_MIN_RECEIVE - 1e-9 ||
                               cryptoGrossNum > totalAvailableForCrypto + 1e-8
                             }
                             sx={{

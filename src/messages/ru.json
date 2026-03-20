@@ -278,12 +278,12 @@
     "cryptoWithdrawMinPlaceholder": "Мин. {minGross}",
     "cryptoWithdrawAmountPlaceholder": "Всего с баланса (мин. {minGross} USD)",
     "cryptoWithdrawTestAdvice": "Для нового адреса рекомендуем сначала небольшой тестовый вывод.",
-    "cryptoWithdrawMinAmount": "Укажите не меньше {minGross} USD с баланса, чтобы после комиссии 3% вы получили минимум 11 USDT.",
-    "cryptoWithdrawNeedMoreBalance": "Недостаточно средств для этой суммы (из неё удерживается комиссия 3%).",
+    "cryptoWithdrawMinAmount": "Укажите не меньше {minGross} USD с баланса (минимум для криптовывода). Комиссия: 3% + 1 USD (округление вверх); остальное вы получите.",
+    "cryptoWithdrawNeedMoreBalance": "Недостаточно средств для этой суммы (удерживается комиссия 3% + 1 USD, округление вверх).",
     "cryptoWithdrawSummaryReceive": "Получите",
-    "cryptoWithdrawSummaryFee": "Комиссия (3%)",
+    "cryptoWithdrawSummaryFee": "Комиссия (3% + 1 USD)",
     "cryptoWithdrawSummaryTotal": "Списано с баланса",
-    "cryptoWithdrawFeeNote": "Комиссия составляет 3% от суммы, списываемой с баланса.",
+    "cryptoWithdrawFeeNote": "Комиссия: 3% от суммы списания с баланса плюс 1 USD (округление вверх до центов).",
 
     "withdrawToCardSubmit": "Запросить вывод на карту",
 
@@ -299,7 +299,7 @@
     "withdrawAll": "Вывести всё",
 
     "withdrawCryptoHint": "Отправьте запрос на вывод USDT (TRC20) на ваш кошелёк. Администратор обработает его вручную.",
-    "withdrawCryptoUsdOnly": "Только USDT (TRC20). Вы указываете сумму списания с баланса; удерживается комиссия 3%, остальное вы получаете на кошелёк (минимум 11 USDT).",
+    "withdrawCryptoUsdOnly": "Только USDT (TRC20). Минимум 10 USD с баланса; комиссия 3% + 1 USD (округление вверх), остальное на кошелёк (например 10 USD брутто → около 8,70 USDT нетто).",
 
     "withdrawCryptoWalletLabel": "Адрес кошелька USDT TRC20",
     "withdrawCryptoSubmit": "Запросить криптовывод",
@@ -1089,7 +1089,7 @@
     "noPendingIbanPayouts": "Нет ожидающих выплат IBAN.",
 
     "cryptoPayoutRequests": "Запросы на вывод криптовалюты",
-    "cryptoPayoutRequestsHint": "Пользователь указывает сумму списания с баланса; 3% комиссии зарезервированы. Отправьте нетто USDT из столбца на кошелёк, отметьте статус.",
+    "cryptoPayoutRequestsHint": "Пользователь указывает сумму списания с баланса (мин. 10 USD); комиссия (3% + 1 USD, округление вверх) зарезервирована. Отправьте нетто USDT из столбца на кошелёк, отметьте статус.",
     "cryptoPayoutFeeLocked": "+{fee} комиссия (заблокировано)",
     "noCryptoPayoutRequests": "Нет криптозапросов на вывод.",
 
