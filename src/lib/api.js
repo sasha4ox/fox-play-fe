@@ -1087,8 +1087,12 @@ export async function flagSafeTransfer(safeTransferId, reason, token) {
 
 // ——— Admin: Agents ———
 
-export async function adminListAgents(token) {
-  return apiGet('/admin/agents', token)
+/** @param {Record<string, string | number | undefined>} [params] — e.g. { skip: 0, take: 20 } */
+export async function adminListAgents(token, params = {}) {
+  const s = new URLSearchParams(
+    Object.entries(params).filter(([, v]) => v !== undefined && v !== ''),
+  ).toString()
+  return apiGet(`/admin/agents${s ? `?${s}` : ''}`, token)
 }
 
 export async function adminAssignAgent(userId, token) {

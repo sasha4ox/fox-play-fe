@@ -335,6 +335,7 @@ export default function AgentPanelPage() {
             label={t('enterYourNick')}
             value={claimNick}
             onChange={(e) => setClaimNick(e.target.value)}
+            inputProps={{ maxLength: 64 }}
             required
           />
         </DialogContent>

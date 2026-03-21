@@ -761,6 +761,7 @@ export default function OfferPDPPage() {
             placeholder={t('yourInGameNick')}
             fullWidth
             required
+            inputProps={{ maxLength: 64 }}
             sx={{ mb: 2 }}
           />
           {isAdenaOffer ? (
