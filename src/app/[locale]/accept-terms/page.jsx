@@ -76,8 +76,9 @@ export default function AcceptTermsPage() {
     setAuthError(null);
     setSubmitting(true);
     try {
-      await acceptTerms(token);
-      const profile = await getProfile(token);
+      const data = await acceptTerms(token);
+      const newToken = data?.token || token;
+      const profile = await getProfile(newToken);
       if (profile?.id) {
         setAuth(
           {
@@ -87,7 +88,7 @@ export default function AcceptTermsPage() {
             nickname: profile.nickname,
             role: profile.role,
           },
-          token
+          newToken
         );
       }
       router.replace(`/${locale}/dashboard`);
