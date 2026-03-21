@@ -839,6 +839,19 @@ export async function getAdminPlatformProfit(token) {
   return apiGet('/admin/money-flow/platform-profit', token)
 }
 
+/** Admin: pending-receipt / withdraw unseen counts (server tracks last-opened per admin). */
+export async function getAdminMoneyFlowAlertBadges(token) {
+  return apiGet('/admin/money-flow/alert-badges', token)
+}
+
+export async function acknowledgeAdminPendingReceiptsView(token) {
+  return apiPost('/admin/money-flow/acknowledge/pending-receipts-view', {}, token)
+}
+
+export async function acknowledgeAdminWithdrawView(token) {
+  return apiPost('/admin/money-flow/acknowledge/withdraw-view', {}, token)
+}
+
 export async function getAdminCards(token) {
   return apiGet('/admin/cards', token)
 }

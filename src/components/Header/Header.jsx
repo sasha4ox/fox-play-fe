@@ -27,7 +27,7 @@ import { useThemeStore } from '@/store/themeStore';
 import { useLoginModalStore } from '@/store/loginModalStore';
 import { useProfile } from '@/hooks/useProfile';
 import { useSellerNewOrder } from '@/hooks/useSellerNewOrder';
-import { updatePreferredCurrency, getUnreadCount, getAdminPendingReceiptsCount, getMySupportConversations } from '@/lib/api';
+import { updatePreferredCurrency, getUnreadCount, getAdminMoneyFlowAlertBadges, getMySupportConversations } from '@/lib/api';
 import {
   playNewOrderSound,
   playNewMessageSound,
@@ -81,7 +81,7 @@ export default function Header() {
   const [messageSoundOn, setMessageSoundOn] = useState(true);
   const [soldSoundOn, setSoldSoundOn] = useState(true);
   const [logoError, setLogoError] = useState(false);
-  const [pendingReceiptsCount, setPendingReceiptsCount] = useState(0);
+  const [adminMoneyFlowBadgeCount, setAdminMoneyFlowBadgeCount] = useState(0);
   const [hasSupportConversations, setHasSupportConversations] = useState(false);
   useEffect(() => {
     setMessageSoundOn(getMessageSoundEnabled());
@@ -148,17 +148,28 @@ export default function Header() {
   const isAdminOrMod = profile?.role === 'ADMIN' || profile?.role === 'MODERATOR' || user?.role === 'ADMIN' || user?.role === 'MODERATOR';
 
   useEffect(() => {
+    if (typeof window === 'undefined') return undefined;
     if (isAdminOrMod && token) {
-      getAdminPendingReceiptsCount(token)
-        .then(setPendingReceiptsCount)
-        .catch(() => setPendingReceiptsCount(0));
-      const interval = setInterval(() => {
-        getAdminPendingReceiptsCount(token).then(setPendingReceiptsCount).catch(() => {});
-      }, 60000);
-      return () => clearInterval(interval);
+      const loadBadges = () => {
+        getAdminMoneyFlowAlertBadges(token)
+          .then((d) => {
+            const n = (Number(d?.pendingReceiptsUnseen) || 0) + (Number(d?.withdrawUnseen) || 0);
+            setAdminMoneyFlowBadgeCount(n);
+          })
+          .catch(() => setAdminMoneyFlowBadgeCount(0));
+      };
+      loadBadges();
+      const interval = setInterval(loadBadges, 60000);
+      const onRefetch = () => loadBadges();
+      window.addEventListener('refetchAdminMoneyFlowBadges', onRefetch);
+      return () => {
+        clearInterval(interval);
+        window.removeEventListener('refetchAdminMoneyFlowBadges', onRefetch);
+      };
     }
-    setPendingReceiptsCount(0);
-  }, [isAdminOrMod, token]);
+    setAdminMoneyFlowBadgeCount(0);
+    return undefined;
+  }, [isAdminOrMod, token, pathname]);
 
   useEffect(() => {
     if (!isAuth || !token) {
@@ -244,7 +255,7 @@ export default function Header() {
           ...(showSupportLink ? [{ href: `${base}/dashboard/support`, label: t('support'), active: pathname?.includes('/dashboard/support') }] : []),
           { href: `${base}/dashboard/sales`, label: t('mySales'), active: pathname?.includes('/dashboard/sales'), badge: sellerOrderCount },
           ...(isAdminOrMod
-            ? [{ href: `${base}/dashboard/admin/overview`, label: t('admin'), active: pathname?.includes('/dashboard/admin'), badge: pendingReceiptsCount }]
+            ? [{ href: `${base}/dashboard/admin/overview`, label: t('admin'), active: pathname?.includes('/dashboard/admin'), badge: adminMoneyFlowBadgeCount }]
             : []),
         ]
       : []),

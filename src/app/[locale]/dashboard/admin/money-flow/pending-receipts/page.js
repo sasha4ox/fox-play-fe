@@ -33,6 +33,7 @@ import {
   adminDeclineIbanReceipt,
   adminGetOrCreateContactBuyer,
   adminSendContactBuyerMessage,
+  acknowledgeAdminPendingReceiptsView,
 } from '@/lib/api';
 import Link from 'next/link';
 
@@ -85,6 +86,17 @@ export default function AdminPendingReceiptsPage() {
       .catch(() => setIbanReceipts([]))
       .finally(() => setLoadingIbanReceipts(false));
   };
+
+  useEffect(() => {
+    if (!token) return;
+    acknowledgeAdminPendingReceiptsView(token)
+      .then(() => {
+        try {
+          window.dispatchEvent(new Event('refetchAdminMoneyFlowBadges'));
+        } catch (_) {}
+      })
+      .catch(() => {});
+  }, [token]);
 
   useEffect(() => {
     loadReceipts();

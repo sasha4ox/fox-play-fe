@@ -24,6 +24,7 @@ import {
   getAdminCryptoPayoutRequests,
   adminCryptoPayoutComplete,
   adminCryptoPayoutFail,
+  acknowledgeAdminWithdrawView,
 } from '@/lib/api';
 
 function maskCardNumber(num) {
@@ -67,6 +68,17 @@ export default function AdminWithdrawFromUsersPage() {
       .catch(() => setCryptoPayoutRequests([]))
       .finally(() => setLoadingCryptoPayoutRequests(false));
   };
+
+  useEffect(() => {
+    if (!token) return;
+    acknowledgeAdminWithdrawView(token)
+      .then(() => {
+        try {
+          window.dispatchEvent(new Event('refetchAdminMoneyFlowBadges'));
+        } catch (_) {}
+      })
+      .catch(() => {});
+  }, [token]);
 
   useEffect(() => {
     loadCardPayouts();
