@@ -1031,3 +1031,75 @@ export async function getSupportConversation(conversationId, token) {
 export async function sendSupportConversationMessage(conversationId, body, token) {
   return apiPost(`/me/support-conversations/${conversationId}/messages`, body, token)
 }
+
+// ——— Safe Transfer ———
+
+export async function getSafeTransferAvailability(serverId, token, sellerId) {
+  const q = sellerId ? `?sellerId=${sellerId}` : ''
+  return apiGet(`/safe-transfer/availability/${serverId}${q}`, token)
+}
+
+// ——— Agent ———
+
+export async function getAgentProfile(token) {
+  return apiGet('/agent/profile', token)
+}
+
+export async function setAgentOnline(isOnline, token) {
+  return apiPatch('/agent/profile/online', { isOnline }, token)
+}
+
+export async function getAgentServers(token) {
+  return apiGet('/agent/servers', token)
+}
+
+export async function addAgentServer(serverId, token) {
+  return apiPost('/agent/servers', { serverId }, token)
+}
+
+export async function removeAgentServer(serverId, token) {
+  return apiDelete(`/agent/servers/${serverId}`, token)
+}
+
+export async function getAgentOrders(token) {
+  return apiGet('/agent/orders', token)
+}
+
+export async function claimSafeTransfer(safeTransferId, agentNick, token) {
+  return apiPost(`/agent/orders/${safeTransferId}/claim`, { agentNick }, token)
+}
+
+export async function confirmItemReceived(safeTransferId, token) {
+  return apiPost(`/agent/orders/${safeTransferId}/item-received`, {}, token)
+}
+
+export async function confirmItemDelivered(safeTransferId, token) {
+  return apiPost(`/agent/orders/${safeTransferId}/item-delivered`, {}, token)
+}
+
+export async function flagSafeTransfer(safeTransferId, reason, token) {
+  return apiPost(`/agent/orders/${safeTransferId}/flag`, { reason }, token)
+}
+
+// ——— Admin: Agents ———
+
+export async function adminListAgents(token) {
+  return apiGet('/admin/agents', token)
+}
+
+export async function adminAssignAgent(userId, token) {
+  return apiPost(`/admin/agents/${userId}/assign`, {}, token)
+}
+
+export async function adminDemoteAgent(userId, token) {
+  return apiDelete(`/admin/agents/${userId}`, token)
+}
+
+export async function adminListSafeTransfers(params, token) {
+  const s = new URLSearchParams(params).toString()
+  return apiGet(`/admin/safe-transfers${s ? `?${s}` : ''}`, token)
+}
+
+export async function adminReassignSafeTransfer(safeTransferId, agentProfileId, token) {
+  return apiPost(`/admin/safe-transfers/${safeTransferId}/reassign`, { agentProfileId }, token)
+}

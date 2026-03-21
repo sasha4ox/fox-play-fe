@@ -27,10 +27,12 @@ import Rating from '@mui/material/Rating';
 import Tooltip from '@mui/material/Tooltip';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
+import Switch from '@mui/material/Switch';
+import FormControlLabel from '@mui/material/FormControlLabel';
 import { useAuthStore } from '@/store/authStore';
 import { useLoginModalStore } from '@/store/loginModalStore';
 import { useProfile } from '@/hooks/useProfile';
-import { fetchOfferById, createOrder, getAvailablePaymentMethods, getOfferMessages, sendOfferMessage, startOfferChat, getOfferInquiryOrderId, getFeedbacksByUserId, deleteOffer } from '@/lib/api';
+import { fetchOfferById, createOrder, getAvailablePaymentMethods, getOfferMessages, sendOfferMessage, startOfferChat, getOfferInquiryOrderId, getFeedbacksByUserId, deleteOffer, getSafeTransferAvailability } from '@/lib/api';
 import { logClientError } from '@/lib/clientLogger';
 import { formatAdena } from '@/lib/adenaFormat';
 import { getMinPriceForUnit, getEffectiveUnitKk, formatPriceForUnit } from '@/lib/offerMinPrice';
@@ -105,6 +107,8 @@ export default function OfferPDPPage() {
   const [cryptoPaymentEnabled, setCryptoPaymentEnabled] = useState(false);
   const [ibanPaymentEnabled, setIbanPaymentEnabled] = useState(false);
   const [inquiryOrderId, setInquiryOrderId] = useState(null);
+  const [stAvailable, setStAvailable] = useState(false);
+  const [stEnabled, setStEnabled] = useState(false);
 
   useEffect(() => {
     if (!token) return;
@@ -118,6 +122,13 @@ export default function OfferPDPPage() {
       setIbanPaymentEnabled(false);
     });
   }, [token]);
+
+  useEffect(() => {
+    if (!offer || !token || isCreator || !serverId) return;
+    getSafeTransferAvailability(serverId, token, offer.seller?.id)
+      .then((data) => setStAvailable(!!data?.available))
+      .catch(() => setStAvailable(false));
+  }, [offer, token, isCreator, serverId]);
 
   useEffect(() => {
     if (!offerId || !token) return;
@@ -158,6 +169,7 @@ export default function OfferPDPPage() {
       ? Number(offer.minSellQuantity) / 1_000_000
       : 1;
     setBuyQuantityKk(initKk);
+    setStEnabled(false);
     setBuyDialogOpen(true);
   };
 
@@ -182,6 +194,7 @@ export default function OfferPDPPage() {
     setBuyError(null);
     try {
       const body = { offerId: offer.id, quantity: qty, characterNick: nick };
+      if (stEnabled) body.safeTransfer = true;
       const order = await createOrder(body, token);
       setBuyDialogOpen(false);
       setBuyCharacterNick('');
@@ -206,6 +219,7 @@ export default function OfferPDPPage() {
     try {
       const body = { offerId: offer.id, quantity: qty, characterNick: nick };
       body.paymentMethod = 'CARD_MANUAL';
+      if (stEnabled) body.safeTransfer = true;
       const order = await createOrder(body, token);
       setBuyDialogOpen(false);
       setBuyCharacterNick('');
@@ -230,6 +244,7 @@ export default function OfferPDPPage() {
     try {
       const body = { offerId: offer.id, quantity: qty, characterNick: nick };
       body.paymentMethod = 'CRYPTO_MANUAL';
+      if (stEnabled) body.safeTransfer = true;
       const order = await createOrder(body, token);
       setBuyDialogOpen(false);
       setBuyCharacterNick('');
@@ -254,6 +269,7 @@ export default function OfferPDPPage() {
     try {
       const body = { offerId: offer.id, quantity: qty, characterNick: nick };
       body.paymentMethod = 'IBAN_MANUAL';
+      if (stEnabled) body.safeTransfer = true;
       const order = await createOrder(body, token);
       setBuyDialogOpen(false);
       setBuyCharacterNick('');
@@ -827,6 +843,34 @@ export default function OfferPDPPage() {
               <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5 }}>
                 {t('bankFeeHint')}
               </Typography>
+            </Box>
+          )}
+          {stAvailable && !isCreator && (
+            <Box sx={{ mb: 2, p: 1.5, border: '1px solid', borderColor: 'info.main', borderRadius: 1, bgcolor: (theme) => `${theme.palette.info.main}08` }}>
+              <FormControlLabel
+                control={<Switch checked={stEnabled} onChange={(e) => setStEnabled(e.target.checked)} color="info" />}
+                label={<Typography variant="body2" fontWeight={600}>{t('safeTransferLabel')}</Typography>}
+              />
+              <Typography variant="caption" color="text.secondary" display="block" sx={{ ml: 4.5 }}>
+                {t('safeTransferHint')}
+              </Typography>
+              {stEnabled && (() => {
+                const pricePer1kk = Number(offer?.displayPrice ?? offer?.price) || 0;
+                const unitPrice = Number(offer?.displayPrice ?? offer?.price) || 0;
+                const dealAmount = isAdenaOffer ? buyQuantityKk * pricePer1kk : buyQuantity * unitPrice;
+                const stFee = Math.max(dealAmount * 0.05, 5);
+                const currency = offer?.displayCurrency ?? offer?.currency ?? '';
+                return (
+                  <Box sx={{ ml: 4.5, mt: 0.5 }}>
+                    <Typography variant="body2" color="info.main" fontWeight={600}>
+                      {t('safeTransferFee', { fee: stFee.toFixed(2), currency })}
+                    </Typography>
+                    <Typography variant="body2" color="info.main">
+                      {t('safeTransferTotal', { total: (dealAmount + stFee).toFixed(2), currency })}
+                    </Typography>
+                  </Box>
+                );
+              })()}
             </Box>
           )}
           {buyError && (

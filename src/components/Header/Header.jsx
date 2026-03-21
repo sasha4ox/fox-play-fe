@@ -144,6 +144,7 @@ export default function Header() {
   }, [effectiveMode]);
 
   const isAdminOrMod = profile?.role === 'ADMIN' || profile?.role === 'MODERATOR' || user?.role === 'ADMIN' || user?.role === 'MODERATOR';
+  const isAgentOrAdmin = profile?.role === 'AGENT' || profile?.role === 'ADMIN' || user?.role === 'AGENT' || user?.role === 'ADMIN';
 
   useEffect(() => {
     if (typeof window === 'undefined') return undefined;
@@ -252,6 +253,9 @@ export default function Header() {
           { href: `${base}/dashboard/balance`, label: t('balance'), active: pathname?.includes('/dashboard/balance') },
           ...(showSupportLink ? [{ href: `${base}/dashboard/support`, label: t('support'), active: pathname?.includes('/dashboard/support') }] : []),
           { href: `${base}/dashboard/sales`, label: t('mySales'), active: pathname?.includes('/dashboard/sales'), badge: sellerOrderCount },
+          ...(isAgentOrAdmin
+            ? [{ href: `${base}/dashboard/agent`, label: t('agentPanel'), active: pathname?.includes('/dashboard/agent') }]
+            : []),
           ...(isAdminOrMod
             ? [{ href: `${base}/dashboard/admin/overview`, label: t('admin'), active: pathname?.includes('/dashboard/admin'), badge: adminMoneyFlowBadgeCount }]
             : []),

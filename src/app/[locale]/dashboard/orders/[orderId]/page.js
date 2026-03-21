@@ -292,6 +292,8 @@ export default function OrderChatPage() {
   const isModerator = role === 'ADMIN' || role === 'MODERATOR';
   const isSeller = order && currentUserId && (order.sellerId === currentUserId || order.seller?.id === currentUserId);
   const isBuyer = order && currentUserId && (order.buyerId === currentUserId || order.buyer?.id === currentUserId);
+  const hasSafeTransfer = !!order?.safeTransfer;
+  const isAssignedAgent = hasSafeTransfer && order.safeTransfer.agentProfile?.userId === currentUserId;
   const getPaymentPageHref = (method) => {
     if (method === 'CRYPTO_MANUAL') return `/${locale}/pay-crypto/${orderId}`;
     if (method === 'IBAN_MANUAL') return `/${locale}/dashboard/orders/${orderId}/iban-payment`;
@@ -525,11 +527,12 @@ export default function OrderChatPage() {
 
   const isMe = (senderId) => currentUserId && senderId === currentUserId;
 
-  /** Returns { labelKey: 'buyer'|'seller'|'adminBadge', isAdmin: boolean } for message sender. */
+  /** Returns { labelKey: 'buyer'|'seller'|'adminBadge'|'agentBadge', isAdmin: boolean } for message sender. */
   const getMessageSenderLabel = (msg) => {
     const senderId = msg.senderId ?? msg.sender?.id;
     if (senderId === order?.buyerId) return { labelKey: 'buyer', isAdmin: false };
     if (senderId === order?.sellerId) return { labelKey: 'seller', isAdmin: false };
+    if (hasSafeTransfer && senderId === order.safeTransfer.agentProfile?.userId) return { labelKey: 'agentBadge', isAdmin: false };
     if (msg.sender?.role === 'ADMIN' || msg.sender?.role === 'MODERATOR') return { labelKey: 'adminBadge', isAdmin: true };
     return { labelKey: null, isAdmin: false };
   };
@@ -624,7 +627,14 @@ export default function OrderChatPage() {
                 <Box component="span" sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: 'success.main' }} />
                 {connected ? t('online') : t('live')}
               </Typography>
-              {order.buyerCharacterNick && (
+              {hasSafeTransfer && isSeller && order.safeTransfer.agentCharacterNick ? (
+                <Typography variant="caption" color="text.secondary" sx={{ mt: 0.25 }} noWrap>
+                  {t('agentInGameNick')}:{' '}
+                  <Typography component="span" sx={{ color: 'info.main', fontWeight: 600 }}>
+                    {order.safeTransfer.agentCharacterNick}
+                  </Typography>
+                </Typography>
+              ) : order.buyerCharacterNick && (
                 <Typography variant="caption" color="text.secondary" sx={{ mt: 0.25 }} noWrap>
                   {t('buyerInGameNick')}:{' '}
                   <Typography component="span" sx={{ color: 'primary.main', fontWeight: 600 }}>
@@ -731,6 +741,37 @@ export default function OrderChatPage() {
             </Button>
           )}
           <Box sx={{ p: { xs: isMobile ? 2 : 1.5, md: 2 }, pt: isMobile ? 0 : undefined, display: isMobile && !infoExpandedOnMobile ? 'none' : 'block' }}>
+          {hasSafeTransfer && (
+            <Box sx={{ mb: 2, p: 2, border: '2px solid', borderColor: 'info.main', borderRadius: 2, bgcolor: (theme) => `${theme.palette.info.main}12` }}>
+              <Typography variant="subtitle2" fontWeight={700} color="info.main" sx={{ mb: 0.5 }}>
+                {t('safeTransferBanner')}
+              </Typography>
+              {isSeller && (
+                <>
+                  <Typography variant="body2" color="text.secondary">{t('safeTransferSellerHint')}</Typography>
+                  {order.safeTransfer.agentCharacterNick && (
+                    <Typography variant="body1" fontWeight={700} color="info.main" sx={{ mt: 1 }}>
+                      {t('agentInGameNick')}: {order.safeTransfer.agentCharacterNick}
+                    </Typography>
+                  )}
+                </>
+              )}
+              {isBuyer && (
+                <Typography variant="body2" color="text.secondary">{t('safeTransferBuyerHint')}</Typography>
+              )}
+              {isAssignedAgent && (
+                <>
+                  <Typography variant="body2" color="text.secondary">{t('safeTransferAgentHint')}</Typography>
+                  {order.buyerCharacterNick && (
+                    <Typography variant="body1" fontWeight={700} color="info.main" sx={{ mt: 1 }}>
+                      {t('buyerInGameNick')}: {order.buyerCharacterNick}
+                    </Typography>
+                  )}
+                </>
+              )}
+            </Box>
+          )}
+
           {order.offer && (
           <>
             {/* Block 1: Offer & what you're buying (buyer) / selling (seller) / deal (moderator) */}
@@ -787,7 +828,11 @@ export default function OrderChatPage() {
               <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5 }}>
                 {t('amountsFixedAtPurchase')}
               </Typography>
-              {order.buyerCharacterNick && (
+              {hasSafeTransfer && isSeller && order.safeTransfer.agentCharacterNick ? (
+                <Typography variant="body1" color="info.main" fontWeight={600} display="block" sx={{ mt: 0.5 }}>
+                  {t('agentInGameNick')}: {order.safeTransfer.agentCharacterNick}
+                </Typography>
+              ) : order.buyerCharacterNick && (
                 <Typography variant="body1" color="text.primary" fontWeight={600} display="block" sx={{ mt: 0.5 }}>
                   {t('buyerInGameNick')}: {order.buyerCharacterNick}
                 </Typography>
@@ -844,7 +889,11 @@ export default function OrderChatPage() {
                   </Typography>
                 </>
               )}
-              {order.buyerCharacterNick && (
+              {hasSafeTransfer && isSeller && order.safeTransfer.agentCharacterNick ? (
+                <Typography variant="body2" color="info.main" fontWeight={600} sx={{ mt: 1 }}>
+                  {t('agentInGameNick')}: {order.safeTransfer.agentCharacterNick}
+                </Typography>
+              ) : order.buyerCharacterNick && (
                 <Typography variant="body2" color="text.primary" fontWeight={600} sx={{ mt: 1 }}>
                   {t('inGameNickLabel')}: {order.buyerCharacterNick}
                 </Typography>
@@ -1424,7 +1473,13 @@ export default function OrderChatPage() {
                   : t('isTyping', { name: otherName })}
           </Typography>
         )}
-        {/* Input area – fixed at bottom of chat panel, always visible on mobile */}
+        {/* Input area – fixed at bottom of chat panel, always visible on mobile; hidden for agents (read-only) */}
+        {isAssignedAgent ? (
+          <Box sx={{ flexShrink: 0, px: 2, py: 1.5, bgcolor: 'background.paper', borderTop: '1px solid', borderColor: 'divider', textAlign: 'center' }}>
+            <Typography variant="body2" color="text.secondary">{t('agentBadge')} — read-only</Typography>
+          </Box>
+        ) : (
+        <>
         <Box
           sx={{
             flexShrink: 0,
@@ -1488,6 +1543,8 @@ export default function OrderChatPage() {
           <Typography variant="caption" color="text.secondary" sx={{ px: 2, pb: 1 }}>
             {t('imagesAttached', { count: files.length })}
           </Typography>
+        )}
+        </>
         )}
 
         <Dialog open={disputeDialogOpen} onClose={() => setDisputeDialogOpen(false)} maxWidth="sm" fullWidth>
