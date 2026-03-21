@@ -13,6 +13,12 @@
     "user": "User",
     "scrollToTop": "Scroll to top"
   },
+  "AcceptTerms": {
+    "title": "Accept terms to continue",
+    "description": "Please confirm the following before using FoxyPlay.",
+    "submit": "Continue",
+    "checking": "Loading…"
+  },
   "Form": {
     "mandatatory": "This field is required",
     "submit": "Submit",

@@ -3,8 +3,7 @@
 import { useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
-
-const getApiBase = () => process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+import { getProfile } from '@/lib/api';
 
 /**
  * Handles return from Google OAuth redirect flow: reads ?token= or ?google_error= from URL,
@@ -29,11 +28,7 @@ export default function GoogleAuthReturnHandler() {
     if (!token) return;
 
     setAuth(null, token);
-    const base = getApiBase();
-    fetch(`${base}/me`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((res) => (res.ok ? res.json() : null))
+    getProfile(token)
       .then((profile) => {
         if (profile && profile.id) {
           setAuth(

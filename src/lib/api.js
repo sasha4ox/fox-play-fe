@@ -69,6 +69,14 @@ export async function apiFetch(path, options = {}, token = null) {
         sessionStorage.setItem('accountRestrictedMessage', message)
       } catch (_) {}
     }
+    if (res.status === 403 && body?.error?.code === 'TERMS_NOT_ACCEPTED' && typeof window !== 'undefined') {
+      const pathname = window.location.pathname || ''
+      if (!pathname.includes('/accept-terms')) {
+        const m = pathname.match(/^\/(en|ua|ru|es)(?:\/|$)/)
+        const loc = m ? m[1] : 'en'
+        window.location.assign(`/${loc}/accept-terms`)
+      }
+    }
     const err = new Error(message)
     err.status = res.status
     err.code = body?.error?.code
@@ -284,6 +292,11 @@ export async function extendOrderIbanPaymentDeadline(orderId, token) {
 /** Profile: user + balances in preferred currency (auth required) */
 export async function getProfile(token) {
   return apiGet('/me', token)
+}
+
+/** Record terms acceptance (required for new Google OAuth users until set). */
+export async function acceptTerms(token) {
+  return apiPost('/me/accept-terms', {}, token)
 }
 
 /** Feedbacks received by a user (public, for seller reviews). Returns [{ id, rating, comment, createdAt, fromUser: { id, nickname } }] */
