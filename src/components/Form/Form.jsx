@@ -82,6 +82,7 @@ function FormInner({ mode, popupMode = false, onLoginSuccess }) {
   const registerConsentsComplete = !!(termsAccepted && privacyAccepted && cryptoRiskAccepted);
   const isLoginForm = mode === 'login';
   const isAuthPage = !popupMode;
+  const isRegisterAuthPage = isAuthPage && mode === 'register';
 
   function TermsLinkLabel(chunks) {
     return (
@@ -304,7 +305,12 @@ function FormInner({ mode, popupMode = false, onLoginSuccess }) {
       className={`${styles.formWrapper} ${popupMode ? styles.formWrapperPopup : ''} ${isAuthPage ? styles.formWrapperAuth : ''} ${componentClass('Form')}`}
     >
       {isAuthPage && (
-        <Box sx={{ mb: 3, textAlign: { xs: 'left', sm: 'left' } }}>
+        <Box
+          sx={{
+            mb: isRegisterAuthPage ? { xs: 3, md: 2 } : 3,
+            textAlign: { xs: 'left', sm: 'left' },
+          }}
+        >
           <Typography variant="h4" component="h1" sx={{ fontWeight: 600, color: 'text.primary', mb: 1 }}>
             {isLoginForm ? tAuth('welcomeTitle') : tAuth('registerWelcomeTitle')}
           </Typography>
@@ -316,7 +322,10 @@ function FormInner({ mode, popupMode = false, onLoginSuccess }) {
       {!isAuthPage && (
         <h2>{isLoginForm ? t('login') : t('register')}</h2>
       )}
-      <form onSubmit={handleSubmit(onSubmit)} className={styles.form}>
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className={`${styles.form} ${isRegisterAuthPage ? styles.formRegisterDesktopTight : ''}`}
+      >
         <Controller
           name="email"
           control={control}
@@ -360,7 +369,9 @@ function FormInner({ mode, popupMode = false, onLoginSuccess }) {
               error={!!error}
               helperText={error ? error.message : null}
               slotProps={fieldSlotProps}
-              sx={{ mt: isAuthPage ? 2 : 0 }}
+              sx={{
+                mt: isAuthPage ? (isRegisterAuthPage ? { xs: 2, md: 1 } : 2) : 0,
+              }}
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
@@ -389,7 +400,7 @@ function FormInner({ mode, popupMode = false, onLoginSuccess }) {
                 error={!!error}
                 helperText={error ? error.message : null}
                 slotProps={fieldSlotProps}
-                sx={{ mt: 2 }}
+                sx={{ mt: { xs: 2, md: 1 } }}
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
@@ -412,7 +423,7 @@ function FormInner({ mode, popupMode = false, onLoginSuccess }) {
                 label={t('nickname')}
                 variant="outlined"
                 fullWidth
-                sx={{ mt: 2 }}
+                sx={{ mt: { xs: 2, md: 1 } }}
                 placeholder={t('nicknamePlaceholder')}
                 error={!!error}
                 helperText={error ? error.message : null}
@@ -434,7 +445,7 @@ function FormInner({ mode, popupMode = false, onLoginSuccess }) {
             control={control}
             rules={{ required: t('mandatatory') }}
             render={({ field, fieldState: { error } }) => (
-              <Box sx={{ mt: 2 }}>
+              <Box sx={{ mt: { xs: 2, md: 1 } }}>
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
                   {t('whereAreYouFrom')}
                 </Typography>
@@ -454,7 +465,7 @@ function FormInner({ mode, popupMode = false, onLoginSuccess }) {
           />
         )}
         {!isLoginForm && (
-          <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+          <Box sx={{ mt: { xs: 2, md: 1 }, display: 'flex', flexDirection: 'column', gap: { xs: 1.5, md: 1 } }}>
             <Controller
               name="termsAccepted"
               control={control}
@@ -561,7 +572,11 @@ function FormInner({ mode, popupMode = false, onLoginSuccess }) {
           </Box>
         )}
         {authError && (
-          <Alert severity="error" sx={{ mb: 2 }} onClose={() => { setAuthError(null); setEmailForResend(''); setResendStatus(null); }}>
+          <Alert
+            severity="error"
+            sx={{ mb: isRegisterAuthPage ? { xs: 2, md: 1.5 } : 2 }}
+            onClose={() => { setAuthError(null); setEmailForResend(''); setResendStatus(null); }}
+          >
             {authError}
             {(authError === t('pleaseVerifyEmail') || authError === t('activationEmailSentAgain')) && emailForResend && (
               <Button
@@ -591,7 +606,7 @@ function FormInner({ mode, popupMode = false, onLoginSuccess }) {
           </Alert>
         )}
         {authSuccess && (
-          <Alert severity="success" sx={{ mb: 2 }}>
+          <Alert severity="success" sx={{ mb: isRegisterAuthPage ? { xs: 2, md: 1.5 } : 2 }}>
             {authSuccess}
             {showActivationCooldown && lastRegisteredEmail && (
               <Box sx={{ mt: 1.5 }}>
@@ -656,7 +671,15 @@ function FormInner({ mode, popupMode = false, onLoginSuccess }) {
         )}
         {googleClientId && (
           <>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, width: '100%', my: 2 }}>
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 2,
+                width: '100%',
+                my: isRegisterAuthPage ? { xs: 2, md: 1.5 } : 2,
+              }}
+            >
               <Divider flexItem sx={{ borderColor: 'divider' }} />
               <Typography variant="body2" color="text.secondary" sx={{ flexShrink: 0 }}>
                 {t('or')}
@@ -679,7 +702,7 @@ function FormInner({ mode, popupMode = false, onLoginSuccess }) {
             </div>
           </>
         )}
-        <Box sx={{ textAlign: 'center', mt: 2 }}>
+        <Box sx={{ textAlign: 'center', mt: isRegisterAuthPage ? { xs: 2, md: 1.5 } : 2 }}>
           <Typography variant="body2" color="text.secondary" component="span">
             {isLoginForm ? tAuth('footerNoAccount') : tAuth('footerHaveAccount')}{' '}
           </Typography>

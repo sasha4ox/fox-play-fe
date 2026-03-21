@@ -5,6 +5,12 @@
     width: 100%;
 }
 
+@media (min-width: 900px) {
+  .form.formRegisterDesktopTight {
+    gap: 12px;
+  }
+}
+
 .formWrapper {
     background-color: transparent;
     color: var(--foreground);
