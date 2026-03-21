@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import Container from '@mui/material/Container';
@@ -20,12 +20,22 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
 import CircularProgress from '@mui/material/CircularProgress';
 import Alert from '@mui/material/Alert';
+import IconButton from '@mui/material/IconButton';
+import DeleteIcon from '@mui/icons-material/Delete';
+import AddIcon from '@mui/icons-material/Add';
+import MenuItem from '@mui/material/MenuItem';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemText from '@mui/material/ListItemText';
 import { useAuthStore } from '@/store/authStore';
 import { useProfile } from '@/hooks/useProfile';
+import { useGames } from '@/hooks/useGames';
 import {
   getAgentOrders,
   setAgentOnline,
   getAgentProfile,
+  addAgentServer,
+  removeAgentServer,
   claimSafeTransfer,
   confirmItemReceived,
   confirmItemDelivered,
@@ -139,6 +149,68 @@ export default function AgentPanelPage() {
   const [claimNick, setClaimNick] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
 
+  // Add-server dialog
+  const [addServerOpen, setAddServerOpen] = useState(false);
+  const [selectedGameId, setSelectedGameId] = useState('');
+  const [selectedVariantId, setSelectedVariantId] = useState('');
+  const [selectedServerId, setSelectedServerId] = useState('');
+  const [addServerError, setAddServerError] = useState('');
+  const [addServerLoading, setAddServerLoading] = useState(false);
+  const { games, loading: gamesLoading } = useGames();
+
+  const assignedServerIds = useMemo(
+    () => new Set((agentProfile?.servers ?? []).map((s) => s.server?.id).filter(Boolean)),
+    [agentProfile?.servers],
+  );
+
+  const selectedGame = useMemo(() => games.find((g) => g.id === selectedGameId) ?? null, [games, selectedGameId]);
+  const variants = selectedGame?.variants ?? [];
+  const selectedVariant = useMemo(() => variants.find((v) => v.id === selectedVariantId) ?? null, [variants, selectedVariantId]);
+  const servers = useMemo(
+    () => (selectedVariant?.servers ?? []).filter((s) => !assignedServerIds.has(s.id)),
+    [selectedVariant, assignedServerIds],
+  );
+
+  const handleOpenAddServer = () => {
+    setSelectedGameId('');
+    setSelectedVariantId('');
+    setSelectedServerId('');
+    setAddServerError('');
+    setAddServerOpen(true);
+  };
+
+  const handleAddServer = async () => {
+    if (!selectedServerId) return;
+    setAddServerLoading(true);
+    setAddServerError('');
+    try {
+      await addAgentServer(selectedServerId, token);
+      setAddServerOpen(false);
+      const prof = await getAgentProfile(token);
+      setAgentProfile(prof);
+    } catch (err) {
+      if (err.message?.toLowerCase().includes('already')) {
+        setAddServerError(t('serverAlreadyAdded'));
+      } else {
+        setAddServerError(err.message);
+      }
+    } finally {
+      setAddServerLoading(false);
+    }
+  };
+
+  const handleRemoveServer = async (serverId) => {
+    try {
+      await removeAgentServer(serverId, token);
+      setAgentProfile((prev) => ({
+        ...prev,
+        servers: (prev?.servers ?? []).filter((s) => s.server?.id !== serverId && s.serverId !== serverId),
+      }));
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
   const loadData = useCallback(async () => {
     if (!token) return;
     try {
@@ -242,17 +314,53 @@ export default function AgentPanelPage() {
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
       {isAgent && agentProfile && (
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3, p: 2, borderRadius: 2, bgcolor: 'background.paper', boxShadow: 1 }}>
-          <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-            {agentProfile.isOnline ? t('onlineToggle') : t('offlineToggle')}
-          </Typography>
-          <Switch checked={agentProfile.isOnline} onChange={handleToggleOnline} color="success" />
-          {agentProfile.servers?.length > 0 && (
-            <Typography variant="body2" color="text.secondary">
-              {t('servers')}: {agentProfile.servers.map((s) => s.server?.name).filter(Boolean).join(', ')}
-            </Typography>
-          )}
-        </Box>
+        <Card variant="outlined" sx={{ mb: 3 }}>
+          <CardContent sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            {/* Online toggle */}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+              <Switch checked={agentProfile.isOnline} onChange={handleToggleOnline} color="success" />
+              <Box>
+                <Typography variant="subtitle1" sx={{ fontWeight: 600, lineHeight: 1.3 }}>
+                  {agentProfile.isOnline ? t('onlineToggle') : t('offlineToggle')}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">{t('onlineHint')}</Typography>
+              </Box>
+            </Box>
+
+            {/* My servers */}
+            <Box>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 0.5 }}>
+                <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>{t('myServers')}</Typography>
+                <Button size="small" startIcon={<AddIcon />} onClick={handleOpenAddServer}>{t('addServer')}</Button>
+              </Box>
+              {(agentProfile.servers?.length ?? 0) === 0 ? (
+                <Typography variant="body2" color="text.secondary" sx={{ py: 1 }}>{t('noServers')}</Typography>
+              ) : (
+                <List dense disablePadding>
+                  {agentProfile.servers.map((as) => {
+                    const srv = as.server;
+                    const variant = srv?.gameVariant;
+                    const game = variant?.game;
+                    const label = [game?.name, variant?.name, srv?.name].filter(Boolean).join(' — ');
+                    return (
+                      <ListItem
+                        key={as.id}
+                        secondaryAction={
+                          <IconButton edge="end" size="small" color="error" onClick={() => handleRemoveServer(srv?.id ?? as.serverId)}>
+                            <DeleteIcon fontSize="small" />
+                          </IconButton>
+                        }
+                        sx={{ pl: 0 }}
+                      >
+                        <ListItemText primary={label} />
+                      </ListItem>
+                    );
+                  })}
+                </List>
+              )}
+            </Box>
+          </CardContent>
+        </Card>
       )}
 
       {loading ? (
@@ -319,6 +427,50 @@ export default function AgentPanelPage() {
           <Button onClick={() => setFlagDialog(null)}>Cancel</Button>
           <Button variant="contained" color="error" disabled={!flagReason.trim() || actionLoading} onClick={handleFlagSubmit}>
             {actionLoading ? <CircularProgress size={20} /> : t('flagIssue')}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Add server dialog */}
+      <Dialog open={addServerOpen} onClose={() => setAddServerOpen(false)} maxWidth="xs" fullWidth>
+        <DialogTitle>{t('addServerDialogTitle')}</DialogTitle>
+        <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: '8px !important' }}>
+          {addServerError && <Alert severity="error" sx={{ mb: 1 }}>{addServerError}</Alert>}
+          <TextField
+            select
+            fullWidth
+            label={t('selectGame')}
+            value={selectedGameId}
+            onChange={(e) => { setSelectedGameId(e.target.value); setSelectedVariantId(''); setSelectedServerId(''); }}
+            disabled={gamesLoading}
+          >
+            {games.map((g) => <MenuItem key={g.id} value={g.id}>{g.name}</MenuItem>)}
+          </TextField>
+          <TextField
+            select
+            fullWidth
+            label={t('selectVariant')}
+            value={selectedVariantId}
+            onChange={(e) => { setSelectedVariantId(e.target.value); setSelectedServerId(''); }}
+            disabled={!selectedGameId || variants.length === 0}
+          >
+            {variants.map((v) => <MenuItem key={v.id} value={v.id}>{v.name}</MenuItem>)}
+          </TextField>
+          <TextField
+            select
+            fullWidth
+            label={t('selectServer')}
+            value={selectedServerId}
+            onChange={(e) => setSelectedServerId(e.target.value)}
+            disabled={!selectedVariantId || servers.length === 0}
+          >
+            {servers.map((s) => <MenuItem key={s.id} value={s.id}>{s.name}</MenuItem>)}
+          </TextField>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setAddServerOpen(false)}>Cancel</Button>
+          <Button variant="contained" disabled={!selectedServerId || addServerLoading} onClick={handleAddServer}>
+            {addServerLoading ? <CircularProgress size={20} /> : t('addServer')}
           </Button>
         </DialogActions>
       </Dialog>

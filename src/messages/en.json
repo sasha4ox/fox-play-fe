@@ -143,7 +143,17 @@
     "enterYourNick": "Your in-game character nickname",
     "enterYourNickHint": "Seller will send items to this character",
     "claimDialogTitle": "Claim Safe Transfer",
-    "claimDialogSubmit": "Claim order"
+    "claimDialogSubmit": "Claim order",
+    "myServers": "My servers",
+    "addServer": "Add server",
+    "removeServer": "Remove",
+    "addServerDialogTitle": "Add a server",
+    "selectGame": "Game",
+    "selectVariant": "Variant",
+    "selectServer": "Server",
+    "noServers": "No servers added yet. Add a server to start receiving orders.",
+    "serverAlreadyAdded": "This server is already in your list.",
+    "onlineHint": "When online, you receive incoming Safe Transfer orders for your servers."
   },
   "Profile": {
     "title": "Profile",

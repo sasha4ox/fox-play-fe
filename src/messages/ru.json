@@ -143,7 +143,17 @@
     "enterYourNick": "Ваш игровой никнейм",
     "enterYourNickHint": "Продавец отправит предметы этому персонажу",
     "claimDialogTitle": "Взять Safe Transfer",
-    "claimDialogSubmit": "Взять заказ"
+    "claimDialogSubmit": "Взять заказ",
+    "myServers": "Мои серверы",
+    "addServer": "Добавить сервер",
+    "removeServer": "Удалить",
+    "addServerDialogTitle": "Добавить сервер",
+    "selectGame": "Игра",
+    "selectVariant": "Вариант",
+    "selectServer": "Сервер",
+    "noServers": "Серверов пока нет. Добавьте сервер, чтобы получать заказы.",
+    "serverAlreadyAdded": "Этот сервер уже в вашем списке.",
+    "onlineHint": "Когда вы онлайн, вы получаете входящие Safe Transfer заказы для ваших серверов."
   },
   "Profile": {
     "title": "Профиль",

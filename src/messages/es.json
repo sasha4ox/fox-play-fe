@@ -142,7 +142,17 @@
     "enterYourNick": "Tu nick de personaje en el juego",
     "enterYourNickHint": "El vendedor enviará los artículos a este personaje",
     "claimDialogTitle": "Tomar Safe Transfer",
-    "claimDialogSubmit": "Tomar orden"
+    "claimDialogSubmit": "Tomar orden",
+    "myServers": "Mis servidores",
+    "addServer": "Agregar servidor",
+    "removeServer": "Eliminar",
+    "addServerDialogTitle": "Agregar un servidor",
+    "selectGame": "Juego",
+    "selectVariant": "Variante",
+    "selectServer": "Servidor",
+    "noServers": "Aún no hay servidores. Agrega un servidor para comenzar a recibir pedidos.",
+    "serverAlreadyAdded": "Este servidor ya está en tu lista.",
+    "onlineHint": "Cuando estás en línea, recibes pedidos de Safe Transfer para tus servidores."
   },
   "Profile": {
     "title": "Profile",
