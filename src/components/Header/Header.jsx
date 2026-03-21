@@ -24,7 +24,6 @@ import Select from '@mui/material/Select';
 import LocaleSwitcher from '@/components/LocaleSwitcher/LocaleSwitcher';
 import { useAuthStore, useIsAuthenticated } from '@/store/authStore';
 import { useThemeStore } from '@/store/themeStore';
-import { useLoginModalStore } from '@/store/loginModalStore';
 import { useProfile } from '@/hooks/useProfile';
 import { useSellerNewOrder } from '@/hooks/useSellerNewOrder';
 import { updatePreferredCurrency, getUnreadCount, getAdminMoneyFlowAlertBadges, getMySupportConversations } from '@/lib/api';
@@ -65,7 +64,6 @@ export default function Header() {
   const isAuth = useIsAuthenticated();
   const token = useAuthStore((s) => s.token);
   const { user, logout } = useAuthStore();
-  const openLoginModal = useLoginModalStore((s) => s.openModal);
   const { profile, primaryBalance, preferredCurrency, loading: profileLoading, refetch } = useProfile();
   const tCommon = useTranslations('Common');
   const displayName = profile?.nickname ?? user?.nickname ?? user?.email ?? tCommon('user');
@@ -618,11 +616,13 @@ export default function Header() {
           </Box>
           <Divider sx={{ my: 1 }} />
           <Button
+            component={Link}
+            href={`${base}/login`}
             fullWidth
             variant="contained"
             color="secondary"
             sx={{ mx: 2, mt: 1 }}
-            onClick={() => { setMobileOpen(false); openLoginModal(); }}
+            onClick={() => setMobileOpen(false)}
           >
             {t('login')}
           </Button>
@@ -719,7 +719,7 @@ export default function Header() {
                   </Box>
                 </>
               )}
-              <Button className={componentClass('Header', 'LoginBtn')} size="small" variant="outlined" color="secondary" sx={{ textTransform: 'none' }} onClick={() => openLoginModal()}>
+              <Button component={Link} href={`${base}/login`} className={componentClass('Header', 'LoginBtn')} size="small" variant="outlined" color="secondary" sx={{ textTransform: 'none' }}>
                 {t('login')}
               </Button>
             </>

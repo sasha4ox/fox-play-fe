@@ -1,31 +1,45 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, Suspense } from 'react';
 import TextField from '@mui/material/TextField';
 import Alert from '@mui/material/Alert';
 import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 import Divider from '@mui/material/Divider';
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import DialogActions from '@mui/material/DialogActions';
+import InputAdornment from '@mui/material/InputAdornment';
 import CountrySelect from '@/components/CountrySelect/CountrySelect';
 import { useForm, Controller, useWatch } from 'react-hook-form';
 import { useTranslations } from 'next-intl';
 import { useLocale } from 'next-intl';
 import Link from 'next/link';
-import { redirect, useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Checkbox from '@mui/material/Checkbox';
 import MuiLink from '@mui/material/Link';
+import AlternateEmailIcon from '@mui/icons-material/AlternateEmail';
+import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
+import PersonOutlineIcon from '@mui/icons-material/PersonOutline';
 import { GoogleLogin } from '@react-oauth/google';
 import { useAuthStore } from '@/store/authStore';
-import { getApiBase } from '@/lib/api';
+import { getApiBase, requestPasswordReset } from '@/lib/api';
+import { useLoginModalStore } from '@/store/loginModalStore';
 import { componentClass } from '@/lib/componentPath';
 import styles from './form.module.css';
 
 const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '';
 
-export default function Form({ popupMode = false, onLoginSuccess }) {
-  const [isLoginForm, setIsloginForm] = useState(true);
+function safeNextPath(raw) {
+  if (!raw || typeof raw !== 'string') return null;
+  if (!raw.startsWith('/') || raw.startsWith('//')) return null;
+  return raw;
+}
+
+function FormInner({ mode, popupMode = false, onLoginSuccess }) {
   const [authError, setAuthError] = useState(null);
   const [authSuccess, setAuthSuccess] = useState(null);
   const [resendStatus, setResendStatus] = useState(null);
@@ -33,12 +47,19 @@ export default function Form({ popupMode = false, onLoginSuccess }) {
   const [showActivationCooldown, setShowActivationCooldown] = useState(false);
   const [resendCooldownSeconds, setResendCooldownSeconds] = useState(0);
   const [lastRegisteredEmail, setLastRegisteredEmail] = useState('');
+  const [forgotOpen, setForgotOpen] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotLoading, setForgotLoading] = useState(false);
+  const [forgotMessage, setForgotMessage] = useState(null);
+  const [forgotError, setForgotError] = useState(null);
+
   const { control, handleSubmit, setValue, getValues, setError, formState: { isSubmitting } } = useForm({
     defaultValues: {
-      password: "",
-      email: "",
-      nickname: "",
-      countryCode: "",
+      password: '',
+      confirmPassword: '',
+      email: '',
+      nickname: '',
+      countryCode: '',
       termsAccepted: false,
       privacyAccepted: false,
       cryptoRiskAccepted: false,
@@ -48,13 +69,19 @@ export default function Form({ popupMode = false, onLoginSuccess }) {
   const locale = useLocale();
   const base = `/${locale}`;
   const router = useRouter();
+  const searchParams = useSearchParams();
   const t = useTranslations('Form');
+  const tAuth = useTranslations('AuthPage');
+  const closeLoginModal = useLoginModalStore((s) => s.closeModal);
+
   const [termsAccepted, privacyAccepted, cryptoRiskAccepted] = useWatch({
     control,
     name: ['termsAccepted', 'privacyAccepted', 'cryptoRiskAccepted'],
     defaultValue: [false, false, false],
   });
   const registerConsentsComplete = !!(termsAccepted && privacyAccepted && cryptoRiskAccepted);
+  const isLoginForm = mode === 'login';
+  const isAuthPage = !popupMode;
 
   function TermsLinkLabel(chunks) {
     return (
@@ -85,24 +112,11 @@ export default function Form({ popupMode = false, onLoginSuccess }) {
     );
   }
 
-  const handleChangeForm = () => {
-    setAuthError(null);
-    setAuthSuccess(null);
-    setShowActivationCooldown(false);
-    setResendCooldownSeconds(0);
-    setLastRegisteredEmail('');
-    setValue('termsAccepted', false);
-    setValue('privacyAccepted', false);
-    setValue('cryptoRiskAccepted', false);
-    setIsloginForm(!isLoginForm);
-  };
-
   useEffect(() => {
     if (!showActivationCooldown || resendCooldownSeconds <= 0) return;
-    const t = setTimeout(() => setResendCooldownSeconds((s) => s - 1), 1000);
-    return () => clearTimeout(t);
+    const timer = setTimeout(() => setResendCooldownSeconds((s) => s - 1), 1000);
+    return () => clearTimeout(timer);
   }, [showActivationCooldown, resendCooldownSeconds]);
-  
 
   const setAuth = useAuthStore((s) => s.setAuth);
 
@@ -117,7 +131,7 @@ export default function Form({ popupMode = false, onLoginSuccess }) {
   }, []);
 
   useEffect(() => {
-    if (isLoginForm || suggestedCountryFetchedRef.current) return;
+    if (mode !== 'register' || suggestedCountryFetchedRef.current) return;
     suggestedCountryFetchedRef.current = true;
     fetch(`${getApiBase()}/auth/suggested-country`)
       .then((res) => res.json())
@@ -127,7 +141,12 @@ export default function Form({ popupMode = false, onLoginSuccess }) {
         }
       })
       .catch(() => {});
-  }, [isLoginForm, setValue, getValues]);
+  }, [mode, setValue, getValues]);
+
+  const postAuthRedirect = () => {
+    const q = safeNextPath(searchParams.get('next'));
+    router.replace(q || `/${locale}/dashboard`);
+  };
 
   const getAuthErrorMessage = (responseBody) => {
     const msg = responseBody?.error?.message ?? responseBody?.message ?? '';
@@ -147,7 +166,7 @@ export default function Form({ popupMode = false, onLoginSuccess }) {
     const response = await fetch('/api/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
+      body: JSON.stringify({ email: data.email, password: data.password }),
     });
     const parsedResponse = await response.json();
     const res = parsedResponse.response;
@@ -160,7 +179,7 @@ export default function Form({ popupMode = false, onLoginSuccess }) {
         onLoginSuccess();
         return;
       }
-      redirect(`/${locale}/dashboard`);
+      postAuthRedirect();
     } else {
       const errMsg = getAuthErrorMessage(parsedResponse?.response ?? parsedResponse);
       setAuthError(errMsg);
@@ -168,7 +187,6 @@ export default function Form({ popupMode = false, onLoginSuccess }) {
     }
   };
 
-  // Popup/iframe flow: Google returns credential (id_token) in-page; we send to backend
   const handleGoogleCredential = async (credentialResponse) => {
     setAuthError(null);
     try {
@@ -186,7 +204,7 @@ export default function Form({ popupMode = false, onLoginSuccess }) {
           onLoginSuccess();
           return;
         }
-        router.push(`/${locale}/dashboard`);
+        postAuthRedirect();
       } else {
         setAuthError(getAuthErrorMessage(data) || t('googleSignInError'));
       }
@@ -197,10 +215,11 @@ export default function Form({ popupMode = false, onLoginSuccess }) {
 
   const handleRegister = async (data) => {
     setAuthError(null);
+    const { termsAccepted: _t, privacyAccepted: _p, cryptoRiskAccepted: _c, confirmPassword: _cp, ...registerData } = data;
     const response = await fetch('/api/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
+      body: JSON.stringify(registerData),
     });
     const parsed = await response.json();
     const res = parsed.response ?? parsed;
@@ -212,7 +231,7 @@ export default function Form({ popupMode = false, onLoginSuccess }) {
         onLoginSuccess();
         return;
       }
-      redirect(`/${locale}/dashboard`);
+      postAuthRedirect();
     }
     if (response.ok && res?.message) {
       setAuthSuccess(res.message);
@@ -232,18 +251,71 @@ export default function Form({ popupMode = false, onLoginSuccess }) {
       if (isLoginForm) {
         await handleLogin(data);
       } else {
-        const { termsAccepted: _t, privacyAccepted: _p, cryptoRiskAccepted: _c, ...registerData } = data;
-        await handleRegister(registerData);
+        await handleRegister(data);
       }
     } catch (err) {
       setAuthError(t('errorSubmit'));
       setError('email', { type: 'custom', message: t('errorSubmit') });
     }
-  }; 
+  };
+
+  const openForgot = () => {
+    setForgotEmail(getValues('email') || '');
+    setForgotMessage(null);
+    setForgotError(null);
+    setForgotOpen(true);
+  };
+
+  const submitForgot = async () => {
+    const email = (forgotEmail || '').trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setForgotError(tAuth('forgotInvalidEmail'));
+      return;
+    }
+    setForgotLoading(true);
+    setForgotError(null);
+    setForgotMessage(null);
+    try {
+      await requestPasswordReset(email);
+      setForgotMessage(tAuth('forgotSuccess'));
+    } catch (e) {
+      setForgotError(e?.message || tAuth('forgotError'));
+    } finally {
+      setForgotLoading(false);
+    }
+  };
+
+  const submitLabel = isSubmitting
+    ? t('sending')
+    : isLoginForm
+      ? t('login')
+      : t('register');
+
+  const fieldSlotProps = isAuthPage
+    ? {
+        input: {
+          sx: { minHeight: 48, boxSizing: 'border-box' },
+        },
+      }
+    : undefined;
 
   return (
-    <section className={`${styles.formWrapper} ${popupMode ? styles.formWrapperPopup : ''} ${componentClass('Form')}`}>
-      <h2>{isLoginForm ? t('login') : t('register')}</h2>
+    <section
+      className={`${styles.formWrapper} ${popupMode ? styles.formWrapperPopup : ''} ${isAuthPage ? styles.formWrapperAuth : ''} ${componentClass('Form')}`}
+    >
+      {isAuthPage && (
+        <Box sx={{ mb: 3, textAlign: { xs: 'left', sm: 'left' } }}>
+          <Typography variant="h4" component="h1" sx={{ fontWeight: 600, color: 'text.primary', mb: 1 }}>
+            {isLoginForm ? tAuth('welcomeTitle') : tAuth('registerWelcomeTitle')}
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            {isLoginForm ? tAuth('welcomeSubtitle') : tAuth('registerWelcomeSubtitle')}
+          </Typography>
+        </Box>
+      )}
+      {!isAuthPage && (
+        <h2>{isLoginForm ? t('login') : t('register')}</h2>
+      )}
       <form onSubmit={handleSubmit(onSubmit)} className={styles.form}>
         <Controller
           name="email"
@@ -263,6 +335,14 @@ export default function Form({ popupMode = false, onLoginSuccess }) {
               fullWidth
               error={!!error}
               helperText={error ? error.message : null}
+              slotProps={fieldSlotProps}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <AlternateEmailIcon sx={{ color: 'text.secondary', fontSize: 22 }} />
+                  </InputAdornment>
+                ),
+              }}
             />
           )}
         />
@@ -271,16 +351,56 @@ export default function Form({ popupMode = false, onLoginSuccess }) {
           control={control}
           rules={{ required: t('mandatatory') }}
           render={({ field, fieldState: { error } }) => (
-              <TextField
-                  {...field}
-                  label={t('password')}
-                  type={"password"}
-                  variant="outlined"
-                  error={!!error}
-                  helperText={error ? error.message : null}
-              />
+            <TextField
+              {...field}
+              label={t('password')}
+              type="password"
+              variant="outlined"
+              fullWidth
+              error={!!error}
+              helperText={error ? error.message : null}
+              slotProps={fieldSlotProps}
+              sx={{ mt: isAuthPage ? 2 : 0 }}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <LockOutlinedIcon sx={{ color: 'text.secondary', fontSize: 22 }} />
+                  </InputAdornment>
+                ),
+              }}
+            />
           )}
         />
+        {!isLoginForm && (
+          <Controller
+            name="confirmPassword"
+            control={control}
+            rules={{
+              required: t('mandatatory'),
+              validate: (v) => v === getValues('password') || t('passwordMismatch'),
+            }}
+            render={({ field, fieldState: { error } }) => (
+              <TextField
+                {...field}
+                label={t('confirmPassword')}
+                type="password"
+                variant="outlined"
+                fullWidth
+                error={!!error}
+                helperText={error ? error.message : null}
+                slotProps={fieldSlotProps}
+                sx={{ mt: 2 }}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <LockOutlinedIcon sx={{ color: 'text.secondary', fontSize: 22 }} />
+                    </InputAdornment>
+                  ),
+                }}
+              />
+            )}
+          />
+        )}
         {!isLoginForm && (
           <Controller
             name="nickname"
@@ -296,6 +416,14 @@ export default function Form({ popupMode = false, onLoginSuccess }) {
                 placeholder={t('nicknamePlaceholder')}
                 error={!!error}
                 helperText={error ? error.message : null}
+                slotProps={fieldSlotProps}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <PersonOutlineIcon sx={{ color: 'text.secondary', fontSize: 22 }} />
+                    </InputAdornment>
+                  ),
+                }}
               />
             )}
           />
@@ -511,8 +639,21 @@ export default function Form({ popupMode = false, onLoginSuccess }) {
           className={`${styles.send} ${componentClass('Form', 'SubmitBtn')}`}
           disabled={isSubmitting || (!isLoginForm && !registerConsentsComplete)}
         >
-          {isSubmitting ? t('sending') : t('submit')}
+          {submitLabel}
         </Button>
+        {isLoginForm && (
+          <Box sx={{ textAlign: 'center', mt: 1.5 }}>
+            <MuiLink
+              component="button"
+              type="button"
+              variant="body2"
+              onClick={openForgot}
+              sx={{ cursor: 'pointer', textDecoration: 'underline', color: 'text.secondary' }}
+            >
+              {tAuth('forgotPassword')}
+            </MuiLink>
+          </Box>
+        )}
         {googleClientId && (
           <>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, width: '100%', my: 2 }}>
@@ -538,11 +679,58 @@ export default function Form({ popupMode = false, onLoginSuccess }) {
             </div>
           </>
         )}
-        <Button type="button" variant="text" color="secondary" fullWidth onClick={handleChangeForm} sx={{ mt: 1 }}>
-          {isLoginForm ? t('noAccount') : t('haveAccount')}
-        </Button>
-        
+        <Box sx={{ textAlign: 'center', mt: 2 }}>
+          <Typography variant="body2" color="text.secondary" component="span">
+            {isLoginForm ? tAuth('footerNoAccount') : tAuth('footerHaveAccount')}{' '}
+          </Typography>
+          <MuiLink
+            component={Link}
+            href={isLoginForm ? `${base}/register` : `${base}/login`}
+            fontWeight={600}
+            underline="hover"
+            onClick={() => {
+              if (popupMode) closeLoginModal();
+            }}
+          >
+            {isLoginForm ? tAuth('registerNow') : tAuth('loginNow')}
+          </MuiLink>
+        </Box>
       </form>
+
+      <Dialog open={forgotOpen} onClose={() => setForgotOpen(false)} fullWidth maxWidth="xs">
+        <DialogTitle>{tAuth('forgotTitle')}</DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            {tAuth('forgotDescription')}
+          </Typography>
+          <TextField
+            autoFocus
+            margin="dense"
+            label={t('email')}
+            type="email"
+            fullWidth
+            value={forgotEmail}
+            onChange={(e) => setForgotEmail(e.target.value)}
+            error={!!forgotError && !forgotMessage}
+          />
+          {forgotError && <Alert severity="error" sx={{ mt: 2 }}>{forgotError}</Alert>}
+          {forgotMessage && <Alert severity="success" sx={{ mt: 2 }}>{forgotMessage}</Alert>}
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={() => setForgotOpen(false)}>{tAuth('forgotClose')}</Button>
+          <Button variant="contained" color="secondary" onClick={submitForgot} disabled={forgotLoading || !!forgotMessage}>
+            {forgotLoading ? t('sending') : tAuth('forgotSubmit')}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </section>
+  );
+}
+
+export default function Form(props) {
+  return (
+    <Suspense fallback={null}>
+      <FormInner {...props} />
+    </Suspense>
   );
 }

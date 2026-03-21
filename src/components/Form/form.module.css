@@ -88,6 +88,12 @@
   }
 }
 
+/* Full-page auth (login/register): align with split layout */
+.formWrapperAuth {
+  padding: 0;
+  max-width: none;
+}
+
 /* In popup (e.g. login modal): less padding so it fits on mobile */
 .formWrapperPopup {
   padding: 24px 16px;

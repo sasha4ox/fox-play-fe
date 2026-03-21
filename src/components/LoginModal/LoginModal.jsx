@@ -9,17 +9,24 @@ import Typography from '@mui/material/Typography';
 import { useTranslations } from 'next-intl';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useTheme } from '@mui/material/styles';
+import { usePathname } from 'next/navigation';
 import Form from '@/components/Form/Form';
 import { useLoginModalStore } from '@/store/loginModalStore';
 import { componentClass } from '@/lib/componentPath';
 
 export default function LoginModal() {
+  const pathname = usePathname();
   const t = useTranslations('LoginModal');
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const open = useLoginModalStore((s) => s.open);
   const closeModal = useLoginModalStore((s) => s.closeModal);
   const triggerLoginSuccess = useLoginModalStore((s) => s.triggerLoginSuccess);
+
+  const onAuthPage = /\/(en|ua|ru|es)\/(login|register)(?:\/|$)/.test(pathname || '');
+  if (onAuthPage) {
+    return null;
+  }
 
   return (
     <Dialog
@@ -91,7 +98,7 @@ export default function LoginModal() {
           pb: { xs: 'max(24px, env(safe-area-inset-bottom))', sm: 3 },
         }}
       >
-        <Form popupMode onLoginSuccess={triggerLoginSuccess} />
+        <Form mode="login" popupMode onLoginSuccess={triggerLoginSuccess} />
       </DialogContent>
     </Dialog>
   );
