@@ -46,7 +46,10 @@
     "registerSuccess": "Аккаунт создан. Вы вошли в систему.",
     "or": "или",
     "googleSignInError": "Ошибка входа через Google. Попробуйте снова.",
-    "continueWithGoogle": "Продолжить через Google"
+    "continueWithGoogle": "Продолжить через Google",
+    "consentTermsRich": "Я соглашаюсь с <terms>Условиями обслуживания</terms> и <disclaimer>Отказом от ответственности маркетплейса</disclaimer>",
+    "consentPrivacyRich": "Я соглашаюсь с <privacy>Политикой конфиденциальности</privacy>",
+    "consentCryptoRich": "Я понимаю риски, описанные в <crypto>Раскрытии информации о крипторисках</crypto>"
   },
   "Header": {
     "home": "Главная",

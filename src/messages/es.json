@@ -46,7 +46,10 @@
     "registerSuccess": "Account created. You are logged in.",
     "or": "or",
     "googleSignInError": "Google sign-in failed. Please try again.",
-    "continueWithGoogle": "Continue with Google"
+    "continueWithGoogle": "Continue with Google",
+    "consentTermsRich": "Acepto los <terms>Términos de servicio</terms> y el <disclaimer>Descargo de responsabilidad del marketplace</disclaimer>",
+    "consentPrivacyRich": "Acepto la <privacy>Política de privacidad</privacy>",
+    "consentCryptoRich": "Entiendo los riesgos descritos en la <crypto>Divulgación de riesgos de cripto</crypto>"
   },
   "Header": {
     "home": "Home",

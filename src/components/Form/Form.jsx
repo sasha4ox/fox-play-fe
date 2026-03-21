@@ -8,10 +8,14 @@ import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 import Divider from '@mui/material/Divider';
 import CountrySelect from '@/components/CountrySelect/CountrySelect';
-import { useForm, Controller } from 'react-hook-form';
+import { useForm, Controller, useWatch } from 'react-hook-form';
 import { useTranslations } from 'next-intl';
 import { useLocale } from 'next-intl';
+import Link from 'next/link';
 import { redirect, useRouter } from 'next/navigation';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import Checkbox from '@mui/material/Checkbox';
+import MuiLink from '@mui/material/Link';
 import { GoogleLogin } from '@react-oauth/google';
 import { useAuthStore } from '@/store/authStore';
 import { getApiBase } from '@/lib/api';
@@ -35,12 +39,51 @@ export default function Form({ popupMode = false, onLoginSuccess }) {
       email: "",
       nickname: "",
       countryCode: "",
+      termsAccepted: false,
+      privacyAccepted: false,
+      cryptoRiskAccepted: false,
     },
   });
   const suggestedCountryFetchedRef = useRef(false);
   const locale = useLocale();
+  const base = `/${locale}`;
   const router = useRouter();
   const t = useTranslations('Form');
+  const [termsAccepted, privacyAccepted, cryptoRiskAccepted] = useWatch({
+    control,
+    name: ['termsAccepted', 'privacyAccepted', 'cryptoRiskAccepted'],
+    defaultValue: [false, false, false],
+  });
+  const registerConsentsComplete = !!(termsAccepted && privacyAccepted && cryptoRiskAccepted);
+
+  function TermsLinkLabel(chunks) {
+    return (
+      <MuiLink component={Link} href={`${base}/terms`} target="_blank" rel="noopener noreferrer" underline="hover">
+        {chunks}
+      </MuiLink>
+    );
+  }
+  function DisclaimerLinkLabel(chunks) {
+    return (
+      <MuiLink component={Link} href={`${base}/disclaimer`} target="_blank" rel="noopener noreferrer" underline="hover">
+        {chunks}
+      </MuiLink>
+    );
+  }
+  function PrivacyLinkLabel(chunks) {
+    return (
+      <MuiLink component={Link} href={`${base}/privacy`} target="_blank" rel="noopener noreferrer" underline="hover">
+        {chunks}
+      </MuiLink>
+    );
+  }
+  function CryptoRiskLinkLabel(chunks) {
+    return (
+      <MuiLink component={Link} href={`${base}/crypto-risk`} target="_blank" rel="noopener noreferrer" underline="hover">
+        {chunks}
+      </MuiLink>
+    );
+  }
 
   const handleChangeForm = () => {
     setAuthError(null);
@@ -48,6 +91,9 @@ export default function Form({ popupMode = false, onLoginSuccess }) {
     setShowActivationCooldown(false);
     setResendCooldownSeconds(0);
     setLastRegisteredEmail('');
+    setValue('termsAccepted', false);
+    setValue('privacyAccepted', false);
+    setValue('cryptoRiskAccepted', false);
     setIsloginForm(!isLoginForm);
   };
 
@@ -186,7 +232,8 @@ export default function Form({ popupMode = false, onLoginSuccess }) {
       if (isLoginForm) {
         await handleLogin(data);
       } else {
-        await handleRegister(data);
+        const { termsAccepted: _t, privacyAccepted: _p, cryptoRiskAccepted: _c, ...registerData } = data;
+        await handleRegister(registerData);
       }
     } catch (err) {
       setAuthError(t('errorSubmit'));
@@ -278,6 +325,113 @@ export default function Form({ popupMode = false, onLoginSuccess }) {
             )}
           />
         )}
+        {!isLoginForm && (
+          <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+            <Controller
+              name="termsAccepted"
+              control={control}
+              shouldUnregister
+              rules={{
+                validate: (v) => v === true || t('mandatatory'),
+              }}
+              render={({ field, fieldState: { error } }) => (
+                <Box>
+                  <FormControlLabel
+                    sx={{ alignItems: 'flex-start', m: 0 }}
+                    control={
+                      <Checkbox
+                        checked={!!field.value}
+                        onChange={(e) => field.onChange(e.target.checked)}
+                        color="primary"
+                      />
+                    }
+                    label={
+                      <Typography variant="body2" component="span" sx={{ lineHeight: 1.5 }}>
+                        {t.rich('consentTermsRich', {
+                          terms: TermsLinkLabel,
+                          disclaimer: DisclaimerLinkLabel,
+                        })}
+                      </Typography>
+                    }
+                  />
+                  {error && (
+                    <Typography variant="caption" color="error" sx={{ display: 'block', ml: 4, mt: 0.25 }}>
+                      {error.message}
+                    </Typography>
+                  )}
+                </Box>
+              )}
+            />
+            <Controller
+              name="privacyAccepted"
+              control={control}
+              shouldUnregister
+              rules={{
+                validate: (v) => v === true || t('mandatatory'),
+              }}
+              render={({ field, fieldState: { error } }) => (
+                <Box>
+                  <FormControlLabel
+                    sx={{ alignItems: 'flex-start', m: 0 }}
+                    control={
+                      <Checkbox
+                        checked={!!field.value}
+                        onChange={(e) => field.onChange(e.target.checked)}
+                        color="primary"
+                      />
+                    }
+                    label={
+                      <Typography variant="body2" component="span" sx={{ lineHeight: 1.5 }}>
+                        {t.rich('consentPrivacyRich', {
+                          privacy: PrivacyLinkLabel,
+                        })}
+                      </Typography>
+                    }
+                  />
+                  {error && (
+                    <Typography variant="caption" color="error" sx={{ display: 'block', ml: 4, mt: 0.25 }}>
+                      {error.message}
+                    </Typography>
+                  )}
+                </Box>
+              )}
+            />
+            <Controller
+              name="cryptoRiskAccepted"
+              control={control}
+              shouldUnregister
+              rules={{
+                validate: (v) => v === true || t('mandatatory'),
+              }}
+              render={({ field, fieldState: { error } }) => (
+                <Box>
+                  <FormControlLabel
+                    sx={{ alignItems: 'flex-start', m: 0 }}
+                    control={
+                      <Checkbox
+                        checked={!!field.value}
+                        onChange={(e) => field.onChange(e.target.checked)}
+                        color="primary"
+                      />
+                    }
+                    label={
+                      <Typography variant="body2" component="span" sx={{ lineHeight: 1.5 }}>
+                        {t.rich('consentCryptoRich', {
+                          crypto: CryptoRiskLinkLabel,
+                        })}
+                      </Typography>
+                    }
+                  />
+                  {error && (
+                    <Typography variant="caption" color="error" sx={{ display: 'block', ml: 4, mt: 0.25 }}>
+                      {error.message}
+                    </Typography>
+                  )}
+                </Box>
+              )}
+            />
+          </Box>
+        )}
         {authError && (
           <Alert severity="error" sx={{ mb: 2 }} onClose={() => { setAuthError(null); setEmailForResend(''); setResendStatus(null); }}>
             {authError}
@@ -349,7 +503,14 @@ export default function Form({ popupMode = false, onLoginSuccess }) {
             )}
           </Alert>
         )}
-        <Button type="submit" variant="contained" color="secondary" fullWidth className={`${styles.send} ${componentClass('Form', 'SubmitBtn')}`} disabled={isSubmitting}>
+        <Button
+          type="submit"
+          variant="contained"
+          color="secondary"
+          fullWidth
+          className={`${styles.send} ${componentClass('Form', 'SubmitBtn')}`}
+          disabled={isSubmitting || (!isLoginForm && !registerConsentsComplete)}
+        >
           {isSubmitting ? t('sending') : t('submit')}
         </Button>
         {googleClientId && (
