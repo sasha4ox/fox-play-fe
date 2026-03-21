@@ -60,7 +60,11 @@ export async function apiFetch(path, options = {}, token = null) {
     if (!text.trimStart().startsWith('<')) {
       try {
         body = JSON.parse(text)
-        message = body?.message ?? body?.error?.message ?? message
+        message =
+          body?.message ??
+          body?.error?.message ??
+          (typeof body?.error === 'string' ? body.error : undefined) ??
+          message
       } catch (_) {}
     }
     if (res.status === 403 && body?.error?.code === 'ACCOUNT_RESTRICTED' && typeof window !== 'undefined') {
