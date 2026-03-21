@@ -27,10 +27,10 @@ export default function AuthPageLayout({ children }) {
       >
         <Box
           sx={{
+            display: { xs: 'none', md: 'block' },
             position: 'relative',
-            flex: { xs: '0 0 auto', md: '1 1 50%' },
-            minHeight: { xs: 180, sm: 200, md: 'auto' },
-            maxHeight: { xs: 220, md: 'none' },
+            flex: { md: '1 1 50%' },
+            minHeight: { md: 'auto' },
             overflow: 'hidden',
             background: heroFailed
               ? 'linear-gradient(145deg, #0c0e14 0%, #1a1c23 40%, #3d1f0a 100%)'
@@ -43,7 +43,7 @@ export default function AuthPageLayout({ children }) {
               alt=""
               fill
               priority
-              sizes="(max-width: 900px) 100vw, 50vw"
+              sizes="50vw"
               style={{ objectFit: 'cover', objectPosition: 'center' }}
               onError={() => setHeroFailed(true)}
             />
@@ -52,10 +52,7 @@ export default function AuthPageLayout({ children }) {
             sx={{
               position: 'absolute',
               inset: 0,
-              background: {
-                xs: 'linear-gradient(to bottom, transparent 0%, rgba(26,28,35,0.85) 100%)',
-                md: 'linear-gradient(to right, transparent 0%, rgba(26,28,35,0.25) 55%, #1a1c23 100%)',
-              },
+              background: 'linear-gradient(to right, transparent 0%, rgba(26,28,35,0.25) 55%, #1a1c23 100%)',
               pointerEvents: 'none',
             }}
           />
@@ -64,6 +61,7 @@ export default function AuthPageLayout({ children }) {
         <Box
           sx={{
             flex: { xs: '1 1 auto', md: '1 1 50%' },
+            width: { xs: '100%', md: 'auto' },
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'center',

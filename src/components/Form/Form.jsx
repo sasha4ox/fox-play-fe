@@ -534,7 +534,7 @@ function FormInner({ mode, popupMode = false, onLoginSuccess }) {
               render={({ field, fieldState: { error } }) => (
                 <Box>
                   <FormControlLabel
-                    sx={{ alignItems: 'flex-start', m: 0 }}
+                    sx={{ alignItems: 'center', m: 0 }}
                     control={
                       <Checkbox
                         checked={!!field.value}
