@@ -835,8 +835,8 @@
     "minPurchaseKk": "Мін: {amount} kk",
     "minPurchaseK": "Мін: {amount} k",
     "safeTransferLabel": "Використати Safe Transfer (доставка агентом)",
-    "safeTransferFee": "Комісія Safe Transfer: +{fee} {currency}",
-    "safeTransferHint": "Довірений агент FoxyPlay отримає предмет і передасть його вам у грі",
+    "safeTransferFee": "Safe Transfer — 5% від суми угоди (мінімум 5 одиниць валюти оголошення): +{fee} {currency}",
+    "safeTransferHint": "Safe Transfer — 5% від суми угоди (мінімум 5 одиниць валюти оголошення). Довірений агент FoxyPlay отримає предмет і передасть його вам у грі.",
     "safeTransferTotal": "Разом з Safe Transfer: {total} {currency}"
   },
   "NewOffer": {

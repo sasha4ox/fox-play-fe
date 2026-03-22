@@ -883,8 +883,8 @@
     "minPurchaseKk": "Mín: {amount} kk",
     "minPurchaseK": "Mín: {amount} k",
     "safeTransferLabel": "Usar Safe Transfer (entrega asistida por agente)",
-    "safeTransferFee": "Comisión Safe Transfer: +{fee} {currency}",
-    "safeTransferHint": "Un agente de confianza de FoxyPlay recibirá el artículo y te lo entregará en el juego",
+    "safeTransferFee": "Safe Transfer — 5% del valor del trato (mínimo 5 en la moneda del anuncio): +{fee} {currency}",
+    "safeTransferHint": "Safe Transfer — 5% del valor del trato (mínimo 5 en la moneda del anuncio). Un agente de FoxyPlay recibirá el artículo y te lo entregará en el juego.",
     "safeTransferTotal": "Total con Safe Transfer: {total} {currency}"
   },
   "NewOffer": {

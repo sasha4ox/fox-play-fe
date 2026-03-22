@@ -859,7 +859,7 @@ export default function OfferPDPPage() {
                 const pricePer1kk = Number(offer?.displayPrice ?? offer?.price) || 0;
                 const unitPrice = Number(offer?.displayPrice ?? offer?.price) || 0;
                 const dealAmount = isAdenaOffer ? buyQuantityKk * pricePer1kk : buyQuantity * unitPrice;
-                const stFee = Math.max(dealAmount * 0.05, 5);
+                const stFee = Math.round(Math.max(dealAmount * 0.05, 5) * 100) / 100;
                 const currency = offer?.displayCurrency ?? offer?.currency ?? '';
                 return (
                   <Box sx={{ ml: 4.5, mt: 0.5 }}>
