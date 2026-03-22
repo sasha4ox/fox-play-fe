@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
-import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import Container from '@mui/material/Container';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
@@ -27,9 +27,11 @@ import MenuItem from '@mui/material/MenuItem';
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
 import ListItemText from '@mui/material/ListItemText';
+import Snackbar from '@mui/material/Snackbar';
 import { useAuthStore } from '@/store/authStore';
 import { useProfile } from '@/hooks/useProfile';
 import { useGames } from '@/hooks/useGames';
+import { useAgentNewSafeTransfer } from '@/hooks/useAgentNewSafeTransfer';
 import {
   getAgentOrders,
   setAgentOnline,
@@ -40,8 +42,6 @@ import {
   confirmItemReceived,
   confirmItemDelivered,
   flagSafeTransfer,
-  adminListSafeTransfers,
-  adminReassignSafeTransfer,
 } from '@/lib/api';
 
 const STATUS_COLORS = {
@@ -62,7 +62,7 @@ function elapsed(dateStr) {
   return `${Math.floor(hrs / 24)}d ${hrs % 24}h`;
 }
 
-function OrderCard({ st, t, locale, isAdmin, onAction }) {
+function OrderCard({ st, t, locale, onAction }) {
   const order = st.order;
   const offer = order?.offer;
   const server = offer?.server;
@@ -88,12 +88,6 @@ function OrderCard({ st, t, locale, isAdmin, onAction }) {
           <Typography variant="body2"><strong>{t('elapsed')}:</strong> {elapsed(st.createdAt)}</Typography>
         </Box>
 
-        {isAdmin && st.agentProfile && (
-          <Typography variant="body2" sx={{ mt: 1 }}>
-            <strong>{t('agent')}:</strong> {st.agentProfile?.user?.nickname || st.agentProfile?.user?.email || t('unassigned')}
-          </Typography>
-        )}
-
         {st.status === 'FLAGGED' && st.flagReason && (
           <Alert severity="error" sx={{ mt: 1 }}><strong>{t('flagReason')}:</strong> {st.flagReason}</Alert>
         )}
@@ -101,24 +95,19 @@ function OrderCard({ st, t, locale, isAdmin, onAction }) {
         <Box sx={{ display: 'flex', gap: 1, mt: 2, flexWrap: 'wrap' }}>
           <Button size="small" variant="outlined" href={`/${locale}/dashboard/orders/${order?.id}`}>{t('viewOrder')}</Button>
 
-          {!isAdmin && !st.agentProfileId && st.status === 'PENDING_ITEM' && (
+          {!st.agentProfileId && st.status === 'PENDING_ITEM' && (
             <Button size="small" variant="contained" color="primary" onClick={() => onAction('claim', st.id)}>{t('claim')}</Button>
           )}
-          {!isAdmin && st.agentProfileId && st.status === 'PENDING_ITEM' && (
+          {st.agentProfileId && st.status === 'PENDING_ITEM' && (
             <Button size="small" variant="contained" color="info" onClick={() => onAction('item-received', st.id)}>{t('confirmReceived')}</Button>
           )}
-          {!isAdmin && st.status === 'ITEM_RECEIVED' && (
+          {st.status === 'ITEM_RECEIVED' && (
             <Button size="small" variant="contained" color="success" onClick={() => onAction('item-delivered', st.id)}>{t('confirmDelivered')}</Button>
           )}
-          {!isAdmin && st.agentProfileId && st.status !== 'COMPLETED' && st.status !== 'CANCELLED' && (
+          {st.agentProfileId && st.status !== 'COMPLETED' && st.status !== 'CANCELLED' && (
             <Button size="small" variant="outlined" color="error" onClick={() => onAction('flag', st.id)}>{t('flagIssue')}</Button>
           )}
 
-          {isAdmin && (
-            <>
-              <Button size="small" variant="outlined" color="warning" onClick={() => onAction('unassign', st.id)}>{t('unassign')}</Button>
-            </>
-          )}
         </Box>
       </CardContent>
     </Card>
@@ -128,12 +117,10 @@ function OrderCard({ st, t, locale, isAdmin, onAction }) {
 export default function AgentPanelPage() {
   const t = useTranslations('AgentPanel');
   const locale = useLocale();
-  const router = useRouter();
   const token = useAuthStore((s) => s.token);
   const user = useAuthStore((s) => s.user);
   const { profile } = useProfile();
   const role = profile?.role || user?.role;
-  const isAdmin = role === 'ADMIN';
   const isAgent = role === 'AGENT';
 
   const [loading, setLoading] = useState(true);
@@ -142,7 +129,7 @@ export default function AgentPanelPage() {
   const [tab, setTab] = useState(0);
   const [incoming, setIncoming] = useState([]);
   const [myOrders, setMyOrders] = useState([]);
-  const [adminTransfers, setAdminTransfers] = useState([]);
+  const [stToastOpen, setStToastOpen] = useState(false);
   const [flagDialog, setFlagDialog] = useState(null);
   const [flagReason, setFlagReason] = useState('');
   const [claimDialog, setClaimDialog] = useState(null);
@@ -212,30 +199,33 @@ export default function AgentPanelPage() {
   };
 
   const loadData = useCallback(async () => {
-    if (!token) return;
+    if (!token || !isAgent) return;
     try {
       setLoading(true);
       setError(null);
-      if (isAgent) {
-        const [prof, orders] = await Promise.all([
-          getAgentProfile(token),
-          getAgentOrders(token),
-        ]);
-        setAgentProfile(prof);
-        setIncoming(orders.incoming || []);
-        setMyOrders(orders.myOrders || []);
-      } else if (isAdmin) {
-        const data = await adminListSafeTransfers({}, token);
-        setAdminTransfers(data.items || []);
-      }
+      const [prof, orders] = await Promise.all([
+        getAgentProfile(token),
+        getAgentOrders(token),
+      ]);
+      setAgentProfile(prof);
+      setIncoming(orders.incoming || []);
+      setMyOrders(orders.myOrders || []);
     } catch (err) {
       setError(err.message);
     } finally {
       setLoading(false);
     }
-  }, [token, isAgent, isAdmin]);
+  }, [token, isAgent]);
 
   useEffect(() => { loadData(); }, [loadData]);
+
+  useAgentNewSafeTransfer(token, {
+    enabled: isAgent,
+    onNew: () => {
+      loadData();
+      setStToastOpen(true);
+    },
+  });
 
   const handleToggleOnline = async () => {
     if (!token || !agentProfile) return;
@@ -262,7 +252,6 @@ export default function AgentPanelPage() {
     try {
       if (action === 'item-received') await confirmItemReceived(safeTransferId, token);
       else if (action === 'item-delivered') await confirmItemDelivered(safeTransferId, token);
-      else if (action === 'unassign') await adminReassignSafeTransfer(safeTransferId, null, token);
       await loadData();
     } catch (err) {
       setError(err.message);
@@ -299,10 +288,15 @@ export default function AgentPanelPage() {
     }
   };
 
-  if (!isAgent && !isAdmin) {
+  if (!isAgent) {
     return (
       <Container maxWidth="md" sx={{ py: 4 }}>
-        <Alert severity="warning">Access denied. Agent or Admin role required.</Alert>
+        <Alert severity="warning" sx={{ mb: 2 }}>{t('accessAgentOnly')}</Alert>
+        {role === 'ADMIN' && (
+          <Button component={Link} href={`/${locale}/dashboard/admin/safe-transfers`} variant="contained">
+            {t('goToAdminSafeTransfers')}
+          </Button>
+        )}
       </Container>
     );
   }
@@ -367,47 +361,31 @@ export default function AgentPanelPage() {
         <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}><CircularProgress /></Box>
       ) : (
         <>
-          {isAgent && (
-            <>
-              <Tabs value={tab} onChange={(_, v) => setTab(v)} sx={{ mb: 2 }}>
-                <Tab label={`${t('incoming')} (${incoming.length})`} />
-                <Tab label={`${t('myOrders')} (${myOrders.length})`} />
-              </Tabs>
+          <Tabs value={tab} onChange={(_, v) => setTab(v)} sx={{ mb: 2 }}>
+            <Tab label={`${t('incoming')} (${incoming.length})`} />
+            <Tab label={`${t('myOrders')} (${myOrders.length})`} />
+          </Tabs>
 
-              {tab === 0 && (
-                incoming.length === 0
-                  ? <Typography color="text.secondary" sx={{ py: 3, textAlign: 'center' }}>{t('noIncoming')}</Typography>
-                  : incoming.map((st) => <OrderCard key={st.id} st={st} t={t} locale={locale} isAdmin={false} onAction={handleAction} />)
-              )}
-              {tab === 1 && (
-                myOrders.length === 0
-                  ? <Typography color="text.secondary" sx={{ py: 3, textAlign: 'center' }}>{t('noMyOrders')}</Typography>
-                  : myOrders.map((st) => <OrderCard key={st.id} st={st} t={t} locale={locale} isAdmin={false} onAction={handleAction} />)
-              )}
-            </>
+          {tab === 0 && (
+            incoming.length === 0
+              ? <Typography color="text.secondary" sx={{ py: 3, textAlign: 'center' }}>{t('noIncoming')}</Typography>
+              : incoming.map((st) => <OrderCard key={st.id} st={st} t={t} locale={locale} onAction={handleAction} />)
           )}
-
-          {isAdmin && (
-            <>
-              <Typography variant="h6" sx={{ mb: 2 }}>All Safe Transfers</Typography>
-              {adminTransfers.filter((st) => st.status === 'FLAGGED').length > 0 && (
-                <Box sx={{ mb: 3 }}>
-                  <Typography variant="subtitle1" color="error" sx={{ mb: 1 }}>{t('flagged')}</Typography>
-                  {adminTransfers.filter((st) => st.status === 'FLAGGED').map((st) => (
-                    <OrderCard key={st.id} st={st} t={t} locale={locale} isAdmin onAction={handleAction} />
-                  ))}
-                </Box>
-              )}
-              {adminTransfers.filter((st) => st.status !== 'FLAGGED').map((st) => (
-                <OrderCard key={st.id} st={st} t={t} locale={locale} isAdmin onAction={handleAction} />
-              ))}
-              {adminTransfers.length === 0 && (
-                <Typography color="text.secondary" sx={{ py: 3, textAlign: 'center' }}>{t('noIncoming')}</Typography>
-              )}
-            </>
+          {tab === 1 && (
+            myOrders.length === 0
+              ? <Typography color="text.secondary" sx={{ py: 3, textAlign: 'center' }}>{t('noMyOrders')}</Typography>
+              : myOrders.map((st) => <OrderCard key={st.id} st={st} t={t} locale={locale} onAction={handleAction} />)
           )}
         </>
       )}
+
+      <Snackbar
+        open={stToastOpen}
+        autoHideDuration={4000}
+        onClose={() => setStToastOpen(false)}
+        message={t('newSafeTransferToast')}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      />
 
       <Dialog open={!!flagDialog} onClose={() => setFlagDialog(null)} maxWidth="sm" fullWidth>
         <DialogTitle>{t('flagIssue')}</DialogTitle>

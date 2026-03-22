@@ -1053,10 +1053,6 @@ export async function setAgentOnline(isOnline, token) {
   return apiPatch('/agent/profile/online', { isOnline }, token)
 }
 
-export async function getAgentServers(token) {
-  return apiGet('/agent/servers', token)
-}
-
 export async function addAgentServer(serverId, token) {
   return apiPost('/agent/servers', { serverId }, token)
 }
@@ -1104,7 +1100,10 @@ export async function adminDemoteAgent(userId, token) {
 }
 
 export async function adminListSafeTransfers(params, token) {
-  const s = new URLSearchParams(params).toString()
+  const entries = Object.entries(params || {}).filter(
+    ([, v]) => v !== undefined && v !== null && v !== '',
+  )
+  const s = new URLSearchParams(Object.fromEntries(entries)).toString()
   return apiGet(`/admin/safe-transfers${s ? `?${s}` : ''}`, token)
 }
 
