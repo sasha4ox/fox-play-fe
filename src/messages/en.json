@@ -1141,7 +1141,18 @@
     "top": "Top",
     "topHint": "Show at the very top of the list and prioritize in filters",
     "adenaPriceUnitKk": "Adena price unit (kk)",
-    "inherit": "Inherit"
+    "inherit": "Inherit",
+    "agents": "Agents",
+    "assignAgent": "Assign agent",
+    "assignAgentHint": "Paste the user ID of the person you want to promote to Agent. You can find it on the Users tab.",
+    "assignAgentDialogTitle": "Assign agent role",
+    "userIdLabel": "User ID",
+    "demoteAgent": "Demote",
+    "noAgents": "No agents.",
+    "agentOnline": "Online",
+    "agentOffline": "Offline",
+    "agentServers": "Servers",
+    "agentCompleted": "Completed"
   },
   "Footer": {
     "brand": "FoxyPlay",

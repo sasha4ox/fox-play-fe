@@ -1190,7 +1190,18 @@
     "top": "Top",
     "topHint": "Show at the very top of the list and prioritize in filters",
     "adenaPriceUnitKk": "Unidad de precio adena (kk)",
-    "inherit": "Heredar"
+    "inherit": "Heredar",
+    "agents": "Agentes",
+    "assignAgent": "Asignar agente",
+    "assignAgentHint": "Pegue el ID del usuario que desea promover a Agente. Puede encontrarlo en la pestaña Usuarios.",
+    "assignAgentDialogTitle": "Asignar rol de agente",
+    "userIdLabel": "ID de usuario",
+    "demoteAgent": "Degradar",
+    "noAgents": "No hay agentes.",
+    "agentOnline": "En línea",
+    "agentOffline": "Desconectado",
+    "agentServers": "Servidores",
+    "agentCompleted": "Completados"
   },
   "Footer": {
     "brand": "FoxyPlay",

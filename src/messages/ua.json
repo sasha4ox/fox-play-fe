@@ -1142,7 +1142,18 @@
     "top": "Топ",
     "topHint": "Показувати на самому верху списку та пріоритизувати у фільтрах",
     "adenaPriceUnitKk": "Одиниця ціни адени (kk)",
-    "inherit": "Успадкувати"
+    "inherit": "Успадкувати",
+    "agents": "Агенти",
+    "assignAgent": "Призначити агента",
+    "assignAgentHint": "Вставте ID користувача, якого хочете зробити агентом. Його можна знайти на вкладці Користувачі.",
+    "assignAgentDialogTitle": "Призначити роль агента",
+    "userIdLabel": "ID користувача",
+    "demoteAgent": "Зняти роль",
+    "noAgents": "Немає агентів.",
+    "agentOnline": "Онлайн",
+    "agentOffline": "Офлайн",
+    "agentServers": "Сервери",
+    "agentCompleted": "Завершено"
   },
   "Footer": {
     "brand": "FoxyPlay",
