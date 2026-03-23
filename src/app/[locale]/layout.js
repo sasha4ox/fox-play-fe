@@ -46,6 +46,22 @@ export async function generateMetadata({ params }) {
     description:
       'Buy and sell in-game items, currency, and boosting services safely. FoxyPlay is a trusted marketplace for gamers worldwide.',
 
+    keywords: [
+      'buy adena lineage 2',
+      'lineage 2 marketplace',
+      'l2 adena buy',
+      'buy game currency',
+      'game marketplace',
+      'secure game trading',
+      'купить адену lineage 2',
+      "купить адену",
+      "купить адену л2",
+      "купить адену линейка",
+      "donate adena lineage 2",
+      "donate adena",
+      "адена lineage 2",
+    ],
+
     alternates: {
       canonical,
       languages: {
@@ -56,11 +72,12 @@ export async function generateMetadata({ params }) {
         'x-default': `${BASE_URL}/en`,
       },
     },
+    
 
     openGraph: {
-      title: 'FoxyPlay – Marketplace for Gamers',
+      title: 'Buy & Sell In-Game Items | FoxyPlay',
       description:
-        'Buy and sell in-game items and services securely.',
+        'Secure marketplace for gamers. Trade currency, items, and boosting services safely.',
       url: canonical,
       siteName: 'FoxyPlay',
       images: [
@@ -68,6 +85,7 @@ export async function generateMetadata({ params }) {
           url: `${BASE_URL}/images/og-banner.jpg`,
           width: 1200,
           height: 630,
+          alt: 'FoxyPlay Marketplace',
         },
       ],
       locale,
@@ -76,9 +94,9 @@ export async function generateMetadata({ params }) {
 
     twitter: {
       card: 'summary_large_image',
-      title: 'FoxyPlay – Marketplace for Gamers',
+      title: 'Buy & Sell In-Game Items | FoxyPlay',
       description:
-        'Buy and sell in-game items and services securely.',
+        'Secure marketplace for gamers. Trade currency, items, and boosting services safely.',
       images: [`${BASE_URL}/images/og-banner.jpg`],
     },
 
