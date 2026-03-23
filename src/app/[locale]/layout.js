@@ -36,10 +36,12 @@ export async function generateMetadata({ params }) {
 
   const headersList = headers();
   const pathname = headersList.get('x-pathname') || '/';
+  
   const pathWithoutLocale =
     pathname.replace(/^\/(en|ua|ru|es)/, '') || '/';
 
-  const canonical = `${BASE_URL}/${locale}${pathWithoutLocale}`;
+  const canonical = `${BASE_URL}/${locale}`;
+
 
   return {
     metadataBase: new URL(BASE_URL),
