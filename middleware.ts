@@ -30,9 +30,15 @@ export default function middleware(request) {
     return NextResponse.redirect(url);
   }
 
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set('x-pathname', pathname);
+
   // Assign correlation ID: reuse from incoming request or generate a new one
   const reqId = request.headers.get('x-request-id') || crypto.randomUUID();
-  const response = intlMiddleware(request);
+  const response = intlMiddleware({
+    ...request,
+    headers: requestHeaders,
+  });;
   response.headers.set('x-request-id', reqId);
   return response;
 }

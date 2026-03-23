@@ -15,6 +15,7 @@ import SyncPreferredLocale from '@/components/SyncPreferredLocale/SyncPreferredL
 import CompleteProfileGate from '@/components/CompleteProfileGate/CompleteProfileGate';
 import RecentServersBar from '@/components/RecentServersBar/RecentServersBar';
 import GlobalErrorHandler from '@/components/GlobalErrorHandler/GlobalErrorHandler';
+import { headers } from 'next/headers';
 import "./globals.css";
 
 const geistSans = Geist({
@@ -30,15 +31,27 @@ const geistMono = Geist_Mono({
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://foxyplay.app';
 
 /** Build hreflang alternates. Use BCP 47 "uk" for Ukrainian (URL stays /ua/). Canonical is self-referencing per page. */
-export async function generateMetadata({ params, request }) {
-  const { locale } = await params;
-  const pathname = request?.url ? new URL(request.url).pathname : '';
-  const pathWithoutLocale = pathname ? pathname.replace(/^\/(en|ua|ru|es)/, '') || '/' : '/';
+export async function generateMetadata({ params }) {
+  const { locale } = params;
+
+  const headersList = headers();
+  const pathname = headersList.get('x-pathname') || '/';
+  const pathWithoutLocale =
+    pathname.replace(/^\/(en|ua|ru|es)/, '') || '/';
+
   const canonical = `${BASE_URL}/${locale}${pathWithoutLocale}`;
+
   return {
-    title: 'FoxyPlay',
-    description: 'FoxyPlay – marketplace for in-game items and services',
-    icons: { icon: '/images/favicon.png', apple: '/images/favicon.png' },
+    metadataBase: new URL(BASE_URL),
+
+    title: {
+      default: 'FoxyPlay – Marketplace for In-Game Items & Services',
+      template: '%s | FoxyPlay',
+    },
+
+    description:
+      'Buy and sell in-game items, currency, and boosting services safely. FoxyPlay is a trusted marketplace for gamers worldwide.',
+
     alternates: {
       canonical,
       languages: {
@@ -48,6 +61,41 @@ export async function generateMetadata({ params, request }) {
         es: `${BASE_URL}/es${pathWithoutLocale}`,
         'x-default': `${BASE_URL}/en${pathWithoutLocale}`,
       },
+    },
+
+    openGraph: {
+      title: 'FoxyPlay – Marketplace for Gamers',
+      description:
+        'Buy and sell in-game items and services securely.',
+      url: canonical,
+      siteName: 'FoxyPlay',
+      images: [
+        {
+          url: `${BASE_URL}/images/og-banner.jpg`,
+          width: 1200,
+          height: 630,
+        },
+      ],
+      locale,
+      type: 'website',
+    },
+
+    twitter: {
+      card: 'summary_large_image',
+      title: 'FoxyPlay – Marketplace for Gamers',
+      description:
+        'Buy and sell in-game items and services securely.',
+      images: [`${BASE_URL}/images/og-banner.jpg`],
+    },
+
+    robots: {
+      index: true,
+      follow: true,
+    },
+
+    icons: {
+      icon: '/images/favicon.png',
+      apple: '/images/favicon.png',
     },
   };
 }
