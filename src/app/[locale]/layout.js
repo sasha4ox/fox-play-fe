@@ -43,7 +43,10 @@ export async function generateMetadata({ params }) {
       template: '%s | FoxyPlay',
     },
 
-    "google-site-verification": "J6zuKwu5enbNGrRo6qSjS_x_z_VosDXJ4S2eDwG7kpI",
+    verification:{
+      google: 'J6zuKwu5enbNGrRo6qSjS_x_z_VosDXJ4S2eDwG7kpI',
+    },
+    
     description:
       'Buy and sell in-game items, currency, and boosting services safely. FoxyPlay is a trusted marketplace for gamers worldwide.',
 
