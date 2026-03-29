@@ -1,6 +1,7 @@
 import { setRequestLocale } from 'next-intl/server';
 import { getTranslations } from 'next-intl/server';
 import Link from 'next/link';
+import { alpha } from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
@@ -45,24 +46,15 @@ export default async function HowSafeTransferWorksPage({ params }) {
     <Box
       sx={{
         minHeight: '100vh',
-        bgcolor: '#0a0a0a',
-        color: 'rgba(255,255,255,0.92)',
+        bgcolor: 'background.default',
+        color: 'text.primary',
         py: { xs: 3, md: 5 },
       }}
     >
       <Container maxWidth="md">
         <Box sx={{ mb: 3 }}>
           <Link href={base} style={{ textDecoration: 'none' }}>
-            <Button
-              size="small"
-              sx={{
-                mb: 2,
-                color: 'rgba(255,255,255,0.75)',
-                borderColor: 'rgba(255,255,255,0.25)',
-                '&:hover': { borderColor: 'rgba(255,255,255,0.45)', bgcolor: 'rgba(255,255,255,0.06)' },
-              }}
-              variant="outlined"
-            >
+            <Button size="small" variant="outlined" color="primary" sx={{ mb: 2 }}>
               {t('backToHome')}
             </Button>
           </Link>
@@ -71,44 +63,44 @@ export default async function HowSafeTransferWorksPage({ params }) {
         <Chip
           label={t('heroBadge')}
           size="small"
-          sx={{
+          sx={(theme) => ({
             mb: 2,
             fontWeight: 700,
             letterSpacing: 0.06,
-            bgcolor: '#166534',
-            color: '#fff',
+            bgcolor: theme.palette.success.main,
+            color: theme.palette.success.contrastText,
             '& .MuiChip-label': { px: 1.5 },
-          }}
+          })}
         />
-        <Typography variant="h3" component="h1" fontWeight={800} sx={{ color: '#fff', mb: 1.5 }}>
+        <Typography variant="h3" component="h1" fontWeight={800} sx={{ color: 'text.primary', mb: 1.5 }}>
           {t('heroTitle')}
         </Typography>
-        <Typography variant="body1" sx={{ color: 'rgba(255,255,255,0.82)', maxWidth: 640, mb: 3 }}>
+        <Typography variant="body1" sx={{ color: 'text.secondary', maxWidth: 640, mb: 3 }}>
           {t('heroSubtitle')}
         </Typography>
-        <Divider sx={{ borderColor: 'rgba(255,255,255,0.12)', mb: 4 }} />
+        <Divider sx={{ borderColor: 'divider', mb: 4 }} />
 
         <Box
-          sx={{
+          sx={(theme) => ({
             p: 2.5,
             mb: 5,
             borderRadius: 2,
             border: '2px solid',
-            borderColor: '#22c55e',
-            bgcolor: 'rgba(34, 197, 94, 0.06)',
-          }}
+            borderColor: 'success.main',
+            bgcolor: alpha(theme.palette.success.main, theme.palette.mode === 'light' ? 0.08 : 0.12),
+          })}
         >
-          <Typography variant="subtitle1" fontWeight={700} sx={{ color: '#4ade80', mb: 1.5 }}>
+          <Typography variant="subtitle1" fontWeight={700} sx={{ color: 'success.dark', mb: 1.5 }}>
             {t('commitmentTitle')}
           </Typography>
-          <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.88)', lineHeight: 1.65 }}>
+          <Typography variant="body2" sx={{ color: 'text.primary', lineHeight: 1.65 }}>
             {t('commitmentBody')}
           </Typography>
         </Box>
 
         <Typography
           variant="overline"
-          sx={{ display: 'block', color: 'rgba(255,255,255,0.45)', letterSpacing: 0.12, mb: 2 }}
+          sx={{ display: 'block', color: 'text.secondary', letterSpacing: 0.12, mb: 2 }}
         >
           {t('sectionHow')}
         </Typography>
@@ -117,26 +109,27 @@ export default async function HowSafeTransferWorksPage({ params }) {
             <Box key={key} sx={{ display: 'flex', gap: 2, pb: idx < stepKeys.length - 1 ? 2.5 : 0 }}>
               <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: 32, flexShrink: 0 }}>
                 <Box
-                  sx={{
+                  sx={(theme) => ({
                     width: 28,
                     height: 28,
                     borderRadius: '50%',
-                    border: '2px solid rgba(255,255,255,0.35)',
+                    border: '2px solid',
+                    borderColor: alpha(theme.palette.text.primary, theme.palette.mode === 'light' ? 0.28 : 0.4),
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     fontSize: 13,
                     fontWeight: 700,
-                    color: '#fff',
-                  }}
+                    color: 'text.primary',
+                  })}
                 >
                   {idx + 1}
                 </Box>
                 {idx < stepKeys.length - 1 && (
-                  <Box sx={{ width: 2, flex: 1, minHeight: 24, bgcolor: 'rgba(255,255,255,0.15)', mt: 0.5 }} />
+                  <Box sx={{ width: 2, flex: 1, minHeight: 24, bgcolor: 'divider', mt: 0.5 }} />
                 )}
               </Box>
-              <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.85)', lineHeight: 1.65, pt: 0.25 }}>
+              <Typography variant="body2" sx={{ color: 'text.primary', lineHeight: 1.65, pt: 0.25 }}>
                 {t(key)}
               </Typography>
             </Box>
@@ -145,7 +138,7 @@ export default async function HowSafeTransferWorksPage({ params }) {
 
         <Typography
           variant="overline"
-          sx={{ display: 'block', color: 'rgba(255,255,255,0.45)', letterSpacing: 0.12, mb: 2 }}
+          sx={{ display: 'block', color: 'text.secondary', letterSpacing: 0.12, mb: 2 }}
         >
           {t('sectionAgents')}
         </Typography>
@@ -153,14 +146,15 @@ export default async function HowSafeTransferWorksPage({ params }) {
           {agentItems.map(({ titleKey, bodyKey, Icon }) => (
             <Box
               key={titleKey}
-              sx={{
+              sx={(theme) => ({
                 display: 'flex',
                 gap: 2,
                 p: 2,
                 borderRadius: 1.5,
-                bgcolor: 'rgba(30, 58, 95, 0.35)',
-                border: '1px solid rgba(96, 165, 250, 0.25)',
-              }}
+                bgcolor: alpha(theme.palette.primary.main, theme.palette.mode === 'light' ? 0.08 : 0.14),
+                border: '1px solid',
+                borderColor: alpha(theme.palette.primary.main, theme.palette.mode === 'light' ? 0.28 : 0.35),
+              })}
             >
               <Box
                 sx={{
@@ -168,19 +162,19 @@ export default async function HowSafeTransferWorksPage({ params }) {
                   height: 44,
                   flexShrink: 0,
                   borderRadius: 1,
-                  bgcolor: '#1d4ed8',
+                  bgcolor: 'primary.main',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                 }}
               >
-                <Icon sx={{ color: '#fff', fontSize: 24 }} />
+                <Icon sx={{ color: 'primary.contrastText', fontSize: 24 }} />
               </Box>
               <Box>
-                <Typography variant="subtitle2" fontWeight={700} sx={{ color: '#93c5fd', mb: 0.5 }}>
+                <Typography variant="subtitle2" fontWeight={700} sx={{ color: 'primary.main', mb: 0.5 }}>
                   {t(titleKey)}
                 </Typography>
-                <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.82)', lineHeight: 1.6 }}>
+                <Typography variant="body2" sx={{ color: 'text.secondary', lineHeight: 1.6 }}>
                   {t(bodyKey)}
                 </Typography>
               </Box>
@@ -190,7 +184,7 @@ export default async function HowSafeTransferWorksPage({ params }) {
 
         <Typography
           variant="overline"
-          sx={{ display: 'block', color: 'rgba(255,255,255,0.45)', letterSpacing: 0.12, mb: 2 }}
+          sx={{ display: 'block', color: 'text.secondary', letterSpacing: 0.12, mb: 2 }}
         >
           {t('sectionAccountability')}
         </Typography>
@@ -198,35 +192,37 @@ export default async function HowSafeTransferWorksPage({ params }) {
           {[t('acc1'), t('acc2'), t('acc3')].map((text, i) => (
             <Box
               key={i}
-              sx={{
+              sx={(theme) => ({
                 display: 'flex',
                 gap: 1.5,
                 alignItems: 'flex-start',
                 p: 1.5,
                 borderRadius: 1,
-                bgcolor: 'rgba(234, 179, 8, 0.08)',
-                border: '1px solid rgba(234, 179, 8, 0.25)',
-              }}
+                bgcolor: alpha(theme.palette.warning.main, theme.palette.mode === 'light' ? 0.1 : 0.14),
+                border: '1px solid',
+                borderColor: alpha(theme.palette.warning.main, 0.4),
+              })}
             >
-              <WarningAmberIcon sx={{ color: '#facc15', fontSize: 22, mt: 0.25 }} />
-              <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.85)', lineHeight: 1.6 }}>
+              <WarningAmberIcon sx={{ color: 'warning.main', fontSize: 22, mt: 0.25 }} />
+              <Typography variant="body2" sx={{ color: 'text.primary', lineHeight: 1.6 }}>
                 {text}
               </Typography>
             </Box>
           ))}
           <Box
-            sx={{
+            sx={(theme) => ({
               display: 'flex',
               gap: 1.5,
               alignItems: 'flex-start',
               p: 1.5,
               borderRadius: 1,
-              bgcolor: 'rgba(34, 197, 94, 0.1)',
-              border: '1px solid rgba(34, 197, 94, 0.35)',
-            }}
+              bgcolor: alpha(theme.palette.success.main, theme.palette.mode === 'light' ? 0.1 : 0.14),
+              border: '1px solid',
+              borderColor: alpha(theme.palette.success.main, 0.4),
+            })}
           >
-            <CheckCircleIcon sx={{ color: '#4ade80', fontSize: 22, mt: 0.25 }} />
-            <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.88)', lineHeight: 1.6 }}>
+            <CheckCircleIcon sx={{ color: 'success.main', fontSize: 22, mt: 0.25 }} />
+            <Typography variant="body2" sx={{ color: 'text.primary', lineHeight: 1.6 }}>
               {t('acc4')}
             </Typography>
           </Box>
@@ -234,60 +230,64 @@ export default async function HowSafeTransferWorksPage({ params }) {
 
         <Typography
           variant="overline"
-          sx={{ display: 'block', color: 'rgba(255,255,255,0.45)', letterSpacing: 0.12, mb: 2 }}
+          sx={{ display: 'block', color: 'text.secondary', letterSpacing: 0.12, mb: 2 }}
         >
           {t('sectionFee')}
         </Typography>
         <Grid container spacing={2} sx={{ mb: 2 }}>
           <Grid item xs={12} sm={6}>
-            <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)', display: 'block' }}>
+            <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block' }}>
               {t('feeSafeLabel')}
             </Typography>
-            <Typography variant="h4" fontWeight={800} sx={{ color: '#fff', my: 0.5 }}>
+            <Typography variant="h4" fontWeight={800} sx={{ color: 'text.primary', my: 0.5 }}>
               {t('feeSafeValue')}
             </Typography>
-            <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.55)' }}>
+            <Typography variant="caption" sx={{ color: 'text.secondary' }}>
               {t('feeSafeHint')}
             </Typography>
           </Grid>
           <Grid item xs={12} sm={6}>
-            <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)', display: 'block' }}>
+            <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block' }}>
               {t('feeMinLabel')}
             </Typography>
-            <Typography variant="h4" fontWeight={800} sx={{ color: '#fff', my: 0.5 }}>
+            <Typography variant="h4" fontWeight={800} sx={{ color: 'text.primary', my: 0.5 }}>
               {t('feeMinValue')}
             </Typography>
-            <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.55)' }}>
+            <Typography variant="caption" sx={{ color: 'text.secondary' }}>
               {t('feeMinHint')}
             </Typography>
           </Grid>
         </Grid>
         <Box
-          sx={{
+          sx={(theme) => ({
             p: 2,
             mb: 5,
             borderRadius: 1,
-            bgcolor: 'rgba(255,255,255,0.06)',
-            border: '1px solid rgba(255,255,255,0.1)',
-          }}
+            bgcolor:
+              theme.palette.mode === 'light'
+                ? alpha(theme.palette.common.black, 0.04)
+                : alpha(theme.palette.common.white, 0.06),
+            border: '1px solid',
+            borderColor: 'divider',
+          })}
         >
-          <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.85)', lineHeight: 1.65 }}>
+          <Typography variant="body2" sx={{ color: 'text.primary', lineHeight: 1.65 }}>
             {t('feeExample')}
           </Typography>
         </Box>
 
         <Typography
           variant="overline"
-          sx={{ display: 'block', color: 'rgba(255,255,255,0.45)', letterSpacing: 0.1, mb: 2 }}
+          sx={{ display: 'block', color: 'text.secondary', letterSpacing: 0.1, mb: 2 }}
         >
           {t('sectionCompare')}
         </Typography>
         <Grid container spacing={2} sx={{ mb: 4 }}>
           <Grid item xs={12} md={6}>
-            <Typography variant="subtitle2" fontWeight={700} sx={{ color: 'rgba(255,255,255,0.9)', mb: 1.5 }}>
+            <Typography variant="subtitle2" fontWeight={700} sx={{ color: 'text.primary', mb: 1.5 }}>
               {t('compareRegularTitle')}
             </Typography>
-            <Stack component="ul" sx={{ m: 0, pl: 2.5, color: 'rgba(255,255,255,0.8)' }}>
+            <Stack component="ul" sx={{ m: 0, pl: 2.5, color: 'text.secondary' }}>
               {regularBullets.map((k) => (
                 <Typography key={k} component="li" variant="body2" sx={{ mb: 1, lineHeight: 1.6 }}>
                   {t(k)}
@@ -297,20 +297,26 @@ export default async function HowSafeTransferWorksPage({ params }) {
           </Grid>
           <Grid item xs={12} md={6}>
             <Box
-              sx={{
+              sx={(theme) => ({
                 p: 2,
                 height: '100%',
                 borderRadius: 1.5,
-                border: '2px solid #22c55e',
-                bgcolor: 'rgba(34, 197, 94, 0.08)',
-              }}
+                border: '2px solid',
+                borderColor: 'success.main',
+                bgcolor: alpha(theme.palette.success.main, theme.palette.mode === 'light' ? 0.08 : 0.12),
+              })}
             >
-              <Typography variant="subtitle2" fontWeight={700} sx={{ color: '#4ade80', mb: 1.5 }}>
+              <Typography variant="subtitle2" fontWeight={700} sx={{ color: 'success.dark', mb: 1.5 }}>
                 {t('compareSafeTitle')}
               </Typography>
               <Stack component="ul" sx={{ m: 0, pl: 2.5 }}>
                 {safeBullets.map((k) => (
-                  <Typography key={k} component="li" variant="body2" sx={{ mb: 1, lineHeight: 1.6, color: 'rgba(255,255,255,0.88)' }}>
+                  <Typography
+                    key={k}
+                    component="li"
+                    variant="body2"
+                    sx={{ mb: 1, lineHeight: 1.6, color: 'text.primary' }}
+                  >
                     {t(k)}
                   </Typography>
                 ))}
@@ -320,10 +326,10 @@ export default async function HowSafeTransferWorksPage({ params }) {
         </Grid>
 
         <Stack spacing={2} sx={{ textAlign: 'center', pt: 2, pb: 4 }}>
-          <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.78)', lineHeight: 1.7 }}>
+          <Typography variant="body2" sx={{ color: 'text.secondary', lineHeight: 1.7 }}>
             {t('footer1')}
           </Typography>
-          <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.78)', lineHeight: 1.7 }}>
+          <Typography variant="body2" sx={{ color: 'text.secondary', lineHeight: 1.7 }}>
             {t('footer2')}
           </Typography>
         </Stack>
