@@ -15,8 +15,8 @@ import { useAuthStore } from '@/store/authStore';
 import { updateProfile } from '@/lib/api';
 
 /**
- * When user is logged in via Google OAuth but has no nickname (new registration),
- * this gate blocks the app and forces them to set a nickname before continuing.
+ * After terms are accepted, if the user still has no nickname (e.g. new Google registration),
+ * this gate blocks the app until they set one.
  */
 export default function CompleteProfileGate() {
   const user = useAuthStore((s) => s.user);
@@ -29,7 +29,9 @@ export default function CompleteProfileGate() {
   const tProfile = useTranslations('Profile');
   const tComplete = useTranslations('CompleteProfile');
 
-  const needsNickname = !!token && !!user && (user.nickname == null || user.nickname === '');
+  const termsOk = !!user?.termsAcceptedAt;
+  const needsNickname =
+    !!token && !!user && termsOk && (user.nickname == null || user.nickname === '');
 
   if (!needsNickname) return null;
 

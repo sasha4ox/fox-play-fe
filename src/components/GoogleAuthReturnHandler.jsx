@@ -38,6 +38,7 @@ export default function GoogleAuthReturnHandler() {
               preferredCurrency: profile.preferredCurrency,
               nickname: profile.nickname,
               role: profile.role,
+              termsAcceptedAt: profile.termsAcceptedAt,
             },
             token
           );

@@ -87,6 +87,7 @@ export default function AcceptTermsPage() {
             preferredCurrency: profile.preferredCurrency,
             nickname: profile.nickname,
             role: profile.role,
+            termsAcceptedAt: profile.termsAcceptedAt,
           },
           newToken
         );
