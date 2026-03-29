@@ -1625,9 +1625,18 @@ export default function OrderChatPage() {
                       bgcolor: bubbleIsAdmin
                         ? ADMIN_BUBBLE_TINT
                         : bubbleIsAgent
-                          ? 'rgba(211, 47, 47, 0.1)'
+                          ? (theme) =>
+                              theme.palette.mode === 'dark'
+                                ? 'rgba(239, 83, 80, 0.22)'
+                                : 'rgba(211, 47, 47, 0.1)'
                           : (myMessage ? '#E8E8E8' : SENDER_BUBBLE),
-                      color: myMessage ? '#1f1f1f' : (bubbleIsAdmin || bubbleIsAgent ? 'text.primary' : '#fff'),
+                      color: bubbleIsAgent
+                        ? 'text.primary'
+                        : myMessage
+                          ? '#1f1f1f'
+                          : bubbleIsAdmin
+                            ? 'text.primary'
+                            : '#fff',
                       boxShadow: bubbleIsAdmin ? '0 1px 2px rgba(255,193,7,0.4)' : '0 1px 2px rgba(0,0,0,0.08)',
                       border: bubbleIsAdmin || bubbleIsAgent ? '1px solid' : 'none',
                       borderColor: bubbleIsAdmin ? 'warning.main' : bubbleIsAgent ? 'error.main' : 'transparent',
@@ -1650,7 +1659,20 @@ export default function OrderChatPage() {
                       ))}
                     </Box>
                   )}
-                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 0.5, mt: 0.5, color: myMessage ? '#5a5a5a' : 'rgba(255,255,255,0.9)' }}>
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'flex-end',
+                      gap: 0.5,
+                      mt: 0.5,
+                      color: bubbleIsAgent && myMessage
+                        ? 'text.secondary'
+                        : myMessage
+                          ? '#5a5a5a'
+                          : 'rgba(255,255,255,0.9)',
+                    }}
+                  >
                     {msg.createdAt && (
                       <Typography variant="caption" sx={{ fontSize: '0.7rem' }}>
                         {new Date(msg.createdAt).toLocaleTimeString(locale, { hour: 'numeric', minute: '2-digit' })}
