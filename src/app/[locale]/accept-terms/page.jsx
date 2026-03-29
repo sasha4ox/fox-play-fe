@@ -14,6 +14,7 @@ import FormControlLabel from '@mui/material/FormControlLabel';
 import Container from '@mui/material/Container';
 import Alert from '@mui/material/Alert';
 import { useAuthStore } from '@/store/authStore';
+import { useAuthHydrated } from '@/hooks/useAuthHydrated';
 import { acceptTerms, getProfile } from '@/lib/api';
 
 export default function AcceptTermsPage() {
@@ -22,6 +23,7 @@ export default function AcceptTermsPage() {
   const base = `/${locale}`;
   const t = useTranslations('Form');
   const tPage = useTranslations('AcceptTerms');
+  const authHydrated = useAuthHydrated();
   const token = useAuthStore((s) => s.token);
   const setAuth = useAuthStore((s) => s.setAuth);
 
@@ -48,6 +50,7 @@ export default function AcceptTermsPage() {
   );
 
   useEffect(() => {
+    if (!authHydrated) return;
     if (!token) {
       router.replace(`/${locale}`);
       return;
@@ -70,7 +73,7 @@ export default function AcceptTermsPage() {
     return () => {
       cancelled = true;
     };
-  }, [token, locale, router]);
+  }, [authHydrated, token, locale, router]);
 
   const onSubmit = async () => {
     setAuthError(null);
@@ -99,6 +102,14 @@ export default function AcceptTermsPage() {
       setSubmitting(false);
     }
   };
+
+  if (!authHydrated) {
+    return (
+      <Container sx={{ py: 4 }}>
+        <Typography color="text.secondary">{tPage('checking')}</Typography>
+      </Container>
+    );
+  }
 
   if (!token) return null;
 
