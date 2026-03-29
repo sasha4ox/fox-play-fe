@@ -960,8 +960,14 @@ export default function OfferPDPPage() {
                 control={<Switch checked={stEnabled} onChange={(e) => setStEnabled(e.target.checked)} color="info" />}
                 label={<Typography variant="body2" fontWeight={600}>{t('safeTransferLabel')}</Typography>}
               />
-              <Typography variant="caption" color="text.secondary" display="block" sx={{ ml: 4.5 }}>
-                {t('safeTransferHint')}
+              <Typography variant="caption" color="text.secondary" display="block" component="div" sx={{ ml: 4.5 }}>
+                {t.rich('safeTransferHintRich', {
+                  learnMore: (chunks) => (
+                    <MuiLink component={Link} href={`/${locale}/how-safe-transfer-works`} underline="hover" color="info.main">
+                      {chunks}
+                    </MuiLink>
+                  ),
+                })}
               </Typography>
               {stEnabled && (() => {
                 const { dealAmount, stFee, totalToPay, currency } = computeBuyMoney();
