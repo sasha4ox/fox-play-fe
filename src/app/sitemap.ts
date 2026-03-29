@@ -10,6 +10,7 @@ const HREFLANG_LOCALES = { en: 'en', ua: 'uk', ru: 'ru', es: 'es' } as const;
 const STATIC_PATHS = [
   '',
   'how-it-works',
+  'how-safe-transfer-works',
   'terms',
   'privacy',
   'payment-model',
