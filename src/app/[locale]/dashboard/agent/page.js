@@ -31,7 +31,6 @@ import Snackbar from '@mui/material/Snackbar';
 import { useAuthStore } from '@/store/authStore';
 import { useProfile } from '@/hooks/useProfile';
 import { useGames } from '@/hooks/useGames';
-import { useAgentNewSafeTransfer } from '@/hooks/useAgentNewSafeTransfer';
 import {
   getAgentOrders,
   setAgentOnline,
@@ -219,13 +218,15 @@ export default function AgentPanelPage() {
 
   useEffect(() => { loadData(); }, [loadData]);
 
-  useAgentNewSafeTransfer(token, {
-    enabled: isAgent,
-    onNew: () => {
+  useEffect(() => {
+    if (typeof window === 'undefined' || !isAgent) return undefined;
+    const onNewSt = () => {
       loadData();
       setStToastOpen(true);
-    },
-  });
+    };
+    window.addEventListener('agentPanelNewSafeTransfer', onNewSt);
+    return () => window.removeEventListener('agentPanelNewSafeTransfer', onNewSt);
+  }, [isAgent, loadData]);
 
   const handleToggleOnline = async () => {
     if (!token || !agentProfile) return;
@@ -253,6 +254,9 @@ export default function AgentPanelPage() {
       if (action === 'item-received') await confirmItemReceived(safeTransferId, token);
       else if (action === 'item-delivered') await confirmItemDelivered(safeTransferId, token);
       await loadData();
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new Event('refetchAgentSafeTransferActionCount'));
+      }
     } catch (err) {
       setError(err.message);
     } finally {
@@ -267,6 +271,9 @@ export default function AgentPanelPage() {
       await claimSafeTransfer(claimDialog, claimNick.trim(), token);
       setClaimDialog(null);
       await loadData();
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new Event('refetchAgentSafeTransferActionCount'));
+      }
     } catch (err) {
       setError(err.message);
     } finally {
@@ -281,6 +288,9 @@ export default function AgentPanelPage() {
       await flagSafeTransfer(flagDialog, flagReason.trim(), token);
       setFlagDialog(null);
       await loadData();
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new Event('refetchAgentSafeTransferActionCount'));
+      }
     } catch (err) {
       setError(err.message);
     } finally {

@@ -97,7 +97,91 @@ export default function AdminTransactionLogDetailPage() {
         <Typography variant="subtitle2" color="text.secondary" gutterBottom>
           {t('description')}
         </Typography>
-        {detail.type === 'order' && detail.sellerAmount != null && detail.sellerCurrency && detail.exchangeRate ? (
+        {detail.type === 'order' && detail.orderPaymentBreakdown ? (
+          <Box sx={{ mb: 2 }}>
+            <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 0.5 }}>
+              {t('paymentSummary')}
+            </Typography>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.75, mt: 1 }}>
+              <Typography variant="body1">
+                <Box component="span" sx={{ color: 'text.secondary' }}>{t('buyerPaidTotalLine')}: </Box>
+                <Box component="span" sx={{ fontWeight: 700, color: 'primary.main' }}>
+                  {detail.orderPaymentBreakdown.buyerPaid} {detail.orderPaymentBreakdown.buyerCurrency}
+                </Box>
+              </Typography>
+              <Typography variant="subtitle2" sx={{ mt: 1 }}>{t('paymentBreakdownTitle')}</Typography>
+              <Typography variant="body2" color="text.secondary">
+                {t('offerWasIn')}{' '}
+                <Box component="span" sx={{ color: 'text.primary', fontWeight: 500 }}>{detail.orderPaymentBreakdown.sellerCurrency}</Box>
+              </Typography>
+              <Typography variant="body2" sx={{ fontFamily: 'monospace', wordBreak: 'break-all' }}>
+                <Box component="span" color="text.secondary">{detail.orderPaymentBreakdown.exchangeRateLabel}</Box>
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                {t('amountInCurrency', { currency: detail.orderPaymentBreakdown.sellerCurrency })}{' '}
+                <Box component="span" sx={{ color: 'text.primary', fontFamily: 'monospace' }}>{detail.orderPaymentBreakdown.sellerReceives}</Box>
+              </Typography>
+              {detail.orderPaymentBreakdown.sellerValueInBuyerCurrency != null && (
+                <Typography variant="body2" sx={{ fontFamily: 'monospace', wordBreak: 'break-all' }}>
+                  <Box component="span" color="text.secondary">{t('fxSellerToBuyer')}: </Box>
+                  <Box component="span" sx={{ color: 'text.primary' }}>
+                    {detail.orderPaymentBreakdown.sellerReceives} × {detail.exchangeRate} = {detail.orderPaymentBreakdown.sellerValueInBuyerCurrency} {detail.orderPaymentBreakdown.buyerCurrency}
+                  </Box>
+                </Typography>
+              )}
+              {detail.orderPaymentBreakdown.platformFeeAmount != null && detail.orderPaymentBreakdown.platformFeeCurrency && (
+                <Typography variant="body2" sx={{ fontFamily: 'monospace', wordBreak: 'break-all' }}>
+                  <Box component="span" color="text.secondary">+ {t('platformFeeLine')}: </Box>
+                  <Box component="span" sx={{ color: 'text.primary' }}>
+                    {detail.orderPaymentBreakdown.platformFeeAmount} {detail.orderPaymentBreakdown.platformFeeCurrency}
+                  </Box>
+                </Typography>
+              )}
+              {detail.orderPaymentBreakdown.safeTransferFeeInBuyerCurrency != null && (
+                <Typography variant="body2" sx={{ fontFamily: 'monospace', wordBreak: 'break-all' }}>
+                  <Box component="span" color="text.secondary">+ {t('safeTransferFeeBuyerCurrency')}: </Box>
+                  <Box component="span" sx={{ color: 'info.main', fontWeight: 600 }}>
+                    {detail.orderPaymentBreakdown.safeTransferFeeInBuyerCurrency} {detail.orderPaymentBreakdown.buyerCurrency}
+                  </Box>
+                </Typography>
+              )}
+              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
+                {t('buyerPaidCheckLine')}: ≈ {detail.orderPaymentBreakdown.sellerValueInBuyerCurrency ?? '—'}
+                {detail.orderPaymentBreakdown.platformFeeAmount != null ? ` + ${detail.orderPaymentBreakdown.platformFeeAmount}` : ''}
+                {detail.orderPaymentBreakdown.safeTransferFeeInBuyerCurrency != null ? ` + ${detail.orderPaymentBreakdown.safeTransferFeeInBuyerCurrency}` : ''}
+                {' → '}{detail.orderPaymentBreakdown.buyerPaid} {detail.orderPaymentBreakdown.buyerCurrency}
+              </Typography>
+            </Box>
+            {detail.safeTransferSettlement && (
+              <Box sx={{ mt: 2, p: 1.5, border: '1px solid', borderColor: 'divider', borderRadius: 1, bgcolor: 'action.hover' }}>
+                <Typography variant="subtitle2" gutterBottom>{t('safeTransferSplitTitle')}</Typography>
+                <Typography variant="body2">
+                  {t('stTotalFee')}: <strong>{detail.safeTransferSettlement.feeAmount} {detail.safeTransferSettlement.feeCurrency}</strong>
+                </Typography>
+                <Typography variant="body2">
+                  {t('stAgentEarning')}: <strong>{detail.safeTransferSettlement.agentEarning} {detail.safeTransferSettlement.feeCurrency}</strong>
+                </Typography>
+                <Typography variant="body2">
+                  {t('stPlatformEarning')}: <strong>{detail.safeTransferSettlement.platformEarning} {detail.safeTransferSettlement.feeCurrency}</strong>
+                </Typography>
+                {detail.safeTransferSettlement.agentUser && (
+                  <Typography variant="body2" sx={{ mt: 0.5 }}>
+                    {t('stAgentAccount')}:{' '}
+                    {detail.safeTransferSettlement.agentUser.nickname || detail.safeTransferSettlement.agentUser.email}
+                  </Typography>
+                )}
+                {detail.safeTransferSettlement.agentCharacterNick && (
+                  <Typography variant="body2">
+                    {t('stAgentInGameNick')}: <strong>{detail.safeTransferSettlement.agentCharacterNick}</strong>
+                  </Typography>
+                )}
+              </Box>
+            )}
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 1.5 }}>
+              {detail.method}{detail.orderNumber ? ` · ${t('orderRef')} #${detail.orderNumber}` : ''}
+            </Typography>
+          </Box>
+        ) : detail.type === 'order' && detail.sellerAmount != null && detail.sellerCurrency && detail.exchangeRate ? (
           <Box sx={{ mb: 2 }}>
             <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 0.5 }}>
               {t('paymentSummary')}
@@ -116,10 +200,6 @@ export default function AdminTransactionLogDetailPage() {
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 {t('amountInCurrency', { currency: detail.sellerCurrency })} <Box component="span" sx={{ color: 'text.primary', fontFamily: 'monospace' }}>{detail.sellerAmount}</Box>
-              </Typography>
-              <Typography variant="body2" sx={{ fontFamily: 'monospace', wordBreak: 'break-all' }}>
-                <Box component="span" color="text.secondary">{detail.sellerAmount} × {detail.exchangeRate} = </Box>
-                <Box component="span" sx={{ color: 'success.main', fontWeight: 600 }}>{detail.amount}</Box>
               </Typography>
             </Box>
             <Typography variant="body2" color="text.secondary" sx={{ mt: 1.5 }}>

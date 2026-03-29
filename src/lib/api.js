@@ -1065,6 +1065,11 @@ export async function getAgentOrders(token) {
   return apiGet('/agent/orders', token)
 }
 
+export async function getAgentSafeTransferActionCount(token) {
+  const data = await apiGet('/agent/orders/safe-transfer-action-count', token)
+  return Number(data?.count) || 0
+}
+
 export async function claimSafeTransfer(safeTransferId, agentNick, token) {
   return apiPost(`/agent/orders/${safeTransferId}/claim`, { agentNick }, token)
 }

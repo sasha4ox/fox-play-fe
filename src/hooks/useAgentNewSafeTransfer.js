@@ -29,6 +29,10 @@ export function useAgentNewSafeTransfer(token, options = {}) {
     });
 
     socket.on('new_safe_transfer', () => {
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new Event('refetchAgentSafeTransferActionCount'));
+        window.dispatchEvent(new Event('agentPanelNewSafeTransfer'));
+      }
       if (typeof onNewRef.current === 'function') {
         onNewRef.current();
       }

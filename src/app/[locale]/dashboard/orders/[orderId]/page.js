@@ -32,6 +32,7 @@ import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import Tooltip from '@mui/material/Tooltip';
+import Chip from '@mui/material/Chip';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useTheme } from '@mui/material/styles';
 import { useAuthStore } from '@/store/authStore';
@@ -344,6 +345,13 @@ export default function OrderChatPage() {
     order?.status === 'PAID' &&
     order?.safeTransfer?.status === 'PENDING_ITEM' &&
     !order?.safeTransfer?.agentCharacterNick;
+  const sellerStReadyForDeliver =
+    hasSafeTransfer &&
+    order?.status === 'PAID' &&
+    order?.safeTransfer?.status === 'PENDING_ITEM' &&
+    Boolean(order?.safeTransfer?.agentProfileId && order?.safeTransfer?.agentCharacterNick);
+  const buyerCanConfirmReceipt =
+    !hasSafeTransfer || order?.safeTransfer?.status === 'ITEM_DELIVERED';
   const getPaymentPageHref = (method) => {
     if (method === 'CRYPTO_MANUAL') return `/${locale}/pay-crypto/${orderId}`;
     if (method === 'IBAN_MANUAL') return `/${locale}/dashboard/orders/${orderId}/iban-payment`;
@@ -357,9 +365,10 @@ export default function OrderChatPage() {
   const canSellerDeliver =
     isSeller &&
     order &&
-    (order.status === 'CREATED' || order.status === 'PAID');
+    ((!hasSafeTransfer && (order.status === 'CREATED' || order.status === 'PAID')) ||
+      (hasSafeTransfer && order.status === 'PAID' && sellerStReadyForDeliver));
   const canBuyerCompleteOrDispute =
-    isBuyer && order && order.status === 'DELIVERED';
+    isBuyer && order && order.status === 'DELIVERED' && buyerCanConfirmReceipt;
   const canSellerDecline =
     isSeller &&
     order &&
@@ -1332,7 +1341,32 @@ export default function OrderChatPage() {
             </Button>
           </Alert>
         )}
-        {!pendingAdminConfirm && isSeller && order?.status === 'PAID' && (
+        {!pendingAdminConfirm && isSeller && order?.status === 'PAID' && hasSafeTransfer && order?.safeTransfer?.status === 'PENDING_ITEM' && !sellerStReadyForDeliver && (
+          <Box
+            sx={{
+              flexShrink: 0,
+              px: { xs: 1.5, md: 2 },
+              py: 1.25,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1.5,
+              background: 'linear-gradient(135deg, #1e3a5f 0%, #0d1b2a 100%)',
+              color: '#fff',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.12)',
+            }}
+          >
+            <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: 'rgba(255,255,255,0.9)', flexShrink: 0 }} />
+            <Box>
+              <Typography variant="subtitle2" fontWeight={600} sx={{ color: 'inherit', lineHeight: 1.3 }}>
+                {t('flowBannerSafeTransferWaitAgentSellerTitle')}
+              </Typography>
+              <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.9)', display: 'block', mt: 0.25 }}>
+                {t('flowBannerSafeTransferWaitAgentSellerDescription')}
+              </Typography>
+            </Box>
+          </Box>
+        )}
+        {!pendingAdminConfirm && isSeller && order?.status === 'PAID' && (!hasSafeTransfer || sellerStReadyForDeliver) && (
           <Box
             sx={{
               flexShrink: 0,
@@ -1349,10 +1383,10 @@ export default function OrderChatPage() {
             <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: 'rgba(255,255,255,0.9)', flexShrink: 0 }} />
             <Box>
               <Typography variant="subtitle2" fontWeight={600} sx={{ color: 'inherit', lineHeight: 1.3 }}>
-                {t('flowBannerSellerDeliverTitle')}
+                {hasSafeTransfer ? t('flowBannerSafeTransferSellerDeliverTitle') : t('flowBannerSellerDeliverTitle')}
               </Typography>
               <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.9)', display: 'block', mt: 0.25 }}>
-                {t('flowBannerSellerDeliverDescription')}
+                {hasSafeTransfer ? t('flowBannerSafeTransferSellerDeliverDescription') : t('flowBannerSellerDeliverDescription')}
               </Typography>
             </Box>
           </Box>
@@ -1382,7 +1416,32 @@ export default function OrderChatPage() {
             </Box>
           </Box>
         )}
-        {!pendingAdminConfirm && isBuyer && order?.status === 'DELIVERED' && (
+        {!pendingAdminConfirm && isBuyer && order?.status === 'DELIVERED' && hasSafeTransfer && !buyerCanConfirmReceipt && (
+          <Box
+            sx={{
+              flexShrink: 0,
+              px: { xs: 1.5, md: 2 },
+              py: 1.25,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1.5,
+              background: 'linear-gradient(135deg, #1e3a5f 0%, #0d1b2a 100%)',
+              color: '#fff',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.12)',
+            }}
+          >
+            <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: 'rgba(255,255,255,0.9)', flexShrink: 0 }} />
+            <Box>
+              <Typography variant="subtitle2" fontWeight={600} sx={{ color: 'inherit', lineHeight: 1.3 }}>
+                {t('flowBannerBuyerWaitAgentDeliveryTitle')}
+              </Typography>
+              <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.9)', display: 'block', mt: 0.25 }}>
+                {t('flowBannerBuyerWaitAgentDeliveryDescription')}
+              </Typography>
+            </Box>
+          </Box>
+        )}
+        {!pendingAdminConfirm && isBuyer && order?.status === 'DELIVERED' && (!hasSafeTransfer || buyerCanConfirmReceipt) && (
           <Box
             sx={{
               flexShrink: 0,
@@ -1533,6 +1592,7 @@ export default function OrderChatPage() {
             const seen = myMessage && otherRead && msg.createdAt && new Date(otherRead.lastReadAt) >= new Date(msg.createdAt);
             const { labelKey: senderLabelKey, isAdmin: senderIsAdmin } = getMessageSenderLabel(msg);
             const bubbleIsAdmin = senderIsAdmin;
+            const bubbleIsAgent = senderLabelKey === 'agentBadge';
             return (
               <Box
                 key={msg.id}
@@ -1543,11 +1603,18 @@ export default function OrderChatPage() {
                 }}
               >
                 <Box sx={{ maxWidth: '75%', display: 'flex', flexDirection: 'column', alignItems: myMessage ? 'flex-end' : 'flex-start' }}>
-                  {senderLabelKey && (
+                  {senderLabelKey === 'agentBadge' ? (
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mb: 0.25, px: 0.5, flexWrap: 'wrap' }}>
+                      <Chip label={t('agentBadge')} size="small" color="error" sx={{ height: 22, fontSize: '0.7rem', fontWeight: 700 }} />
+                      <Typography variant="caption" sx={{ fontWeight: 800, color: 'error.main' }}>
+                        {msg.sender?.nickname ?? msg.sender?.email ?? t('agentBadge')}
+                      </Typography>
+                    </Box>
+                  ) : senderLabelKey ? (
                     <Typography variant="caption" color="text.secondary" sx={{ mb: 0.25, px: 0.5, fontWeight: 600 }}>
                       {t(senderLabelKey)}
                     </Typography>
-                  )}
+                  ) : null}
                   <Box
                     sx={{
                       px: 2,
@@ -1555,11 +1622,15 @@ export default function OrderChatPage() {
                       borderRadius: 2,
                       borderTopRightRadius: myMessage ? 4 : 12,
                       borderTopLeftRadius: myMessage ? 12 : 4,
-                      bgcolor: bubbleIsAdmin ? ADMIN_BUBBLE_TINT : (myMessage ? '#E8E8E8' : SENDER_BUBBLE),
-                      color: myMessage ? '#1f1f1f' : (bubbleIsAdmin ? 'text.primary' : '#fff'),
+                      bgcolor: bubbleIsAdmin
+                        ? ADMIN_BUBBLE_TINT
+                        : bubbleIsAgent
+                          ? 'rgba(211, 47, 47, 0.1)'
+                          : (myMessage ? '#E8E8E8' : SENDER_BUBBLE),
+                      color: myMessage ? '#1f1f1f' : (bubbleIsAdmin || bubbleIsAgent ? 'text.primary' : '#fff'),
                       boxShadow: bubbleIsAdmin ? '0 1px 2px rgba(255,193,7,0.4)' : '0 1px 2px rgba(0,0,0,0.08)',
-                      border: bubbleIsAdmin ? '1px solid' : 'none',
-                      borderColor: bubbleIsAdmin ? 'warning.main' : 'transparent',
+                      border: bubbleIsAdmin || bubbleIsAgent ? '1px solid' : 'none',
+                      borderColor: bubbleIsAdmin ? 'warning.main' : bubbleIsAgent ? 'error.main' : 'transparent',
                     }}
                   >
                   <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
@@ -1610,13 +1681,7 @@ export default function OrderChatPage() {
                   : t('isTyping', { name: otherName })}
           </Typography>
         )}
-        {/* Input area – fixed at bottom of chat panel, always visible on mobile; hidden for agents (read-only) */}
-        {isAssignedAgent ? (
-          <Box sx={{ flexShrink: 0, px: 2, py: 1.5, bgcolor: 'background.paper', borderTop: '1px solid', borderColor: 'divider', textAlign: 'center' }}>
-            <Typography variant="body2" color="text.secondary">{t('agentBadge')} — read-only</Typography>
-          </Box>
-        ) : (
-        <>
+        {/* Input area – fixed at bottom of chat panel; agents can post as Agent (badge + styling). */}
         <Box
           sx={{
             flexShrink: 0,
@@ -1680,8 +1745,6 @@ export default function OrderChatPage() {
           <Typography variant="caption" color="text.secondary" sx={{ px: 2, pb: 1 }}>
             {t('imagesAttached', { count: files.length })}
           </Typography>
-        )}
-        </>
         )}
 
         <Dialog open={disputeDialogOpen} onClose={() => setDisputeDialogOpen(false)} maxWidth="sm" fullWidth>

@@ -26,7 +26,8 @@ import { useAuthStore, useIsAuthenticated } from '@/store/authStore';
 import { useThemeStore } from '@/store/themeStore';
 import { useProfile } from '@/hooks/useProfile';
 import { useSellerNewOrder } from '@/hooks/useSellerNewOrder';
-import { updatePreferredCurrency, getUnreadCount, getAdminMoneyFlowAlertBadges, getMySupportConversations } from '@/lib/api';
+import { useAgentNewSafeTransfer } from '@/hooks/useAgentNewSafeTransfer';
+import { updatePreferredCurrency, getUnreadCount, getAdminMoneyFlowAlertBadges, getMySupportConversations, getAgentSafeTransferActionCount } from '@/lib/api';
 import {
   playNewOrderSound,
   playNewMessageSound,
@@ -80,6 +81,7 @@ export default function Header() {
   const [soldSoundOn, setSoldSoundOn] = useState(true);
   const [logoError, setLogoError] = useState(false);
   const [adminMoneyFlowBadgeCount, setAdminMoneyFlowBadgeCount] = useState(0);
+  const [agentSafeTransferActionCount, setAgentSafeTransferActionCount] = useState(0);
   const [hasSupportConversations, setHasSupportConversations] = useState(false);
   useEffect(() => {
     setMessageSoundOn(getMessageSoundEnabled());
@@ -145,6 +147,7 @@ export default function Header() {
 
   const isAdminOrMod = profile?.role === 'ADMIN' || profile?.role === 'MODERATOR' || user?.role === 'ADMIN' || user?.role === 'MODERATOR';
   const isAgentOrAdmin = profile?.role === 'AGENT' || profile?.role === 'ADMIN' || user?.role === 'AGENT' || user?.role === 'ADMIN';
+  const isAgentOnly = profile?.role === 'AGENT' || user?.role === 'AGENT';
 
   useEffect(() => {
     if (typeof window === 'undefined') return undefined;
@@ -169,6 +172,32 @@ export default function Header() {
     setAdminMoneyFlowBadgeCount(0);
     return undefined;
   }, [isAdminOrMod, token, pathname]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined;
+    if (!isAgentOnly || !token) {
+      setAgentSafeTransferActionCount(0);
+      return undefined;
+    }
+    const load = () => {
+      getAgentSafeTransferActionCount(token)
+        .then((n) => setAgentSafeTransferActionCount(Number(n) || 0))
+        .catch(() => setAgentSafeTransferActionCount(0));
+    };
+    load();
+    const interval = setInterval(load, 60000);
+    const onRefetch = () => load();
+    window.addEventListener('refetchAgentSafeTransferActionCount', onRefetch);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('refetchAgentSafeTransferActionCount', onRefetch);
+    };
+  }, [isAgentOnly, token, pathname]);
+
+  useAgentNewSafeTransfer(token, {
+    enabled: Boolean(isAuth && isAgentOnly && token),
+    onNew: () => {},
+  });
 
   useEffect(() => {
     if (!isAuth || !token) {
@@ -254,7 +283,7 @@ export default function Header() {
           ...(showSupportLink ? [{ href: `${base}/dashboard/support`, label: t('support'), active: pathname?.includes('/dashboard/support') }] : []),
           { href: `${base}/dashboard/sales`, label: t('mySales'), active: pathname?.includes('/dashboard/sales'), badge: sellerOrderCount },
           ...(isAgentOrAdmin
-            ? [{ href: `${base}/dashboard/agent`, label: t('agentPanel'), active: pathname?.includes('/dashboard/agent') }]
+            ? [{ href: `${base}/dashboard/agent`, label: t('agentPanel'), active: pathname?.includes('/dashboard/agent'), badge: isAgentOnly ? agentSafeTransferActionCount : 0 }]
             : []),
           ...(isAdminOrMod
             ? [{ href: `${base}/dashboard/admin/overview`, label: t('admin'), active: pathname?.includes('/dashboard/admin'), badge: adminMoneyFlowBadgeCount }]

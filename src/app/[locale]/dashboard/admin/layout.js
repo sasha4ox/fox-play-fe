@@ -3,13 +3,15 @@
 import { useRouter, usePathname } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
 import Link from 'next/link';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import Box from '@mui/material/Box';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import Skeleton from '@mui/material/Skeleton';
+import Badge from '@mui/material/Badge';
 import { useProfile } from '@/hooks/useProfile';
 import { useAuthStore } from '@/store/authStore';
+import { getAdminMoneyFlowAlertBadges } from '@/lib/api';
 
 const adminNav = [
   { href: 'overview', labelKey: 'overview' },
@@ -35,6 +37,27 @@ export default function AdminLayout({ children }) {
 
   const role = profile?.role ?? user?.role;
   const isAdmin = role === 'ADMIN' || role === 'MODERATOR';
+  const [moneyFlowBadgeCount, setMoneyFlowBadgeCount] = useState(0);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined;
+    if (!isAdmin || !token) {
+      setMoneyFlowBadgeCount(0);
+      return undefined;
+    }
+    const load = () => {
+      getAdminMoneyFlowAlertBadges(token)
+        .then((d) => {
+          const n = (Number(d?.pendingReceiptsUnseen) || 0) + (Number(d?.withdrawUnseen) || 0);
+          setMoneyFlowBadgeCount(n);
+        })
+        .catch(() => setMoneyFlowBadgeCount(0));
+    };
+    load();
+    const onRefetch = () => load();
+    window.addEventListener('refetchAdminMoneyFlowBadges', onRefetch);
+    return () => window.removeEventListener('refetchAdminMoneyFlowBadges', onRefetch);
+  }, [isAdmin, token, pathname]);
 
   useEffect(() => {
     if (!token) {
@@ -70,16 +93,23 @@ export default function AdminLayout({ children }) {
           allowScrollButtonsMobile
           sx={{ minHeight: 48 }}
         >
-          {adminNav.map(({ href, labelKey }) => (
-            <Tab
-              key={href}
-              value={href}
-              label={t(labelKey)}
-              component={Link}
-              href={`${base}/${href}`}
-              sx={{ textTransform: 'none' }}
-            />
-          ))}
+          {adminNav.map(({ href, labelKey }) => {
+            const tabBadge = href === 'money-flow' ? moneyFlowBadgeCount : 0;
+            return (
+              <Tab
+                key={href}
+                value={href}
+                label={
+                  <Badge color="error" badgeContent={tabBadge} invisible={tabBadge === 0}>
+                    <span>{t(labelKey)}</span>
+                  </Badge>
+                }
+                component={Link}
+                href={`${base}/${href}`}
+                sx={{ textTransform: 'none' }}
+              />
+            );
+          })}
         </Tabs>
       </Box>
       <Box sx={{ px: { xs: 1, sm: 2 }, pt: 2 }}>{children}</Box>

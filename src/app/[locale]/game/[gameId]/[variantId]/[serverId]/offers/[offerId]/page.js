@@ -57,6 +57,9 @@ export default function OfferPDPPage() {
   const [buyDialogOpen, setBuyDialogOpen] = useState(false);
   const [buyQuantity, setBuyQuantity] = useState(1);
   const [buyQuantityKk, setBuyQuantityKk] = useState(1);
+  /** Controlled string so user can clear the field while typing; synced to buyQuantityKk on blur. */
+  const [buyQuantityKkStr, setBuyQuantityKkStr] = useState('1');
+  const [buyQuantityStr, setBuyQuantityStr] = useState('1');
   const [buyCharacterNick, setBuyCharacterNick] = useState('');
   const [buySubmitting, setBuySubmitting] = useState(false);
   const [buyError, setBuyError] = useState(null);
@@ -88,6 +91,8 @@ export default function OfferPDPPage() {
         setOffer(data);
         setBuyQuantity(1);
         setBuyQuantityKk(1);
+        setBuyQuantityKkStr('1');
+        setBuyQuantityStr('1');
         setLoading(false);
       })
       .catch((err) => {
@@ -158,8 +163,9 @@ export default function OfferPDPPage() {
       openLoginModal(() => setBuyDialogOpen(true));
       return;
     }
-    const isCoins = offer?.offerType === 'COINS';
-    if (isCoins) {
+    const isCoinsType = offer?.offerType === 'COINS';
+    const isAdenaType = offer?.offerType === 'ADENA';
+    if (isCoinsType) {
       const initCoins = (offer?.minSellQuantity != null ? Number(offer.minSellQuantity) : 1);
       setBuyQuantity(Math.max(1, Math.min(initCoins, Number(offer.quantity) || 1)));
     } else {
@@ -169,17 +175,86 @@ export default function OfferPDPPage() {
       ? Number(offer.minSellQuantity) / 1_000_000
       : 1;
     setBuyQuantityKk(initKk);
+    setBuyQuantityKkStr(String(initKk));
+    if (isCoinsType) {
+      const initCoins = (offer?.minSellQuantity != null ? Number(offer.minSellQuantity) : 1);
+      const q = Math.max(1, Math.min(initCoins, Number(offer.quantity) || 1));
+      setBuyQuantity(q);
+      setBuyQuantityStr(String(q));
+    } else if (!isAdenaType) {
+      setBuyQuantity(1);
+      setBuyQuantityStr('1');
+    }
     setStEnabled(false);
     setBuyDialogOpen(true);
+  };
+
+  const parseKkFromStr = (s) => {
+    const n = Number(String(s ?? '').replace(',', '.').trim());
+    return Number.isFinite(n) ? n : NaN;
   };
 
   const calcBuyQty = () => {
     const isAdena = offer?.offerType === 'ADENA';
     const isCoins = offer?.offerType === 'COINS';
     const minSellQty = (isAdena || isCoins) && offer?.minSellQuantity != null ? Number(offer.minSellQuantity) : 1;
-    return isAdena
-      ? Math.min(Number(offer.quantity), Math.max(minSellQty, Math.floor(buyQuantityKk * 1_000_000)))
-      : Math.min(Math.max(minSellQty, Math.floor(buyQuantity)), Number(offer.quantity));
+    if (isAdena) {
+      const kk = parseKkFromStr(buyQuantityKkStr);
+      const kkNum = Number.isFinite(kk) ? kk : buyQuantityKk;
+      return Math.min(Number(offer.quantity), Math.max(minSellQty, Math.floor(kkNum * 1_000_000)));
+    }
+    const qRaw = Number(String(buyQuantityStr ?? '').replace(',', '.').trim());
+    const q = Number.isFinite(qRaw) ? Math.floor(qRaw) : buyQuantity;
+    return Math.min(Math.max(minSellQty, q), Number(offer.quantity));
+  };
+
+  /** Deal subtotal, optional ST fee, and total buyer pays (matches Safe Transfer block). */
+  const computeBuyMoney = () => {
+    if (!offer) {
+      return { dealAmount: 0, stFee: 0, totalToPay: 0, currency: '' };
+    }
+    const isAdena = offer.offerType === 'ADENA';
+    const pricePer1kk = Number(offer.displayPrice ?? offer.price) || 0;
+    const unitPrice = pricePer1kk;
+    const kk = parseKkFromStr(buyQuantityKkStr);
+    const kkNum = Number.isFinite(kk) ? kk : buyQuantityKk;
+    const qRaw = Number(String(buyQuantityStr ?? '').replace(',', '.').trim());
+    const qNum = Number.isFinite(qRaw) ? qRaw : buyQuantity;
+    const dealAmount = isAdena ? kkNum * pricePer1kk : qNum * unitPrice;
+    const usesDisplay = offer.displayPrice != null && offer.displayCurrency != null;
+    const minStFee = usesDisplay
+      ? (offer.safeTransferMinFeeInDisplay ?? offer.safeTransferMinFeeInSellerCurrency ?? 5)
+      : (offer.safeTransferMinFeeInSellerCurrency ?? 5);
+    const stFee = Math.round(Math.max(dealAmount * 0.05, minStFee) * 100) / 100;
+    const totalToPay = stEnabled ? dealAmount + stFee : dealAmount;
+    const currency = offer.displayCurrency ?? offer.currency ?? '';
+    return { dealAmount, stFee, totalToPay, currency };
+  };
+
+  const validateBuyQuantity = () => {
+    if (!offer) return 'Invalid offer';
+    if (offer.offerType === 'ADENA') {
+      const maxKk = (offer.quantity ?? 0) / 1_000_000;
+      const minKk = offer.minSellQuantity != null ? Number(offer.minSellQuantity) / 1_000_000 : 0.001;
+      const kk = parseKkFromStr(buyQuantityKkStr);
+      if (buyQuantityKkStr.trim() === '' || !Number.isFinite(kk)) {
+        return t('toBeReceived') ? `${t('toBeReceived')}: invalid` : 'Enter a valid amount';
+      }
+      if (kk < minKk || kk > maxKk) {
+        return t('toBeReceived') ? `${t('toBeReceived')}: out of range` : 'Amount out of range';
+      }
+    } else {
+      const qRaw = Number(String(buyQuantityStr ?? '').replace(',', '.').trim());
+      if (buyQuantityStr.trim() === '' || !Number.isFinite(qRaw)) {
+        return t('quantity') ? `${t('quantity')}: invalid` : 'Enter a valid quantity';
+      }
+      const minSellQty = offer.minSellQuantity != null ? Number(offer.minSellQuantity) : 1;
+      const q = Math.floor(qRaw);
+      if (q < minSellQty || q > Number(offer.quantity)) {
+        return t('quantity') ? `${t('quantity')}: out of range` : 'Quantity out of range';
+      }
+    }
+    return null;
   };
 
   const handleBuySubmit = async () => {
@@ -187,6 +262,11 @@ export default function OfferPDPPage() {
     const nick = (buyCharacterNick || '').trim();
     if (!nick) {
       setBuyError(t('inGameNickRequired'));
+      return;
+    }
+    const qErr = validateBuyQuantity();
+    if (qErr) {
+      setBuyError(qErr);
       return;
     }
     const qty = calcBuyQty();
@@ -211,6 +291,11 @@ export default function OfferPDPPage() {
     const nick = (buyCharacterNick || '').trim();
     if (!nick) {
       setBuyError(t('inGameNickRequired'));
+      return;
+    }
+    const qErr = validateBuyQuantity();
+    if (qErr) {
+      setBuyError(qErr);
       return;
     }
     const qty = calcBuyQty();
@@ -238,6 +323,11 @@ export default function OfferPDPPage() {
       setBuyError(t('inGameNickRequired'));
       return;
     }
+    const qErr = validateBuyQuantity();
+    if (qErr) {
+      setBuyError(qErr);
+      return;
+    }
     const qty = calcBuyQty();
     setBuySubmitting(true);
     setBuyError(null);
@@ -261,6 +351,11 @@ export default function OfferPDPPage() {
     const nick = (buyCharacterNick || '').trim();
     if (!nick) {
       setBuyError(t('inGameNickRequired'));
+      return;
+    }
+    const qErr = validateBuyQuantity();
+    if (qErr) {
+      setBuyError(qErr);
       return;
     }
     const qty = calcBuyQty();
@@ -774,27 +869,27 @@ export default function OfferPDPPage() {
                 return (
                   <>
                     <TextField
-                      type="number"
+                      type="text"
                       inputMode="decimal"
                       label={t('toBeReceived')}
-                      value={buyQuantityKk}
-                      onChange={(e) => {
-                        const inputValue = e.target.value;
-                        if (inputValue === '') {
-                          setBuyQuantityKk(0);
+                      value={buyQuantityKkStr}
+                      onChange={(e) => setBuyQuantityKkStr(e.target.value)}
+                      onBlur={() => {
+                        const kk = parseKkFromStr(buyQuantityKkStr);
+                        if (buyQuantityKkStr.trim() === '' || !Number.isFinite(kk)) {
+                          setBuyQuantityKk(minKk);
+                          setBuyQuantityKkStr(String(minKk));
                           return;
                         }
-                        const value = Number(inputValue);
-                        if (!Number.isFinite(value) || value < 0) return;
-                        setBuyQuantityKk(Math.min(maxKk, value));
+                        const clamped = Math.min(maxKk, Math.max(minKk, kk));
+                        setBuyQuantityKk(clamped);
+                        setBuyQuantityKkStr(String(clamped));
                       }}
                       InputProps={{
                         endAdornment: <InputAdornment position="end">kk</InputAdornment>,
                       }}
                       inputProps={{
-                        min: minKk,
-                        max: maxKk,
-                        step: 'any',
+                        inputMode: 'decimal',
                       }}
                       placeholder={String(minKk)}
                       fullWidth
@@ -812,23 +907,33 @@ export default function OfferPDPPage() {
             </>
           ) : (
             <TextField
-              type="number"
+              type="text"
+              inputMode="numeric"
               label={t('quantity')}
-              value={buyQuantity}
-              onChange={(e) => setBuyQuantity(Math.min(maxQty, Math.max(1, Number(e.target.value) || 1)))}
-              inputProps={{ min: 1, max: maxQty }}
+              value={buyQuantityStr}
+              onChange={(e) => setBuyQuantityStr(e.target.value)}
+              onBlur={() => {
+                const minSellQty = offer?.minSellQuantity != null ? Number(offer.minSellQuantity) : 1;
+                const qRaw = Number(String(buyQuantityStr ?? '').replace(',', '.').trim());
+                if (buyQuantityStr.trim() === '' || !Number.isFinite(qRaw)) {
+                  setBuyQuantity(minSellQty);
+                  setBuyQuantityStr(String(minSellQty));
+                  return;
+                }
+                const q = Math.min(maxQty, Math.max(minSellQty, Math.floor(qRaw)));
+                setBuyQuantity(q);
+                setBuyQuantityStr(String(q));
+              }}
               fullWidth
               sx={{ mb: 2 }}
             />
           )}
           {isAdenaOffer && (() => {
-            const pricePer1kk = Number(offer.displayPrice ?? offer.price) || 0;
-            const totalToPay = buyQuantityKk * pricePer1kk;
-            const currency = offer.displayCurrency ?? offer.currency ?? '';
+            const { totalToPay, currency } = computeBuyMoney();
             return (
               <Box sx={{ mb: 2 }}>
                 <Typography variant="body2" color="text.secondary">
-                  {t('youWillPay')}: <strong>{totalToPay.toFixed(2)} {currency}</strong>
+                  {t('youWillPay')}: <strong>{Number.isFinite(totalToPay) ? totalToPay.toFixed(2) : '—'} {currency}</strong>
                 </Typography>
                 <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5 }}>
                   {t('bankFeeHint')}
@@ -839,7 +944,10 @@ export default function OfferPDPPage() {
           {!isAdenaOffer && offer && (
             <Box sx={{ mb: 2 }}>
               <Typography variant="body2" color="text.secondary">
-                {t('youWillPay')}: <strong>{(buyQuantity * (Number(offer.displayPrice ?? offer.price) || 0)).toFixed(2)} {offer.displayCurrency ?? offer.currency ?? ''}</strong>
+                {t('youWillPay')}: <strong>{(() => {
+                  const { totalToPay, currency } = computeBuyMoney();
+                  return `${Number.isFinite(totalToPay) ? totalToPay.toFixed(2) : '—'} ${currency}`;
+                })()}</strong>
               </Typography>
               <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5 }}>
                 {t('bankFeeHint')}
@@ -856,22 +964,14 @@ export default function OfferPDPPage() {
                 {t('safeTransferHint')}
               </Typography>
               {stEnabled && (() => {
-                const pricePer1kk = Number(offer?.displayPrice ?? offer?.price) || 0;
-                const unitPrice = Number(offer?.displayPrice ?? offer?.price) || 0;
-                const dealAmount = isAdenaOffer ? buyQuantityKk * pricePer1kk : buyQuantity * unitPrice;
-                const usesDisplay = offer?.displayPrice != null && offer?.displayCurrency != null;
-                const minStFee = usesDisplay
-                  ? (offer.safeTransferMinFeeInDisplay ?? offer.safeTransferMinFeeInSellerCurrency ?? 5)
-                  : (offer.safeTransferMinFeeInSellerCurrency ?? 5);
-                const stFee = Math.round(Math.max(dealAmount * 0.05, minStFee) * 100) / 100;
-                const currency = offer?.displayCurrency ?? offer?.currency ?? '';
+                const { dealAmount, stFee, totalToPay, currency } = computeBuyMoney();
                 return (
                   <Box sx={{ ml: 4.5, mt: 0.5 }}>
                     <Typography variant="body2" color="info.main" fontWeight={600}>
                       {t('safeTransferFee', { fee: stFee.toFixed(2), currency })}
                     </Typography>
                     <Typography variant="body2" color="info.main">
-                      {t('safeTransferTotal', { total: (dealAmount + stFee).toFixed(2), currency })}
+                      {t('safeTransferTotal', { total: totalToPay.toFixed(2), currency })}
                     </Typography>
                   </Box>
                 );
@@ -895,13 +995,18 @@ export default function OfferPDPPage() {
           <Button onClick={() => setBuyDialogOpen(false)}>Cancel</Button>
           {(() => {
             const offerCurrency = offer?.displayCurrency ?? offer?.currency ?? '';
-            const pricePer1kk = Number(offer?.displayPrice ?? offer?.price) || 0;
-            const unitPrice = Number(offer?.displayPrice ?? offer?.price) || 0;
-            const totalToPay = isAdenaOffer ? buyQuantityKk * pricePer1kk : buyQuantity * unitPrice;
-            // Use total available in preferred currency so user can pay with balance in any wallet (backend converts)
+            const { totalToPay } = computeBuyMoney();
             const availableBalance = Number(primaryBalance?.available ?? 0);
             const hasEnoughBalance = offerCurrency && totalToPay > 0 && availableBalance >= totalToPay;
-            const dialogSubmitDisabled = buySubmitting || isPriceBelowMin || (isAdenaOffer ? buyQuantityKk <= 0 : buyQuantity < 1);
+            const kkOk = !isAdenaOffer || (() => {
+              const kk = parseKkFromStr(buyQuantityKkStr);
+              return buyQuantityKkStr.trim() !== '' && Number.isFinite(kk) && kk > 0;
+            })();
+            const qtyOk = isAdenaOffer || (() => {
+              const qRaw = Number(String(buyQuantityStr ?? '').replace(',', '.').trim());
+              return buyQuantityStr.trim() !== '' && Number.isFinite(qRaw) && Math.floor(qRaw) >= 1;
+            })();
+            const dialogSubmitDisabled = buySubmitting || isPriceBelowMin || !kkOk || !qtyOk;
             return (
               <Tooltip title={!hasEnoughBalance ? (t('insufficientBalance') || 'Insufficient balance') : ''}>
                 <span>
@@ -917,19 +1022,19 @@ export default function OfferPDPPage() {
             );
           })()}
           {cardPaymentEnabled && (
-            <Button variant="contained" onClick={handleManuauCardBuySubmit} disabled={buySubmitting || isPriceBelowMin || (isAdenaOffer ? buyQuantityKk <= 0 : buyQuantity < 1)}>
+            <Button variant="contained" onClick={handleManuauCardBuySubmit} disabled={buySubmitting || isPriceBelowMin || (isAdenaOffer ? (buyQuantityKkStr.trim() === '' || !Number.isFinite(parseKkFromStr(buyQuantityKkStr)) || parseKkFromStr(buyQuantityKkStr) <= 0) : (buyQuantityStr.trim() === '' || !Number.isFinite(Number(buyQuantityStr)) || Math.floor(Number(buyQuantityStr)) < 1))}>
               {buySubmitting ? 'Creating…' : (t('payByCard') || 'Pay by card')}
             </Button>
           )}
           {cryptoPaymentEnabled && (
             <Tooltip title={t('payWithCryptoUsdNotice')}>
-              <Button variant="contained" color="secondary" onClick={handleCryptoBuySubmit} disabled={buySubmitting || isPriceBelowMin || (isAdenaOffer ? buyQuantityKk <= 0 : buyQuantity < 1)}>
+              <Button variant="contained" color="secondary" onClick={handleCryptoBuySubmit} disabled={buySubmitting || isPriceBelowMin || (isAdenaOffer ? (buyQuantityKkStr.trim() === '' || !Number.isFinite(parseKkFromStr(buyQuantityKkStr)) || parseKkFromStr(buyQuantityKkStr) <= 0) : (buyQuantityStr.trim() === '' || !Number.isFinite(Number(String(buyQuantityStr).replace(',', '.'))) || Math.floor(Number(String(buyQuantityStr).replace(',', '.'))) < 1))}>
                 {buySubmitting ? 'Creating…' : (t('payWithCrypto') || 'Pay with Crypto')}
               </Button>
             </Tooltip>
           )}
           {ibanPaymentEnabled && (
-            <Button variant="contained" color="secondary" onClick={handleIbanBuySubmit} disabled={buySubmitting || isPriceBelowMin || (isAdenaOffer ? buyQuantityKk <= 0 : buyQuantity < 1)}>
+            <Button variant="contained" color="secondary" onClick={handleIbanBuySubmit} disabled={buySubmitting || isPriceBelowMin || (isAdenaOffer ? (buyQuantityKkStr.trim() === '' || !Number.isFinite(parseKkFromStr(buyQuantityKkStr)) || parseKkFromStr(buyQuantityKkStr) <= 0) : (buyQuantityStr.trim() === '' || !Number.isFinite(Number(String(buyQuantityStr).replace(',', '.'))) || Math.floor(Number(String(buyQuantityStr).replace(',', '.'))) < 1))}>
               {buySubmitting ? 'Creating…' : (t('payViaIban') || 'Pay via IBAN (EUR)')}
             </Button>
           )}
