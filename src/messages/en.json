@@ -386,6 +386,7 @@
     "enable2FADescription": "Scan the QR code with your authenticator app (e.g. Google Authenticator), then enter the 6-digit code to verify.",
     "enable2FAScanQR": "Scan QR code",
     "enable2FAManualEntry": "Can't scan? Enter this key manually in your app:",
+    "enable2FAManualEntryHint": "Paste only the characters below into the key field — not the full otpauth link.",
     "enable2FAEnterCode": "Enter 6-digit code",
     "enable2FAVerify": "Verify and enable",
     "enable2FALoading": "Loading…",

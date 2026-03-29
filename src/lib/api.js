@@ -380,7 +380,7 @@ export async function createDepositOrder({ amount, returnUrl, cancelUrl, provide
   return apiPost('/me/deposit/create', body, token)
 }
 
-/** Get 2FA setup (QR + otpauth URI). Returns { qrCodeDataUrl, otpauthUri }. Auth required. */
+/** Get 2FA setup (QR + otpauth URI + secret for manual entry). Returns { qrCodeDataUrl, otpauthUri, secret }. Auth required. */
 export async function get2FASetup(token) {
   return apiGet('/me/2fa/setup', token)
 }

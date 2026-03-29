@@ -16,6 +16,22 @@ import useMediaQuery from '@mui/material/useMediaQuery';
 import { useTheme } from '@mui/material/styles';
 import { get2FASetup, verify2FASetup } from '@/lib/api';
 
+/** Authenticator apps expect the Base32 secret only, not the full otpauth:// URL. */
+function totpSecretForManualEntry(otpauthUri, apiSecret) {
+  if (typeof apiSecret === 'string' && apiSecret.trim()) return apiSecret.trim();
+  if (!otpauthUri || typeof otpauthUri !== 'string') return '';
+  const q = otpauthUri.indexOf('?');
+  if (q === -1) return '';
+  const params = new URLSearchParams(otpauthUri.slice(q));
+  const raw = params.get('secret');
+  if (!raw) return '';
+  try {
+    return decodeURIComponent(raw);
+  } catch {
+    return raw;
+  }
+}
+
 export default function Enable2FAModal({ open, onClose, onSuccess, token, requiredForWithdraw = false }) {
   const t = useTranslations('Balance');
   const theme = useTheme();
@@ -23,6 +39,7 @@ export default function Enable2FAModal({ open, onClose, onSuccess, token, requir
   const [step, setStep] = useState(1);
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState(null);
   const [otpauthUri, setOtpauthUri] = useState(null);
+  const [manualSecret, setManualSecret] = useState('');
   const [setupLoading, setSetupLoading] = useState(false);
   const [verifyLoading, setVerifyLoading] = useState(false);
   const [code, setCode] = useState('');
@@ -35,7 +52,9 @@ export default function Enable2FAModal({ open, onClose, onSuccess, token, requir
       get2FASetup(token)
         .then((data) => {
           setQrCodeDataUrl(data?.qrCodeDataUrl ?? null);
-          setOtpauthUri(data?.otpauthUri ?? null);
+          const uri = data?.otpauthUri ?? null;
+          setOtpauthUri(uri);
+          setManualSecret(totpSecretForManualEntry(uri, data?.secret));
         })
         .catch((e) => {
           const msg = e?.message ?? '';
@@ -52,6 +71,7 @@ export default function Enable2FAModal({ open, onClose, onSuccess, token, requir
     setError(null);
     setQrCodeDataUrl(null);
     setOtpauthUri(null);
+    setManualSecret('');
     onClose?.();
   };
 
@@ -137,10 +157,13 @@ export default function Enable2FAModal({ open, onClose, onSuccess, token, requir
                     <img src={qrCodeDataUrl} alt="QR code" width={200} height={200} style={{ display: 'block' }} />
                   </Box>
                 )}
-                {otpauthUri && (
+                {manualSecret && (
                   <Box sx={{ mt: 2 }}>
                     <Typography variant="caption" color="text.secondary" display="block" gutterBottom>
                       {t('enable2FAManualEntry')}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 0.5 }}>
+                      {t('enable2FAManualEntryHint')}
                     </Typography>
                     <Typography
                       component="code"
@@ -154,7 +177,7 @@ export default function Enable2FAModal({ open, onClose, onSuccess, token, requir
                         borderRadius: 1,
                       }}
                     >
-                      {otpauthUri}
+                      {manualSecret}
                     </Typography>
                   </Box>
                 )}

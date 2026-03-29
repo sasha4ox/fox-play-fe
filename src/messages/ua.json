@@ -386,6 +386,7 @@
     "enable2FADescription": "Відскануйте QR-код у застосунку-автентифікаторі (наприклад Google Authenticator), потім введіть 6-значний код для підтвердження.",
     "enable2FAScanQR": "Відскануйте QR-код",
     "enable2FAManualEntry": "Не можете відсканувати? Введіть цей ключ вручну в застосунку:",
+    "enable2FAManualEntryHint": "У поле ключа вставте лише символи нижче, не посилання otpauth://…",
     "enable2FAEnterCode": "Введіть 6-значний код",
     "enable2FAVerify": "Підтвердити та увімкнути",
     "enable2FALoading": "Завантаження…",

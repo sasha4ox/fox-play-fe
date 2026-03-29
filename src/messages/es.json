@@ -429,6 +429,7 @@
 
     "enable2FAScanQR": "Сканируйте QR-код",
     "enable2FAManualEntry": "Не получается отсканировать? Введите этот ключ вручную:",
+    "enable2FAManualEntryHint": "Pega solo los caracteres de abajo en el campo de clave, no el enlace otpauth completo.",
 
     "enable2FAEnterCode": "Введите 6-значный код",
     "enable2FAVerify": "Подтвердить и включить",
