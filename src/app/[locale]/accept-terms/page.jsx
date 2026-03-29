@@ -140,7 +140,7 @@ export default function AcceptTermsPage() {
           render={({ field, fieldState: { error } }) => (
             <Box>
               <FormControlLabel
-                sx={{ alignItems: 'flex-start', m: 0 }}
+                sx={{ alignItems: 'center', m: 0 }}
                 control={
                   <Checkbox
                     checked={!!field.value}
@@ -174,7 +174,7 @@ export default function AcceptTermsPage() {
           render={({ field, fieldState: { error } }) => (
             <Box>
               <FormControlLabel
-                sx={{ alignItems: 'flex-start', m: 0 }}
+                sx={{ alignItems: 'center', m: 0 }}
                 control={
                   <Checkbox
                     checked={!!field.value}
@@ -207,7 +207,7 @@ export default function AcceptTermsPage() {
           render={({ field, fieldState: { error } }) => (
             <Box>
               <FormControlLabel
-                sx={{ alignItems: 'flex-start', m: 0 }}
+                sx={{ alignItems: 'center', m: 0 }}
                 control={
                   <Checkbox
                     checked={!!field.value}
