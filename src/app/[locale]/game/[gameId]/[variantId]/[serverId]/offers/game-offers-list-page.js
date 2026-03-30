@@ -94,6 +94,8 @@ export default function GameOffersListPage({ categorySegment }) {
   const game = tree ? getGameFromTree(tree, gameId) : null;
   const variant = tree ? getVariantFromTree(tree, gameId, variantId) : null;
   const server = tree ? getServerFromTree(tree, gameId, variantId, serverId) : null;
+  /** API always needs real server UUID; URL segment may be a slug (e.g. x10-new). */
+  const resolvedServerId = server?.id ?? (isUuidSegment(serverId) ? serverId : null);
   const adenaPriceUnitKk = server?.adenaPriceUnitKk ?? game?.adenaPriceUnitKk ?? 100;
   const effectiveUnitKk = getEffectiveUnitKk(adenaPriceUnitKk);
   const unitLabel = adenaPriceUnitKk === 0 ? t('pricePer1k') : t('pricePerNkk', { n: adenaPriceUnitKk });
@@ -124,10 +126,10 @@ export default function GameOffersListPage({ categorySegment }) {
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
-    if (serverId && token) {
-      addRecentServer(serverId, token).catch(() => {});
+    if (resolvedServerId && token) {
+      addRecentServer(resolvedServerId, token).catch(() => {});
     }
-  }, [serverId, token]);
+  }, [resolvedServerId, token]);
 
   useEffect(() => {
     if (!server || !game || !variant || !categorySegment) return;
@@ -157,14 +159,14 @@ export default function GameOffersListPage({ categorySegment }) {
   }, [game, variant, server, gameId, variantId, serverId, gamesLoading, locale, router, categorySegment]);
 
   useEffect(() => {
-    if (!serverId) return;
+    if (!resolvedServerId) return;
     setOffersLoading(true);
     setOffersError(null);
-    const params = {
+    const fetchParams = {
       offerType: categoryFilter || undefined, // can be standard type or custom category UUID
       displayCurrency: preferredCurrency ?? 'USD',
     };
-    fetchOffersByServer(serverId, token, params)
+    fetchOffersByServer(resolvedServerId, token, fetchParams)
       .then((data) => {
         setOffers(Array.isArray(data) ? data : []);
         setOffersLoading(false);
@@ -173,7 +175,7 @@ export default function GameOffersListPage({ categorySegment }) {
         setOffersError(err.message);
         setOffersLoading(false);
       });
-  }, [serverId, token, preferredCurrency, categoryFilter]);
+  }, [resolvedServerId, token, preferredCurrency, categoryFilter]);
 
   const handleSellItems = () => {
     if (!game || !variant || !server) return;
@@ -187,14 +189,14 @@ export default function GameOffersListPage({ categorySegment }) {
   };
 
   const refetchOffers = () => {
-    if (!serverId) return;
+    if (!resolvedServerId) return;
     setOffersLoading(true);
     setOffersError(null);
-    const params = {
+    const fetchParams = {
       offerType: categoryFilter || undefined,
       displayCurrency: token ? undefined : 'USD',
     };
-    fetchOffersByServer(serverId, token, params)
+    fetchOffersByServer(resolvedServerId, token, fetchParams)
       .then((data) => {
         setOffers(Array.isArray(data) ? data : []);
         setOffersLoading(false);

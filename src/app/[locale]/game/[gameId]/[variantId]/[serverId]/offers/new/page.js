@@ -53,7 +53,7 @@ export default function NewOfferPage() {
   const game = tree ? getGameFromTree(tree, gameId) : null;
   const variant = tree ? getVariantFromTree(tree, gameId, variantId) : null;
   const server = tree ? getServerFromTree(tree, gameId, variantId, serverId) : null;
-  const resolvedServerId = server?.id ?? serverId;
+  const resolvedServerId = server?.id ?? (isUuidSegment(serverId) ? serverId : null);
   const adenaPriceUnitKk = server?.adenaPriceUnitKk ?? game?.adenaPriceUnitKk ?? 100;
   const effectiveUnitKk = getEffectiveUnitKk(adenaPriceUnitKk);
   const token = useAuthStore((s) => s.token);
