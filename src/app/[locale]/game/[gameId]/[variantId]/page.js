@@ -13,7 +13,17 @@ import Alert from '@mui/material/Alert';
 import InputBase from '@mui/material/InputBase';
 import SearchIcon from '@mui/icons-material/Search';
 import { useGames } from '@/hooks/useGames';
-import { getGameFromTree, getVariantFromTree, getGameImageCandidateUrls } from '@/lib/games';
+import {
+  getGameFromTree,
+  getVariantFromTree,
+  getGameImageCandidateUrls,
+  getGamePathSegment,
+  getVariantPathSegment,
+  pathGameVariantServer,
+  getDefaultCategorySlug,
+  getAllowedOfferTypesForServer,
+  isUuidSegment,
+} from '@/lib/games';
 import SelectCard from '@/components/SelectCard/SelectCard';
 
 export default function GameServersPage() {
@@ -33,12 +43,41 @@ export default function GameServersPage() {
   useEffect(() => {
     if (loading || error || !game || !variant) return;
     if (servers.length === 1) {
-      router.replace(`/${locale}/game/${gameId}/${variantId}/${servers[0].id}/offers`);
+      const srv = servers[0];
+      router.replace(
+        pathGameVariantServer(
+          locale,
+          game,
+          variant,
+          srv,
+          getDefaultCategorySlug(getAllowedOfferTypesForServer(srv), srv)
+        )
+      );
     }
   }, [loading, error, game, variant, servers, locale, gameId, variantId, router]);
 
+  useEffect(() => {
+    if (loading || error || !game || !variant) return;
+    if (servers.length === 1) return;
+    const uuidPath =
+      (isUuidSegment(gameId) && gameId === game.id) ||
+      (isUuidSegment(variantId) && variantId === variant.id);
+    if (!uuidPath) return;
+    router.replace(`/${locale}/game/${getGamePathSegment(game)}/${getVariantPathSegment(variant)}`);
+  }, [loading, error, game, variant, servers.length, gameId, variantId, locale, router]);
+
   const handleServerClick = (serverId) => {
-    router.push(`/${locale}/game/${gameId}/${variantId}/${serverId}/offers`);
+    const srv = variant?.servers?.find((s) => s.id === serverId);
+    if (!srv || !game || !variant) return;
+    router.push(
+      pathGameVariantServer(
+        locale,
+        game,
+        variant,
+        srv,
+        getDefaultCategorySlug(getAllowedOfferTypesForServer(srv), srv)
+      )
+    );
   };
 
   const [search, setSearch] = useState('');
@@ -73,7 +112,12 @@ export default function GameServersPage() {
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', py: 4, px: 2 }}>
       <Container>
-        <MuiLink component={Link} href={`/${locale}/game/${gameId}`} color="secondary" sx={{ display: 'inline-block', mb: 2 }}>
+        <MuiLink
+          component={Link}
+          href={`/${locale}/game/${getGamePathSegment(game)}`}
+          color="secondary"
+          sx={{ display: 'inline-block', mb: 2 }}
+        >
           ← {game.name} → {variant.name}
         </MuiLink>
         <Typography variant="h4" fontWeight={600} color="text.primary" gutterBottom>

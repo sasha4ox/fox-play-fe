@@ -19,6 +19,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import { useLocale, useTranslations } from 'next-intl';
 import { getPublicProfile, getOffersBySeller, getFeedbacksByUserId } from '@/lib/api';
+import { pathToOfferDetail } from '@/lib/games';
 
 export default function UserProfilePage() {
   const params = useParams();
@@ -111,7 +112,21 @@ export default function UserProfilePage() {
         ) : (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mb: 3 }}>
             {offers.map((offer) => (
-              <Link key={offer.id} href={`${base}/game/${offer.server?.gameVariant?.game?.id ?? ''}/${offer.server?.gameVariant?.id ?? ''}/${offer.server?.id ?? ''}/offers/${offer.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+              <Link
+                key={offer.id}
+                href={
+                  offer.server?.gameVariant?.game && offer.server?.gameVariant && offer.server
+                    ? pathToOfferDetail(
+                        locale,
+                        offer.server.gameVariant.game,
+                        offer.server.gameVariant,
+                        offer.server,
+                        offer.id
+                      )
+                    : `${base}/dashboard`
+                }
+                style={{ textDecoration: 'none', color: 'inherit' }}
+              >
                 <Card variant="outlined" sx={{ '&:hover': { bgcolor: 'action.hover' } }}>
                   <CardContent sx={{ py: 1.5, '&:last-child': { pb: 1.5 } }}>
                     <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 1 }}>
@@ -168,7 +183,7 @@ export default function UserProfilePage() {
                 {f.gameFullName && (f.gameId && f.variantId && f.serverId ? (
                   <MuiLink
                     component={Link}
-                    href={`/${locale}/game/${f.gameId}/${f.variantId}/${f.serverId}/offers`}
+                    href={`/${locale}/game/${f.gameId}/${f.variantId}/${f.serverId}/offers/adena`}
                     underline="hover"
                     sx={{ display: 'inline-block', mb: 1, fontWeight: 600, fontSize: '0.75rem' }}
                   >

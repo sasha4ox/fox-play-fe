@@ -18,6 +18,18 @@ import { useProfile } from '@/hooks/useProfile';
 import { fetchOfferById, updateOffer, getPlatformFeePercent, fetchOfferRecentPrices } from '@/lib/api';
 import { parseAdenaInput } from '@/lib/adenaFormat';
 import { getMinPriceForUnit, getEffectiveUnitKk, formatPriceForUnit } from '@/lib/offerMinPrice';
+import { useGames } from '@/hooks/useGames';
+import {
+  getGameFromTree,
+  getVariantFromTree,
+  getServerFromTree,
+  pathGameVariantServer,
+  pathToOfferDetail,
+  pathToOfferEdit,
+  getAllowedOfferTypesForServer,
+  getDefaultCategorySlug,
+  isUuidSegment,
+} from '@/lib/games';
 
 export default function EditOfferPage() {
   const params = useParams();
@@ -26,10 +38,15 @@ export default function EditOfferPage() {
   const t = useTranslations('EditOffer');
   const tNew = useTranslations('NewOffer');
   const tCommon = useTranslations('Common');
-  const offerId = params?.offerId;
+  const offerId = params?.segment;
   const gameId = params?.gameId;
   const variantId = params?.variantId;
   const serverId = params?.serverId;
+  const { tree, loading: gamesLoading } = useGames();
+  const game = tree ? getGameFromTree(tree, gameId) : null;
+  const variant = tree ? getVariantFromTree(tree, gameId, variantId) : null;
+  const server = tree ? getServerFromTree(tree, gameId, variantId, serverId) : null;
+  const resolvedServerId = server?.id ?? serverId;
   const [offer, setOffer] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -97,19 +114,29 @@ export default function EditOfferPage() {
   }, [offerId, token]);
 
   useEffect(() => {
+    if (!game || !variant || !server || gamesLoading || !offerId || !isUuidSegment(offerId)) return;
+    const uuidPath =
+      (isUuidSegment(gameId) && gameId === game.id) ||
+      (isUuidSegment(variantId) && variantId === variant.id) ||
+      (isUuidSegment(serverId) && serverId === server.id);
+    if (!uuidPath) return;
+    router.replace(pathToOfferEdit(locale, game, variant, server, offerId));
+  }, [game, variant, server, gameId, variantId, serverId, gamesLoading, locale, router, offerId]);
+
+  useEffect(() => {
     getPlatformFeePercent().then(setPlatformFeePercent).catch(() => {});
   }, []);
 
   useEffect(() => {
-    if (!serverId || (!isAdena && !isCoins)) return;
+    if (!resolvedServerId || (!isAdena && !isCoins)) return;
     fetchOfferRecentPrices({
-      serverId,
+      serverId: resolvedServerId,
       offerType: isAdena ? 'ADENA' : 'COINS',
       displayCurrency: currency,
     })
       .then((data) => setRecentPrices(data?.prices ?? []))
       .catch(() => setRecentPrices([]));
-  }, [serverId, isAdena, isCoins, currency]);
+  }, [resolvedServerId, isAdena, isCoins, currency]);
 
   const isCreator = user?.id && offer?.seller?.id && user.id === offer.seller.id;
 
@@ -202,7 +229,10 @@ export default function EditOfferPage() {
               price: parseFloat(String(price).trim().replace(',', '.')) || 0,
             };
       await updateOffer(offer.id, payload, token);
-      router.push(`/${locale}/game/${gameId}/${variantId}/${serverId}/offers/${offerId}`);
+      const pg = game ?? offer?.server?.gameVariant?.game;
+      const pv = variant ?? offer?.server?.gameVariant;
+      const ps = server ?? offer?.server;
+      router.push(pathToOfferDetail(locale, pg, pv, ps, offerId));
     } catch (err) {
       setSubmitError(err.message || t('failedUpdate'));
     } finally {
@@ -223,7 +253,23 @@ export default function EditOfferPage() {
       <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', py: 4, px: 2 }}>
         <Container>
           <Alert severity="error">{error || t('offerNotFound')}</Alert>
-          <MuiLink component={Link} href={`/${locale}/game/${gameId}/${variantId}/${serverId}/offers`} sx={{ display: 'inline-block', mt: 2 }}>{tCommon('back')}</MuiLink>
+          <MuiLink
+            component={Link}
+            href={
+              game && variant && server
+                ? pathGameVariantServer(
+                    locale,
+                    game,
+                    variant,
+                    server,
+                    getDefaultCategorySlug(getAllowedOfferTypesForServer(server), server)
+                  )
+                : `/${locale}/game/${gameId}/${variantId}/${serverId}/offers/adena`
+            }
+            sx={{ display: 'inline-block', mt: 2 }}
+          >
+            {tCommon('back')}
+          </MuiLink>
         </Container>
       </Box>
     );
@@ -234,7 +280,19 @@ export default function EditOfferPage() {
       <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', py: 4, px: 2 }}>
         <Container>
           <Alert severity="error">{t('onlyEditOwn')}</Alert>
-          <MuiLink component={Link} href={`/${locale}/game/${gameId}/${variantId}/${serverId}/offers/${offerId}`} sx={{ display: 'inline-block', mt: 2 }}>{t('backToOffer')}</MuiLink>
+          <MuiLink
+            component={Link}
+            href={pathToOfferDetail(
+              locale,
+              game ?? offer?.server?.gameVariant?.game,
+              variant ?? offer?.server?.gameVariant,
+              server ?? offer?.server,
+              offerId
+            )}
+            sx={{ display: 'inline-block', mt: 2 }}
+          >
+            {t('backToOffer')}
+          </MuiLink>
         </Container>
       </Box>
     );
@@ -243,7 +301,18 @@ export default function EditOfferPage() {
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', py: 4, px: 2 }}>
       <Container>
-        <MuiLink component={Link} href={`/${locale}/game/${gameId}/${variantId}/${serverId}/offers/${offerId}`} color="secondary" sx={{ display: 'inline-block', mb: 2 }}>
+        <MuiLink
+          component={Link}
+          href={pathToOfferDetail(
+            locale,
+            game ?? offer?.server?.gameVariant?.game,
+            variant ?? offer?.server?.gameVariant,
+            server ?? offer?.server,
+            offerId
+          )}
+          color="secondary"
+          sx={{ display: 'inline-block', mb: 2 }}
+        >
           {t('backToOffer')}
         </MuiLink>
         {isAdminOrMod && !isCreator && (

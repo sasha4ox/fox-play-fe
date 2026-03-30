@@ -13,7 +13,17 @@ import Alert from '@mui/material/Alert';
 import InputBase from '@mui/material/InputBase';
 import SearchIcon from '@mui/icons-material/Search';
 import { useGames } from '@/hooks/useGames';
-import { getGameFromTree, getDirectOfferTarget, getGameImageCandidateUrls } from '@/lib/games';
+import {
+  getGameFromTree,
+  getDirectOfferTarget,
+  getGameImageCandidateUrls,
+  getGamePathSegment,
+  getVariantPathSegment,
+  pathGameVariantServer,
+  getDefaultCategorySlug,
+  getAllowedOfferTypesForServer,
+  isUuidSegment,
+} from '@/lib/games';
 import SelectCard from '@/components/SelectCard/SelectCard';
 
 export default function GameVariantsPage() {
@@ -31,12 +41,34 @@ export default function GameVariantsPage() {
     if (loading || error || !game) return;
     const target = getDirectOfferTarget(game);
     if (target) {
-      router.replace(`/${locale}/game/${gameId}/${target.variantId}/${target.serverId}/offers`);
+      const v = game.variants?.find((x) => x.id === target.variantId);
+      const s = v?.servers?.find((x) => x.id === target.serverId);
+      if (v && s) {
+        router.replace(
+          pathGameVariantServer(
+            locale,
+            game,
+            v,
+            s,
+            getDefaultCategorySlug(getAllowedOfferTypesForServer(s), s)
+          )
+        );
+      }
+    }
+  }, [loading, error, game, gameId, locale, router]);
+
+  useEffect(() => {
+    if (loading || error || !game) return;
+    if (getDirectOfferTarget(game)) return;
+    if (isUuidSegment(gameId) && game.id === gameId) {
+      router.replace(`/${locale}/game/${getGamePathSegment(game)}`);
     }
   }, [loading, error, game, gameId, locale, router]);
 
   const handleVariantClick = (variantId) => {
-    router.push(`/${locale}/game/${gameId}/${variantId}`);
+    const v = game?.variants?.find((x) => x.id === variantId);
+    if (!v) return;
+    router.push(`/${locale}/game/${getGamePathSegment(game)}/${getVariantPathSegment(v)}`);
   };
 
   const [search, setSearch] = useState('');

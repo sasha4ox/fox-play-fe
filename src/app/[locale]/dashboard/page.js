@@ -17,7 +17,14 @@ import SearchIcon from '@mui/icons-material/Search';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { useGames } from '@/hooks/useGames';
 import SelectCard from '@/components/SelectCard/SelectCard';
-import { getDirectOfferTarget, getGameImageCandidateUrls } from '@/lib/games';
+import {
+  getDirectOfferTarget,
+  getGameImageCandidateUrls,
+  getGamePathSegment,
+  pathGameVariantServer,
+  getDefaultCategorySlug,
+  getAllowedOfferTypesForServer,
+} from '@/lib/games';
 import DashboardHeroBanner from '@/components/DashboardHeroBanner/DashboardHeroBanner';
 
 const LETTERS = ['#', ...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')];
@@ -121,9 +128,21 @@ export default function DashboardPage() {
   const handleGameClick = (game) => {
     const target = getDirectOfferTarget(game);
     if (target) {
-      router.push(`/${locale}/game/${game.id}/${target.variantId}/${target.serverId}/offers`);
+      const v = game.variants?.find((x) => x.id === target.variantId);
+      const s = v?.servers?.find((x) => x.id === target.serverId);
+      if (v && s) {
+        router.push(
+          pathGameVariantServer(
+            locale,
+            game,
+            v,
+            s,
+            getDefaultCategorySlug(getAllowedOfferTypesForServer(s), s)
+          )
+        );
+      }
     } else {
-      router.push(`/${locale}/game/${game.id}`);
+      router.push(`/${locale}/game/${getGamePathSegment(game)}`);
     }
   };
 

@@ -54,6 +54,7 @@ import { playNewMessageSound } from '@/lib/notificationSound';
 import { formatAdena } from '@/lib/adenaFormat';
 import { getEffectiveUnitKk, formatPriceForUnit } from '@/lib/offerMinPrice';
 import { getOrderStatusTextColor } from '@/lib/orderStatusColors';
+import { pathGameVariantServer, pathToOfferDetail, getDefaultCategorySlug, getAllowedOfferTypesForServer } from '@/lib/games';
 
 /**
  * @returns {string|null} OrderDetail i18n key for the current Safe Transfer step line.
@@ -886,7 +887,13 @@ export default function OrderChatPage() {
               {order.offer?.server?.gameVariant?.game?.name && order.offer?.server?.gameVariant?.name && order.offer?.server?.name && order.offer?.server?.gameVariant?.game?.id && order.offer?.server?.gameVariant?.id && order.offer?.server?.id && (
                 <MuiLink
                   component={Link}
-                  href={`/${locale}/game/${order.offer.server.gameVariant.game.id}/${order.offer.server.gameVariant.id}/${order.offer.server.id}/offers`}
+                  href={pathGameVariantServer(
+                    locale,
+                    order.offer.server.gameVariant.game,
+                    order.offer.server.gameVariant,
+                    order.offer.server,
+                    getDefaultCategorySlug(getAllowedOfferTypesForServer(order.offer.server), order.offer.server)
+                  )}
                   underline="none"
                   color="primary.main"
                   sx={{ display: 'inline-block', mb: 1, '&:hover': { textDecoration: 'underline' } }}
@@ -901,7 +908,13 @@ export default function OrderChatPage() {
                   {t('orderForThisOffer')}{' '}
                   <MuiLink
                     component={Link}
-                    href={`/${locale}/game/${order.offer.server.gameVariant.game.id}/${order.offer.server.gameVariant.id}/${order.offer.server.id}/offers/${order.offer.id}`}
+                    href={pathToOfferDetail(
+                      locale,
+                      order.offer.server.gameVariant.game,
+                      order.offer.server.gameVariant,
+                      order.offer.server,
+                      order.offer.id
+                    )}
                     underline="hover"
                     color="primary.main"
                   >

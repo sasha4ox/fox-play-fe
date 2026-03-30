@@ -16,7 +16,15 @@ import MuiLink from '@mui/material/Link';
 import CircularProgress from '@mui/material/CircularProgress';
 import Alert from '@mui/material/Alert';
 import { useGames } from '@/hooks/useGames';
-import { getGameFromTree, getVariantFromTree, getServerFromTree } from '@/lib/games';
+import {
+  getGameFromTree,
+  getVariantFromTree,
+  getServerFromTree,
+  pathGameVariantServer,
+  getDefaultCategorySlug,
+  getAllowedOfferTypesForServer,
+  isUuidSegment,
+} from '@/lib/games';
 import { useAuthStore } from '@/store/authStore';
 import { useProfile } from '@/hooks/useProfile';
 import { createOffer, getPlatformFeePercent, fetchOfferRecentPrices } from '@/lib/api';
@@ -45,6 +53,7 @@ export default function NewOfferPage() {
   const game = tree ? getGameFromTree(tree, gameId) : null;
   const variant = tree ? getVariantFromTree(tree, gameId, variantId) : null;
   const server = tree ? getServerFromTree(tree, gameId, variantId, serverId) : null;
+  const resolvedServerId = server?.id ?? serverId;
   const adenaPriceUnitKk = server?.adenaPriceUnitKk ?? game?.adenaPriceUnitKk ?? 100;
   const effectiveUnitKk = getEffectiveUnitKk(adenaPriceUnitKk);
   const token = useAuthStore((s) => s.token);
@@ -92,24 +101,35 @@ export default function NewOfferPage() {
   }, []);
 
   useEffect(() => {
+    if (!game || !variant || !server || gamesLoading) return;
+    const uuidPath =
+      (isUuidSegment(gameId) && gameId === game.id) ||
+      (isUuidSegment(variantId) && variantId === variant.id) ||
+      (isUuidSegment(serverId) && serverId === server.id);
+    if (!uuidPath) return;
+    const q = categoryFromUrl ? `?category=${encodeURIComponent(categoryFromUrl)}` : '';
+    router.replace(`${pathGameVariantServer(locale, game, variant, server, null)}/new${q}`);
+  }, [game, variant, server, gameId, variantId, serverId, gamesLoading, locale, router, categoryFromUrl]);
+
+  useEffect(() => {
     if (!categoryFromUrl || OFFER_TYPES.length === 0) return;
     const index = OFFER_TYPES.findIndex((t) => t.value === categoryFromUrl);
     if (index >= 0) setTab(index);
   }, [categoryFromUrl, OFFER_TYPES.length]);
 
   useEffect(() => {
-    if (!serverId) return;
+    if (!resolvedServerId) return;
     const offerType = OFFER_TYPES[tab]?.value;
     const customCategoryId = OFFER_TYPES[tab]?.custom ? OFFER_TYPES[tab].value : null;
     fetchOfferRecentPrices({
-      serverId,
+      serverId: resolvedServerId,
       offerType: offerType && !OFFER_TYPES[tab]?.custom ? offerType : undefined,
       customCategoryId: customCategoryId || undefined,
       displayCurrency: currency,
     })
       .then((data) => setRecentPrices(data?.prices ?? []))
       .catch(() => setRecentPrices([]));
-  }, [serverId, tab, currency]);
+  }, [resolvedServerId, tab, currency]);
 
   const selectedTab = OFFER_TYPES[tab];
   const offerType = selectedTab?.custom ? 'OTHER' : (selectedTab?.value ?? 'OTHER');
@@ -195,7 +215,7 @@ export default function NewOfferPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!token || !serverId) return;
+    if (!token || !resolvedServerId) return;
     setSubmitError(null);
     setPriceErrorNonAdena(null);
     if (isAdena && !validateAdenaInputs()) return;
@@ -216,7 +236,7 @@ export default function NewOfferPage() {
       : (isCoins && minSellQuantityCoins.trim() !== '' ? (parseInt(String(minSellQuantityCoins).trim(), 10) || null) : null);
     const payload = {
       offerType,
-      serverId,
+      serverId: resolvedServerId,
       currency,
       title: isAdena ? 'Adena' : (isCoins ? 'Coins' : title),
       description: isAdena ? `Selling ${formatAdena(quantityNum)} adena` : (isCoins ? `Selling ${quantityNum} coins` : description),
@@ -227,7 +247,15 @@ export default function NewOfferPage() {
     };
     try {
       await createOffer(payload, token);
-      router.push(`/${locale}/game/${gameId}/${variantId}/${serverId}/offers`);
+      router.push(
+        pathGameVariantServer(
+          locale,
+          game,
+          variant,
+          server,
+          getDefaultCategorySlug(getAllowedOfferTypesForServer(server), server)
+        )
+      );
     } catch (err) {
       setSubmitError(err.message || 'Failed to create offer');
     } finally {
@@ -270,7 +298,18 @@ export default function NewOfferPage() {
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', py: 4, px: 2 }}>
       <Container>
-        <MuiLink component={Link} href={`/${locale}/game/${gameId}/${variantId}/${serverId}/offers`} color="secondary" sx={{ display: 'inline-block', mb: 2 }}>
+        <MuiLink
+          component={Link}
+          href={pathGameVariantServer(
+            locale,
+            game,
+            variant,
+            server,
+            getDefaultCategorySlug(getAllowedOfferTypesForServer(server), server)
+          )}
+          color="secondary"
+          sx={{ display: 'inline-block', mb: 2 }}
+        >
           ← Back to offers
         </MuiLink>
         <Typography variant="h4" fontWeight={600} gutterBottom>

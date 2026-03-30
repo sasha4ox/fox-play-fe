@@ -19,6 +19,13 @@ import { getMyOffers, updateOffer } from '@/lib/api';
 import { formatAdena, formatPricePer1Adena } from '@/lib/adenaFormat';
 import { formatPriceForUnit } from '@/lib/offerMinPrice';
 import { logClientError } from '@/lib/clientLogger';
+import {
+  pathGameVariantServer,
+  pathToOfferDetail,
+  pathToOfferEdit,
+  getDefaultCategorySlug,
+  getAllowedOfferTypesForServer,
+} from '@/lib/games';
 
 const OFFER_TYPE_LABELS = { ADENA: 'Adena', ITEMS: 'Items', ACCOUNTS: 'Accounts', BOOSTING: 'Boosting', OTHER: 'Other' };
 
@@ -103,24 +110,25 @@ export default function MyOffersPage() {
         {!loading && offers.length > 0 && (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mt: 2 }}>
             {offers.map((offer) => {
-              const gameId = offer.server?.gameVariant?.game?.id;
-              const variantId = offer.server?.gameVariant?.id;
-              const serverId = offer.server?.id;
               const gameName = offer.server?.gameVariant?.game?.name;
               const variantName = offer.server?.gameVariant?.name;
               const serverName = offer.server?.name;
+              const g = offer.server?.gameVariant?.game;
+              const v = offer.server?.gameVariant;
+              const s = offer.server;
               const offersListHref =
-                gameId && variantId && serverId
-                  ? `/${locale}/game/${gameId}/${variantId}/${serverId}/offers`
+                g && v && s
+                  ? pathGameVariantServer(
+                      locale,
+                      g,
+                      v,
+                      s,
+                      getDefaultCategorySlug(getAllowedOfferTypesForServer(s), s)
+                    )
                   : null;
               const href =
-                gameId && variantId && serverId
-                  ? `/${locale}/game/${gameId}/${variantId}/${serverId}/offers/${offer.id}`
-                  : `/${locale}/dashboard`;
-              const editHref =
-                gameId && variantId && serverId
-                  ? `/${locale}/game/${gameId}/${variantId}/${serverId}/offers/${offer.id}/edit`
-                  : null;
+                g && v && s ? pathToOfferDetail(locale, g, v, s, offer.id) : `/${locale}/dashboard`;
+              const editHref = g && v && s ? pathToOfferEdit(locale, g, v, s, offer.id) : null;
               const isAdena = offer.offerType === 'ADENA';
               const pricePer1kk = Number(offer.displayPrice ?? offer.price) || 0;
               const currency = offer.displayCurrency ?? offer.currency;

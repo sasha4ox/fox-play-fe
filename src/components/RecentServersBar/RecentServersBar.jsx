@@ -13,6 +13,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import { useAuthStore } from '@/store/authStore';
 import { getRecentServers } from '@/lib/api';
+import { pathGameVariantServer } from '@/lib/games';
 import { componentClass } from '@/lib/componentPath';
 
 const MAX_DISPLAY = 3;
@@ -68,7 +69,13 @@ export default function RecentServersBar() {
         </Typography>
       )}
       <Link
-        href={`/${locale}/game/${s.gameId}/${s.variantId}/${s.serverId}/offers`}
+        href={pathGameVariantServer(
+          locale,
+          { name: s.gameName },
+          { name: s.variantName },
+          { name: s.serverName },
+          'adena'
+        )}
         style={{ textDecoration: 'none' }}
       >
         <Typography

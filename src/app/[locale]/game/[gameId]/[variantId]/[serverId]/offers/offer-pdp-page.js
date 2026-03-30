@@ -36,6 +36,19 @@ import { fetchOfferById, createOrder, getAvailablePaymentMethods, getOfferMessag
 import { logClientError } from '@/lib/clientLogger';
 import { formatAdena } from '@/lib/adenaFormat';
 import { getMinPriceForUnit, getEffectiveUnitKk, formatPriceForUnit } from '@/lib/offerMinPrice';
+import { useGames } from '@/hooks/useGames';
+import {
+  getGameFromTree,
+  getVariantFromTree,
+  getServerFromTree,
+  pathGameVariantServer,
+  pathToOfferDetail,
+  pathToOfferEdit,
+  filterValueToCategorySlug,
+  getAllowedOfferTypesForServer,
+  getDefaultCategorySlug,
+  isUuidSegment,
+} from '@/lib/games';
 
 export default function OfferPDPPage() {
   const params = useParams();
@@ -46,10 +59,15 @@ export default function OfferPDPPage() {
   const tOffers = useTranslations('Offers');
   const tCommon = useTranslations('Common');
   const tEdit = useTranslations('EditOffer');
-  const offerId = params?.offerId;
+  const offerId = params?.segment;
   const gameId = params?.gameId;
   const variantId = params?.variantId;
   const serverId = params?.serverId;
+  const { tree, loading: gamesLoading } = useGames();
+  const game = tree ? getGameFromTree(tree, gameId) : null;
+  const variant = tree ? getVariantFromTree(tree, gameId, variantId) : null;
+  const server = tree ? getServerFromTree(tree, gameId, variantId, serverId) : null;
+  const resolvedServerId = server?.id ?? serverId;
   const OFFER_TYPE_LABELS = { ADENA: tOffers('adena'), COINS: tOffers('coins'), ITEMS: tOffers('items'), ACCOUNTS: tOffers('accounts'), BOOSTING: tOffers('boosting'), OTHER: tOffers('other') };
   const [offer, setOffer] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -129,11 +147,11 @@ export default function OfferPDPPage() {
   }, [token]);
 
   useEffect(() => {
-    if (!offer || !token || isCreator || !serverId) return;
-    getSafeTransferAvailability(serverId, token, offer.seller?.id)
+    if (!offer || !token || isCreator || !resolvedServerId) return;
+    getSafeTransferAvailability(resolvedServerId, token, offer.seller?.id)
       .then((data) => setStAvailable(!!data?.available))
       .catch(() => setStAvailable(false));
-  }, [offer, token, isCreator, serverId]);
+  }, [offer, token, isCreator, resolvedServerId]);
 
   useEffect(() => {
     if (!offerId || !token) return;
@@ -157,6 +175,16 @@ export default function OfferPDPPage() {
       .catch(() => setFeedbacks([]))
       .finally(() => setFeedbacksLoading(false));
   }, [feedbacksDialogOpen, offer?.seller?.id]);
+
+  useEffect(() => {
+    if (!game || !variant || !server || gamesLoading || !offerId || !isUuidSegment(offerId)) return;
+    const uuidPath =
+      (isUuidSegment(gameId) && gameId === game.id) ||
+      (isUuidSegment(variantId) && variantId === variant.id) ||
+      (isUuidSegment(serverId) && serverId === server.id);
+    if (!uuidPath) return;
+    router.replace(pathToOfferDetail(locale, game, variant, server, offerId));
+  }, [game, variant, server, gameId, variantId, serverId, gamesLoading, locale, router, offerId]);
 
   const handleBuyClick = () => {
     if (!isAuthenticated) {
@@ -411,7 +439,19 @@ export default function OfferPDPPage() {
     try {
       await deleteOffer(offerId, token);
       setDeleteDialogOpen(false);
-      router.push(`/${locale}/game/${gameId}/${variantId}/${serverId}/offers`);
+      if (game && variant && server) {
+        router.push(
+          pathGameVariantServer(
+            locale,
+            game,
+            variant,
+            server,
+            getDefaultCategorySlug(getAllowedOfferTypesForServer(server), server)
+          )
+        );
+      } else {
+        router.push(`/${locale}/dashboard`);
+      }
     } catch (err) {
       logClientError(err);
       setDeleteError(err.message);
@@ -450,7 +490,21 @@ export default function OfferPDPPage() {
       <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', py: 4, px: 2 }}>
         <Container >
           <Alert severity="error">{error || 'Offer not found.'}</Alert>
-          <MuiLink component={Link} href={`/${locale}/game/${gameId}/${variantId}/${serverId}/offers`} sx={{ display: 'inline-block', mt: 2 }}>
+          <MuiLink
+            component={Link}
+            href={
+              game && variant && server
+                ? pathGameVariantServer(
+                    locale,
+                    game,
+                    variant,
+                    server,
+                    getDefaultCategorySlug(getAllowedOfferTypesForServer(server), server)
+                  )
+                : `/${locale}/game/${gameId}/${variantId}/${serverId}/offers/adena`
+            }
+            sx={{ display: 'inline-block', mt: 2 }}
+          >
             ← Back to offers
           </MuiLink>
         </Container>
@@ -474,10 +528,25 @@ export default function OfferPDPPage() {
   const priceForUnitForMin = pricePer1kkForMin * effectiveUnitKk;
   const isPriceBelowMin = isAdenaOffer && priceForUnitForMin < getMinPriceForUnit(offerCurrency, adenaPriceUnitKk);
 
+  const pathGame = game ?? offer?.server?.gameVariant?.game;
+  const pathVariant = variant ?? offer?.server?.gameVariant;
+  const pathServer = server ?? offer?.server;
+
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', py: 4, px: 2 }}>
       <Container>
-        <MuiLink component={Link} href={`/${locale}/game/${gameId}/${variantId}/${serverId}/offers`} color="secondary" sx={{ display: 'inline-block', mb: 2 }}>
+        <MuiLink
+          component={Link}
+          href={pathGameVariantServer(
+            locale,
+            pathGame,
+            pathVariant,
+            pathServer,
+            filterValueToCategorySlug(offer.offerType, pathServer)
+          )}
+          color="secondary"
+          sx={{ display: 'inline-block', mb: 2 }}
+        >
           {t('backToOffers')}
         </MuiLink>
 
@@ -705,7 +774,7 @@ export default function OfferPDPPage() {
             </Button>
           )}
           {(isCreator || isAdminOrMod) && (
-            <Button component={Link} href={`/${locale}/game/${gameId}/${variantId}/${serverId}/offers/${offerId}/edit`} variant="outlined" color="secondary">
+            <Button component={Link} href={pathToOfferEdit(locale, pathGame, pathVariant, pathServer, offerId)} variant="outlined" color="secondary">
               {tEdit('editOffer')}
             </Button>
           )}
