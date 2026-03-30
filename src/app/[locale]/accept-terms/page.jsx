@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm, Controller } from 'react-hook-form';
 import { useTranslations, useLocale } from 'next-intl';
@@ -15,7 +15,8 @@ import Container from '@mui/material/Container';
 import Alert from '@mui/material/Alert';
 import { useAuthStore } from '@/store/authStore';
 import { useAuthHydrated } from '@/hooks/useAuthHydrated';
-import { acceptTerms, getProfile } from '@/lib/api';
+import { acceptTerms, getApiBase, getProfile } from '@/lib/api';
+import CountrySelect from '@/components/CountrySelect/CountrySelect';
 
 export default function AcceptTermsPage() {
   const router = useRouter();
@@ -23,6 +24,7 @@ export default function AcceptTermsPage() {
   const base = `/${locale}`;
   const t = useTranslations('Form');
   const tPage = useTranslations('AcceptTerms');
+  const tProfile = useTranslations('Profile');
   const authHydrated = useAuthHydrated();
   const token = useAuthStore((s) => s.token);
   const setAuth = useAuthStore((s) => s.setAuth);
@@ -30,18 +32,40 @@ export default function AcceptTermsPage() {
   const [checking, setChecking] = useState(true);
   const [authError, setAuthError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  const suggestedCountryFetchedRef = useRef(false);
 
-  const { control, handleSubmit, watch, formState: { isSubmitting } } = useForm({
+  const { control, handleSubmit, watch, setValue, formState: { isSubmitting } } = useForm({
     defaultValues: {
       termsAccepted: false,
       privacyAccepted: false,
       cryptoRiskAccepted: false,
+      countryCode: '',
     },
   });
   const termsAccepted = watch('termsAccepted');
   const privacyAccepted = watch('privacyAccepted');
   const cryptoRiskAccepted = watch('cryptoRiskAccepted');
-  const registerConsentsComplete = !!(termsAccepted && privacyAccepted && cryptoRiskAccepted);
+  const countryCode = watch('countryCode');
+  const registerConsentsComplete = !!(
+    termsAccepted
+    && privacyAccepted
+    && cryptoRiskAccepted
+    && typeof countryCode === 'string'
+    && countryCode.trim().length === 2
+  );
+
+  useEffect(() => {
+    if (suggestedCountryFetchedRef.current) return;
+    suggestedCountryFetchedRef.current = true;
+    fetch(`${getApiBase()}/auth/suggested-country`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.countryCode) {
+          setValue('countryCode', data.countryCode, { shouldValidate: true });
+        }
+      })
+      .catch(() => {});
+  }, [setValue]);
 
   const legalLink = (href) => (chunks) => (
     <MuiLink component={Link} href={href} target="_blank" rel="noopener noreferrer" underline="hover">
@@ -75,11 +99,12 @@ export default function AcceptTermsPage() {
     };
   }, [authHydrated, token, locale, router]);
 
-  const onSubmit = async () => {
+  const onSubmit = async (formValues) => {
     setAuthError(null);
     setSubmitting(true);
     try {
-      const data = await acceptTerms(token);
+      const code = (formValues.countryCode || '').trim().toUpperCase();
+      const data = await acceptTerms(token, { countryCode: code });
       const newToken = data?.token || token;
       const profile = await getProfile(newToken);
       if (profile?.id) {
@@ -91,6 +116,7 @@ export default function AcceptTermsPage() {
             nickname: profile.nickname,
             role: profile.role,
             termsAcceptedAt: profile.termsAcceptedAt,
+            countryCode: profile.countryCode ?? null,
           },
           newToken
         );
@@ -131,6 +157,37 @@ export default function AcceptTermsPage() {
       </Typography>
 
       <Box component="form" onSubmit={handleSubmit(onSubmit)} sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+        <Box>
+          <Typography variant="body2" sx={{ mb: 0.75, fontWeight: 600 }}>
+            {tProfile('country')}
+          </Typography>
+          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
+            {tPage('countryHint')}
+          </Typography>
+          <Controller
+            name="countryCode"
+            control={control}
+            rules={{
+              validate: (v) =>
+                (typeof v === 'string' && v.trim().length === 2) || t('mandatatory'),
+            }}
+            render={({ field, fieldState: { error } }) => (
+              <Box>
+                <CountrySelect
+                  selected={field.value || ''}
+                  onSelect={field.onChange}
+                  placeholder={tProfile('selectCountry')}
+                  fullWidth
+                />
+                {error && (
+                  <Typography variant="caption" color="error" sx={{ display: 'block', mt: 0.5 }}>
+                    {error.message}
+                  </Typography>
+                )}
+              </Box>
+            )}
+          />
+        </Box>
         <Controller
           name="termsAccepted"
           control={control}

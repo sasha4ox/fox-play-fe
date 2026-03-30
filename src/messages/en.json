@@ -16,6 +16,7 @@
   "AcceptTerms": {
     "title": "Accept terms to continue",
     "description": "Please confirm the following before using FoxyPlay.",
+    "countryHint": "Required for payments and compliance. You can change it later in your profile.",
     "submit": "Continue",
     "checking": "Loading…"
   },

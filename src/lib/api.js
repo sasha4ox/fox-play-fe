@@ -298,9 +298,9 @@ export async function getProfile(token) {
   return apiGet('/me', token)
 }
 
-/** Record terms acceptance (required for new Google OAuth users until set). */
-export async function acceptTerms(token) {
-  return apiPost('/me/accept-terms', {}, token)
+/** Record terms acceptance (required for new Google OAuth users until set). body: { countryCode? } — required when user has no country yet. */
+export async function acceptTerms(token, body = {}) {
+  return apiPost('/me/accept-terms', body, token)
 }
 
 /** Feedbacks received by a user (public, for seller reviews). Returns [{ id, rating, comment, createdAt, fromUser: { id, nickname } }] */
