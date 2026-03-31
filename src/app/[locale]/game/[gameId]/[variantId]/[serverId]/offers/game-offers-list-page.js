@@ -3,7 +3,7 @@
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useLocale, useTranslations } from 'next-intl';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import Container from '@mui/material/Container';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
@@ -117,7 +117,19 @@ export default function GameOffersListPage({ categorySegment }) {
   const [offers, setOffers] = useState([]);
   const [offersLoading, setOffersLoading] = useState(true);
   const [offersError, setOffersError] = useState(null);
-  const [categoryFilter, setCategoryFilter] = useState('ADENA');
+  /** Resolved from URL + server (single source of truth; avoids ADENA-first fetch race). */
+  const categoryFilter = useMemo(() => {
+    if (!server || !categorySegment) return null;
+    const serverTypes = server.enabledOfferTypes?.length ? server.enabledOfferTypes : null;
+    const customOnly = (server.customCategories ?? []).filter(
+      (c) => !STANDARD_CATEGORY_NAMES.has(c.name.toLowerCase())
+    );
+    const allowed = serverTypes ?? [...ALL_OFFER_TYPES, ...customOnly.map((c) => c.id)];
+    const fv = categorySlugToFilterValue(categorySegment, server);
+    if (!fv || !allowed.includes(fv)) return null;
+    return fv;
+  }, [server, categorySegment]);
+  const offersFetchGenRef = useRef(0);
   const [sortBy, setSortBy] = useState('price');
   const [sortDir, setSortDir] = useState('asc');
   const [deleteDialogOfferId, setDeleteDialogOfferId] = useState(null);
@@ -143,9 +155,7 @@ export default function GameOffersListPage({ categorySegment }) {
       router.replace(
         pathGameVariantServer(locale, game, variant, server, getDefaultCategorySlug(allowed, server))
       );
-      return;
     }
-    setCategoryFilter(fv);
   }, [categorySegment, server, game, variant, locale, router]);
 
   useEffect(() => {
@@ -159,7 +169,9 @@ export default function GameOffersListPage({ categorySegment }) {
   }, [game, variant, server, gameId, variantId, serverId, gamesLoading, locale, router, categorySegment]);
 
   useEffect(() => {
-    if (!resolvedServerId) return;
+    if (!resolvedServerId || categoryFilter == null) return;
+    offersFetchGenRef.current += 1;
+    const reqId = offersFetchGenRef.current;
     setOffersLoading(true);
     setOffersError(null);
     const fetchParams = {
@@ -168,10 +180,12 @@ export default function GameOffersListPage({ categorySegment }) {
     };
     fetchOffersByServer(resolvedServerId, token, fetchParams)
       .then((data) => {
+        if (offersFetchGenRef.current !== reqId) return;
         setOffers(Array.isArray(data) ? data : []);
         setOffersLoading(false);
       })
       .catch((err) => {
+        if (offersFetchGenRef.current !== reqId) return;
         setOffersError(err.message);
         setOffersLoading(false);
       });
@@ -189,7 +203,9 @@ export default function GameOffersListPage({ categorySegment }) {
   };
 
   const refetchOffers = () => {
-    if (!resolvedServerId) return;
+    if (!resolvedServerId || categoryFilter == null) return;
+    offersFetchGenRef.current += 1;
+    const reqId = offersFetchGenRef.current;
     setOffersLoading(true);
     setOffersError(null);
     const fetchParams = {
@@ -198,10 +214,12 @@ export default function GameOffersListPage({ categorySegment }) {
     };
     fetchOffersByServer(resolvedServerId, token, fetchParams)
       .then((data) => {
+        if (offersFetchGenRef.current !== reqId) return;
         setOffers(Array.isArray(data) ? data : []);
         setOffersLoading(false);
       })
       .catch((err) => {
+        if (offersFetchGenRef.current !== reqId) return;
         setOffersError(err.message);
         setOffersLoading(false);
       });
@@ -235,6 +253,14 @@ export default function GameOffersListPage({ categorySegment }) {
           </Container>
         </Box>
       );
+    return (
+      <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', display: 'flex', alignItems: 'center', justifyContent: 'center', py: 4 }}>
+        <CircularProgress color="secondary" />
+      </Box>
+    );
+  }
+
+  if (!categoryFilter) {
     return (
       <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', display: 'flex', alignItems: 'center', justifyContent: 'center', py: 4 }}>
         <CircularProgress color="secondary" />
@@ -352,7 +378,6 @@ export default function GameOffersListPage({ categorySegment }) {
                 variant={categoryFilter === type ? 'contained' : 'outlined'}
                 color={categoryFilter === type ? 'primary' : 'inherit'}
                 onClick={() => {
-                  setCategoryFilter(type);
                   router.replace(
                     pathGameVariantServer(locale, game, variant, server, filterValueToCategorySlug(type, server))
                   );

@@ -555,6 +555,29 @@
     "orderDetails": "Order details",
     "hideOrderDetails": "Hide details",
     "messages": "Messages",
+    "report": {
+      "button": "Reportar",
+      "modal": {
+        "title": "Reportar usuario",
+        "who": "¿A quién reportas?",
+        "reason": "Motivo",
+        "comment": "Detalles adicionales (opcional)",
+        "submit": "Enviar reporte"
+      },
+      "success": "Reporte enviado. Lo revisaremos en breve.",
+      "already_reported": "Ya enviaste un reporte para este pedido.",
+      "reason": {
+        "FRAUD": "Fraude",
+        "SCAM": "Estafa",
+        "ABUSIVE_BEHAVIOR": "Comportamiento abusivo",
+        "OTHER": "Otro"
+      },
+      "role": {
+        "buyer": "Comprador",
+        "seller": "Vendedor",
+        "agent": "Agente"
+      }
+    },
     "chatLegendPendingConfirm": "Waiting for payment confirmation",
     "chatLegendPaidOrDone": "Payment confirmed (paid, delivered, or completed)",
     "chatLegendCreatedOrOther": "Order created or other status",
@@ -614,6 +637,9 @@
     "confirmDelivered": "Confirm delivered",
     "confirmReceiptOrDispute": "Confirm receipt or open dispute",
     "iReceivedComplete": "I received it — Complete",
+    "adminModeratorCompleteTitle": "Staff: liberar pago",
+    "adminModeratorCompleteHint": "Úsalo cuando la entrega está hecha pero el comprador no confirma (p. ej. no responde). Completa el pedido y paga al vendedor como una confirmación del comprador.",
+    "adminModeratorCompleteButton": "Completar pedido (comprador no responde)",
     "completing": "Completing…",
     "notReceivedDispute": "I didn't receive it — Open dispute",
     "orderCompleted": "Order completed. Seller has been paid.",

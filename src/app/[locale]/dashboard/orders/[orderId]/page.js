@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
 import Link from 'next/link';
@@ -11,7 +11,11 @@ import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
 import FormControl from '@mui/material/FormControl';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import FormLabel from '@mui/material/FormLabel';
 import InputLabel from '@mui/material/InputLabel';
+import Radio from '@mui/material/Radio';
+import RadioGroup from '@mui/material/RadioGroup';
 import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
 import IconButton from '@mui/material/IconButton';
@@ -48,6 +52,8 @@ import {
   leaveOrderFeedback,
   openDispute,
   resolveDispute,
+  getMyReportStatus,
+  postReport,
 } from '@/lib/api';
 import { useOrderSocket } from '@/hooks/useOrderSocket';
 import { playNewMessageSound } from '@/lib/notificationSound';
@@ -143,6 +149,12 @@ export default function OrderChatPage() {
   const [cancelSubmitting, setCancelSubmitting] = useState(false);
   const [declineDialogOpen, setDeclineDialogOpen] = useState(false);
   const [paymentSuccessShown, setPaymentSuccessShown] = useState(false);
+  const [hasReported, setHasReported] = useState(null);
+  const [reportModalOpen, setReportModalOpen] = useState(false);
+  const [reportTargetId, setReportTargetId] = useState('');
+  const [reportReason, setReportReason] = useState('FRAUD');
+  const [reportComment, setReportComment] = useState('');
+  const [reportSubmitting, setReportSubmitting] = useState(false);
   const [infoExpandedOnMobile, setInfoExpandedOnMobile] = useState(false);
   const [newMessageNotification, setNewMessageNotification] = useState(null);
   const tAdmin = useTranslations('Admin');
@@ -202,6 +214,21 @@ export default function OrderChatPage() {
     if (!orderId || !token) return;
     getOrderById(orderId, token).then(setOrder).catch(() => {});
   };
+
+  useEffect(() => {
+    if (!orderId || !token) return;
+    let cancelled = false;
+    getMyReportStatus(orderId, token)
+      .then((r) => {
+        if (!cancelled) setHasReported(!!r?.hasReported);
+      })
+      .catch(() => {
+        if (!cancelled) setHasReported(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [orderId, token]);
 
   useEffect(() => {
     if (!orderId || !token) return;
@@ -336,6 +363,49 @@ export default function OrderChatPage() {
   const isBuyer = order && currentUserId && (order.buyerId === currentUserId || order.buyer?.id === currentUserId);
   const hasSafeTransfer = !!order?.safeTransfer;
   const isAssignedAgent = hasSafeTransfer && order.safeTransfer.agentProfile?.userId === currentUserId;
+
+  const reportableTargets = useMemo(() => {
+    if (!order || !currentUserId) return [];
+    const agentUid = order.safeTransfer?.agentProfile?.userId;
+    const list = [];
+    if (order.buyerId && order.buyerId !== currentUserId) {
+      list.push({
+        id: order.buyerId,
+        nickname: order.buyer?.nickname,
+        roleKey: 'buyer',
+      });
+    }
+    if (order.sellerId && order.sellerId !== currentUserId) {
+      list.push({
+        id: order.sellerId,
+        nickname: order.seller?.nickname,
+        roleKey: 'seller',
+      });
+    }
+    if (agentUid && agentUid !== currentUserId) {
+      list.push({
+        id: agentUid,
+        nickname: order.safeTransfer?.agentProfile?.user?.nickname,
+        roleKey: 'agent',
+      });
+    }
+    const seen = new Set();
+    return list.filter((x) => {
+      if (seen.has(x.id)) return false;
+      seen.add(x.id);
+      return true;
+    });
+  }, [order, currentUserId]);
+
+  const showReportButton =
+    order &&
+    token &&
+    (isBuyer || isSeller || isAssignedAgent) &&
+    !isModerator &&
+    order.status !== 'CANCELED' &&
+    hasReported === false &&
+    reportableTargets.length > 0;
+
   const safeTransferStepKey =
     order && hasSafeTransfer
       ? getSafeTransferStepKey(order, { isBuyer, isSeller, isAssignedAgent, isModerator })
@@ -370,10 +440,17 @@ export default function OrderChatPage() {
       (hasSafeTransfer && order.status === 'PAID' && sellerStReadyForDeliver));
   const canBuyerCompleteOrDispute =
     isBuyer && order && order.status === 'DELIVERED' && buyerCanConfirmReceipt;
+  const canModeratorComplete =
+    isModerator &&
+    !isBuyer &&
+    order &&
+    order.status === 'DELIVERED' &&
+    buyerCanConfirmReceipt;
   const canSellerDecline =
     isSeller &&
     order &&
-    ['CREATED', 'PAID', 'DELIVERED'].includes(order.status);
+    ['CREATED', 'PAID', 'DELIVERED'].includes(order.status) &&
+    (!hasSafeTransfer || order.safeTransfer?.status === 'PENDING_ITEM');
   const buyerCanAskToDecline =
     isBuyer &&
     order &&
@@ -473,6 +550,45 @@ export default function OrderChatPage() {
       }
     } finally {
       setResolveSubmitting(false);
+    }
+  };
+
+  const handleOpenReportModal = () => {
+    if (reportableTargets.length === 0) return;
+    setReportTargetId(reportableTargets[0].id);
+    setReportReason('FRAUD');
+    setReportComment('');
+    setReportModalOpen(true);
+  };
+
+  const handleSubmitReport = async () => {
+    if (!orderId || !token || !reportTargetId) return;
+    setReportSubmitting(true);
+    setActionError(null);
+    setActionInfo(null);
+    try {
+      const body = {
+        orderId,
+        reportedId: reportTargetId,
+        reason: reportReason,
+      };
+      if (reportComment.trim()) body.comment = reportComment.trim();
+      await postReport(body, token);
+      setReportModalOpen(false);
+      setHasReported(true);
+      setActionInfo(t('report.success'));
+      setTimeout(() => setActionInfo(null), 6000);
+    } catch (err) {
+      if (err.status === 409 || err.code === 'already_reported') {
+        setHasReported(true);
+        setReportModalOpen(false);
+        setActionInfo(t('report.already_reported'));
+        setTimeout(() => setActionInfo(null), 8000);
+      } else {
+        setActionError(err.message || 'Failed to submit report');
+      }
+    } finally {
+      setReportSubmitting(false);
     }
   };
 
@@ -725,6 +841,16 @@ export default function OrderChatPage() {
           </>
         )}
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', minWidth: 0 }}>
+          {showReportButton && (
+            <Button
+              variant="outlined"
+              size="small"
+              onClick={handleOpenReportModal}
+              sx={{ mb: 0.5 }}
+            >
+              {t('report.button')}
+            </Button>
+          )}
           <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }} noWrap>
             {order.offer?.title || tOrders('offer')}
           </Typography>
@@ -1118,6 +1244,22 @@ export default function OrderChatPage() {
                 {t('notReceivedDispute')}
               </Button>
             </Box>
+          </Box>
+        )}
+
+        {canModeratorComplete && (
+          <Box sx={{ mb: 2, p: 2, border: '2px solid', borderColor: 'info.main', borderRadius: 2, bgcolor: 'info.50', boxShadow: 1 }}>
+            <Typography variant="subtitle2" gutterBottom fontWeight={700} color="info.dark">{t('adminModeratorCompleteTitle')}</Typography>
+            <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 1 }}>{t('adminModeratorCompleteHint')}</Typography>
+            <Button
+              size="small"
+              variant="contained"
+              color="info"
+              onClick={handleComplete}
+              disabled={completeSubmitting}
+            >
+              {completeSubmitting ? t('completing') : t('adminModeratorCompleteButton')}
+            </Button>
           </Box>
         )}
 
@@ -1525,6 +1667,71 @@ export default function OrderChatPage() {
             <Button onClick={closeResolveVerdictDialog}>{tAdmin('cancel')}</Button>
             <Button variant="contained" onClick={handleResolveDisputeSubmit} disabled={resolveSubmitting || !resolveVerdictText.trim()}>
               {resolveSubmitting ? tAdmin('submitting') : (resolveVerdictDialog.action === 'RELEASE' ? t('releaseToSeller') : t('refundBuyer'))}
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        <Dialog
+          open={reportModalOpen}
+          onClose={() => !reportSubmitting && setReportModalOpen(false)}
+          maxWidth="sm"
+          fullWidth
+        >
+          <DialogTitle>{t('report.modal.title')}</DialogTitle>
+          <DialogContent>
+            {reportableTargets.length > 1 && (
+              <FormControl component="fieldset" variant="standard" sx={{ mb: 2, width: '100%' }}>
+                <FormLabel component="legend" sx={{ mb: 1 }}>
+                  {t('report.modal.who')}
+                </FormLabel>
+                <RadioGroup value={reportTargetId} onChange={(e) => setReportTargetId(e.target.value)}>
+                  {reportableTargets.map((tgt) => (
+                    <FormControlLabel
+                      key={tgt.id}
+                      value={tgt.id}
+                      control={<Radio />}
+                      label={`${tgt.nickname ?? '—'} (${t(`report.role.${tgt.roleKey}`)})`}
+                    />
+                  ))}
+                </RadioGroup>
+              </FormControl>
+            )}
+            <FormControl fullWidth sx={{ mb: 2 }}>
+              <InputLabel id="report-reason-label">{t('report.modal.reason')}</InputLabel>
+              <Select
+                labelId="report-reason-label"
+                value={reportReason}
+                label={t('report.modal.reason')}
+                onChange={(e) => setReportReason(e.target.value)}
+              >
+                {['FRAUD', 'SCAM', 'ABUSIVE_BEHAVIOR', 'OTHER'].map((k) => (
+                  <MenuItem key={k} value={k}>
+                    {t(`report.reason.${k}`)}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <TextField
+              label={t('report.modal.comment')}
+              value={reportComment}
+              onChange={(e) => setReportComment(e.target.value)}
+              fullWidth
+              multiline
+              minRows={2}
+              inputProps={{ maxLength: 500 }}
+              helperText={`${reportComment.length}/500`}
+            />
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setReportModalOpen(false)} disabled={reportSubmitting}>
+              {tCommon('cancel')}
+            </Button>
+            <Button
+              variant="contained"
+              onClick={handleSubmitReport}
+              disabled={reportSubmitting || !reportTargetId}
+            >
+              {reportSubmitting ? tCommon('loading') : t('report.modal.submit')}
             </Button>
           </DialogActions>
         </Dialog>

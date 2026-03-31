@@ -548,6 +548,16 @@ export async function getOrderById(orderId, token) {
   return apiGet(`/orders/${orderId}`, token)
 }
 
+/** Whether the current user has already submitted any report on this order (auth required) */
+export async function getMyReportStatus(orderId, token) {
+  return apiGet(`/reports/my?orderId=${encodeURIComponent(orderId)}`, token)
+}
+
+/** Report another participant in an order (auth required). Body: { orderId, reportedId, reason, comment? } */
+export async function postReport(body, token) {
+  return apiPost('/reports', body, token)
+}
+
 /** Seller: mark order as delivered with optional proof image(s) (auth required). body: FormData with optional 'files' */
 export async function markOrderDelivered(orderId, formData, token) {
   const base = getApiBase()

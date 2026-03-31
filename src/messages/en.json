@@ -507,6 +507,29 @@
     "orderDetails": "Order details",
     "hideOrderDetails": "Hide details",
     "messages": "Messages",
+    "report": {
+      "button": "Report",
+      "modal": {
+        "title": "Report user",
+        "who": "Who are you reporting?",
+        "reason": "Reason",
+        "comment": "Additional details (optional)",
+        "submit": "Submit report"
+      },
+      "success": "Report submitted. We will review it shortly.",
+      "already_reported": "You have already submitted a report for this order.",
+      "reason": {
+        "FRAUD": "Fraud",
+        "SCAM": "Scam",
+        "ABUSIVE_BEHAVIOR": "Abusive behavior",
+        "OTHER": "Other"
+      },
+      "role": {
+        "buyer": "Buyer",
+        "seller": "Seller",
+        "agent": "Agent"
+      }
+    },
     "chatLegendPendingConfirm": "Waiting for payment confirmation",
     "chatLegendPaidOrDone": "Payment confirmed (paid, delivered, or completed)",
     "chatLegendCreatedOrOther": "Order created or other status",
@@ -566,6 +589,9 @@
     "confirmDelivered": "Confirm delivered",
     "confirmReceiptOrDispute": "Confirm receipt or open dispute",
     "iReceivedComplete": "I received it — Complete",
+    "adminModeratorCompleteTitle": "Staff: release payment",
+    "adminModeratorCompleteHint": "Use when delivery is done but the buyer has not confirmed (e.g. unresponsive). This completes the order and pays the seller like a buyer confirmation.",
+    "adminModeratorCompleteButton": "Complete order (buyer unresponsive)",
     "completing": "Completing…",
     "notReceivedDispute": "I didn't receive it — Open dispute",
     "orderCompleted": "Order completed. Seller has been paid.",
