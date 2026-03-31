@@ -448,17 +448,18 @@ export default function OrderChatHeader({
         <Box
           sx={{
             display: 'flex',
-            flexDirection: { xs: 'column', sm: 'row' },
+            flexDirection: 'row',
             flexWrap: 'wrap',
-            alignItems: { xs: 'stretch', sm: 'center' },
-            gap: { xs: isCompactStaffHeader ? 0.75 : 1, sm: isCompactStaffHeader ? 1.4 : 2 },
+            alignItems: 'center',
+            columnGap: { xs: 1.25, sm: 1.5 },
+            rowGap: 0.75,
             px: { xs: 1.5, md: 2 },
-            py: isCompactStaffHeader ? 0.9 : 1.25,
+            py: isCompactStaffHeader ? 0.85 : 1.1,
             borderTop: '1px solid rgba(255,255,255,0.08)',
           }}
         >
           {showBuyerNickInMetadata && (
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, minWidth: 0 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, minWidth: 0, flex: '0 1 auto' }}>
               <ScheduleOutlinedIcon sx={{ fontSize: isCompactStaffHeader ? 16 : 18, color: LABEL_MUTED, flexShrink: 0 }} />
               <Typography variant="body2" sx={{ color: LABEL_MUTED, fontSize: '0.8125rem' }}>
                 {t('buyerNickShort')}
@@ -471,19 +472,22 @@ export default function OrderChatHeader({
           )}
           {showBuyerNickInMetadata && paymentMeta && (
             <Box
+              component="span"
+              aria-hidden
               sx={{
-                display: { xs: 'none', sm: 'block' },
-                width: 1,
-                alignSelf: 'stretch',
-                minHeight: 18,
-                borderLeft: '1px solid rgba(255,255,255,0.2)',
-                mx: 1,
+                display: 'inline-block',
+                width: '1px',
+                height: 14,
+                flexShrink: 0,
+                bgcolor: 'rgba(255,255,255,0.22)',
+                alignSelf: 'center',
+                mx: { xs: 0.25, sm: 0.5 },
               }}
             />
           )}
           {paymentMeta && (
-            <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 0.75, minWidth: 0, flex: { xs: '1 1 100%', sm: '0 1 auto' } }}>
-              <DescriptionOutlinedIcon sx={{ fontSize: isCompactStaffHeader ? 16 : 18, color: LABEL_MUTED, flexShrink: 0, mt: 0.15 }} />
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, minWidth: 0, flex: '0 1 auto' }}>
+              <DescriptionOutlinedIcon sx={{ fontSize: isCompactStaffHeader ? 16 : 18, color: LABEL_MUTED, flexShrink: 0 }} />
               <Typography variant="body2" sx={{ color: LABEL_MUTED, fontSize: '0.8125rem' }}>
                 {paymentMeta.label}
                 {paymentMeta.hash && (
