@@ -88,6 +88,7 @@ export default function OrderChatHeader({
 
   const statusColor = getOrderStatusTextColor(order?.status, order?.paymentMethod);
   const statusLabel = order?.status ? tSales(`status_${order.status}`) : '—';
+  const isCompactStaffHeader = isModerator;
 
   const offerLine = order?.offer?.title || tOrders('offer');
 
@@ -95,7 +96,20 @@ export default function OrderChatHeader({
     if (isModerator) {
       return (
         <>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexShrink: 0, flexWrap: 'wrap' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.9, flexShrink: 0, flexWrap: 'wrap' }}>
+            <Typography
+              variant="caption"
+              sx={{
+                color: LABEL_MUTED,
+                border: '1px solid rgba(138,153,173,0.3)',
+                borderRadius: 1,
+                px: 0.75,
+                py: 0.1,
+                fontWeight: 600,
+              }}
+            >
+              {t('headerRoleStaff')}
+            </Typography>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexShrink: 0 }}>
               <Link
                 href={order?.buyer?.id ? `/${locale}/user/${order.buyer.id}` : '#'}
@@ -104,7 +118,7 @@ export default function OrderChatHeader({
                 <Avatar
                   src={order?.buyer?.avatarUrl}
                   alt={order?.buyer?.nickname || ''}
-                  sx={{ width: { xs: 36, md: 40 }, height: { xs: 36, md: 40 }, bgcolor: AVATAR_BG }}
+                  sx={{ width: { xs: 34, md: 36 }, height: { xs: 34, md: 36 }, bgcolor: AVATAR_BG }}
                 >
                   {(order?.buyer?.nickname || '?').charAt(0).toUpperCase()}
                 </Avatar>
@@ -129,7 +143,7 @@ export default function OrderChatHeader({
                 <Avatar
                   src={order?.seller?.avatarUrl}
                   alt={order?.seller?.nickname || ''}
-                  sx={{ width: { xs: 36, md: 40 }, height: { xs: 36, md: 40 }, bgcolor: AVATAR_BG }}
+                  sx={{ width: { xs: 34, md: 36 }, height: { xs: 34, md: 36 }, bgcolor: AVATAR_BG }}
                 >
                   {(order?.seller?.nickname || '?').charAt(0).toUpperCase()}
                 </Avatar>
@@ -144,9 +158,6 @@ export default function OrderChatHeader({
               </Box>
             </Box>
           </Box>
-          <Typography variant="caption" sx={{ color: LABEL_MUTED, display: 'block', mt: 0.5 }}>
-            {t('headerRoleStaff')}
-          </Typography>
         </>
       );
     }
@@ -285,8 +296,8 @@ export default function OrderChatHeader({
           flexDirection: { xs: 'column', md: 'row' },
           alignItems: { xs: 'stretch', md: 'flex-start' },
           justifyContent: 'space-between',
-          gap: { xs: 1.5, md: 2 },
-          py: { xs: 1.25, md: 1.5 },
+          gap: { xs: 1.1, md: isCompactStaffHeader ? 1.5 : 2 },
+          py: { xs: isCompactStaffHeader ? 0.9 : 1.25, md: isCompactStaffHeader ? 1.15 : 1.5 },
           px: { xs: 1.5, md: 2 },
         }}
       >
@@ -308,7 +319,7 @@ export default function OrderChatHeader({
             flexDirection: 'column',
             alignItems: { xs: 'stretch', md: 'flex-end' },
             justifyContent: 'flex-start',
-            gap: 1,
+            gap: isCompactStaffHeader ? 0.65 : 1,
             flexShrink: 0,
             width: { xs: '100%', md: 'auto' },
             minWidth: { md: 200 },
@@ -335,9 +346,6 @@ export default function OrderChatHeader({
               {t('report.button')}
             </Button>
           )}
-          <Typography variant="caption" sx={{ color: LABEL_MUTED, fontWeight: 600, textAlign: { xs: 'left', md: 'right' }, width: '100%' }} noWrap>
-            {offerLine}
-          </Typography>
           <Chip
             size="small"
             label={
@@ -348,16 +356,19 @@ export default function OrderChatHeader({
             }
             sx={{
               alignSelf: { xs: 'flex-start', md: 'flex-end' },
-              height: 28,
-              fontWeight: 700,
-              fontSize: '0.8125rem',
-              bgcolor: alpha(statusColor, 0.2),
+              height: isCompactStaffHeader ? 30 : 28,
+              fontWeight: isCompactStaffHeader ? 800 : 700,
+              fontSize: isCompactStaffHeader ? '0.84rem' : '0.8125rem',
+              bgcolor: alpha(statusColor, isCompactStaffHeader ? 0.28 : 0.2),
               color: statusColor,
               border: `1px solid ${alpha(statusColor, 0.45)}`,
               maxWidth: '100%',
               '& .MuiChip-label': { px: 1, overflow: 'visible' },
             }}
           />
+          <Typography variant="caption" sx={{ color: LABEL_MUTED, fontWeight: 600, textAlign: { xs: 'left', md: 'right' }, width: '100%' }} noWrap>
+            {offerLine}
+          </Typography>
         </Box>
       </Box>
 
@@ -367,16 +378,16 @@ export default function OrderChatHeader({
             display: 'flex',
             flexWrap: 'wrap',
             alignItems: 'center',
-            gap: { xs: 1.5, md: 2 },
-            rowGap: 1,
+            gap: { xs: isCompactStaffHeader ? 1 : 1.5, md: isCompactStaffHeader ? 1.4 : 2 },
+            rowGap: isCompactStaffHeader ? 0.6 : 1,
             px: { xs: 1.5, md: 2 },
-            py: 1.25,
+            py: isCompactStaffHeader ? 0.85 : 1.25,
             borderTop: '1px solid rgba(255,255,255,0.08)',
           }}
         >
           {showBuyerNickInMetadata && (
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, minWidth: 0 }}>
-              <ScheduleOutlinedIcon sx={{ fontSize: 18, color: LABEL_MUTED, flexShrink: 0 }} />
+              <ScheduleOutlinedIcon sx={{ fontSize: isCompactStaffHeader ? 16 : 18, color: LABEL_MUTED, flexShrink: 0 }} />
               <Typography variant="body2" sx={{ color: LABEL_MUTED, fontSize: '0.8125rem' }}>
                 {t('buyerNickShort')}
                 {': '}
@@ -399,7 +410,7 @@ export default function OrderChatHeader({
           )}
           {paymentMeta && (
             <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 0.75, minWidth: 0, flex: { xs: '1 1 100%', sm: '0 1 auto' } }}>
-              <DescriptionOutlinedIcon sx={{ fontSize: 18, color: LABEL_MUTED, flexShrink: 0, mt: 0.15 }} />
+              <DescriptionOutlinedIcon sx={{ fontSize: isCompactStaffHeader ? 16 : 18, color: LABEL_MUTED, flexShrink: 0, mt: 0.15 }} />
               <Typography variant="body2" sx={{ color: LABEL_MUTED, fontSize: '0.8125rem' }}>
                 {paymentMeta.label}
                 {paymentMeta.hash && (
