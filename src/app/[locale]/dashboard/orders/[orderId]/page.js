@@ -19,7 +19,6 @@ import RadioGroup from '@mui/material/RadioGroup';
 import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
 import IconButton from '@mui/material/IconButton';
-import Avatar from '@mui/material/Avatar';
 import Alert from '@mui/material/Alert';
 import Snackbar from '@mui/material/Snackbar';
 import Dialog from '@mui/material/Dialog';
@@ -31,7 +30,6 @@ import AttachFileIcon from '@mui/icons-material/AttachFile';
 import SendIcon from '@mui/icons-material/Send';
 import DoneAllIcon from '@mui/icons-material/DoneAll';
 import DoneIcon from '@mui/icons-material/Done';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
@@ -59,7 +57,7 @@ import { useOrderSocket } from '@/hooks/useOrderSocket';
 import { playNewMessageSound } from '@/lib/notificationSound';
 import { formatAdena } from '@/lib/adenaFormat';
 import { getEffectiveUnitKk, formatPriceForUnit } from '@/lib/offerMinPrice';
-import { getOrderStatusTextColor } from '@/lib/orderStatusColors';
+import OrderChatHeader from './OrderChatHeader';
 import { pathGameVariantServer, pathToOfferDetail, getDefaultCategorySlug, getAllowedOfferTypesForServer } from '@/lib/games';
 
 /**
@@ -724,174 +722,27 @@ export default function OrderChatPage() {
 
   return (
     <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', bgcolor: '#f5f5f5' }}>
-      {/* Chat header – fixed at top */}
-      <Box
-        sx={{
-          flexShrink: 0,
-          display: 'flex',
-          alignItems: 'center',
-          gap: { xs: 1, md: 2 },
-          py: { xs: 1, md: 1.5 },
-          px: { xs: 1.5, md: 2 },
-          bgcolor: 'background.paper',
-          borderBottom: '1px solid',
-          borderColor: 'divider',
-        }}
-      >
-        {isMobile && (
-          <IconButton component={Link} href={`/${locale}/dashboard/orders`} size="small" sx={{ flexShrink: 0 }} aria-label={tOrders('chats')}>
-            <ArrowBackIcon />
-          </IconButton>
-        )}
-        {isModerator ? (
-          <>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexShrink: 0 }}>
-              <Link href={order?.buyer?.id ? `/${locale}/user/${order.buyer.id}` : '#'} style={{ textDecoration: 'none', color: 'inherit' }}>
-                <Avatar
-                  src={order?.buyer?.avatarUrl}
-                  alt={order?.buyer?.nickname || ''}
-                  sx={{ width: { xs: 32, md: 40 }, height: { xs: 32, md: 40 }, bgcolor: SENDER_BUBBLE }}
-                >
-                  {(order?.buyer?.nickname || '?').charAt(0).toUpperCase()}
-                </Avatar>
-              </Link>
-              <Box sx={{ minWidth: 0 }}>
-                <Typography variant="caption" color="text.secondary" display="block">{t('buyer')}</Typography>
-                <Typography variant="body2" fontWeight={600} noWrap>{order?.buyer?.nickname ?? '—'}</Typography>
-              </Box>
-            </Box>
-            <Typography variant="body2" color="text.secondary" sx={{ flexShrink: 0 }}>·</Typography>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexShrink: 0 }}>
-              <Link href={order?.seller?.id ? `/${locale}/user/${order.seller.id}` : '#'} style={{ textDecoration: 'none', color: 'inherit' }}>
-                <Avatar
-                  src={order?.seller?.avatarUrl}
-                  alt={order?.seller?.nickname || ''}
-                  sx={{ width: { xs: 32, md: 40 }, height: { xs: 32, md: 40 }, bgcolor: SENDER_BUBBLE }}
-                >
-                  {(order?.seller?.nickname || '?').charAt(0).toUpperCase()}
-                </Avatar>
-              </Link>
-              <Box sx={{ minWidth: 0 }}>
-                <Typography variant="caption" color="text.secondary" display="block">{t('seller')}</Typography>
-                <Typography variant="body2" fontWeight={600} noWrap>{order?.seller?.nickname ?? '—'}</Typography>
-              </Box>
-            </Box>
-            <Box sx={{ flex: 1, minWidth: 0 }} />
-          </>
-        ) : (
-          <>
-            <Link href={otherParty?.id ? `/${locale}/user/${otherParty.id}` : '#'} style={{ textDecoration: 'none', color: 'inherit' }}>
-              <Avatar
-                src={otherParty?.avatarUrl}
-                alt={otherParty?.nickname || otherParty?.email || ''}
-                sx={{ width: { xs: 36, md: 44 }, height: { xs: 36, md: 44 }, bgcolor: SENDER_BUBBLE }}
-              >
-                {(otherName || '?').charAt(0).toUpperCase()}
-              </Avatar>
-            </Link>
-            <Box sx={{ flex: 1, minWidth: 0 }}>
-              {otherParty?.id ? (
-                <Typography variant="subtitle1" fontWeight={600} noWrap component={Link} href={`/${locale}/user/${otherParty.id}`} sx={{ color: 'text.primary', textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}>
-                  {otherName}
-                </Typography>
-              ) : (
-                <Typography variant="subtitle1" fontWeight={600} noWrap sx={{ color: 'text.primary' }}>
-                  {otherName}
-                </Typography>
-              )}
-              <Typography variant="caption" color="success.main" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                <Box component="span" sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: 'success.main' }} />
-                {connected ? t('online') : t('live')}
-              </Typography>
-              {hasSafeTransfer && isSeller && order.safeTransfer.agentCharacterNick && (
-                <Box
-                  sx={{
-                    mt: 0.5,
-                    px: 1,
-                    py: 0.5,
-                    borderRadius: 1,
-                    border: '2px solid',
-                    borderColor: 'info.main',
-                    bgcolor: (theme) => `${theme.palette.info.main}18`,
-                    maxWidth: '100%',
-                  }}
-                >
-                  <Typography variant="caption" color="text.secondary" display="block" sx={{ fontWeight: 600 }}>
-                    {t('agentInGameNick')}
-                  </Typography>
-                  <Typography variant="body2" color="info.dark" fontWeight={800} sx={{ wordBreak: 'break-word' }}>
-                    {order.safeTransfer.agentCharacterNick}
-                  </Typography>
-                </Box>
-              )}
-              {hasSafeTransfer && isSeller && sellerSafeTransferWaitingAgentNick && (
-                <Typography variant="caption" color="warning.dark" fontWeight={700} sx={{ mt: 0.5 }} display="block">
-                  {t('safeTransferWaitingAgentNick')}
-                </Typography>
-              )}
-              {order.buyerCharacterNick && (!hasSafeTransfer || !isSeller || isModerator || isAssignedAgent) && (
-                <Typography variant="caption" color="text.secondary" sx={{ mt: 0.25 }} noWrap>
-                  {t('buyerInGameNick')}:{' '}
-                  <Typography component="span" sx={{ color: 'primary.main', fontWeight: 600 }}>
-                    {order.buyerCharacterNick}
-                  </Typography>
-                </Typography>
-              )}
-            </Box>
-          </>
-        )}
-        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', minWidth: 0 }}>
-          {showReportButton && (
-            <Button
-              variant="outlined"
-              size="small"
-              onClick={handleOpenReportModal}
-              sx={{ mb: 0.5 }}
-            >
-              {t('report.button')}
-            </Button>
-          )}
-          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }} noWrap>
-            {order.offer?.title || tOrders('offer')}
-          </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.8rem' }}>
-            {tOrders('status')}:{' '}
-            {order.status ? (
-              <Box component="span" sx={{ fontSize: '0.875rem', fontWeight: 700, color: getOrderStatusTextColor(order.status, order.paymentMethod) }}>
-                {tSales(`status_${order.status}`)}
-              </Box>
-            ) : (
-              '—'
-            )}
-          </Typography>
-          {order?.paymentMethod === 'CRYPTO_MANUAL' && order?.orderCryptoPayment?.adminConfirmedReceivedAt && (
-            <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.75rem', mt: 0.5 }}>
-              {order.orderCryptoPayment.paymentConfirmedBy === 'AUTO'
-                ? t('paymentConfirmedAutomatically')
-                : t('paymentConfirmedByAdmin')}
-              {order.orderCryptoPayment.cryptoTransactionHash && (
-                <>
-                  {' · '}
-                  <MuiLink
-                    href={`https://tronscan.org/#/transaction/${order.orderCryptoPayment.cryptoTransactionHash}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    underline="hover"
-                    sx={{ fontSize: 'inherit' }}
-                  >
-                    {t('viewOnTronscan')}
-                  </MuiLink>
-                </>
-              )}
-            </Typography>
-          )}
-          {order?.paymentMethod === 'IBAN_MANUAL' && order?.orderIbanPayment?.adminConfirmedReceivedAt && (
-            <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.75rem', mt: 0.5 }}>
-              {t('paymentConfirmedByAdmin')}
-            </Typography>
-          )}
-        </Box>
-      </Box>
+      <OrderChatHeader
+        locale={locale}
+        isMobile={isMobile}
+        backHref={`/${locale}/dashboard/orders`}
+        backAriaLabel={tOrders('chats')}
+        isModerator={isModerator}
+        isBuyer={isBuyer}
+        isSeller={isSeller}
+        isAssignedAgent={isAssignedAgent}
+        hasSafeTransfer={hasSafeTransfer}
+        order={order}
+        connected={connected}
+        showReportButton={showReportButton}
+        onOpenReport={handleOpenReportModal}
+        sellerSafeTransferWaitingAgentNick={sellerSafeTransferWaitingAgentNick}
+        t={t}
+        tOrders={tOrders}
+        tSales={tSales}
+        otherParty={otherParty}
+        otherName={otherName}
+      />
       {showPaymentSuccess && (
         <Alert severity="success" onClose={() => setPaymentSuccessShown(true)} sx={{ mx: { xs: 1, md: 2 }, mt: 1 }}>
           {t('paymentSuccessMessage')}
