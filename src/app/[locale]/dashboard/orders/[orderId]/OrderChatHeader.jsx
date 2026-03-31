@@ -95,70 +95,118 @@ export default function OrderChatHeader({
   const identityColumn = (() => {
     if (isModerator) {
       return (
-        <>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.9, flexShrink: 0, flexWrap: 'wrap' }}>
-            <Typography
-              variant="caption"
-              sx={{
-                color: LABEL_MUTED,
-                border: '1px solid rgba(138,153,173,0.3)',
-                borderRadius: 1,
-                px: 0.75,
-                py: 0.1,
-                fontWeight: 600,
-              }}
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: { xs: 1.25, sm: 1.75 },
+            flexWrap: 'wrap',
+            width: '100%',
+            minWidth: 0,
+          }}
+        >
+          <Typography
+            variant="caption"
+            sx={{
+              color: LABEL_MUTED,
+              border: '1px solid rgba(138,153,173,0.35)',
+              borderRadius: 1,
+              px: 0.85,
+              py: 0.35,
+              fontWeight: 600,
+              lineHeight: 1.2,
+              flexShrink: 0,
+              alignSelf: 'center',
+            }}
+          >
+            {t('headerRoleStaff')}
+          </Typography>
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1,
+              flex: '1 1 0%',
+              minWidth: 0,
+              maxWidth: { xs: '100%', sm: 'min(240px, 42%)' },
+            }}
+          >
+            <Link
+              href={order?.buyer?.id ? `/${locale}/user/${order.buyer.id}` : '#'}
+              style={{ textDecoration: 'none', color: 'inherit', flexShrink: 0 }}
             >
-              {t('headerRoleStaff')}
-            </Typography>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexShrink: 0 }}>
-              <Link
-                href={order?.buyer?.id ? `/${locale}/user/${order.buyer.id}` : '#'}
-                style={{ textDecoration: 'none', color: 'inherit' }}
+              <Avatar
+                src={order?.buyer?.avatarUrl}
+                alt={order?.buyer?.nickname || ''}
+                sx={{ width: { xs: 36, md: 38 }, height: { xs: 36, md: 38 }, bgcolor: AVATAR_BG }}
               >
-                <Avatar
-                  src={order?.buyer?.avatarUrl}
-                  alt={order?.buyer?.nickname || ''}
-                  sx={{ width: { xs: 34, md: 36 }, height: { xs: 34, md: 36 }, bgcolor: AVATAR_BG }}
-                >
-                  {(order?.buyer?.nickname || '?').charAt(0).toUpperCase()}
-                </Avatar>
-              </Link>
-              <Box sx={{ minWidth: 0 }}>
-                <Typography variant="caption" sx={{ color: LABEL_MUTED }} display="block">
-                  {t('buyer')}
-                </Typography>
-                <Typography variant="body2" fontWeight={700} noWrap sx={{ color: '#fff' }}>
-                  {order?.buyer?.nickname ?? '—'}
-                </Typography>
-              </Box>
-            </Box>
-            <Typography variant="body2" sx={{ color: LABEL_MUTED, flexShrink: 0 }}>
-              ·
-            </Typography>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexShrink: 0 }}>
-              <Link
-                href={order?.seller?.id ? `/${locale}/user/${order.seller.id}` : '#'}
-                style={{ textDecoration: 'none', color: 'inherit' }}
+                {(order?.buyer?.nickname || '?').charAt(0).toUpperCase()}
+              </Avatar>
+            </Link>
+            <Box sx={{ minWidth: 0, flex: 1 }}>
+              <Typography variant="caption" sx={{ color: LABEL_MUTED }} display="block" lineHeight={1.2}>
+                {t('buyer')}
+              </Typography>
+              <Typography
+                variant="body2"
+                fontWeight={700}
+                sx={{
+                  color: '#fff',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                  maxWidth: '100%',
+                }}
               >
-                <Avatar
-                  src={order?.seller?.avatarUrl}
-                  alt={order?.seller?.nickname || ''}
-                  sx={{ width: { xs: 34, md: 36 }, height: { xs: 34, md: 36 }, bgcolor: AVATAR_BG }}
-                >
-                  {(order?.seller?.nickname || '?').charAt(0).toUpperCase()}
-                </Avatar>
-              </Link>
-              <Box sx={{ minWidth: 0 }}>
-                <Typography variant="caption" sx={{ color: LABEL_MUTED }} display="block">
-                  {t('seller')}
-                </Typography>
-                <Typography variant="body2" fontWeight={700} noWrap sx={{ color: '#fff' }}>
-                  {order?.seller?.nickname ?? '—'}
-                </Typography>
-              </Box>
+                {order?.buyer?.nickname ?? '—'}
+              </Typography>
             </Box>
           </Box>
-        </>
+          <Typography variant="body2" sx={{ color: LABEL_MUTED, flexShrink: 0, px: { xs: 0, sm: 0.25 } }}>
+            ·
+          </Typography>
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1,
+              flex: '1 1 0%',
+              minWidth: 0,
+              maxWidth: { xs: '100%', sm: 'min(240px, 42%)' },
+            }}
+          >
+            <Link
+              href={order?.seller?.id ? `/${locale}/user/${order.seller.id}` : '#'}
+              style={{ textDecoration: 'none', color: 'inherit', flexShrink: 0 }}
+            >
+              <Avatar
+                src={order?.seller?.avatarUrl}
+                alt={order?.seller?.nickname || ''}
+                sx={{ width: { xs: 36, md: 38 }, height: { xs: 36, md: 38 }, bgcolor: AVATAR_BG }}
+              >
+                {(order?.seller?.nickname || '?').charAt(0).toUpperCase()}
+              </Avatar>
+            </Link>
+            <Box sx={{ minWidth: 0, flex: 1 }}>
+              <Typography variant="caption" sx={{ color: LABEL_MUTED }} display="block" lineHeight={1.2}>
+                {t('seller')}
+              </Typography>
+              <Typography
+                variant="body2"
+                fontWeight={700}
+                sx={{
+                  color: '#fff',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                  maxWidth: '100%',
+                }}
+              >
+                {order?.seller?.nickname ?? '—'}
+              </Typography>
+            </Box>
+          </Box>
+        </Box>
       );
     }
 
@@ -294,14 +342,14 @@ export default function OrderChatHeader({
         sx={{
           display: 'flex',
           flexDirection: { xs: 'column', md: 'row' },
-          alignItems: { xs: 'stretch', md: 'flex-start' },
+          alignItems: { xs: 'stretch', md: isCompactStaffHeader ? 'center' : 'flex-start' },
           justifyContent: 'space-between',
           gap: { xs: 1.1, md: isCompactStaffHeader ? 1.5 : 2 },
           py: { xs: isCompactStaffHeader ? 0.9 : 1.25, md: isCompactStaffHeader ? 1.15 : 1.5 },
           px: { xs: 1.5, md: 2 },
         }}
       >
-        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: { xs: 1, md: 1.5 }, flex: 1, minWidth: 0 }}>
+        <Box sx={{ display: 'flex', alignItems: { xs: 'flex-start', md: isCompactStaffHeader ? 'center' : 'flex-start' }, gap: { xs: 1, md: 1.5 }, flex: 1, minWidth: 0 }}>
           {isMobile && (
             <IconButton component={Link} href={backHref} size="small" sx={{ flexShrink: 0, color: '#fff', mt: 0.25 }} aria-label={backAriaLabel}>
               <ArrowBackIcon />
@@ -318,55 +366,79 @@ export default function OrderChatHeader({
             display: 'flex',
             flexDirection: 'column',
             alignItems: { xs: 'stretch', md: 'flex-end' },
-            justifyContent: 'flex-start',
-            gap: isCompactStaffHeader ? 0.65 : 1,
+            justifyContent: 'center',
+            gap: isCompactStaffHeader ? 0.5 : 0.75,
             flexShrink: 0,
             width: { xs: '100%', md: 'auto' },
             minWidth: { md: 200 },
           }}
         >
-          {showReportButton && (
-            <Button
-              variant="outlined"
-              size="small"
-              startIcon={<ReportProblemOutlinedIcon sx={{ fontSize: 18 }} />}
-              onClick={onOpenReport}
-              sx={{
-                alignSelf: { xs: 'stretch', md: 'flex-end' },
-                color: 'error.light',
-                borderColor: alpha('#f44336', 0.45),
-                textTransform: 'none',
-                fontWeight: 600,
-                '&:hover': {
-                  borderColor: 'error.light',
-                  bgcolor: alpha('#f44336', 0.08),
-                },
-              }}
-            >
-              {t('report.button')}
-            </Button>
-          )}
-          <Chip
-            size="small"
-            label={
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
-                <Box component="span" sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: statusColor }} />
-                {statusLabel}
-              </Box>
-            }
+          <Box
             sx={{
-              alignSelf: { xs: 'flex-start', md: 'flex-end' },
-              height: isCompactStaffHeader ? 30 : 28,
-              fontWeight: isCompactStaffHeader ? 800 : 700,
-              fontSize: isCompactStaffHeader ? '0.84rem' : '0.8125rem',
-              bgcolor: alpha(statusColor, isCompactStaffHeader ? 0.28 : 0.2),
-              color: statusColor,
-              border: `1px solid ${alpha(statusColor, 0.45)}`,
-              maxWidth: '100%',
-              '& .MuiChip-label': { px: 1, overflow: 'visible' },
+              display: 'flex',
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: { xs: showReportButton ? 'space-between' : 'flex-end', md: 'flex-end' },
+              gap: 1,
+              flexWrap: 'wrap',
+              width: { xs: '100%', md: 'auto' },
             }}
-          />
-          <Typography variant="caption" sx={{ color: LABEL_MUTED, fontWeight: 600, textAlign: { xs: 'left', md: 'right' }, width: '100%' }} noWrap>
+          >
+            <Chip
+              size="small"
+              label={
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+                  <Box component="span" sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: statusColor }} />
+                  {statusLabel}
+                </Box>
+              }
+              sx={{
+                alignSelf: 'flex-end',
+                height: isCompactStaffHeader ? 30 : 28,
+                fontWeight: isCompactStaffHeader ? 800 : 700,
+                fontSize: isCompactStaffHeader ? '0.84rem' : '0.8125rem',
+                bgcolor: alpha(statusColor, isCompactStaffHeader ? 0.28 : 0.2),
+                color: statusColor,
+                border: `1px solid ${alpha(statusColor, 0.45)}`,
+                maxWidth: '100%',
+                '& .MuiChip-label': { px: 1, overflow: 'visible' },
+              }}
+            />
+            {showReportButton && (
+              <Button
+                variant="outlined"
+                size="small"
+                startIcon={<ReportProblemOutlinedIcon sx={{ fontSize: 18 }} />}
+                onClick={onOpenReport}
+                sx={{
+                  alignSelf: 'flex-end',
+                  color: 'error.light',
+                  borderColor: alpha('#f44336', 0.45),
+                  textTransform: 'none',
+                  fontWeight: 600,
+                  whiteSpace: 'nowrap',
+                  '&:hover': {
+                    borderColor: 'error.light',
+                    bgcolor: alpha('#f44336', 0.08),
+                  },
+                }}
+              >
+                {t('report.button')}
+              </Button>
+            )}
+          </Box>
+          <Typography
+            variant="caption"
+            sx={{
+              color: LABEL_MUTED,
+              fontWeight: 600,
+              textAlign: { xs: 'left', md: 'right' },
+              width: '100%',
+              opacity: 0.95,
+            }}
+            noWrap
+            title={offerLine}
+          >
             {offerLine}
           </Typography>
         </Box>
@@ -376,12 +448,12 @@ export default function OrderChatHeader({
         <Box
           sx={{
             display: 'flex',
+            flexDirection: { xs: 'column', sm: 'row' },
             flexWrap: 'wrap',
-            alignItems: 'center',
-            gap: { xs: isCompactStaffHeader ? 1 : 1.5, md: isCompactStaffHeader ? 1.4 : 2 },
-            rowGap: isCompactStaffHeader ? 0.6 : 1,
+            alignItems: { xs: 'stretch', sm: 'center' },
+            gap: { xs: isCompactStaffHeader ? 0.75 : 1, sm: isCompactStaffHeader ? 1.4 : 2 },
             px: { xs: 1.5, md: 2 },
-            py: isCompactStaffHeader ? 0.85 : 1.25,
+            py: isCompactStaffHeader ? 0.9 : 1.25,
             borderTop: '1px solid rgba(255,255,255,0.08)',
           }}
         >
@@ -391,7 +463,7 @@ export default function OrderChatHeader({
               <Typography variant="body2" sx={{ color: LABEL_MUTED, fontSize: '0.8125rem' }}>
                 {t('buyerNickShort')}
                 {': '}
-                <Box component="span" sx={{ color: NICK_HIGHLIGHT, fontWeight: 700 }}>
+                <Box component="span" sx={{ color: NICK_HIGHLIGHT, fontWeight: 700 }} title={t('buyerInGameNick')}>
                   {order.buyerCharacterNick}
                 </Box>
               </Typography>
@@ -402,9 +474,10 @@ export default function OrderChatHeader({
               sx={{
                 display: { xs: 'none', sm: 'block' },
                 width: 1,
-                height: 16,
+                alignSelf: 'stretch',
+                minHeight: 18,
                 borderLeft: '1px solid rgba(255,255,255,0.2)',
-                alignSelf: 'center',
+                mx: 1,
               }}
             />
           )}
