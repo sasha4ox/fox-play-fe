@@ -75,7 +75,10 @@ export default function OrderChatHeader({
         hash: order.orderCryptoPayment.cryptoTransactionHash ?? null,
       };
     }
-    if (order?.paymentMethod === 'IBAN_MANUAL' && order?.orderIbanPayment?.adminConfirmedReceivedAt) {
+    if (
+      (order?.paymentMethod === 'IBAN_MANUAL' || order?.paymentMethod === 'SEPA_MANUAL') &&
+      order?.orderIbanPayment?.adminConfirmedReceivedAt
+    ) {
       return { label: t('paymentConfirmedByAdmin'), hash: null };
     }
     if (order?.paymentMethod === 'CARD_MANUAL' && order?.orderCardPayment?.adminConfirmedReceivedAt) {

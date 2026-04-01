@@ -216,11 +216,19 @@ export async function getIbanPaymentEnabled() {
 
 /** Auth: payment methods available for current user by region (UA: card+crypto; Europe: IBAN+crypto; Other: crypto). Returns { cardPaymentEnabled, ibanPaymentEnabled, cryptoPaymentEnabled }. */
 export async function getAvailablePaymentMethods(token) {
-  if (!token) return { cardPaymentEnabled: false, ibanPaymentEnabled: false, cryptoPaymentEnabled: false }
+  if (!token) {
+    return {
+      cardPaymentEnabled: false,
+      ibanPaymentEnabled: false,
+      sepaPaymentEnabled: false,
+      cryptoPaymentEnabled: false,
+    }
+  }
   const data = await apiGet('/me/available-payment-methods', token)
   return {
     cardPaymentEnabled: data?.cardPaymentEnabled === true,
     ibanPaymentEnabled: data?.ibanPaymentEnabled === true,
+    sepaPaymentEnabled: data?.sepaPaymentEnabled === true,
     cryptoPaymentEnabled: data?.cryptoPaymentEnabled === true,
   }
 }
@@ -860,6 +868,28 @@ export async function getAdminIbanPaymentConfig(token) {
 /** Admin: set IBAN payment config. body: { iban?, bicSwift?, beneficiaryName?, beneficiaryBank?, accountCurrency?, taxId?, legalAddress?, correspondentAccount?, correspondentBank?, paymentReference? } */
 export async function setAdminIbanPaymentConfig(config, token) {
   return apiPatch('/admin/settings/iban-payment-config', config || {}, token)
+}
+
+/** Admin: get SEPA payment enabled. */
+export async function getAdminSepaPaymentEnabled(token) {
+  const data = await apiGet('/admin/settings/sepa-payment-enabled', token)
+  return data?.sepaPaymentEnabled === true
+}
+
+/** Admin: set SEPA payment enabled. */
+export async function setAdminSepaPaymentEnabled(enabled, token) {
+  const data = await apiPatch('/admin/settings/sepa-payment-enabled', { enabled }, token)
+  return data?.sepaPaymentEnabled === true
+}
+
+/** Admin: get SEPA payment config. */
+export async function getAdminSepaPaymentConfig(token) {
+  return apiGet('/admin/settings/sepa-payment-config', token)
+}
+
+/** Admin: set SEPA payment config. */
+export async function setAdminSepaPaymentConfig(config, token) {
+  return apiPatch('/admin/settings/sepa-payment-config', config || {}, token)
 }
 
 export async function getAdminPlatformProfit(token) {

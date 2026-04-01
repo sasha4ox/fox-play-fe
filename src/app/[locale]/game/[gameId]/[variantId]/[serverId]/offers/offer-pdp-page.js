@@ -16,7 +16,6 @@ import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
 import TextField from '@mui/material/TextField';
-import InputAdornment from '@mui/material/InputAdornment';
 import FormControl from '@mui/material/FormControl';
 import InputLabel from '@mui/material/InputLabel';
 import Select from '@mui/material/Select';
@@ -27,12 +26,10 @@ import Rating from '@mui/material/Rating';
 import Tooltip from '@mui/material/Tooltip';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
-import Switch from '@mui/material/Switch';
-import FormControlLabel from '@mui/material/FormControlLabel';
 import { useAuthStore } from '@/store/authStore';
 import { useLoginModalStore } from '@/store/loginModalStore';
 import { useProfile } from '@/hooks/useProfile';
-import { fetchOfferById, createOrder, getAvailablePaymentMethods, getOfferMessages, sendOfferMessage, startOfferChat, getOfferInquiryOrderId, getFeedbacksByUserId, deleteOffer, getSafeTransferAvailability } from '@/lib/api';
+import { fetchOfferById, getOfferMessages, sendOfferMessage, startOfferChat, getOfferInquiryOrderId, getFeedbacksByUserId, deleteOffer } from '@/lib/api';
 import { logClientError } from '@/lib/clientLogger';
 import { formatAdena } from '@/lib/adenaFormat';
 import { getMinPriceForUnit, getEffectiveUnitKk, formatPriceForUnit } from '@/lib/offerMinPrice';
@@ -43,6 +40,7 @@ import {
   getServerFromTree,
   pathGameVariantServer,
   pathToOfferDetail,
+  pathToOfferCheckout,
   pathToOfferEdit,
   filterValueToCategorySlug,
   getAllowedOfferTypesForServer,
@@ -72,22 +70,13 @@ export default function OfferPDPPage() {
   const [offer, setOffer] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [buyDialogOpen, setBuyDialogOpen] = useState(false);
-  const [buyQuantity, setBuyQuantity] = useState(1);
-  const [buyQuantityKk, setBuyQuantityKk] = useState(1);
-  /** Controlled string so user can clear the field while typing; synced to buyQuantityKk on blur. */
-  const [buyQuantityKkStr, setBuyQuantityKkStr] = useState('1');
-  const [buyQuantityStr, setBuyQuantityStr] = useState('1');
-  const [buyCharacterNick, setBuyCharacterNick] = useState('');
-  const [buySubmitting, setBuySubmitting] = useState(false);
-  const [buyError, setBuyError] = useState(null);
   const [offerMessages, setOfferMessages] = useState([]);
   const [messageText, setMessageText] = useState('');
   const [messageSending, setMessageSending] = useState(false);
   const [messageError, setMessageError] = useState(null);
   const user = useAuthStore((s) => s.user);
   const token = useAuthStore((s) => s.token);
-  const { profile, balances, primaryBalance } = useProfile();
+  const { profile } = useProfile();
   const isAuthenticated = !!token;
   const openLoginModal = useLoginModalStore((s) => s.openModal);
   const currentUserId = user?.id ?? user?.userId;
@@ -107,10 +96,6 @@ export default function OfferPDPPage() {
     fetchOfferById(offerId, token, { displayCurrency: token ? undefined : 'USD' })
       .then((data) => {
         setOffer(data);
-        setBuyQuantity(1);
-        setBuyQuantityKk(1);
-        setBuyQuantityKkStr('1');
-        setBuyQuantityStr('1');
         setLoading(false);
       })
       .catch((err) => {
@@ -126,32 +111,7 @@ export default function OfferPDPPage() {
   const [feedbacksLoading, setFeedbacksLoading] = useState(false);
   const [paymentDeclinedDismissed, setPaymentDeclinedDismissed] = useState(false);
   const showPaymentDeclined = searchParams.get('payment') === 'declined' && !paymentDeclinedDismissed;
-  const [cardPaymentEnabled, setCardPaymentEnabled] = useState(false);
-  const [cryptoPaymentEnabled, setCryptoPaymentEnabled] = useState(false);
-  const [ibanPaymentEnabled, setIbanPaymentEnabled] = useState(false);
   const [inquiryOrderId, setInquiryOrderId] = useState(null);
-  const [stAvailable, setStAvailable] = useState(false);
-  const [stEnabled, setStEnabled] = useState(false);
-
-  useEffect(() => {
-    if (!token) return;
-    getAvailablePaymentMethods(token).then((methods) => {
-      setCardPaymentEnabled(methods.cardPaymentEnabled);
-      setCryptoPaymentEnabled(methods.cryptoPaymentEnabled);
-      setIbanPaymentEnabled(methods.ibanPaymentEnabled);
-    }).catch(() => {
-      setCardPaymentEnabled(false);
-      setCryptoPaymentEnabled(false);
-      setIbanPaymentEnabled(false);
-    });
-  }, [token]);
-
-  useEffect(() => {
-    if (!offer || !token || isCreator || !resolvedServerId) return;
-    getSafeTransferAvailability(resolvedServerId, token, offer.seller?.id)
-      .then((data) => setStAvailable(!!data?.available))
-      .catch(() => setStAvailable(false));
-  }, [offer, token, isCreator, resolvedServerId]);
 
   useEffect(() => {
     if (!offerId || !token) return;
@@ -187,223 +147,14 @@ export default function OfferPDPPage() {
   }, [game, variant, server, gameId, variantId, serverId, gamesLoading, locale, router, offerId]);
 
   const handleBuyClick = () => {
+    if (!game || !variant || !server || !offerId) return;
+    const checkoutHref = pathToOfferCheckout(locale, game, variant, server, offerId);
     if (!isAuthenticated) {
-      openLoginModal(() => setBuyDialogOpen(true));
+      openLoginModal(() => router.push(checkoutHref));
       return;
     }
-    const isCoinsType = offer?.offerType === 'COINS';
-    const isAdenaType = offer?.offerType === 'ADENA';
-    if (isCoinsType) {
-      const initCoins = (offer?.minSellQuantity != null ? Number(offer.minSellQuantity) : 1);
-      setBuyQuantity(Math.max(1, Math.min(initCoins, Number(offer.quantity) || 1)));
-    } else {
-      setBuyQuantity(1);
-    }
-    const initKk = offer?.minSellQuantity != null
-      ? Number(offer.minSellQuantity) / 1_000_000
-      : 1;
-    setBuyQuantityKk(initKk);
-    setBuyQuantityKkStr(String(initKk));
-    if (isCoinsType) {
-      const initCoins = (offer?.minSellQuantity != null ? Number(offer.minSellQuantity) : 1);
-      const q = Math.max(1, Math.min(initCoins, Number(offer.quantity) || 1));
-      setBuyQuantity(q);
-      setBuyQuantityStr(String(q));
-    } else if (!isAdenaType) {
-      setBuyQuantity(1);
-      setBuyQuantityStr('1');
-    }
-    setStEnabled(false);
-    setBuyDialogOpen(true);
+    router.push(checkoutHref);
   };
-
-  const parseKkFromStr = (s) => {
-    const n = Number(String(s ?? '').replace(',', '.').trim());
-    return Number.isFinite(n) ? n : NaN;
-  };
-
-  const calcBuyQty = () => {
-    const isAdena = offer?.offerType === 'ADENA';
-    const isCoins = offer?.offerType === 'COINS';
-    const minSellQty = (isAdena || isCoins) && offer?.minSellQuantity != null ? Number(offer.minSellQuantity) : 1;
-    if (isAdena) {
-      const kk = parseKkFromStr(buyQuantityKkStr);
-      const kkNum = Number.isFinite(kk) ? kk : buyQuantityKk;
-      return Math.min(Number(offer.quantity), Math.max(minSellQty, Math.floor(kkNum * 1_000_000)));
-    }
-    const qRaw = Number(String(buyQuantityStr ?? '').replace(',', '.').trim());
-    const q = Number.isFinite(qRaw) ? Math.floor(qRaw) : buyQuantity;
-    return Math.min(Math.max(minSellQty, q), Number(offer.quantity));
-  };
-
-  /** Deal subtotal, optional ST fee, and total buyer pays (matches Safe Transfer block). */
-  const computeBuyMoney = () => {
-    if (!offer) {
-      return { dealAmount: 0, stFee: 0, totalToPay: 0, currency: '' };
-    }
-    const isAdena = offer.offerType === 'ADENA';
-    const pricePer1kk = Number(offer.displayPrice ?? offer.price) || 0;
-    const unitPrice = pricePer1kk;
-    const kk = parseKkFromStr(buyQuantityKkStr);
-    const kkNum = Number.isFinite(kk) ? kk : buyQuantityKk;
-    const qRaw = Number(String(buyQuantityStr ?? '').replace(',', '.').trim());
-    const qNum = Number.isFinite(qRaw) ? qRaw : buyQuantity;
-    const dealAmount = isAdena ? kkNum * pricePer1kk : qNum * unitPrice;
-    const usesDisplay = offer.displayPrice != null && offer.displayCurrency != null;
-    const minStFee = usesDisplay
-      ? (offer.safeTransferMinFeeInDisplay ?? offer.safeTransferMinFeeInSellerCurrency ?? 5)
-      : (offer.safeTransferMinFeeInSellerCurrency ?? 5);
-    const stFee = Math.round(Math.max(dealAmount * 0.05, minStFee) * 100) / 100;
-    const totalToPay = stEnabled ? dealAmount + stFee : dealAmount;
-    const currency = offer.displayCurrency ?? offer.currency ?? '';
-    return { dealAmount, stFee, totalToPay, currency };
-  };
-
-  const validateBuyQuantity = () => {
-    if (!offer) return 'Invalid offer';
-    if (offer.offerType === 'ADENA') {
-      const maxKk = (offer.quantity ?? 0) / 1_000_000;
-      const minKk = offer.minSellQuantity != null ? Number(offer.minSellQuantity) / 1_000_000 : 0.001;
-      const kk = parseKkFromStr(buyQuantityKkStr);
-      if (buyQuantityKkStr.trim() === '' || !Number.isFinite(kk)) {
-        return t('toBeReceived') ? `${t('toBeReceived')}: invalid` : 'Enter a valid amount';
-      }
-      if (kk < minKk || kk > maxKk) {
-        return t('toBeReceived') ? `${t('toBeReceived')}: out of range` : 'Amount out of range';
-      }
-    } else {
-      const qRaw = Number(String(buyQuantityStr ?? '').replace(',', '.').trim());
-      if (buyQuantityStr.trim() === '' || !Number.isFinite(qRaw)) {
-        return t('quantity') ? `${t('quantity')}: invalid` : 'Enter a valid quantity';
-      }
-      const minSellQty = offer.minSellQuantity != null ? Number(offer.minSellQuantity) : 1;
-      const q = Math.floor(qRaw);
-      if (q < minSellQty || q > Number(offer.quantity)) {
-        return t('quantity') ? `${t('quantity')}: out of range` : 'Quantity out of range';
-      }
-    }
-    return null;
-  };
-
-  const handleBuySubmit = async () => {
-    if (!offer || !token) return;
-    const nick = (buyCharacterNick || '').trim();
-    if (!nick) {
-      setBuyError(t('inGameNickRequired'));
-      return;
-    }
-    const qErr = validateBuyQuantity();
-    if (qErr) {
-      setBuyError(qErr);
-      return;
-    }
-    const qty = calcBuyQty();
-    setBuySubmitting(true);
-    setBuyError(null);
-    try {
-      const body = { offerId: offer.id, quantity: qty, characterNick: nick };
-      if (stEnabled) body.safeTransfer = true;
-      const order = await createOrder(body, token);
-      setBuyDialogOpen(false);
-      setBuyCharacterNick('');
-      router.push(`/${locale}/dashboard/orders/${order.id}`);
-    } catch (err) {
-      setBuyError(err.message || 'Failed to create order');
-    } finally {
-      setBuySubmitting(false);
-    }
-  };
-
-  const handleManuauCardBuySubmit = async () => {
-    if (!offer || !token) return;
-    const nick = (buyCharacterNick || '').trim();
-    if (!nick) {
-      setBuyError(t('inGameNickRequired'));
-      return;
-    }
-    const qErr = validateBuyQuantity();
-    if (qErr) {
-      setBuyError(qErr);
-      return;
-    }
-    const qty = calcBuyQty();
-    setBuySubmitting(true);
-    setBuyError(null);
-    try {
-      const body = { offerId: offer.id, quantity: qty, characterNick: nick };
-      body.paymentMethod = 'CARD_MANUAL';
-      if (stEnabled) body.safeTransfer = true;
-      const order = await createOrder(body, token);
-      setBuyDialogOpen(false);
-      setBuyCharacterNick('');
-      router.push(`/${locale}/dashboard/orders/${order.id}/card-payment`);
-    } catch (err) {
-      setBuyError(err.message || 'Failed to create order');
-    } finally {
-      setBuySubmitting(false);
-    }
-  };
-
-  const handleCryptoBuySubmit = async () => {
-    if (!offer || !token) return;
-    const nick = (buyCharacterNick || '').trim();
-    if (!nick) {
-      setBuyError(t('inGameNickRequired'));
-      return;
-    }
-    const qErr = validateBuyQuantity();
-    if (qErr) {
-      setBuyError(qErr);
-      return;
-    }
-    const qty = calcBuyQty();
-    setBuySubmitting(true);
-    setBuyError(null);
-    try {
-      const body = { offerId: offer.id, quantity: qty, characterNick: nick };
-      body.paymentMethod = 'CRYPTO_MANUAL';
-      if (stEnabled) body.safeTransfer = true;
-      const order = await createOrder(body, token);
-      setBuyDialogOpen(false);
-      setBuyCharacterNick('');
-      router.push(`/${locale}/pay-crypto/${order.id}`);
-    } catch (err) {
-      setBuyError(err.message || 'Failed to create order');
-    } finally {
-      setBuySubmitting(false);
-    }
-  };
-
-  const handleIbanBuySubmit = async () => {
-    if (!offer || !token) return;
-    const nick = (buyCharacterNick || '').trim();
-    if (!nick) {
-      setBuyError(t('inGameNickRequired'));
-      return;
-    }
-    const qErr = validateBuyQuantity();
-    if (qErr) {
-      setBuyError(qErr);
-      return;
-    }
-    const qty = calcBuyQty();
-    setBuySubmitting(true);
-    setBuyError(null);
-    try {
-      const body = { offerId: offer.id, quantity: qty, characterNick: nick };
-      body.paymentMethod = 'IBAN_MANUAL';
-      if (stEnabled) body.safeTransfer = true;
-      const order = await createOrder(body, token);
-      setBuyDialogOpen(false);
-      setBuyCharacterNick('');
-      router.push(`/${locale}/dashboard/orders/${order.id}/iban-payment`);
-    } catch (err) {
-      setBuyError(err.message || 'Failed to create order');
-    } finally {
-      setBuySubmitting(false);
-    }
-  };
-
 
   const handleSendMessage = async () => {
     if (!offerId || !token || !messageText.trim()) return;
@@ -512,10 +263,8 @@ export default function OfferPDPPage() {
     );
   }
 
-  const maxQty = Math.max(1, offer.quantity);
   const isAdenaOffer = offer.offerType === 'ADENA';
   const isCoinsOffer = offer.offerType === 'COINS';
-  const maxKk = isAdenaOffer ? offer.quantity : null;
   const offerCurrency = offer.displayCurrency ?? offer.currency ?? '';
   const adenaPriceUnitKk = offer?.server?.adenaPriceUnitKk ?? offer?.server?.gameVariant?.game?.adenaPriceUnitKk ?? 100;
   const effectiveUnitKk = getEffectiveUnitKk(adenaPriceUnitKk);
@@ -910,211 +659,6 @@ export default function OfferPDPPage() {
           </Box>
         )}
       </Container>
-
-      <Dialog open={buyDialogOpen} onClose={() => setBuyDialogOpen(false)} maxWidth="xs" fullWidth>
-        <DialogTitle>Buy</DialogTitle>
-        <DialogContent>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            {offer.title}
-            {isAdenaOffer ? ` · Max: ${maxKk} kk` : ` · Max: ${maxQty}`}
-          </Typography>
-          <TextField
-            label={t('yourInGameNick')}
-            value={buyCharacterNick}
-            onChange={(e) => setBuyCharacterNick(e.target.value)}
-            placeholder={t('yourInGameNick')}
-            fullWidth
-            required
-            inputProps={{ maxLength: 64 }}
-            sx={{ mb: 2 }}
-          />
-          {isAdenaOffer ? (
-            <>
-              {(() => {
-                const maxKk = (offer?.quantity ?? 0) / 1_000_000;
-                const minKk = offer?.minSellQuantity != null
-                  ? Number(offer.minSellQuantity) / 1_000_000
-                  : 0.001;
-                return (
-                  <>
-                    <TextField
-                      type="text"
-                      inputMode="decimal"
-                      label={t('toBeReceived')}
-                      value={buyQuantityKkStr}
-                      onChange={(e) => setBuyQuantityKkStr(e.target.value)}
-                      onBlur={() => {
-                        const kk = parseKkFromStr(buyQuantityKkStr);
-                        if (buyQuantityKkStr.trim() === '' || !Number.isFinite(kk)) {
-                          setBuyQuantityKk(minKk);
-                          setBuyQuantityKkStr(String(minKk));
-                          return;
-                        }
-                        const clamped = Math.min(maxKk, Math.max(minKk, kk));
-                        setBuyQuantityKk(clamped);
-                        setBuyQuantityKkStr(String(clamped));
-                      }}
-                      InputProps={{
-                        endAdornment: <InputAdornment position="end">kk</InputAdornment>,
-                      }}
-                      inputProps={{
-                        inputMode: 'decimal',
-                      }}
-                      placeholder={String(minKk)}
-                      fullWidth
-                      sx={{ mb: 1 }}
-                    />
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2, fontSize: '0.75rem' }}>
-                      {offer?.minSellQuantity != null && (
-                        <>{t('minPurchase')}: {formatAdena(Number(offer.minSellQuantity))}{' · '}</>
-                      )}
-                      Max available: {formatAdena(offer?.quantity ?? 0)}
-                    </Typography>
-                  </>
-                );
-              })()}
-            </>
-          ) : (
-            <TextField
-              type="text"
-              inputMode="numeric"
-              label={t('quantity')}
-              value={buyQuantityStr}
-              onChange={(e) => setBuyQuantityStr(e.target.value)}
-              onBlur={() => {
-                const minSellQty = offer?.minSellQuantity != null ? Number(offer.minSellQuantity) : 1;
-                const qRaw = Number(String(buyQuantityStr ?? '').replace(',', '.').trim());
-                if (buyQuantityStr.trim() === '' || !Number.isFinite(qRaw)) {
-                  setBuyQuantity(minSellQty);
-                  setBuyQuantityStr(String(minSellQty));
-                  return;
-                }
-                const q = Math.min(maxQty, Math.max(minSellQty, Math.floor(qRaw)));
-                setBuyQuantity(q);
-                setBuyQuantityStr(String(q));
-              }}
-              fullWidth
-              sx={{ mb: 2 }}
-            />
-          )}
-          {isAdenaOffer && (() => {
-            const { totalToPay, currency } = computeBuyMoney();
-            return (
-              <Box sx={{ mb: 2 }}>
-                <Typography variant="body2" color="text.secondary">
-                  {t('youWillPay')}: <strong>{Number.isFinite(totalToPay) ? totalToPay.toFixed(2) : '—'} {currency}</strong>
-                </Typography>
-                <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5 }}>
-                  {t('bankFeeHint')}
-                </Typography>
-              </Box>
-            );
-          })()}
-          {!isAdenaOffer && offer && (
-            <Box sx={{ mb: 2 }}>
-              <Typography variant="body2" color="text.secondary">
-                {t('youWillPay')}: <strong>{(() => {
-                  const { totalToPay, currency } = computeBuyMoney();
-                  return `${Number.isFinite(totalToPay) ? totalToPay.toFixed(2) : '—'} ${currency}`;
-                })()}</strong>
-              </Typography>
-              <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5 }}>
-                {t('bankFeeHint')}
-              </Typography>
-            </Box>
-          )}
-          {stAvailable && !isCreator && (
-            <Box sx={{ mb: 2, p: 1.5, border: '1px solid', borderColor: 'info.main', borderRadius: 1, bgcolor: (theme) => `${theme.palette.info.main}08` }}>
-              <FormControlLabel
-                control={<Switch checked={stEnabled} onChange={(e) => setStEnabled(e.target.checked)} color="info" />}
-                label={<Typography variant="body2" fontWeight={600}>{t('safeTransferLabel')}</Typography>}
-              />
-              <Typography variant="caption" color="text.secondary" display="block" component="div" sx={{ ml: 4.5 }}>
-                {t.rich('safeTransferHintRich', {
-                  learnMore: (chunks) => (
-                    <MuiLink component={Link} href={`/${locale}/how-safe-transfer-works`} underline="hover" color="info.main">
-                      {chunks}
-                    </MuiLink>
-                  ),
-                })}
-              </Typography>
-              {stEnabled && (() => {
-                const { dealAmount, stFee, totalToPay, currency } = computeBuyMoney();
-                return (
-                  <Box sx={{ ml: 4.5, mt: 0.5 }}>
-                    <Typography variant="body2" color="info.main" fontWeight={600}>
-                      {t('safeTransferFee', { fee: stFee.toFixed(2), currency })}
-                    </Typography>
-                    <Typography variant="body2" color="info.main">
-                      {t('safeTransferTotal', { total: totalToPay.toFixed(2), currency })}
-                    </Typography>
-                  </Box>
-                );
-              })()}
-            </Box>
-          )}
-          {buyError && (
-            <Alert severity="error" sx={{ mt: 2 }}>
-              {buyError}
-              {buyError.toLowerCase().includes('insufficient') && !payWithCard && (
-                <Box sx={{ mt: 1 }}>
-                  <MuiLink component={Link} href={`/${locale}/dashboard/balance`}>
-                    Add funds to your balance →
-                  </MuiLink>
-                </Box>
-              )}
-            </Alert>
-          )}
-        </DialogContent>
-        <DialogActions sx={{ flexWrap: 'wrap', gap: 1 }}>
-          <Button onClick={() => setBuyDialogOpen(false)}>Cancel</Button>
-          {(() => {
-            const offerCurrency = offer?.displayCurrency ?? offer?.currency ?? '';
-            const { totalToPay } = computeBuyMoney();
-            const availableBalance = Number(primaryBalance?.available ?? 0);
-            const hasEnoughBalance = offerCurrency && totalToPay > 0 && availableBalance >= totalToPay;
-            const kkOk = !isAdenaOffer || (() => {
-              const kk = parseKkFromStr(buyQuantityKkStr);
-              return buyQuantityKkStr.trim() !== '' && Number.isFinite(kk) && kk > 0;
-            })();
-            const qtyOk = isAdenaOffer || (() => {
-              const qRaw = Number(String(buyQuantityStr ?? '').replace(',', '.').trim());
-              return buyQuantityStr.trim() !== '' && Number.isFinite(qRaw) && Math.floor(qRaw) >= 1;
-            })();
-            const dialogSubmitDisabled = buySubmitting || isPriceBelowMin || !kkOk || !qtyOk;
-            return (
-              <Tooltip title={!hasEnoughBalance ? (t('insufficientBalance') || 'Insufficient balance') : ''}>
-                <span>
-                  <Button
-                    variant="contained"
-                    onClick={handleBuySubmit}
-                    disabled={dialogSubmitDisabled || !hasEnoughBalance}
-                  >
-                    {buySubmitting ? 'Creating…' : t('payWithBalance')}
-                  </Button>
-                </span>
-              </Tooltip>
-            );
-          })()}
-          {cardPaymentEnabled && (
-            <Button variant="contained" onClick={handleManuauCardBuySubmit} disabled={buySubmitting || isPriceBelowMin || (isAdenaOffer ? (buyQuantityKkStr.trim() === '' || !Number.isFinite(parseKkFromStr(buyQuantityKkStr)) || parseKkFromStr(buyQuantityKkStr) <= 0) : (buyQuantityStr.trim() === '' || !Number.isFinite(Number(buyQuantityStr)) || Math.floor(Number(buyQuantityStr)) < 1))}>
-              {buySubmitting ? 'Creating…' : (t('payByCard') || 'Pay by card')}
-            </Button>
-          )}
-          {cryptoPaymentEnabled && (
-            <Tooltip title={t('payWithCryptoUsdNotice')}>
-              <Button variant="contained" color="secondary" onClick={handleCryptoBuySubmit} disabled={buySubmitting || isPriceBelowMin || (isAdenaOffer ? (buyQuantityKkStr.trim() === '' || !Number.isFinite(parseKkFromStr(buyQuantityKkStr)) || parseKkFromStr(buyQuantityKkStr) <= 0) : (buyQuantityStr.trim() === '' || !Number.isFinite(Number(String(buyQuantityStr).replace(',', '.'))) || Math.floor(Number(String(buyQuantityStr).replace(',', '.'))) < 1))}>
-                {buySubmitting ? 'Creating…' : (t('payWithCrypto') || 'Pay with Crypto')}
-              </Button>
-            </Tooltip>
-          )}
-          {ibanPaymentEnabled && (
-            <Button variant="contained" color="secondary" onClick={handleIbanBuySubmit} disabled={buySubmitting || isPriceBelowMin || (isAdenaOffer ? (buyQuantityKkStr.trim() === '' || !Number.isFinite(parseKkFromStr(buyQuantityKkStr)) || parseKkFromStr(buyQuantityKkStr) <= 0) : (buyQuantityStr.trim() === '' || !Number.isFinite(Number(String(buyQuantityStr).replace(',', '.'))) || Math.floor(Number(String(buyQuantityStr).replace(',', '.'))) < 1))}>
-              {buySubmitting ? 'Creating…' : (t('payViaIban') || 'Pay via IBAN (EUR)')}
-            </Button>
-          )}
-        </DialogActions>
-      </Dialog>
     </Box>
   );
 }

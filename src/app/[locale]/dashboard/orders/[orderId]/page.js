@@ -423,12 +423,12 @@ export default function OrderChatPage() {
     !hasSafeTransfer || order?.safeTransfer?.status === 'ITEM_DELIVERED';
   const getPaymentPageHref = (method) => {
     if (method === 'CRYPTO_MANUAL') return `/${locale}/pay-crypto/${orderId}`;
-    if (method === 'IBAN_MANUAL') return `/${locale}/dashboard/orders/${orderId}/iban-payment`;
+    if (method === 'IBAN_MANUAL' || method === 'SEPA_MANUAL') return `/${locale}/dashboard/orders/${orderId}/iban-payment`;
     return `/${locale}/dashboard/orders/${orderId}/card-payment`;
   };
 
-  const buyerPendingAdminConfirm = isBuyer && (order?.paymentMethod === 'CARD_MANUAL' || order?.paymentMethod === 'CRYPTO_MANUAL' || order?.paymentMethod === 'IBAN_MANUAL') && order?.status === 'CREATED';
-  const sellerPendingAdminConfirm = isSeller && (order?.paymentMethod === 'CARD_MANUAL' || order?.paymentMethod === 'CRYPTO_MANUAL' || order?.paymentMethod === 'IBAN_MANUAL') && order?.status === 'CREATED';
+  const buyerPendingAdminConfirm = isBuyer && (order?.paymentMethod === 'CARD_MANUAL' || order?.paymentMethod === 'CRYPTO_MANUAL' || order?.paymentMethod === 'IBAN_MANUAL' || order?.paymentMethod === 'SEPA_MANUAL') && order?.status === 'CREATED';
+  const sellerPendingAdminConfirm = isSeller && (order?.paymentMethod === 'CARD_MANUAL' || order?.paymentMethod === 'CRYPTO_MANUAL' || order?.paymentMethod === 'IBAN_MANUAL' || order?.paymentMethod === 'SEPA_MANUAL') && order?.status === 'CREATED';
   const pendingAdminConfirm = buyerPendingAdminConfirm || sellerPendingAdminConfirm;
   const chatBgColor = 'var(--background)';
   const canSellerDeliver =
@@ -1339,9 +1339,9 @@ export default function OrderChatPage() {
             </Button>
           </Alert>
         )}
-        {isBuyer && order?.paymentMethod === 'IBAN_MANUAL' && order?.status === 'CREATED' && order?.orderIbanPayment && !order?.orderIbanPayment?.buyerMarkedSentAt && (
+        {isBuyer && (order?.paymentMethod === 'IBAN_MANUAL' || order?.paymentMethod === 'SEPA_MANUAL') && order?.status === 'CREATED' && order?.orderIbanPayment && !order?.orderIbanPayment?.buyerMarkedSentAt && (
           <Alert severity="warning" sx={{ mx: { xs: 1.5, md: 2 }, mt: 1, flexShrink: 0 }}>
-            {t('ibanPaymentBanner')}{' '}
+            {order?.paymentMethod === 'SEPA_MANUAL' ? t('sepaPaymentBanner') : t('ibanPaymentBanner')}{' '}
             <Button component={Link} href={getPaymentPageHref(order?.paymentMethod)} size="small" variant="outlined" sx={{ mt: 0.5 }}>
               {t('openPaymentPage')}
             </Button>
@@ -1644,7 +1644,7 @@ export default function OrderChatPage() {
             flexDirection: 'column',
           }}
         >
-          {order?.status === 'PAID' && ['CARD_MANUAL', 'CRYPTO_MANUAL', 'IBAN_MANUAL'].includes(order?.paymentMethod) && (
+          {order?.status === 'PAID' && ['CARD_MANUAL', 'CRYPTO_MANUAL', 'IBAN_MANUAL', 'SEPA_MANUAL'].includes(order?.paymentMethod) && (
             <Alert severity="error" sx={{ mb: 1.5, flexShrink: 0 }}>
               {t('proofInChatHint')}
             </Alert>

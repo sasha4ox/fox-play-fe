@@ -886,7 +886,22 @@
     "safeTransferLabel": "Usar Transferencia Segura",
     "safeTransferFee": "Transferencia Segura — 5% del valor (mín. $5 USD, convertido a {currency}): +{fee} {currency}",
     "safeTransferHintRich": "Transferencia Segura — 5% del valor (mín. $5 USD). <learnMore>Más info</learnMore>",
-    "safeTransferTotal": "Total con Transferencia Segura: {total} {currency}"
+    "safeTransferTotal": "Total con Transferencia Segura: {total} {currency}",
+    "checkoutTitle": "Pago",
+    "checkoutSellerCannotBuy": "No puedes comprar tu propia oferta.",
+    "checkoutOrderDetails": "Detalles del pedido",
+    "checkoutPaymentMethods": "Métodos de pago",
+    "checkoutPaymentIntro": "Elige cómo quieres pagar. Después verás las instrucciones exactas para tu opción.",
+    "checkoutAddFundsLink": "Añadir fondos al saldo →",
+    "checkoutFastestBadge": "Más rápido",
+    "checkoutCryptoFastest": "La cripto suele ser la opción más rápida una vez envías el pago.",
+    "checkoutHintBalance": "Paga al instante con tu saldo FoxPlay si tienes fondos suficientes.",
+    "checkoutHintCard": "Paga con tarjeta mediante nuestro flujo manual. Verás instrucciones tras crear el pedido.",
+    "checkoutHintCrypto": "Paga con cripto. En el siguiente paso verás la dirección y el importe.",
+    "checkoutHintIban": "Paga en EUR por transferencia bancaria a nuestro IBAN. Verás datos bancarios y la referencia.",
+    "checkoutHintSepa": "Paga en EUR por transferencia SEPA. Usa la referencia de la página siguiente para identificar el pago.",
+    "checkoutSepaTiming": "Las transferencias SEPA suelen llegar en 1–2 días laborables.",
+    "payViaSepa": "Pagar por SEPA (EUR)"
   },
   "NewOffer": {
     "createOffer": "Crear oferta",

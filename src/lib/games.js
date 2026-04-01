@@ -150,6 +150,11 @@ export function pathToOfferDetail(locale, game, variant, server, offerId) {
   return `/${locale}/game/${g}/${v}/${s}/offers/${offerId}`
 }
 
+/** Checkout (buy flow) for an offer; `offerId` is UUID segment. */
+export function pathToOfferCheckout(locale, game, variant, server, offerId) {
+  return `${pathToOfferDetail(locale, game, variant, server, offerId)}/checkout`
+}
+
 /** Path to edit offer. */
 export function pathToOfferEdit(locale, game, variant, server, offerId) {
   return `${pathToOfferDetail(locale, game, variant, server, offerId)}/edit`
