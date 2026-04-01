@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
@@ -26,18 +26,23 @@ import { useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useAuthStore } from '@/store/authStore';
 import { getAdminUserFinancialHistory } from '@/lib/api';
+import { formatBalancePaymentContext } from '@/lib/formatBalancePaymentContext';
 
-const TYPE_LABELS = {
-  sale: 'Sale',
-  purchase: 'Purchase',
-  refund: 'Refund',
-  deposit: 'Deposit',
-  card_payout_refund: 'Card payout refund',
-  crypto_payout_refund: 'Crypto payout refund',
-  iban_payout_refund: 'IBAN payout refund',
-  withdrawal: 'Withdrawal',
-  payout_lock: 'Withdrawal (locked)',
-};
+const FH_TYPES = new Set([
+  'sale',
+  'purchase',
+  'refund',
+  'deposit',
+  'card_payout_refund',
+  'crypto_payout_refund',
+  'iban_payout_refund',
+  'withdrawal',
+  'payout_lock',
+]);
+
+function typeLabel(itemType, t) {
+  return FH_TYPES.has(itemType) ? t(`fhType_${itemType}`) : itemType;
+}
 
 export default function AdminUserFinancialHistoryPage() {
   const t = useTranslations('Admin');
@@ -50,7 +55,7 @@ export default function AdminUserFinancialHistoryPage() {
   const [error, setError] = useState(null);
   const [currencyFilter, setCurrencyFilter] = useState('');
 
-  const load = () => {
+  const load = useCallback(() => {
     if (!token || !userId) return;
     setLoading(true);
     setError(null);
@@ -61,11 +66,11 @@ export default function AdminUserFinancialHistoryPage() {
       .then(setData)
       .catch((e) => setError(e.message || 'Failed to load'))
       .finally(() => setLoading(false));
-  };
+  }, [token, userId, currencyFilter]);
 
   useEffect(() => {
     load();
-  }, [token, userId, currencyFilter]);
+  }, [load]);
 
   return (
     <Container maxWidth="lg">
@@ -73,25 +78,25 @@ export default function AdminUserFinancialHistoryPage() {
         <Button component={Link} href={`/${locale}/dashboard/admin/users`} size="small">
           ← {t('users')}
         </Button>
-        <Typography variant="h6">User financial history</Typography>
+        <Typography variant="h6">{t('userFinancialHistory')}</Typography>
         <Typography variant="body2" color="text.secondary">
-          (user id: {userId})
+          ({t('fhUserIdLabel')}: {userId})
         </Typography>
       </Box>
 
       {data.balances && data.balances.length > 0 && (
         <Box sx={{ mb: 2 }}>
           <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-            Balances
+            {t('balances')}
           </Typography>
           <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 0.5 }}>
-            Available = spendable/withdrawable now. Frozen = locked in orders or pending payouts.
+            {t('fhBalancesHint')}
           </Typography>
           <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
             {data.balances.map((b) => (
               <Typography key={b.currency} variant="body2">
-                {b.currency}: {Number(b.available).toFixed(2)} available
-                {Number(b.frozen) > 0 ? `, ${Number(b.frozen).toFixed(2)} frozen` : ''}
+                {b.currency}: {Number(b.available).toFixed(2)} {t('available')}
+                {Number(b.frozen) > 0 ? `, ${Number(b.frozen).toFixed(2)} ${t('frozen')}` : ''}
               </Typography>
             ))}
           </Box>
@@ -99,13 +104,13 @@ export default function AdminUserFinancialHistoryPage() {
       )}
 
       <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 120 }, mb: 2 }}>
-        <InputLabel>Currency</InputLabel>
+        <InputLabel>{t('currency')}</InputLabel>
         <Select
           value={currencyFilter}
-          label="Currency"
+          label={t('currency')}
           onChange={(e) => setCurrencyFilter(e.target.value)}
         >
-          <MenuItem value="">All</MenuItem>
+          <MenuItem value="">{t('filterAll')}</MenuItem>
           <MenuItem value="UAH">UAH</MenuItem>
           <MenuItem value="USD">USD</MenuItem>
           <MenuItem value="EUR">EUR</MenuItem>
@@ -122,7 +127,7 @@ export default function AdminUserFinancialHistoryPage() {
       {loading ? (
         <Skeleton variant="rectangular" height={300} sx={{ borderRadius: 1 }} />
       ) : data.items.length === 0 ? (
-        <Typography color="text.secondary">No transactions.</Typography>
+        <Typography color="text.secondary">{t('noTransactions')}</Typography>
       ) : isMobile ? (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
           {data.items.map((item, i) => (
@@ -131,7 +136,7 @@ export default function AdminUserFinancialHistoryPage() {
                 <Typography variant="subtitle2">
                   {item.date ? new Date(item.date).toLocaleString() : '—'}
                 </Typography>
-                <Typography variant="body2" color="text.secondary">{TYPE_LABELS[item.type] ?? item.type}</Typography>
+                <Typography variant="body2" color="text.secondary">{typeLabel(item.type, t)}</Typography>
                 <Typography
                   variant="body2"
                   sx={{
@@ -142,21 +147,31 @@ export default function AdminUserFinancialHistoryPage() {
                   {(item.type === 'purchase' || item.type === 'withdrawal' || item.type === 'payout_lock') ? '−' : '+'}
                   {item.amount} {item.currency}
                 </Typography>
-                <Typography variant="body2" sx={{ mt: 0.5, wordBreak: 'break-word' }}>{item.description ?? '—'}</Typography>
+                <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5 }}>
+                  {t('fhPaymentTransfer')}
+                </Typography>
+                <Typography variant="body2" sx={{ wordBreak: 'break-word' }}>
+                  {formatBalancePaymentContext(item.paymentContext, (key, values) => t(`fh${key}`, values))}
+                </Typography>
+                <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 1 }}>
+                  {t('fhDescription')}
+                </Typography>
+                <Typography variant="body2" sx={{ wordBreak: 'break-word' }}>{item.description ?? '—'}</Typography>
               </CardContent>
             </Card>
           ))}
         </Box>
       ) : (
         <TableContainer sx={{ overflowX: 'auto' }}>
-          <Table size="small" sx={{ minWidth: 520 }}>
+          <Table size="small" sx={{ minWidth: 640 }}>
             <TableHead>
               <TableRow sx={{ bgcolor: 'action.hover' }}>
-                <TableCell>Date</TableCell>
-                <TableCell>Type</TableCell>
-                <TableCell>Amount</TableCell>
-                <TableCell>Currency</TableCell>
-                <TableCell>Description</TableCell>
+                <TableCell>{t('created')}</TableCell>
+                <TableCell>{t('type')}</TableCell>
+                <TableCell>{t('amount')}</TableCell>
+                <TableCell>{t('currency')}</TableCell>
+                <TableCell sx={{ minWidth: 220 }}>{t('fhPaymentTransfer')}</TableCell>
+                <TableCell>{t('fhDescription')}</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -165,13 +180,16 @@ export default function AdminUserFinancialHistoryPage() {
                   <TableCell>
                     {item.date ? new Date(item.date).toLocaleString() : '—'}
                   </TableCell>
-                  <TableCell>{TYPE_LABELS[item.type] ?? item.type}</TableCell>
+                  <TableCell>{typeLabel(item.type, t)}</TableCell>
                   <TableCell>
                     {(item.type === 'purchase' || item.type === 'withdrawal' || item.type === 'payout_lock') ? '−' : '+'}
                     {item.amount} {item.currency}
                   </TableCell>
                   <TableCell>{item.currency}</TableCell>
-                  <TableCell>{item.description ?? '—'}</TableCell>
+                  <TableCell sx={{ whiteSpace: 'normal', wordBreak: 'break-word' }}>
+                    {formatBalancePaymentContext(item.paymentContext, (key, values) => t(`fh${key}`, values))}
+                  </TableCell>
+                  <TableCell sx={{ whiteSpace: 'normal', wordBreak: 'break-word' }}>{item.description ?? '—'}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -180,7 +198,7 @@ export default function AdminUserFinancialHistoryPage() {
       )}
       {data.total > 0 && (
         <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-          Total: {data.total} entries
+          {t('totalEntries', { count: data.total })}
         </Typography>
       )}
     </Container>

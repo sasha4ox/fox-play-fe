@@ -26,6 +26,7 @@ import IconButton from '@mui/material/IconButton';
 import InputAdornment from '@mui/material/InputAdornment';
 import Enable2FAModal from '@/components/Enable2FAModal/Enable2FAModal';
 import VerifyTOTPModal from '@/components/VerifyTOTPModal/VerifyTOTPModal';
+import { formatBalancePaymentContext } from '@/lib/formatBalancePaymentContext';
 
 const CRYPTO_FEE_PERCENT = 0.03;
 const CRYPTO_FEE_FIXED_USD = 1;
@@ -656,33 +657,39 @@ export default function BalancePage() {
                       key={idx}
                       sx={{
                         display: 'flex',
-                        flexWrap: 'wrap',
-                        alignItems: 'center',
-                        gap: 1,
+                        flexDirection: 'column',
+                        gap: 0.5,
                         py: 1.5,
                         borderBottom: idx < balanceHistory.items.length - 1 ? '1px solid' : 'none',
                         borderColor: 'divider',
                       }}
                     >
-                      <Typography variant="body2" color="text.secondary" sx={{ minWidth: { xs: '100%', sm: 100 } }}>
-                        {new Date(item.date).toLocaleString(locale)}
-                      </Typography>
-                      <Typography variant="body2" fontWeight={600} sx={{ color: item.type === 'sale' ? 'success.main' : item.type === 'refund' ? 'info.main' : (item.type === 'purchase' || item.type === 'withdrawal' || item.type === 'payout_lock') ? 'warning.main' : 'text.primary' }}>
-                        {(item.type === 'purchase' || item.type === 'withdrawal' || item.type === 'payout_lock') ? '−' : '+'}{item.amount} {item.currency}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        {t(`balanceHistoryType_${item.type}`)}
-                        {item.offerTitle ? ` · ${item.offerTitle}` : ''}
-                      </Typography>
-                      {item.otherParty && (
-                        <Link href={`${base}/user/${item.otherParty.id}`} style={{ fontSize: '0.875rem' }}>
-                          {item.otherParty.nickname || item.otherParty.id.slice(0, 8)}
-                        </Link>
-                      )}
-                      {item.orderId && (
-                        <Link href={`${base}/dashboard/orders/${item.orderId}`} style={{ fontSize: '0.875rem' }}>
-                          {item.orderNumber ? `${t('order')} ${item.orderNumber}` : t('order')}
-                        </Link>
+                      <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 1 }}>
+                        <Typography variant="body2" color="text.secondary" sx={{ minWidth: { xs: '100%', sm: 100 } }}>
+                          {new Date(item.date).toLocaleString(locale)}
+                        </Typography>
+                        <Typography variant="body2" fontWeight={600} sx={{ color: item.type === 'sale' ? 'success.main' : item.type === 'refund' ? 'info.main' : (item.type === 'purchase' || item.type === 'withdrawal' || item.type === 'payout_lock') ? 'warning.main' : 'text.primary' }}>
+                          {(item.type === 'purchase' || item.type === 'withdrawal' || item.type === 'payout_lock') ? '−' : '+'}{item.amount} {item.currency}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          {t(`balanceHistoryType_${item.type}`)}
+                          {item.offerTitle ? ` · ${item.offerTitle}` : ''}
+                        </Typography>
+                        {item.otherParty && (
+                          <Link href={`${base}/user/${item.otherParty.id}`} style={{ fontSize: '0.875rem' }}>
+                            {item.otherParty.nickname || item.otherParty.id.slice(0, 8)}
+                          </Link>
+                        )}
+                        {item.orderId && (
+                          <Link href={`${base}/dashboard/orders/${item.orderId}`} style={{ fontSize: '0.875rem' }}>
+                            {item.orderNumber ? `${t('order')} ${item.orderNumber}` : t('order')}
+                          </Link>
+                        )}
+                      </Box>
+                      {item.paymentContext && (
+                        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', maxWidth: '100%', wordBreak: 'break-word' }}>
+                          {formatBalancePaymentContext(item.paymentContext, (key, vals) => t(`balanceHistoryPay${key}`, vals))}
+                        </Typography>
                       )}
                     </Box>
                   ))}
