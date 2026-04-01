@@ -439,6 +439,8 @@
     "manualTopUpCheckoutIntro": "Indica cuánto quieres añadir y el método. La moneda depende del método.",
     "manualTopUpAmountLabel": "Importe a añadir",
     "manualTopUpAmountHint": "Importe",
+    "manualTopUpAmountInAccountCurrency": "Introduce el importe en la moneda de tu cuenta ({currency}).",
+    "manualTopUpCryptoConvertsNotice": "Para cripto, convertimos este importe de {currency} a USDT (USD) al tipo actual.",
     "manualTopUpCurrencyPerMethod": "Tarjeta: UAH. Cripto: USDT (USD). IBAN y SEPA: EUR.",
     "manualTopUpMethodsIntro": "Tras pagar, abre la página de instrucciones y marca el envío si aplica. Acreditamos el saldo al confirmar.",
     "manualTopUpCurrencyUah": "Pagarás en UAH a la tarjeta del siguiente paso.",

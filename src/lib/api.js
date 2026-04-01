@@ -301,7 +301,11 @@ export async function extendOrderIbanPaymentDeadline(orderId, token) {
   return apiPost(`/orders/${orderId}/iban-payment/extend-deadline`, {}, token)
 }
 
-/** Balance manual top-up: create. body: { amount, currency: 'UAH'|'USD'|'EUR', paymentMethod: 'CARD_MANUAL'|'CRYPTO_MANUAL'|'IBAN_MANUAL'|'SEPA_MANUAL' } → { id } */
+/**
+ * Balance manual top-up: create → { id }.
+ * body: { amount, currency: 'UAH'|'USD'|'EUR', paymentMethod: 'CARD_MANUAL'|'CRYPTO_MANUAL'|'IBAN_MANUAL'|'SEPA_MANUAL' }
+ * For CRYPTO_MANUAL, optional amountInputCurrency: 'UAH'|'EUR'|'RUB'|'USD' — denomination of `amount` before server converts to USD (omit or USD = amount is already USD).
+ */
 export async function createBalanceManualTopUp(body, token) {
   return apiPost('/me/balance/manual-topup', body, token)
 }

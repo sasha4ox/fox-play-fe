@@ -427,6 +427,8 @@
     "manualTopUpCheckoutIntro": "Enter how much you want to add, then pick a payment method. Currency is fixed per method.",
     "manualTopUpAmountLabel": "Amount to add",
     "manualTopUpAmountHint": "Amount",
+    "manualTopUpAmountInAccountCurrency": "Enter the amount in your account currency ({currency}).",
+    "manualTopUpCryptoConvertsNotice": "For crypto, we convert this amount from {currency} to USDT (USD) at our current rate.",
     "manualTopUpCurrencyPerMethod": "Card: UAH. Crypto: USDT (USD). IBAN & SEPA: EUR.",
     "manualTopUpMethodsIntro": "After payment, open the instructions page and mark payment as sent if required. We credit your balance after confirmation.",
     "manualTopUpCurrencyUah": "You will pay in UAH to the card shown on the next step.",

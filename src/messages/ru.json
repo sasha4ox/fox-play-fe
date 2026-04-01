@@ -481,6 +481,8 @@
     "manualTopUpCheckoutIntro": "Укажите сумму и способ оплаты. Валюта зависит от способа.",
     "manualTopUpAmountLabel": "Сумма пополнения",
     "manualTopUpAmountHint": "Сумма",
+    "manualTopUpAmountInAccountCurrency": "Введите сумму в валюте вашего аккаунта ({currency}).",
+    "manualTopUpCryptoConvertsNotice": "Для крипто эту сумму конвертируем из {currency} в USDT (USD) по текущему курсу.",
     "manualTopUpCurrencyPerMethod": "Карта: UAH. Крипто: USDT (USD). IBAN и SEPA: EUR.",
     "manualTopUpMethodsIntro": "После оплаты откройте страницу инструкций и при необходимости отметьте «отправил». Зачисление после подтверждения администратором.",
     "manualTopUpCurrencyUah": "Оплата в UAH на карту со следующего шага.",

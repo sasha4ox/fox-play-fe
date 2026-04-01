@@ -12,12 +12,14 @@ import MuiLink from '@mui/material/Link';
 import CircularProgress from '@mui/material/CircularProgress';
 import Alert from '@mui/material/Alert';
 import TextField from '@mui/material/TextField';
+import InputAdornment from '@mui/material/InputAdornment';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import Chip from '@mui/material/Chip';
 import Divider from '@mui/material/Divider';
 import { useAuthStore } from '@/store/authStore';
 import { useLoginModalStore } from '@/store/loginModalStore';
+import { useProfile } from '@/hooks/useProfile';
 import { getAvailablePaymentMethods, createBalanceManualTopUp } from '@/lib/api';
 
 function BalanceTopUpCheckoutInner() {
@@ -29,6 +31,8 @@ function BalanceTopUpCheckoutInner() {
   const tCommon = useTranslations('Common');
   const token = useAuthStore((s) => s.token);
   const openLoginModal = useLoginModalStore((s) => s.openModal);
+  const { preferredCurrency } = useProfile();
+  const accountCurrency = preferredCurrency || 'UAH';
 
   const [amountStr, setAmountStr] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -80,7 +84,11 @@ function BalanceTopUpCheckoutInner() {
     }
     setSubmitting(true);
     setError(null);
-    createBalanceManualTopUp({ amount: n, currency, paymentMethod }, token)
+    const body = { amount: n, currency, paymentMethod };
+    if (paymentMethod === 'CRYPTO_MANUAL') {
+      body.amountInputCurrency = preferredCurrency || 'UAH';
+    }
+    createBalanceManualTopUp(body, token)
       .then(({ id }) => {
         if (!id) throw new Error('No top-up id');
         if (paymentMethod === 'CARD_MANUAL') {
@@ -153,8 +161,16 @@ function BalanceTopUpCheckoutInner() {
               onChange={(e) => setAmountStr(e.target.value)}
               fullWidth
               sx={{ maxWidth: 360 }}
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">{accountCurrency}</InputAdornment>
+                ),
+              }}
             />
             <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 1 }}>
+              {t('manualTopUpAmountInAccountCurrency', { currency: accountCurrency })}
+            </Typography>
+            <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5 }}>
               {t('manualTopUpCurrencyPerMethod')}
             </Typography>
           </CardContent>
@@ -202,6 +218,9 @@ function BalanceTopUpCheckoutInner() {
                 </Box>
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
                   {tOffer('checkoutHintCrypto')}
+                </Typography>
+                <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 1 }}>
+                  {t('manualTopUpCryptoConvertsNotice', { currency: accountCurrency })}
                 </Typography>
                 <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 2 }}>
                   {tOffer('payWithCryptoUsdNotice')}
