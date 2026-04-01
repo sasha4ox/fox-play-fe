@@ -1185,6 +1185,7 @@
     "sepaPaymentTitle": "Оплата SEPA (EU, EUR)",
     "sepaPaymentHint": "Окремо від IBAN (UA). Лише для покупців з EU. IBAN отримувача — у зоні SEPA (не UA). Сума завжди EUR.",
     "sepaPaymentEnabled": "SEPA увімкнено",
+    "sepaBeneficiaryBankLabel": "Банк бенефіціара (необовʼязково)",
     "sepaReferenceTemplateLabel": "Шаблон призначення платежу",
     "sepaReferenceTemplateHint": "Використовуйте {{orderId}}, {{amount}}, {{currency}}. Покупець побачить підставлений текст.",
     "pendingIbanReceipts": "Очікують підтвердження надходження IBAN",

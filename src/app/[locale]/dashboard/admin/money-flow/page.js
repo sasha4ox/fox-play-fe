@@ -915,7 +915,7 @@ export default function AdminMoneyFlowPage() {
                 fullWidth
               />
               <TextField
-                label={t('ibanBeneficiaryBankLabel')}
+                label={t('sepaBeneficiaryBankLabel')}
                 value={sepaConfigInput.beneficiaryBank}
                 onChange={(e) => setSepaConfigInput((prev) => ({ ...prev, beneficiaryBank: e.target.value }))}
                 size="small"

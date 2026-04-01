@@ -1197,6 +1197,7 @@
   "sepaPaymentTitle": "Pago SEPA (UE, EUR)",
   "sepaPaymentHint": "Independiente del IBAN (UA). Solo compradores UE. El IBAN del beneficiario debe ser de la zona SEPA (no UA). Importe siempre en EUR.",
   "sepaPaymentEnabled": "SEPA activada",
+  "sepaBeneficiaryBankLabel": "Banco del beneficiario (opcional)",
   "sepaReferenceTemplateLabel": "Plantilla de referencia de pago",
   "sepaReferenceTemplateHint": "Usa {{orderId}}, {{amount}}, {{currency}}. El comprador verá el texto generado.",
   "pendingIbanReceipts": "Confirmaciones IBAN pendientes",

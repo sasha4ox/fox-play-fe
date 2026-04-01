@@ -1185,6 +1185,7 @@
     "sepaPaymentTitle": "SEPA payment (EU, EUR)",
     "sepaPaymentHint": "Separate from IBAN (UA receiver). EU buyers only. Receiver IBAN must be a SEPA-area account (not UA). Amount is always EUR.",
     "sepaPaymentEnabled": "SEPA payment enabled",
+    "sepaBeneficiaryBankLabel": "Beneficiary bank (optional)",
     "sepaReferenceTemplateLabel": "Payment reference template",
     "sepaReferenceTemplateHint": "Use {{orderId}}, {{amount}}, {{currency}}. Buyers see the rendered text on the payment page.",
     "pendingIbanReceipts": "Pending IBAN receipt confirmation",
