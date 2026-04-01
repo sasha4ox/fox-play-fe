@@ -301,6 +301,47 @@ export async function extendOrderIbanPaymentDeadline(orderId, token) {
   return apiPost(`/orders/${orderId}/iban-payment/extend-deadline`, {}, token)
 }
 
+/** Balance manual top-up: create. body: { amount, currency: 'UAH'|'USD'|'EUR', paymentMethod: 'CARD_MANUAL'|'CRYPTO_MANUAL'|'IBAN_MANUAL'|'SEPA_MANUAL' } → { id } */
+export async function createBalanceManualTopUp(body, token) {
+  return apiPost('/me/balance/manual-topup', body, token)
+}
+
+export async function getBalanceTopUpCardPayment(topUpId, token) {
+  return apiGet(`/me/balance/manual-topup/${topUpId}/card-payment`, token)
+}
+
+export async function markBalanceTopUpCardSent(topUpId, body, token) {
+  return apiPost(`/me/balance/manual-topup/${topUpId}/card-payment/sent`, body || {}, token)
+}
+
+export async function extendBalanceTopUpCardDeadline(topUpId, token) {
+  return apiPost(`/me/balance/manual-topup/${topUpId}/card-payment/extend-deadline`, {}, token)
+}
+
+export async function getBalanceTopUpCryptoPayment(topUpId, token) {
+  return apiGet(`/me/balance/manual-topup/${topUpId}/crypto-payment`, token)
+}
+
+export async function markBalanceTopUpCryptoSent(topUpId, token) {
+  return apiPost(`/me/balance/manual-topup/${topUpId}/crypto-payment/sent`, {}, token)
+}
+
+export async function extendBalanceTopUpCryptoDeadline(topUpId, token) {
+  return apiPost(`/me/balance/manual-topup/${topUpId}/crypto-payment/extend-deadline`, {}, token)
+}
+
+export async function getBalanceTopUpBankPayment(topUpId, token) {
+  return apiGet(`/me/balance/manual-topup/${topUpId}/bank-payment`, token)
+}
+
+export async function markBalanceTopUpBankSent(topUpId, token) {
+  return apiPost(`/me/balance/manual-topup/${topUpId}/bank-payment/sent`, {}, token)
+}
+
+export async function extendBalanceTopUpBankDeadline(topUpId, token) {
+  return apiPost(`/me/balance/manual-topup/${topUpId}/bank-payment/extend-deadline`, {}, token)
+}
+
 /** Profile: user + balances in preferred currency (auth required) */
 export async function getProfile(token) {
   return apiGet('/me', token)
@@ -998,6 +1039,23 @@ export async function adminConfirmIbanReceipt(orderId, token) {
 
 export async function adminDeclineIbanReceipt(orderId, token) {
   return apiPost(`/admin/money-flow/orders/${orderId}/decline-iban-receipt`, {}, token)
+}
+
+export async function getAdminPendingBalanceTopUpReceipts(token) {
+  return apiGet('/admin/money-flow/balance-topup-receipts', token)
+}
+
+export async function getAdminPendingBalanceTopUpReceiptsCount(token) {
+  const data = await apiGet('/admin/money-flow/balance-topup-receipts-count', token)
+  return typeof data?.count === 'number' ? data.count : 0
+}
+
+export async function adminConfirmBalanceTopUpReceipt(topUpId, token) {
+  return apiPost(`/admin/money-flow/balance-topup/${topUpId}/confirm-receipt`, {}, token)
+}
+
+export async function adminDeclineBalanceTopUpReceipt(topUpId, token) {
+  return apiPost(`/admin/money-flow/balance-topup/${topUpId}/decline-receipt`, {}, token)
 }
 
 export async function adminConfirmIbanPayout(orderId, token) {

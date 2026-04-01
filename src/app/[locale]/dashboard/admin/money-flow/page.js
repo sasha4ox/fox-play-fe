@@ -49,6 +49,10 @@ import {
   setAdminIbanPaymentEnabled,
   getAdminIbanPaymentConfig,
   setAdminIbanPaymentConfig,
+  getAdminSepaPaymentEnabled,
+  setAdminSepaPaymentEnabled,
+  getAdminSepaPaymentConfig,
+  setAdminSepaPaymentConfig,
 } from '@/lib/api';
 
 function maskCardNumber(num) {
@@ -111,6 +115,18 @@ export default function AdminMoneyFlowPage() {
   });
   const [loadingIbanConfig, setLoadingIbanConfig] = useState(true);
   const [savingIbanConfig, setSavingIbanConfig] = useState(false);
+  const [sepaPaymentEnabled, setSepaPaymentEnabled] = useState(false);
+  const [loadingSepaFlag, setLoadingSepaFlag] = useState(true);
+  const [savingSepaFlag, setSavingSepaFlag] = useState(false);
+  const [sepaConfigInput, setSepaConfigInput] = useState({
+    iban: '',
+    bicSwift: '',
+    beneficiaryName: '',
+    beneficiaryBank: '',
+    referenceTemplate: '',
+  });
+  const [loadingSepaConfig, setLoadingSepaConfig] = useState(true);
+  const [savingSepaConfig, setSavingSepaConfig] = useState(false);
 
   const loadFlag = () => {
     if (!token) return;
@@ -278,6 +294,36 @@ export default function AdminMoneyFlowPage() {
     loadIbanFlag();
     loadIbanConfig();
   }, [token]);
+
+  const loadSepaFlag = () => {
+    if (!token) return;
+    setLoadingSepaFlag(true);
+    getAdminSepaPaymentEnabled(token)
+      .then(setSepaPaymentEnabled)
+      .catch(() => setSepaPaymentEnabled(false))
+      .finally(() => setLoadingSepaFlag(false));
+  };
+  const loadSepaConfig = () => {
+    if (!token) return;
+    setLoadingSepaConfig(true);
+    getAdminSepaPaymentConfig(token)
+      .then((c) => {
+        setSepaConfigInput({
+          iban: c?.iban ?? '',
+          bicSwift: c?.bicSwift ?? '',
+          beneficiaryName: c?.beneficiaryName ?? '',
+          beneficiaryBank: c?.beneficiaryBank ?? '',
+          referenceTemplate: c?.referenceTemplate ?? '',
+        });
+      })
+      .catch(() => {})
+      .finally(() => setLoadingSepaConfig(false));
+  };
+  useEffect(() => {
+    loadSepaFlag();
+    loadSepaConfig();
+  }, [token]);
+
   const handleSaveIbanFlag = () => {
     if (!token) return;
     setSavingIbanFlag(true);
@@ -320,6 +366,34 @@ export default function AdminMoneyFlowPage() {
       .catch((err) => setError(err?.message || 'Failed to save'))
       .finally(() => setSavingIbanConfig(false));
   };
+
+  const handleSaveSepaConfig = () => {
+    if (!token) return;
+    setSavingSepaConfig(true);
+    setError(null);
+    setAdminSepaPaymentConfig(
+      {
+        iban: sepaConfigInput.iban.trim(),
+        bicSwift: sepaConfigInput.bicSwift.trim(),
+        beneficiaryName: sepaConfigInput.beneficiaryName.trim(),
+        beneficiaryBank: sepaConfigInput.beneficiaryBank.trim(),
+        referenceTemplate: sepaConfigInput.referenceTemplate.trim(),
+      },
+      token
+    )
+      .then((c) => {
+        setSepaConfigInput({
+          iban: c?.iban ?? '',
+          bicSwift: c?.bicSwift ?? '',
+          beneficiaryName: c?.beneficiaryName ?? '',
+          beneficiaryBank: c?.beneficiaryBank ?? '',
+          referenceTemplate: c?.referenceTemplate ?? '',
+        });
+      })
+      .catch((err) => setError(err?.message || 'Failed to save'))
+      .finally(() => setSavingSepaConfig(false));
+  };
+
   const handleSaveCryptoWallet = () => {
     setSavingCryptoWallet(true);
     setError(null);
@@ -776,6 +850,88 @@ export default function AdminMoneyFlowPage() {
               />
               <Button variant="contained" onClick={handleSaveIbanConfig} disabled={savingIbanConfig} sx={{ alignSelf: 'flex-start' }}>
                 {savingIbanConfig ? '…' : t('save')}
+              </Button>
+            </Box>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card sx={{ mb: 3 }}>
+        <CardContent sx={{ px: { xs: 1.5, sm: 2 } }}>
+          <Typography variant="subtitle1" fontWeight={600} gutterBottom>
+            {t('sepaPaymentTitle')}
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            {t('sepaPaymentHint')}
+          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2, flexWrap: 'wrap' }}>
+            {loadingSepaFlag ? (
+              <Skeleton width={120} height={40} />
+            ) : (
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={sepaPaymentEnabled}
+                    onChange={(e) => {
+                      setSepaPaymentEnabled(e.target.checked);
+                      setSavingSepaFlag(true);
+                      setError(null);
+                      setAdminSepaPaymentEnabled(e.target.checked, token)
+                        .then(setSepaPaymentEnabled)
+                        .catch((err) => setError(err?.message || 'Failed to save'))
+                        .finally(() => setSavingSepaFlag(false));
+                    }}
+                    disabled={savingSepaFlag}
+                  />
+                }
+                label={t('sepaPaymentEnabled')}
+              />
+            )}
+          </Box>
+          {loadingSepaConfig ? (
+            <Skeleton height={160} />
+          ) : (
+            <Box component="form" sx={{ display: 'flex', flexDirection: 'column', gap: 2, maxWidth: 560 }}>
+              <TextField
+                label={t('ibanLabel')}
+                value={sepaConfigInput.iban}
+                onChange={(e) => setSepaConfigInput((prev) => ({ ...prev, iban: e.target.value }))}
+                placeholder="DE89370400440532013000"
+                size="small"
+                fullWidth
+              />
+              <TextField
+                label={t('ibanBicSwiftLabel')}
+                value={sepaConfigInput.bicSwift}
+                onChange={(e) => setSepaConfigInput((prev) => ({ ...prev, bicSwift: e.target.value }))}
+                size="small"
+                fullWidth
+              />
+              <TextField
+                label={t('ibanBeneficiaryNameLabel')}
+                value={sepaConfigInput.beneficiaryName}
+                onChange={(e) => setSepaConfigInput((prev) => ({ ...prev, beneficiaryName: e.target.value }))}
+                size="small"
+                fullWidth
+              />
+              <TextField
+                label={t('ibanBeneficiaryBankLabel')}
+                value={sepaConfigInput.beneficiaryBank}
+                onChange={(e) => setSepaConfigInput((prev) => ({ ...prev, beneficiaryBank: e.target.value }))}
+                size="small"
+                fullWidth
+              />
+              <TextField
+                label={t('sepaReferenceTemplateLabel')}
+                value={sepaConfigInput.referenceTemplate}
+                onChange={(e) => setSepaConfigInput((prev) => ({ ...prev, referenceTemplate: e.target.value }))}
+                placeholder="FoxPlay {{orderId}} {{amount}} {{currency}}"
+                size="small"
+                fullWidth
+                helperText={t('sepaReferenceTemplateHint')}
+              />
+              <Button variant="contained" onClick={handleSaveSepaConfig} disabled={savingSepaConfig} sx={{ alignSelf: 'flex-start' }}>
+                {savingSepaConfig ? '…' : t('save')}
               </Button>
             </Box>
           )}

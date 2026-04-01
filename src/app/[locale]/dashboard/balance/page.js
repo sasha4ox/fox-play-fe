@@ -96,6 +96,7 @@ export default function BalancePage() {
   const [cardPaymentEnabled, setCardPaymentEnabled] = useState(false);
   const [ibanPaymentEnabled, setIbanPaymentEnabled] = useState(false);
   const [cryptoPaymentEnabled, setCryptoPaymentEnabled] = useState(false);
+  const [sepaPaymentEnabled, setSepaPaymentEnabled] = useState(false);
   const [withdrawSection, setWithdrawSection] = useState(null);
   const [savedCards, setSavedCards] = useState([]);
   const [savedWallets, setSavedWallets] = useState([]);
@@ -148,10 +149,12 @@ export default function BalancePage() {
       setCardPaymentEnabled(methods.cardPaymentEnabled);
       setIbanPaymentEnabled(methods.ibanPaymentEnabled);
       setCryptoPaymentEnabled(methods.cryptoPaymentEnabled);
+      setSepaPaymentEnabled(methods.sepaPaymentEnabled === true);
     }).catch(() => {
       setCardPaymentEnabled(false);
       setIbanPaymentEnabled(false);
       setCryptoPaymentEnabled(false);
+      setSepaPaymentEnabled(false);
     });
   }, [token]);
 
@@ -727,6 +730,28 @@ export default function BalancePage() {
                     sx={{ textTransform: 'none' }}
                   >
                     {testCreditLoading ? t('adding') : t('getTestCredit', { amount: depositInfo.testCreditAmount ?? 2000, currency: preferredCurrency ?? 'USD' })}
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+
+            {isAuth && (cardPaymentEnabled || cryptoPaymentEnabled || ibanPaymentEnabled || sepaPaymentEnabled) && (
+              <Card variant="outlined" sx={{ mt: 2, mb: 3, borderColor: 'divider' }}>
+                <CardContent>
+                  <Typography variant="subtitle1" fontWeight={600} gutterBottom>
+                    {t('manualTopUpTitle')}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                    {t('manualTopUpHint')}
+                  </Typography>
+                  <Button
+                    component={Link}
+                    href={`${base}/dashboard/balance/top-up/checkout`}
+                    variant="contained"
+                    color="primary"
+                    sx={{ textTransform: 'none' }}
+                  >
+                    {t('manualTopUpCta')}
                   </Button>
                 </CardContent>
               </Card>

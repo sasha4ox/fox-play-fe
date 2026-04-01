@@ -31,6 +31,9 @@ import {
   getAdminPendingIbanReceipts,
   adminConfirmIbanReceipt,
   adminDeclineIbanReceipt,
+  getAdminPendingBalanceTopUpReceipts,
+  adminConfirmBalanceTopUpReceipt,
+  adminDeclineBalanceTopUpReceipt,
   adminGetOrCreateContactBuyer,
   adminSendContactBuyerMessage,
   acknowledgeAdminPendingReceiptsView,
@@ -54,6 +57,10 @@ export default function AdminPendingReceiptsPage() {
   const [loadingIbanReceipts, setLoadingIbanReceipts] = useState(true);
   const [confirmingIbanReceipt, setConfirmingIbanReceipt] = useState(null);
   const [decliningIbanReceipt, setDecliningIbanReceipt] = useState(null);
+  const [balanceTopUpReceipts, setBalanceTopUpReceipts] = useState([]);
+  const [loadingBalanceTopUpReceipts, setLoadingBalanceTopUpReceipts] = useState(true);
+  const [confirmingBalanceTopUp, setConfirmingBalanceTopUp] = useState(null);
+  const [decliningBalanceTopUp, setDecliningBalanceTopUp] = useState(null);
   const [contactBuyerOrderId, setContactBuyerOrderId] = useState(null);
   const [contactBuyerConvo, setContactBuyerConvo] = useState(null);
   const [contactBuyerMessage, setContactBuyerMessage] = useState('');
@@ -87,6 +94,15 @@ export default function AdminPendingReceiptsPage() {
       .finally(() => setLoadingIbanReceipts(false));
   };
 
+  const loadBalanceTopUpReceipts = () => {
+    if (!token) return;
+    setLoadingBalanceTopUpReceipts(true);
+    getAdminPendingBalanceTopUpReceipts(token)
+      .then((data) => setBalanceTopUpReceipts(data?.items ?? []))
+      .catch(() => setBalanceTopUpReceipts([]))
+      .finally(() => setLoadingBalanceTopUpReceipts(false));
+  };
+
   useEffect(() => {
     if (!token) return;
     acknowledgeAdminPendingReceiptsView(token)
@@ -106,6 +122,9 @@ export default function AdminPendingReceiptsPage() {
   }, [token]);
   useEffect(() => {
     loadIbanReceipts();
+  }, [token]);
+  useEffect(() => {
+    loadBalanceTopUpReceipts();
   }, [token]);
 
   const handleConfirmReceipt = (orderId) => {
@@ -207,6 +226,25 @@ export default function AdminPendingReceiptsPage() {
       })
       .catch((err) => setError(err?.message || 'Failed'))
       .finally(() => setDecliningIbanReceipt(null));
+  };
+
+  const handleConfirmBalanceTopUp = (topUpId) => {
+    setConfirmingBalanceTopUp(topUpId);
+    setError(null);
+    adminConfirmBalanceTopUpReceipt(topUpId, token)
+      .then(() => loadBalanceTopUpReceipts())
+      .catch((err) => setError(err?.message || 'Failed'))
+      .finally(() => setConfirmingBalanceTopUp(null));
+  };
+
+  const handleDeclineBalanceTopUp = (topUpId) => {
+    if (!confirm(t('declineReceiptConfirm'))) return;
+    setDecliningBalanceTopUp(topUpId);
+    setError(null);
+    adminDeclineBalanceTopUpReceipt(topUpId, token)
+      .then(() => loadBalanceTopUpReceipts())
+      .catch((err) => setError(err?.message || 'Failed'))
+      .finally(() => setDecliningBalanceTopUp(null));
   };
 
   return (
@@ -411,6 +449,73 @@ export default function AdminPendingReceiptsPage() {
                           </Button>
                           <Button size="small" variant="contained" onClick={() => handleConfirmIbanReceipt(r.orderId)} disabled={confirmingIbanReceipt === r.orderId}>
                             {confirmingIbanReceipt === r.orderId ? '…' : t('confirmReceipt')}
+                          </Button>
+                        </Box>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card sx={{ mb: 3 }}>
+        <CardContent sx={{ px: { xs: 1.5, sm: 2 } }}>
+          <Typography variant="subtitle1" fontWeight={600} gutterBottom>
+            {t('pendingBalanceTopUpReceipts')}
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            {t('pendingBalanceTopUpReceiptsHint')}
+          </Typography>
+          {loadingBalanceTopUpReceipts ? (
+            <Skeleton height={60} />
+          ) : balanceTopUpReceipts.length === 0 ? (
+            <Typography color="text.secondary">{t('noPendingBalanceTopUpReceipts')}</Typography>
+          ) : (
+            <TableContainer sx={{ overflowX: 'auto' }}>
+              <Table size="small" sx={{ minWidth: 480 }}>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>{t('topUpId')}</TableCell>
+                    <TableCell>{t('user')}</TableCell>
+                    <TableCell>{t('topUpKind')}</TableCell>
+                    <TableCell>{t('amount')}</TableCell>
+                    <TableCell>Marked sent</TableCell>
+                    <TableCell align="right">{t('actions')}</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {balanceTopUpReceipts.map((r) => (
+                    <TableRow key={r.topUpId}>
+                      <TableCell sx={{ fontFamily: 'monospace', fontSize: '0.8rem' }}>
+                        {r.topUpId ? `${r.topUpId.slice(0, 8)}…` : '—'}
+                      </TableCell>
+                      <TableCell>{r.user?.email ?? r.user?.nickname ?? r.user?.id}</TableCell>
+                      <TableCell>{r.kind} · {r.paymentMethod}</TableCell>
+                      <TableCell>
+                        {r.amount != null ? Number(r.amount).toFixed(2) : '—'} {r.currency}
+                      </TableCell>
+                      <TableCell>{r.buyerMarkedSentAt ? new Date(r.buyerMarkedSentAt).toLocaleString() : '—'}</TableCell>
+                      <TableCell align="right">
+                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, justifyContent: 'flex-end', '& .MuiButton-root': { minHeight: 44 } }}>
+                          <Button
+                            size="small"
+                            variant="outlined"
+                            color="error"
+                            onClick={() => handleDeclineBalanceTopUp(r.topUpId)}
+                            disabled={decliningBalanceTopUp === r.topUpId || confirmingBalanceTopUp === r.topUpId}
+                          >
+                            {decliningBalanceTopUp === r.topUpId ? '…' : t('declineReceipt')}
+                          </Button>
+                          <Button
+                            size="small"
+                            variant="contained"
+                            onClick={() => handleConfirmBalanceTopUp(r.topUpId)}
+                            disabled={confirmingBalanceTopUp === r.topUpId}
+                          >
+                            {confirmingBalanceTopUp === r.topUpId ? '…' : t('confirmReceipt')}
                           </Button>
                         </Box>
                       </TableCell>

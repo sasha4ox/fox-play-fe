@@ -13,7 +13,11 @@ import CircularProgress from '@mui/material/CircularProgress';
 import Alert from '@mui/material/Alert';
 import IconButton from '@mui/material/IconButton';
 import { useAuthStore } from '@/store/authStore';
-import { getOrderIbanPayment, markOrderIbanPaymentSent, extendOrderIbanPaymentDeadline } from '@/lib/api';
+import {
+  getBalanceTopUpBankPayment,
+  markBalanceTopUpBankSent,
+  extendBalanceTopUpBankDeadline,
+} from '@/lib/api';
 import ContentCopy from '@mui/icons-material/ContentCopy';
 
 function useCountdown(deadlineAt) {
@@ -85,11 +89,12 @@ function CopyRow({ label, value, tCopy }) {
   );
 }
 
-export default function OrderIbanPaymentPage() {
+export default function BalanceTopUpBankPaymentPage() {
   const params = useParams();
   const locale = useLocale();
   const t = useTranslations('IbanPayment');
-  const orderId = params?.orderId;
+  const tBal = useTranslations('Balance');
+  const topUpId = params?.topUpId;
   const token = useAuthStore((s) => s.token);
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -102,35 +107,35 @@ export default function OrderIbanPaymentPage() {
   const expired = remaining !== null && remaining <= 0;
 
   useEffect(() => {
-    if (!orderId || !token) return;
+    if (!topUpId || !token) return;
     setLoading(true);
     setError(null);
-    getOrderIbanPayment(orderId, token)
+    getBalanceTopUpBankPayment(topUpId, token)
       .then(setData)
       .catch((err) => {
         setError(err.message || 'Failed to load');
         setData(null);
       })
       .finally(() => setLoading(false));
-  }, [orderId, token]);
+  }, [topUpId, token]);
 
   const handleExtendDeadline = () => {
-    if (!orderId || !token) return;
+    if (!topUpId || !token) return;
     setExtending(true);
     setError(null);
-    extendOrderIbanPaymentDeadline(orderId, token)
-      .then(() => getOrderIbanPayment(orderId, token))
+    extendBalanceTopUpBankDeadline(topUpId, token)
+      .then(() => getBalanceTopUpBankPayment(topUpId, token))
       .then((updated) => setData(updated))
       .catch((err) => setError(err.message || t('extendFailed')))
       .finally(() => setExtending(false));
   };
 
   const handleMarkSent = () => {
-    if (!orderId || !token) return;
+    if (!topUpId || !token) return;
     setSending(true);
     setError(null);
-    markOrderIbanPaymentSent(orderId, token)
-      .then(() => getOrderIbanPayment(orderId, token))
+    markBalanceTopUpBankSent(topUpId, token)
+      .then(() => getBalanceTopUpBankPayment(topUpId, token))
       .then((updated) => {
         setData(updated);
       })
@@ -146,7 +151,7 @@ export default function OrderIbanPaymentPage() {
     );
   }
 
-  const base = `/${locale}/dashboard/orders/${orderId}`;
+  const balanceHref = `/${locale}/dashboard/balance`;
   const status = data?.status;
   const showCredentials =
     (status === 'awaiting_payment' || status === 'awaiting_confirmation') &&
@@ -293,8 +298,8 @@ export default function OrderIbanPaymentPage() {
             {sending ? '…' : t('iSentMoney')}
           </Button>
         )}
-        <Button component={Link} href={base} variant="outlined" sx={{ minHeight: 44 }}>
-          {status === 'confirmed' || status === 'expired' ? t('backToOrder') : t('openOrderChat')}
+        <Button component={Link} href={balanceHref} variant="outlined" sx={{ minHeight: 44 }}>
+          {tBal('manualTopUpBackToBalance')}
         </Button>
       </Box>
     </Container>
