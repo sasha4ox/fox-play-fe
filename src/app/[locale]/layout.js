@@ -1,4 +1,5 @@
 import { Suspense } from 'react';
+import Script from 'next/script';
 import { Geist, Geist_Mono } from "next/font/google";
 import { NextIntlClientProvider } from 'next-intl';
 import { notFound } from 'next/navigation';
@@ -233,6 +234,22 @@ export default async function RootLayout({ children, params }) {
             </div>
           </NextIntlClientProvider>
         </Providers>
+
+         {/* Google Ads tag */}
+         <Script
+            src="https://www.googletagmanager.com/gtag/js?id=AW-778100487"
+            strategy="afterInteractive"
+        />
+
+        <Script id="google-ads-gtag" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+
+            gtag('config', 'AW-778100487');
+          `}
+        </Script>
       </body>
     </html>
   );
