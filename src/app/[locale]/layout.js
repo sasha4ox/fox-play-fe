@@ -213,6 +213,22 @@ export default async function RootLayout({ children, params }) {
 
   return (
     <html lang={locale === 'ua' ? 'uk' : locale}>
+      <head> {/* Google Ads tag */}
+         <Script
+            src="https://www.googletagmanager.com/gtag/js?id=AW-778100487"
+            strategy="afterInteractive"
+        />
+
+        <Script id="google-ads-gtag" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+
+            gtag('config', 'AW-778100487');
+          `}
+        </Script>
+      </head>
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
         <GlobalErrorHandler />
         <Providers>
@@ -234,22 +250,6 @@ export default async function RootLayout({ children, params }) {
             </div>
           </NextIntlClientProvider>
         </Providers>
-
-         {/* Google Ads tag */}
-         <Script
-            src="https://www.googletagmanager.com/gtag/js?id=AW-778100487"
-            strategy="afterInteractive"
-        />
-
-        <Script id="google-ads-gtag" strategy="afterInteractive">
-          {`
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-
-            gtag('config', 'AW-778100487');
-          `}
-        </Script>
       </body>
     </html>
   );
