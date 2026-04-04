@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
 import { getProfile } from '@/lib/api';
+import { trackGoogleRegistrationConversion } from '@/lib/googleAdsConversion';
 
 /**
  * Handles return from Google OAuth redirect flow: reads ?token= or ?google_error= from URL,
@@ -27,6 +28,8 @@ export default function GoogleAuthReturnHandler() {
     }
     if (!token) return;
 
+    const googleRegistration = searchParams.get('google_registration');
+
     setAuth(null, token);
     getProfile(token)
       .then((profile) => {
@@ -42,12 +45,16 @@ export default function GoogleAuthReturnHandler() {
             },
             token
           );
+          if (googleRegistration === '1') {
+            trackGoogleRegistrationConversion(profile.id);
+          }
         }
       })
       .catch(() => {})
       .finally(() => {
         const url = new URL(window.location.href);
         url.searchParams.delete('token');
+        url.searchParams.delete('google_registration');
         window.history.replaceState({}, '', url.pathname + url.search);
       });
   }, [searchParams, setAuth]);

@@ -29,6 +29,7 @@ import { useAuthStore } from '@/store/authStore';
 import { getApiBase, requestPasswordReset } from '@/lib/api';
 import { useLoginModalStore } from '@/store/loginModalStore';
 import { componentClass } from '@/lib/componentPath';
+import { trackGoogleRegistrationConversion } from '@/lib/googleAdsConversion';
 import styles from './form.module.css';
 
 const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '';
@@ -199,6 +200,9 @@ function FormInner({ mode, popupMode = false, onLoginSuccess }) {
       const data = await res.json();
       if (res.ok && data?.token) {
         const user = data.user ?? { id: data.userId, email: data.email, nickname: data.nickname };
+        if (data.isNewUser && user.id) {
+          trackGoogleRegistrationConversion(user.id);
+        }
         setAuth(user, data.token);
         setAuthSuccess(t('loginSuccess'));
         if (popupMode && onLoginSuccess) {
