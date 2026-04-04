@@ -19,7 +19,7 @@ function pushConversionOnce(dedupeKey) {
   } catch (_) {
     // sessionStorage unavailable — still fire conversion once this session
   }
-
+  console.log("Firing registration conversion");
   sendGAEvent('event', 'conversion', REGISTRATION_CONVERSION_PAYLOAD);
 }
 
