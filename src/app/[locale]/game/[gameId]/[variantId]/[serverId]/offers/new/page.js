@@ -30,6 +30,7 @@ import { useProfile } from '@/hooks/useProfile';
 import { createOffer, getPlatformFeePercent, fetchOfferRecentPrices } from '@/lib/api';
 import { formatAdena, parseAdenaInput } from '@/lib/adenaFormat';
 import { getMinPriceForUnit, getEffectiveUnitKk, formatPriceForUnit } from '@/lib/offerMinPrice';
+import { trackStartSellingConversion } from '@/lib/googleAdsConversion';
 
 export default function NewOfferPage() {
   const params = useParams();
@@ -247,6 +248,7 @@ export default function NewOfferPage() {
     };
     try {
       await createOffer(payload, token);
+      trackStartSellingConversion();
       router.push(
         pathGameVariantServer(
           locale,

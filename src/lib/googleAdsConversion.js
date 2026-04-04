@@ -1,6 +1,6 @@
 import { sendGAEvent } from '@next/third-parties/google';
 
-const DEDUPE_PREFIX = 'fox_gads_registration_conv:';
+const DEDUPE_PREFIX = 'fox_gads_conv:';
 
 const REGISTRATION_CONVERSION_PAYLOAD = {
   send_to: 'AW-778100487/xdzOCJ3s25UcEIe-g_MC',
@@ -8,7 +8,13 @@ const REGISTRATION_CONVERSION_PAYLOAD = {
   currency: 'UAH',
 };
 
-function pushConversionOnce(dedupeKey) {
+const START_SELLING_CONVERSION_PAYLOAD = {
+  send_to: 'AW-778100487/wfssCLHN5ZUcEIe-g_MC',
+  value: 1.0,
+  currency: 'UAH',
+};
+
+function pushConversionOnce(dedupeKey, payload) {
   if (typeof window === 'undefined') return;
   if (!dedupeKey || typeof dedupeKey !== 'string') return;
 
@@ -19,8 +25,7 @@ function pushConversionOnce(dedupeKey) {
   } catch (_) {
     // sessionStorage unavailable — still fire conversion once this session
   }
-  console.log("Firing registration conversion");
-  sendGAEvent('event', 'conversion', REGISTRATION_CONVERSION_PAYLOAD);
+  sendGAEvent('event', 'conversion', payload);
 }
 
 /**
@@ -28,7 +33,7 @@ function pushConversionOnce(dedupeKey) {
  * Dedupes by verification token so refresh does not double-count.
  */
 export function trackRegistrationConversion(verificationToken) {
-  pushConversionOnce(verificationToken);
+  pushConversionOnce(verificationToken, REGISTRATION_CONVERSION_PAYLOAD);
 }
 
 /**
@@ -37,5 +42,12 @@ export function trackRegistrationConversion(verificationToken) {
  */
 export function trackGoogleRegistrationConversion(userId) {
   if (!userId) return;
-  pushConversionOnce(`google:${userId}`);
+  pushConversionOnce(`google:${userId}`, REGISTRATION_CONVERSION_PAYLOAD);
+}
+
+/**
+ * Fire Google Ads "Start to Selling" conversion after first successful offer create in this session.
+ */
+export function trackStartSellingConversion() {
+  pushConversionOnce('start_selling', START_SELLING_CONVERSION_PAYLOAD);
 }
