@@ -7,6 +7,7 @@ import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
 import CircularProgress from '@mui/material/CircularProgress';
 import { useAuthStore } from '@/store/authStore';
+import { trackRegistrationConversion } from '@/lib/googleAdsConversion';
 
 function VerifyEmailContent() {
   const searchParams = useSearchParams();
@@ -29,6 +30,7 @@ function VerifyEmailContent() {
           if (data.user) {
             setAuth(data.user, data.token ?? null);
           }
+          trackRegistrationConversion(token);
           setStatus('success');
           setMessage('Your account is activated. Redirecting…');
           const locale = typeof window !== 'undefined' && window.navigator?.language?.startsWith('uk') ? 'ua' : 'en';
